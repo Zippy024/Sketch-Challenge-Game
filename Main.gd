@@ -231,14 +231,30 @@ func _ready() -> void:
 	_update_lang_buttons_style()
 	_run_conversation()
 
+# Use font resources bundled with the game. SystemFont is not reliable on Web.
 func _setup_multilang_font() -> void:
-	var sys_font: SystemFont = SystemFont.new()
-	sys_font.font_names = PackedStringArray([
-		"Yu Gothic UI", "Yu Gothic", "Meiryo", "MS PGothic", "Hiragino Sans",
-		"Pyidaungsu", "Myanmar Text", "Padauk", "Noto Sans JP", "Noto Sans Myanmar", "Segoe UI"
-	])
-	var t: Theme = Theme.new()
-	t.default_font = sys_font
+	var jp_font: Font = null
+	var mm_font: Font = null
+	var font_dir := "res://Font"
+	if DirAccess.dir_exists_absolute(font_dir):
+		for filename in DirAccess.get_files_at(font_dir):
+			var lower_name := filename.to_lower()
+			if not lower_name.ends_with(".ttf") and not lower_name.ends_with(".otf"):
+				continue
+			var font_path := font_dir.path_join(filename)
+			if lower_name.begins_with("notosansjp"):
+				jp_font = load(font_path) as Font
+			elif lower_name.begins_with("notosansmyanmar"):
+				mm_font = load(font_path) as Font
+
+	if jp_font == null or mm_font == null:
+		push_error("Web fonts missing: add NotoSansJP*.ttf and NotoSansMyanmar*.ttf to res://Font/")
+		return
+
+	# JP as primary font; Myanmar as a fallback for missing glyphs.
+	jp_font.fallbacks = [mm_font]
+	var t := Theme.new()
+	t.default_font = jp_font
 	theme = t
 
 func _unhandled_input(event: InputEvent) -> void:
