@@ -126,11 +126,7 @@ var fallback_duration: float = 1.8
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var sys_font := SystemFont.new()
-	sys_font.font_names = PackedStringArray(["Yu Gothic UI", "Meiryo", "Noto Sans JP", "Myanmar Text", "Pyidaungsu", "Padauk", "Segoe UI"])
-	var custom_theme := Theme.new()
-	custom_theme.default_font = sys_font
-	theme = custom_theme
+	_setup_multilang_font()
 
 	voice_player = AudioStreamPlayer.new()
 	add_child(voice_player)
@@ -139,6 +135,28 @@ func _ready() -> void:
 	_build_ui()
 	_change_language("jp")
 	_play_entrance_fade()
+
+# Shared font policy: keep Stage 2 desktop appearance; bundle fonts for browsers.
+const WEB_JP_FONT: FontFile = preload("res://Font/NotoSansJP-VariableFont_wght.ttf")
+const WEB_MM_FONT: FontFile = preload("res://Font/NotoSansMyanmar-VariableFont_wdth,wght.ttf")
+
+func _setup_multilang_font() -> void:
+	var chosen_font: Font
+	if OS.has_feature("web"):
+		# Web browsers cannot reliably access Godot SystemFont.
+		var jp_variant := FontVariation.new()
+		jp_variant.base_font = WEB_JP_FONT
+		jp_variant.variation_opentype = {"wght": 400.0}
+		jp_variant.fallbacks = [WEB_MM_FONT]
+		chosen_font = jp_variant
+	else:
+		# Match the original Stage 2 typography on Windows desktop.
+		var sys_font := SystemFont.new()
+		sys_font.font_names = PackedStringArray(["Yu Gothic UI", "Meiryo", "Noto Sans JP", "Myanmar Text", "Pyidaungsu", "Padauk", "Segoe UI"])
+		chosen_font = sys_font
+	var custom_theme := Theme.new()
+	custom_theme.default_font = chosen_font
+	theme = custom_theme
 
 func _style(bg: String, edge: String = "cad7e8", radius: int = 10) -> StyleBoxFlat:
 	var st := StyleBoxFlat.new()
