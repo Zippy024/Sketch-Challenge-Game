@@ -133,6 +133,7 @@ func _ready() -> void:
 	voice_player.finished.connect(_on_voice_finished)
 
 	_build_ui()
+	_apply_web_readability(self)
 	_change_language("jp")
 	_play_entrance_fade()
 
@@ -146,8 +147,11 @@ func _setup_multilang_font() -> void:
 		# Web browsers cannot reliably access Godot SystemFont.
 		var jp_variant := FontVariation.new()
 		jp_variant.base_font = WEB_JP_FONT
-		jp_variant.variation_opentype = {"wght": 400.0}
-		jp_variant.fallbacks = [WEB_MM_FONT]
+		jp_variant.variation_opentype = {"wght": 650.0}
+		var mm_variant := FontVariation.new()
+		mm_variant.base_font = WEB_MM_FONT
+		mm_variant.variation_opentype = {"wght": 600.0}
+		jp_variant.fallbacks = [mm_variant]
 		chosen_font = jp_variant
 	else:
 		# Match the original Stage 2 typography on Windows desktop.
@@ -157,6 +161,28 @@ func _setup_multilang_font() -> void:
 	var custom_theme := Theme.new()
 	custom_theme.default_font = chosen_font
 	theme = custom_theme
+
+# Browser-only readability adjustment. Desktop UI is intentionally unchanged.
+func _apply_web_readability(node: Node) -> void:
+	if not OS.has_feature("web"):
+		return
+	if node is Label:
+		var label := node as Label
+		var current_size: int = label.get_theme_font_size("font_size")
+		label.add_theme_font_size_override("font_size", current_size + 2)
+		var current_color: Color = label.get_theme_color("font_color")
+		if current_color.a > 0.0 and current_color != Color.WHITE:
+			label.add_theme_color_override("font_color", current_color.darkened(0.24))
+	elif node is RichTextLabel:
+		var rich := node as RichTextLabel
+		rich.add_theme_font_size_override("normal_font_size", rich.get_theme_font_size("normal_font_size") + 3)
+		var current_color: Color = rich.get_theme_color("default_color")
+		rich.add_theme_color_override("default_color", current_color.darkened(0.25))
+	elif node is Button:
+		var btn := node as Button
+		btn.add_theme_font_size_override("font_size", btn.get_theme_font_size("font_size") + 1)
+	for child in node.get_children():
+		_apply_web_readability(child)
 
 func _style(bg: String, edge: String = "cad7e8", radius: int = 10) -> StyleBoxFlat:
 	var st := StyleBoxFlat.new()
