@@ -301,7 +301,7 @@ func _show_intro_screen() -> void:
 	stack.add_child(languages)
 
 	var start := Button.new()
-	start.text = "▶  START GAME"
+	start.text = "START GAME"
 	start.custom_minimum_size = Vector2(260, 62)
 	start.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	start.add_theme_font_size_override("font_size", 22)
@@ -345,23 +345,20 @@ func _unhandled_input(event: InputEvent) -> void:
 
 # Browser-only readability adjustment. Desktop UI is intentionally unchanged.
 func _apply_web_readability(node: Node) -> void:
+	# Avoid increasing font sizes on Web: doing so forced unwanted line wraps
+	# in the narrow customer dialogue panel. Keep the desktop text geometry.
 	if not OS.has_feature("web"):
 		return
 	if node is Label:
 		var label := node as Label
-		var current_size: int = label.get_theme_font_size("font_size")
-		label.add_theme_font_size_override("font_size", current_size + 2)
 		var current_color: Color = label.get_theme_color("font_color")
 		if current_color.a > 0.0 and current_color != Color.WHITE:
-			label.add_theme_color_override("font_color", current_color.darkened(0.24))
+			label.add_theme_color_override("font_color", current_color.darkened(0.18))
 	elif node is RichTextLabel:
 		var rich := node as RichTextLabel
-		rich.add_theme_font_size_override("normal_font_size", rich.get_theme_font_size("normal_font_size") + 3)
 		var current_color: Color = rich.get_theme_color("default_color")
-		rich.add_theme_color_override("default_color", current_color.darkened(0.25))
-	elif node is Button:
-		var btn := node as Button
-		btn.add_theme_font_size_override("font_size", btn.get_theme_font_size("font_size") + 1)
+		if current_color.a > 0.0 and current_color != Color.WHITE:
+			rich.add_theme_color_override("default_color", current_color.darkened(0.18))
 	for child in node.get_children():
 		_apply_web_readability(child)
 
@@ -558,7 +555,7 @@ func _build_ui() -> void:
 	voice_controls.size_flags_horizontal = Control.SIZE_SHRINK_END
 	name_voice_row.add_child(voice_controls)
 
-	voice_replay_button = _button("↻", _replay_voice, 22)
+	voice_replay_button = _button("R", _replay_voice, 22)
 	voice_stop_button = _button("Ⅱ", _toggle_voice_pause, 22)
 	for btn in [voice_replay_button, voice_stop_button]:
 		btn.custom_minimum_size = Vector2(22, 22)
@@ -1088,14 +1085,14 @@ func _stop_voice() -> void:
 		voice_player.stop()
 		voice_player.stream_paused = false
 	if voice_stop_button != null:
-		voice_stop_button.text = "▶"
+		voice_stop_button.text = "Play"
 
 func _toggle_voice_pause() -> void:
 	if voice_player == null:
 		return
 	if voice_player.playing and not voice_player.stream_paused:
 		voice_player.stream_paused = true
-		voice_stop_button.text = "▶"
+		voice_stop_button.text = "Play"
 	elif voice_player.stream_paused:
 		voice_player.stream_paused = false
 		voice_stop_button.text = "Ⅱ"
@@ -1110,7 +1107,7 @@ func _replay_voice() -> void:
 
 func _on_voice_finished() -> void:
 	if voice_stop_button != null:
-		voice_stop_button.text = "▶"
+		voice_stop_button.text = "Play"
 	if voice_caption == request_label:
 		request_label.visible_characters = -1
 	elif voice_caption == feedback_label and voice_kind != "":
