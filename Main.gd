@@ -233,13 +233,25 @@ func _ready() -> void:
 	_update_lang_buttons_style()
 	_show_intro_screen()
 
-# No external TTF/OTF files are required. This matches Stage 2 desktop fonts.
-# Note: Web browser font availability is platform-dependent.
+# Use bundled fonts on Web; retain the preferred desktop font appearance.
+# These paths must exactly match the files under res://Font/.
+const WEB_JP_FONT: FontFile = preload("res://Font/NotoSansJP-VariableFont_wght.ttf")
+const WEB_MM_FONT: FontFile = preload("res://Font/NotoSansMyanmar-VariableFont_wdth,wght.ttf")
+
 func _setup_multilang_font() -> void:
-	var sys_font := SystemFont.new()
-	sys_font.font_names = PackedStringArray(["Yu Gothic UI", "Meiryo", "Noto Sans JP", "Myanmar Text", "Pyidaungsu", "Padauk", "Segoe UI"])
+	var chosen_font: Font
+	if OS.has_feature("web"):
+		var jp_variant := FontVariation.new()
+		jp_variant.base_font = WEB_JP_FONT
+		jp_variant.variation_opentype = {"wght": 400.0}
+		jp_variant.fallbacks = [WEB_MM_FONT]
+		chosen_font = jp_variant
+	else:
+		var sys_font := SystemFont.new()
+		sys_font.font_names = PackedStringArray(["Yu Gothic UI", "Meiryo", "Noto Sans JP", "Myanmar Text", "Pyidaungsu", "Padauk", "Segoe UI"])
+		chosen_font = sys_font
 	var custom_theme := Theme.new()
-	custom_theme.default_font = sys_font
+	custom_theme.default_font = chosen_font
 	theme = custom_theme
 
 func _show_intro_screen() -> void:
