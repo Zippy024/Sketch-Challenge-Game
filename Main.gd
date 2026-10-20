@@ -178,6 +178,8 @@ var start_button: Button
 var again_button_row: HBoxContainer
 var again_button: Button
 var stage_transition_running: bool = false
+var intro_overlay: ColorRect
+var game_has_started: bool = false
 var status_label: Label
 var status_panel: PanelContainer
 var ok_button: Button
@@ -204,16 +206,16 @@ var typing_token: int = 0
 const DIALOGUE_TEXTS: Dictionary = {
 	"jp": {
 		"speaker": "細川さん（女性）",
-		"request": "キッチンのリフォームを考えています。\n\n図面はあったけど、よくわかりません。\n\n必要なエリアをきれいに描いてもらえますか？\n\nリビングダイニングとキッチンの間取りを正確に知りたいです。",
-		"correct": "よくわかりました。\n\nありがとうございます。",
+		"request": "キッチンのリフォームを考えています。\n図面はあったけど、よくわかりません。\n必要なエリアをきれいに描いてもらえますか？\nリビングダイニングとキッチンの間取りを正確に知りたいです。",
+		"correct": "よくわかりました。\nありがとうございます。",
 		"wrong": "ちょっと違うような気がしますけど。",
 		"try_again": "Try Again",
 		"start": "Start (描き始める)"
 	},
 	"mm": {
 		"speaker": "ဟိုဆိုကာဝါစံ",
-		"request": "မီးဖိုချောင်ကို ပြန်လည်ပြင်ဆင်ဖို့ စဉ်းစားနေပါတယ်။\n\nပုံစံစာရွက် ရှိပေမယ့် သေချာနားမလည်လို့ပါ။\n\nလိုအပ်တဲ့ ဧရိယာလေးကို သပ်သပ်ရပ်ရပ် ဆွဲပေးနိုင်မလားရှင်။\n\nထမင်းစားခန်းနဲ့ မီးဖိုချောင်ရဲ့ အခန်းဖွဲ့စည်းပုံကို အတိအကျ သိချင်ပါတယ်။",
-		"correct": "သေချာနားလည်သွားပါပြီ။\n\nကျေးဇူးအများကြီးတင်ပါတယ်။",
+		"request": "မီးဖိုချောင်ကို ပြန်လည်ပြင်ဆင်ဖို့ စဉ်းစားနေပါတယ်။\nပုံစံစာရွက် ရှိပေမယ့် သေချာနားမလည်လို့ပါ။\nလိုအပ်တဲ့ ဧရိယာလေးကို သပ်သပ်ရပ်ရပ် ဆွဲပေးနိုင်မလားရှင်။\nထမင်းစားခန်းနဲ့ မီးဖိုချောင်ရဲ့ အခန်းဖွဲ့စည်းပုံကို အတိအကျ သိချင်ပါတယ်။",
+		"correct": "သေချာနားလည်သွားပါပြီ။\nကျေးဇူးအများကြီးတင်ပါတယ်။",
 		"wrong": "နည်းနည်းလေး လွဲနေသလိုပဲနော်、、、",
 		"try_again": "Try Again",
 		"start": "Start (စတင်ဆွဲမည်)"
@@ -229,29 +231,95 @@ func _ready() -> void:
 	voice_player.finished.connect(_on_voice_finished)
 	_build_ui()
 	_update_lang_buttons_style()
-	_run_conversation()
+	_show_intro_screen()
 
-# Shared font policy: keep Stage 2 desktop appearance; bundle fonts for browsers.
-const WEB_JP_FONT: FontFile = preload("res://Font/NotoSansJP-VariableFont_wght.ttf")
-const WEB_MM_FONT: FontFile = preload("res://Font/NotoSansMyanmar-VariableFont_wdth,wght.ttf")
-
+# No external TTF/OTF files are required. This matches Stage 2 desktop fonts.
+# Note: Web browser font availability is platform-dependent.
 func _setup_multilang_font() -> void:
-	var chosen_font: Font
-	if OS.has_feature("web"):
-		# Web browsers cannot reliably access Godot SystemFont.
-		var jp_variant := FontVariation.new()
-		jp_variant.base_font = WEB_JP_FONT
-		jp_variant.variation_opentype = {"wght": 400.0}
-		jp_variant.fallbacks = [WEB_MM_FONT]
-		chosen_font = jp_variant
-	else:
-		# Match the original Stage 2 typography on Windows desktop.
-		var sys_font := SystemFont.new()
-		sys_font.font_names = PackedStringArray(["Yu Gothic UI", "Meiryo", "Noto Sans JP", "Myanmar Text", "Pyidaungsu", "Padauk", "Segoe UI"])
-		chosen_font = sys_font
+	var sys_font := SystemFont.new()
+	sys_font.font_names = PackedStringArray(["Yu Gothic UI", "Meiryo", "Noto Sans JP", "Myanmar Text", "Pyidaungsu", "Padauk", "Segoe UI"])
 	var custom_theme := Theme.new()
-	custom_theme.default_font = chosen_font
+	custom_theme.default_font = sys_font
 	theme = custom_theme
+
+func _show_intro_screen() -> void:
+	# Keep the game UI constructed underneath the intro screen.
+	canvas.set_drawing_enabled(false)
+	request_label.visible = true
+	request_label.text = DIALOGUE_TEXTS[current_lang]["request"]
+	request_label.visible_characters = -1
+	intro_overlay = ColorRect.new()
+	intro_overlay.name = "GameIntroOverlay"
+	intro_overlay.color = Color("101d35")
+	intro_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(intro_overlay)
+	intro_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	intro_overlay.add_child(center)
+	var stack := VBoxContainer.new()
+	stack.custom_minimum_size = Vector2(420, 280)
+	stack.add_theme_constant_override("separation", 18)
+	center.add_child(stack)
+
+	var heading := Label.new()
+	heading.text = "SKETCH CHALLENGE"
+	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	heading.add_theme_font_size_override("font_size", 36)
+	heading.add_theme_color_override("font_color", Color.WHITE)
+	stack.add_child(heading)
+
+	var subtitle := Label.new()
+	subtitle.text = "Kitchen Layout Design Game"
+	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	subtitle.add_theme_font_size_override("font_size", 19)
+	subtitle.add_theme_color_override("font_color", Color("cbd5e1"))
+	stack.add_child(subtitle)
+
+	var languages := Label.new()
+	languages.text = "日本語  /  မြန်မာ"
+	languages.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	languages.add_theme_font_size_override("font_size", 17)
+	languages.add_theme_color_override("font_color", Color("bfdbfe"))
+	stack.add_child(languages)
+
+	var start := Button.new()
+	start.text = "▶  START GAME"
+	start.custom_minimum_size = Vector2(260, 62)
+	start.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	start.add_theme_font_size_override("font_size", 22)
+	start.add_theme_color_override("font_color", Color.WHITE)
+	start.add_theme_color_override("font_hover_color", Color.WHITE)
+	var normal := StyleBoxFlat.new()
+	normal.bg_color = Color("2563eb")
+	normal.set_corner_radius_all(12)
+	var hover := normal.duplicate() as StyleBoxFlat
+	hover.bg_color = Color("1d4ed8")
+	start.add_theme_stylebox_override("normal", normal)
+	start.add_theme_stylebox_override("hover", hover)
+	start.add_theme_stylebox_override("pressed", hover)
+	start.pressed.connect(_on_intro_start_pressed)
+	stack.add_child(start)
+
+	var hint := Label.new()
+	hint.text = "Press START GAME to enable customer audio."
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hint.add_theme_font_size_override("font_size", 13)
+	hint.add_theme_color_override("font_color", Color("94a3b8"))
+	stack.add_child(hint)
+
+func _on_intro_start_pressed() -> void:
+	if game_has_started:
+		return
+	game_has_started = true
+	# Direct button interaction gives the browser a chance to unlock audio.
+	if intro_overlay != null:
+		intro_overlay.hide()
+	_run_conversation()
+	if intro_overlay != null:
+		intro_overlay.queue_free()
+		intro_overlay = null
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
@@ -920,33 +988,34 @@ func _play_voice(kind: String) -> void:
 	# Small edits to the MP3 may require adjustments to these times.
 	if current_lang == "jp" and kind == "talk":
 		voice_segment_texts = [
-			"キッチンのリフォームを考えています。\n\n",
-			"図面はあったけど、よくわかりません。\n\n",
-			"必要なエリアをきれいに描いてもらえますか？\n\n",
+			"キッチンのリフォームを考えています。\n",
+			"図面はあったけど、よくわかりません。\n",
+			"必要なエリアをきれいに描いてもらえますか？\n",
 			"リビングダイニングとキッチンの間取りを正確に知りたいです。"
 		]
 		voice_segment_times = [0.0, 3.29, 6.79, 10.50, stream.get_length()]
 	elif current_lang == "jp" and kind == "correct":
-		voice_segment_texts = ["よくわかりました。\n\n", "ありがとうございます。"]
+		voice_segment_texts = ["よくわかりました。\n", "ありがとうございます。"]
 		voice_segment_times = [0.0, 2.21, stream.get_length()]
 	elif current_lang == "mm" and kind == "talk":
 		voice_segment_texts = [
-			"မီးဖိုချောင်ကို ပြန်လည်ပြင်ဆင်ဖို့ စဉ်းစားနေပါတယ်။\n\n",
-			"ပုံစံစာရွက် ရှိပေမယ့် သေချာနားမလည်လို့ပါ။\n\n",
-			"လိုအပ်တဲ့ ဧရိယာလေးကို သပ်သပ်ရပ်ရပ် ဆွဲပေးနိုင်မလားရှင်။\n\n",
+			"မီးဖိုချောင်ကို ပြန်လည်ပြင်ဆင်ဖို့ စဉ်းစားနေပါတယ်။\n",
+			"ပုံစံစာရွက် ရှိပေမယ့် သေချာနားမလည်လို့ပါ။\n",
+			"လိုအပ်တဲ့ ဧရိယာလေးကို သပ်သပ်ရပ်ရပ် ဆွဲပေးနိုင်မလားရှင်။\n",
 			"ထမင်းစားခန်းနဲ့ မီးဖိုချောင်ရဲ့ အခန်းဖွဲ့စည်းပုံကို အတိအကျ သိချင်ပါတယ်။"
 		]
 		voice_segment_times = [0.0, 4.3, 8.1, 12.8, stream.get_length()]
 	elif current_lang == "mm" and kind == "correct":
-		voice_segment_texts = ["သေချာနားလည်သွားပါပြီ။\n\n", "ကျေးဇူးအများကြီးတင်ပါတယ်။"]
+		voice_segment_texts = ["သေချာနားလည်သွားပါပြီ။\n", "ကျေးဇူးအများကြီးတင်ပါတယ်။"]
 		voice_segment_times = [0.0, 2.7, stream.get_length()]
 	else:
 		voice_segment_texts = [str(DIALOGUE_TEXTS[current_lang]["request" if kind == "talk" else kind])]
 		voice_segment_times = [0.0, stream.get_length()]
 	if target is RichTextLabel:
-		request_label.visible_characters = 0
+		# On Web always show readable dialogue, even when audio cannot play.
+		request_label.visible_characters = -1 if OS.has_feature("web") else 0
 	else:
-		feedback_label.text = ""
+		feedback_label.text = "" if not OS.has_feature("web") else DIALOGUE_TEXTS[current_lang][kind]
 	voice_player.play()
 	voice_stop_button.text = "Ⅱ"
 
@@ -967,6 +1036,9 @@ func _process(_delta: float) -> void:
 			break
 		else:
 			break
+	if OS.has_feature("web"):
+		# Never hide the customer's text behind browser audio restrictions.
+		return
 	if voice_caption == request_label:
 		# RichTextLabel text has no markup for the Japanese spoken version.
 		var visible: int = displayed.length()
