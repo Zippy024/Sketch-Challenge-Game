@@ -1012,10 +1012,10 @@ func _play_voice(kind: String) -> void:
 		voice_segment_texts = [str(DIALOGUE_TEXTS[current_lang]["request" if kind == "talk" else kind])]
 		voice_segment_times = [0.0, stream.get_length()]
 	if target is RichTextLabel:
-		# On Web always show readable dialogue, even when audio cannot play.
-		request_label.visible_characters = -1 if OS.has_feature("web") else 0
+		# Reveal characters in sync with the voice on Desktop and Web.
+		request_label.visible_characters = 0
 	else:
-		feedback_label.text = "" if not OS.has_feature("web") else DIALOGUE_TEXTS[current_lang][kind]
+		feedback_label.text = ""
 	voice_player.play()
 	voice_stop_button.text = "Ⅱ"
 
@@ -1036,12 +1036,9 @@ func _process(_delta: float) -> void:
 			break
 		else:
 			break
-	if OS.has_feature("web"):
-		# Never hide the customer's text behind browser audio restrictions.
-		return
 	if voice_caption == request_label:
 		# RichTextLabel text has no markup for the Japanese spoken version.
-		var visible: int = displayed.length()
+		var visible: int = mini(displayed.length(), request_label.get_total_character_count())
 		if visible != voice_last_visible:
 			request_label.visible_characters = visible
 			voice_last_visible = visible
