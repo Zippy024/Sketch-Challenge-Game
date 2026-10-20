@@ -164,23 +164,20 @@ func _setup_multilang_font() -> void:
 
 # Browser-only readability adjustment. Desktop UI is intentionally unchanged.
 func _apply_web_readability(node: Node) -> void:
+	# Avoid increasing font sizes on Web: doing so forced unwanted line wraps
+	# in the narrow customer dialogue panel. Keep the desktop text geometry.
 	if not OS.has_feature("web"):
 		return
 	if node is Label:
 		var label := node as Label
-		var current_size: int = label.get_theme_font_size("font_size")
-		label.add_theme_font_size_override("font_size", current_size + 2)
 		var current_color: Color = label.get_theme_color("font_color")
 		if current_color.a > 0.0 and current_color != Color.WHITE:
-			label.add_theme_color_override("font_color", current_color.darkened(0.24))
+			label.add_theme_color_override("font_color", current_color.darkened(0.18))
 	elif node is RichTextLabel:
 		var rich := node as RichTextLabel
-		rich.add_theme_font_size_override("normal_font_size", rich.get_theme_font_size("normal_font_size") + 3)
 		var current_color: Color = rich.get_theme_color("default_color")
-		rich.add_theme_color_override("default_color", current_color.darkened(0.25))
-	elif node is Button:
-		var btn := node as Button
-		btn.add_theme_font_size_override("font_size", btn.get_theme_font_size("font_size") + 1)
+		if current_color.a > 0.0 and current_color != Color.WHITE:
+			rich.add_theme_color_override("default_color", current_color.darkened(0.18))
 	for child in node.get_children():
 		_apply_web_readability(child)
 
