@@ -1,0 +1,17 @@
+Kitchen Layout — updated Godot source project
+
+Changes:
+1. Main.gd: Stage 1 replay/play/pause buttons are no longer added to the UI. Audio and typing continue automatically after START GAME.
+2. Main.gd: Stage 1 reference drawing fades in when the customer talk MP3 finishes. If the MP3 is missing or cannot load, the image is revealed without waiting.
+3. Stage2.gd: Replay/play/pause buttons are no longer added to the UI. Stage 2 voice and typing logic remain.
+4. project.godot: window/stretch/scale_mode changed from integer to fractional to avoid coarse integer scaling on browser windows.
+5. Original Japanese and Myanmar TTF fonts, MP3 audio and drawing scripts are retained.
+
+IMPORTANT: This source package has NOT been tested in a running Godot editor or web browser in this environment. Back up the original project and test both scenes locally before deploying. The font blur issue may also require browser scaling and export/renderer investigation.
+
+GitHub:
+- Keep your EXISTING .github/workflows deployment workflow from your repository (it was not present in the uploaded ZIP).
+- Replace source files with these files; do NOT upload the .godot cache or old Web Game exported files.
+- Trigger your existing Actions workflow after checking that Godot opens the project successfully.
+- Test in browser with Ctrl+Shift+R and browser zoom 100%.
+- Do not delete the current working repository until the updated deployment is verified.

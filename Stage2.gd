@@ -138,48 +138,16 @@ func _ready() -> void:
 	_play_entrance_fade()
 
 # Shared font policy: keep Stage 2 desktop appearance; bundle fonts for browsers.
-const WEB_JP_FONT: FontFile = preload("res://Font/NotoSansJP-VariableFont_wght.ttf")
-const WEB_MM_FONT: FontFile = preload("res://Font/NotoSansMyanmar-VariableFont_wdth,wght.ttf")
+# Reference-project method: one bundled bilingual Theme for both desktop and Web.
+# This avoids SystemFont dependency and provides Myanmar glyph fallback.
+const BILINGUAL_THEME: Theme = preload("res://WebBilingualTheme.tres")
 
 func _setup_multilang_font() -> void:
-	var chosen_font: Font
-	if OS.has_feature("web"):
-		# Web browsers cannot reliably access Godot SystemFont.
-		var jp_variant := FontVariation.new()
-		jp_variant.base_font = WEB_JP_FONT
-		jp_variant.variation_opentype = {"wght": 650.0}
-		var mm_variant := FontVariation.new()
-		mm_variant.base_font = WEB_MM_FONT
-		mm_variant.variation_opentype = {"wght": 600.0}
-		jp_variant.fallbacks = [mm_variant]
-		chosen_font = jp_variant
-	else:
-		# Match the original Stage 2 typography on Windows desktop.
-		var sys_font := SystemFont.new()
-		sys_font.font_names = PackedStringArray(["Yu Gothic UI", "Meiryo", "Noto Sans JP", "Myanmar Text", "Pyidaungsu", "Padauk", "Segoe UI"])
-		chosen_font = sys_font
-	var custom_theme := Theme.new()
-	custom_theme.default_font = chosen_font
-	theme = custom_theme
+	theme = BILINGUAL_THEME
 
-# Browser-only readability adjustment. Desktop UI is intentionally unchanged.
-func _apply_web_readability(node: Node) -> void:
-	# Avoid increasing font sizes on Web: doing so forced unwanted line wraps
-	# in the narrow customer dialogue panel. Keep the desktop text geometry.
-	if not OS.has_feature("web"):
-		return
-	if node is Label:
-		var label := node as Label
-		var current_color: Color = label.get_theme_color("font_color")
-		if current_color.a > 0.0 and current_color != Color.WHITE:
-			label.add_theme_color_override("font_color", current_color.darkened(0.18))
-	elif node is RichTextLabel:
-		var rich := node as RichTextLabel
-		var current_color: Color = rich.get_theme_color("default_color")
-		if current_color.a > 0.0 and current_color != Color.WHITE:
-			rich.add_theme_color_override("default_color", current_color.darkened(0.18))
-	for child in node.get_children():
-		_apply_web_readability(child)
+func _apply_web_readability(_node: Node) -> void:
+	# Preserve original UI colors on desktop and web.
+	pass
 
 func _style(bg: String, edge: String = "cad7e8", radius: int = 10) -> StyleBoxFlat:
 	var st := StyleBoxFlat.new()

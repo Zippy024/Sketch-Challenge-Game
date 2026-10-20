@@ -27,7 +27,7 @@ window/stretch/aspect="expand"
 
 [gui]
 
-theme/custom_font="uid://5kcr4v4okh64"
+theme/custom="res://WebBilingualTheme.tres"
 
 [rendering]
 
