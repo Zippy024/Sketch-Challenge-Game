@@ -223,7 +223,9 @@ const DIALOGUE_TEXTS: Dictionary = {
 }
 
 func _ready() -> void:
-	get_viewport().msaa_2d = Viewport.MSAA_4X
+	# GLES3/Web does not support 2D MSAA. Keep it disabled for crisp, compatible UI.
+	if OS.has_feature("web"):
+		get_viewport().msaa_2d = Viewport.MSAA_DISABLED
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_setup_multilang_font()
 	voice_player = AudioStreamPlayer.new()
