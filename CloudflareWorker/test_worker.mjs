@@ -7,15 +7,15 @@ const endpoint='https://sketch-challenge-ai.wyan244202.workers.dev/check';
 const params={method:'POST',headers:{'Content-Type':'application/json','Origin':'https://zippy024.github.io'},body:JSON.stringify({language:'mm',answer:'PS is the vertical space for pipes'})};
 const original=globalThis.fetch;
 const mock=(f)=>globalThis.fetch=async (...args)=>f(...args);
-const googleAnswer=(correct)=>new Response(JSON.stringify({candidates:[{content:{parts:[{text:JSON.stringify({correct})}]}}]}),{status:200});
+const googleAnswer=(identity,vertical_plumbing,renovation_restriction)=>new Response(JSON.stringify({candidates:[{content:{parts:[{text:JSON.stringify({identity,vertical_plumbing,renovation_restriction})}]}}]}),{status:200});
 const urls=[];
 try {
-  mock(async (u)=>{urls.push(u);return googleAnswer(true)});
+  mock(async (u)=>{urls.push(u);return googleAnswer(true,true,true)});
   let r=await worker.fetch(new Request(endpoint,params),{GEMINI_API_KEY:'fake'});
   let d=await r.json();
   assert.equal(d.correct,true);assert.equal(d.model,'gemini-3.8-flash');assert.equal(urls.length,1);
   urls.length=0;
-  mock(async (u)=>{urls.push(u);return urls.length===1 ? new Response('quota',{status:429}): googleAnswer(false)});
+  mock(async (u)=>{urls.push(u);return urls.length===1 ? new Response('quota',{status:429}): googleAnswer(true,true,false)});
   r=await worker.fetch(new Request(endpoint,params),{GEMINI_API_KEY:'fake'});d=await r.json();
   assert.equal(d.correct,false);assert.equal(d.model,'gemini-3.5-flash-lite');assert.equal(urls.length,2);
   urls.length=0;
@@ -28,5 +28,21 @@ try {
   assert.equal(r.status,503);assert.equal(urls.length,1);
   const bad=await worker.fetch(new Request(endpoint,{...params,headers:{'Content-Type':'application/json','Origin':'https://evil.example'}}),{GEMINI_API_KEY:'fake'});
   assert.equal(bad.status,403);
-  console.log('V14 WORKER TESTS PASS (primary, backup, all down, auth and CORS)');
+  // Short/incomplete answers are NEVER automatically correct.
+  urls.length=0;
+  mock(async () => googleAnswer(true,true,false));
+  r=await worker.fetch(new Request(endpoint,params),{GEMINI_API_KEY:'fake'});
+  d=await r.json();
+  assert.equal(d.correct,false);
+  urls.length=0;
+  mock(async () => googleAnswer(true,false,true));
+  r=await worker.fetch(new Request(endpoint,params),{GEMINI_API_KEY:'fake'});
+  d=await r.json();
+  assert.equal(d.correct,false);
+  urls.length=0;
+  mock(async () => googleAnswer(false,true,true));
+  r=await worker.fetch(new Request(endpoint,params),{GEMINI_API_KEY:'fake'});
+  d=await r.json();
+  assert.equal(d.correct,false);
+  console.log('V15 WORKER TESTS PASS (3-concept strictness, primary, backup, outage, auth and CORS)');
 } finally {globalThis.fetch=original;}

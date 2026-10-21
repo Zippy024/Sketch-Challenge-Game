@@ -17,10 +17,9 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 config/name="Sketch Challenge | Kitchen Layout Game"
 run/main_scene="res://GameMenu.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
-config/icon="res://Branding/SketchChallengeLogo.png"
-boot_splash/show_image=true
-boot_splash/image="res://Branding/SketchChallengeSplash.png"
 boot_splash/bg_color=Color(0.973, 0.957, 0.914, 1)
+boot_splash/image="res://Branding/SketchChallengeSplash.png"
+config/icon="res://Branding/SketchChallengeLogo.png"
 
 [display]
 

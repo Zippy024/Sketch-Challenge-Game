@@ -844,25 +844,60 @@ func _has_any_keyword(text: String, options: Array[String]) -> bool:
 	return false
 
 func _check_demo_answer() -> void:
-	# V14 offline / local fallback. Keyword and pattern check is APPROXIMATE,
-	# not equivalent to Gemini multilingual semantic evaluation.
+	# V15 Local Fallback: CONSERVATIVE keyword approximation, not semantic AI.
+	# THREE PS concepts must ALL be present (same standard as the Gemini grader).
+	# It is safer to request another attempt than to mark a vague answer correct.
 	var answer: String = answer_input.text.strip_edges()
 	if answer.is_empty():
 		_set_progress_state("invalid", str(QUESTIONS[current_lang]["empty"]))
 		return
 	last_evaluation_source = "local"
 	var s: String = answer.to_lower().replace("　", " ").replace("\n", " ")
-	# Explicit wrong meanings must never be credited simply for saying "pipe".
-	var wrong: Array[String] = ["pipe shift", "pipe-shift", "pipe shifts", "pipe size", "パイプシフト", "配管の移動"]
-	var negative: bool = _has_any_keyword(s, wrong)
-	# Directly naming what PS stands for is acceptable for this question.
-	var precise: Array[String] = ["pipe shaft", "pipe-shaft", "pipeshaft", "plumbing shaft", "piping shaft", "service shaft", "パイプシャフト", "配管シャフト", "配管スペース", "ပိုက်ရှပ်", "ပိုက်ခန်း", "ရေပိုက်ခန်း"]
-	var has_name: bool = _has_any_keyword(s, precise)
-	# Alternate wording: pipes/services + a vertical space/shaft/location.
-	var pipe_words: Array[String] = ["pipe", "plumb", "drain", "water supply", "配管", "給排水", "給水", "排水", "パイプ", "ရေပိုက်", "ရေဆင်းပိုက်", "ရေဆိုးပိုက်", "ပိုက်တွေ", "ပိုက်များ", "ပိုက်လိုင်း"]
-	var place_words: Array[String] = ["shaft", "vertical", "duct", "space", "pass through", "run through", "service cavity", "通す", "通る", "シャフト", "縦", "竪", "空間", "場所", "スペース", "ဒေါင်လိုက်", "နေရာ", "အခန်း", "ဖြတ်သန်း", "လမ်းကြောင်း", "သွားတဲ့", "သွားသော"]
-	var concept_matches: bool = _has_any_keyword(s, pipe_words) and _has_any_keyword(s, place_words)
-	_show_check_result(not negative and (has_name or concept_matches))
+
+	# 1) Dedicated pipe shaft / service SPACE in a building.
+	var space_words: Array[String] = [
+		"shaft", "space", "duct", "service void", "service chase", "riser", "cavity",
+		"シャフト", "スペース", "空間", "縦穴", "竪穴", "場所", "配管室",
+		"နေရာ", "အခန်း", "ပိုက်ခန်း", "ပိုက်ရှပ်", "ပိုက်လမ်းကြောင်း"
+	]
+	var identity_ok: bool = _has_any_keyword(s, space_words)
+
+	# 2) Pipe services running through a VERTICAL space.
+	var pipe_words: Array[String] = [
+		"pipe", "plumb", "water supply", "drain", "water line", "wastewater",
+		"配管", "給水", "排水", "パイプ", "水道管", "水管",
+		"ရေပိုက်", "ရေပေး", "ရေဆင်း", "ရေထုတ်", "ရေဆိုး", "ပိုက်လိုင်း", "ပိုက်များ", "ပိုက်တွေ", "ပိုက်"
+	]
+	var vertical_words: Array[String] = [
+		"vertical", "vertically", "shaft", "riser", "up and down", "upright",
+		"縦", "竪", "垂直", "上下", "シャフト",
+		"ဒေါင်လိုက်", "အပေါ်အောက်", "အထက်အောက်"
+	]
+	var purpose_ok: bool = _has_any_keyword(s, pipe_words) and _has_any_keyword(s, vertical_words)
+
+	# 3) The PS cannot easily be moved/relocated during renovation.
+	var movement_words: Array[String] = [
+		"mov", "relocat", "reposition", "shift the shaft", "shift the ps", "change its position", "fixed",
+		"移動", "移設", "動か", "移す", "変更", "固定",
+		"ရွှေ့", "ပြောင်း", "နေရာပြောင်း", "တည်နေရာ"
+	]
+	var restriction_words: Array[String] = [
+		"cannot", "can't", "can not", "not easy", "not easily", "difficult", "hard to", "impossible", "fixed", "not movable", "non-movable", "not permitted",
+		"できません", "できない", "難しい", "困難", "不可", "簡単ではない", "簡単に動かせない", "固定", "容易ではない", "不可能",
+		"မရ", "မနိုင်", "မလွယ်", "ခက်", "အလွယ်တကူ မ", "အလွယ်တကူမ", "အလွယ်တကူ ရွှေ့၍မရ", "မဖြစ်နိုင်"
+	]
+	var relocation_ok: bool = _has_any_keyword(s, movement_words) and _has_any_keyword(s, restriction_words)
+
+	# Explicitly incorrect definitions must not be accepted.
+	var wrong_definition: Array[String] = ["pipe shift", "pipe-shift", "pipe size", "パイプシフト"]
+	var wrong: bool = _has_any_keyword(s, wrong_definition)
+	# Reject obviously easy-to-move claims unless a genuine negation is also stated.
+	var easy_move: Array[String] = ["easy to move", "easy to relocate", "can easily move", "can easily be moved", "can be easily moved", "簡単に動かせます", "容易に移動できます", "ရွှေ့လို့ရပါတယ်", "ရွှေ့လို့ရတယ်"]
+	if _has_any_keyword(s, easy_move) and not _has_any_keyword(s, restriction_words):
+		wrong = true
+
+	var correct: bool = identity_ok and purpose_ok and relocation_ok and not wrong
+	_show_check_result(correct)
 	status_label.text = "LOCAL CHECK · APPROXIMATE"
 
 # ---------------- Stage 2 Voice & Subtitle Animation ----------------

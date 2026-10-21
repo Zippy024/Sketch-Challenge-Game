@@ -1,8 +1,8 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://cmxxwhbguwnl"]
 
-[ext_resource type="Script" path="res://GameMenu.gd" id="1_menu"]
+[ext_resource type="Script" uid="uid://ca208qtrh24cn" path="res://GameMenu.gd" id="1_menu"]
 
-[node name="GameMenu" type="Control"]
+[node name="GameMenu" type="Control" unique_id=1686627203]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0

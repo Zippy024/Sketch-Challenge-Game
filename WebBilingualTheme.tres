@@ -1,11 +1,11 @@
-[gd_resource type="Theme" load_steps=4 format=3]
+[gd_resource type="Theme" format=3 uid="uid://rt7e2qvwlkef"]
 
-[ext_resource type="FontFile" path="res://Font/NotoSansCJKjp-Regular.otf" id="1_jp"]
-[ext_resource type="FontFile" path="res://Font/NotoSansMyanmar.ttf" id="2_my"]
+[ext_resource type="FontFile" uid="uid://b88gj4f55f8f6" path="res://Font/NotoSansCJKjp-Regular.otf" id="1_jp"]
+[ext_resource type="FontFile" uid="uid://jv4deyu5ukh8" path="res://Font/NotoSansMyanmar.ttf" id="2_my"]
 
 [sub_resource type="FontVariation" id="FontVariation_bilingual"]
-base_font = ExtResource("1_jp")
 fallbacks = Array[Font]([ExtResource("2_my")])
+base_font = ExtResource("1_jp")
 
 [resource]
 default_font = SubResource("FontVariation_bilingual")
