@@ -1,0 +1,7 @@
+name = "sketch-challenge-ai"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+# GEMINI_API_KEY is a Secret added via Cloudflare dashboard.
+# Do not put API keys or secrets in this file.
+[vars]
+GEMINI_MODEL = "gemini-3.5-flash-lite"

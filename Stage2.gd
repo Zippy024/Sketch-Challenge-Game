@@ -1,6 +1,7 @@
 extends Control
 
 const Progress = preload("res://GameProgress.gd")
+const AIConfig = preload("res://AIConfig.gd")
 
 const QUESTIONS := {
 	"jp": {
@@ -45,6 +46,37 @@ class PlanViewer extends Control:
 	var last_pos: Vector2
 	var allow_open := true
 
+	# Stage 2: PS points from the 1695 × 928 reference image.
+	# Normalized coordinates keep highlights aligned during zoom and pan.
+	const PS_POINTS: Array[Vector2] = [
+		Vector2(862.5 / 1695.0, 431.5 / 928.0),
+		Vector2(838.5 / 1695.0, 720.0 / 928.0),
+		Vector2(1174.0 / 1695.0, 678.5 / 928.0)
+	]
+	const PS_PULSE_TIME: float = 2.5
+	const PS_STAGGER: float = 0.32
+	var _ps_hint_elapsed: float = 0.0
+	var _ps_hint_active: bool = false
+
+	func _ready() -> void:
+		play_ps_hint()
+
+	# The PS rings remain printed on the image after the short overlay motion.
+	func play_ps_hint() -> void:
+		_ps_hint_elapsed = 0.0
+		_ps_hint_active = true
+		set_process(true)
+		queue_redraw()
+
+	func _process(delta: float) -> void:
+		if not _ps_hint_active:
+			return
+		_ps_hint_elapsed += delta
+		if _ps_hint_elapsed >= PS_PULSE_TIME + PS_STAGGER * float(PS_POINTS.size() - 1):
+			_ps_hint_active = false
+			set_process(false)
+		queue_redraw()
+
 	func _init(tex: Texture2D, open_on_click: bool = true) -> void:
 		plan_texture = tex
 		allow_open = open_on_click
@@ -64,6 +96,23 @@ class PlanViewer extends Control:
 		var drawn_size := img_size * scale_factor
 		var pos := (size - drawn_size) * 0.5 + offset
 		draw_texture_rect(plan_texture, Rect2(pos, drawn_size), false)
+		# Animated rings are drawn in the same coordinate space as the texture.
+		# The background already contains the stationary red PS circles.
+		if _ps_hint_active:
+			for i in range(PS_POINTS.size()):
+				var pulse_time: float = _ps_hint_elapsed - float(i) * PS_STAGGER
+				if pulse_time < 0.0 or pulse_time >= PS_PULSE_TIME:
+					continue
+				var cycle: float = fposmod(pulse_time, 0.82) / 0.82
+				var fade: float = 1.0 - pulse_time / PS_PULSE_TIME
+				var alpha: float = maxf(0.0, sin(cycle * PI)) * fade
+				var uv: Vector2 = PS_POINTS[i]
+				var center: Vector2 = pos + Vector2(uv.x * drawn_size.x, uv.y * drawn_size.y)
+				var base_radius: float = maxf(8.0, 27.0 * scale_factor)
+				var pulse_radius: float = base_radius * (1.08 + cycle * 0.82)
+				var red: Color = Color(0.96, 0.10, 0.08, 0.85 * alpha)
+				draw_circle(center, pulse_radius * 0.68, Color(1.0, 0.14, 0.10, 0.09 * alpha))
+				draw_arc(center, pulse_radius, 0.0, TAU, 48, red, 2.5, true)
 
 	func _gui_input(event: InputEvent) -> void:
 		if event is InputEventMouseButton:
@@ -99,6 +148,9 @@ class PlanViewer extends Control:
 
 var current_lang := "jp"
 var last_eval_state := "none" # "none", "good", "needs"
+var last_evaluation_source: String = "offline"
+var _ai_http: HTTPRequest
+var _ai_busy: bool = false
 var name_label: Label
 var bubble: PanelContainer
 var question_label: Label
@@ -131,6 +183,10 @@ var fallback_duration: float = 1.8
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_ai_http = HTTPRequest.new()
+	_ai_http.timeout = 22.0
+	add_child(_ai_http)
+	_ai_http.request_completed.connect(_on_ai_request_completed)
 	_setup_multilang_font()
 
 	voice_player = AudioStreamPlayer.new()
@@ -383,7 +439,7 @@ void fragment() {
 	image_frame.add_theme_stylebox_override("panel", _style("ffffff"))
 	left.add_child(image_frame)
 
-	var texture_path := "res://reference_sketch.png"
+	var texture_path := "res://reference_ps_stage2.png"
 	var loaded_tex: Texture2D = null
 	if ResourceLoader.exists(texture_path):
 		loaded_tex = load(texture_path) as Texture2D
@@ -442,7 +498,7 @@ void fragment() {
 	actions.add_child(submit_button)
 	reset_button = _btn("Clear", 90)
 	actions.add_child(reset_button)
-	submit_button.pressed.connect(_check_demo_answer)
+	submit_button.pressed.connect(_check_ai_or_demo_answer)
 	reset_button.pressed.connect(_reset_answer)
 
 	var result_panel := PanelContainer.new()
@@ -476,6 +532,7 @@ func _update_lang_buttons_style() -> void:
 		jp_button.add_theme_color_override("font_color", Color("1e293b"))
 
 func _change_language(lang: String) -> void:
+	_cancel_ai_request()
 	Progress.set_language(lang)
 	_stop_voice()
 	current_lang = lang
@@ -486,20 +543,20 @@ func _change_language(lang: String) -> void:
 	answer_input.placeholder_text = str(d["answer_hint"])
 	submit_button.text = str(d["check"])
 	reset_button.text = str(d["reset"])
-	status_label.text = str(d["offline"])
+	status_label.text = "AI CHECK (Gemini)" if _is_ai_configured() else str(d["offline"])
 
 	if last_eval_state == "good":
 		question_label.visible = false
 		feedback_divider.visible = false
 		feedback_label.visible = true
-		result_label.text = str(d["demo"]) + str(d["good"])
+		result_label.text = (str(d["demo"]) if last_evaluation_source == "offline" else "") + str(d["good"])
 		_play_voice("good")
 	elif last_eval_state == "needs":
 		question_label.visible = true
 		question_label.text = str(d["question"])
 		feedback_divider.visible = true
 		feedback_label.visible = true
-		result_label.text = str(d["demo"]) + str(d["needs"])
+		result_label.text = (str(d["demo"]) if last_evaluation_source == "offline" else "") + str(d["needs"])
 		_play_voice("needs")
 	else:
 		question_label.visible = true
@@ -509,6 +566,7 @@ func _change_language(lang: String) -> void:
 		_play_voice("question")
 
 func _reset_answer() -> void:
+	_cancel_ai_request()
 	_stop_voice()
 	last_eval_state = "none"
 	answer_input.clear()
@@ -520,13 +578,98 @@ func _reset_answer() -> void:
 	bubble.add_theme_stylebox_override("panel", _style("ffffff", "d6e2ef"))
 	answer_input.grab_focus()
 
-func _check_demo_answer() -> void:
-	var answer := answer_input.text.strip_edges()
+# Stage 2 Gemini AI: HTTP requests go only to our Cloudflare Worker; no API key in game.
+func _is_ai_configured() -> bool:
+	return AIConfig.API_URL.begins_with("https://") and not AIConfig.API_URL.contains("REPLACE")
+
+func _cancel_ai_request() -> void:
+	if _ai_busy:
+		_ai_busy = false
+		if is_instance_valid(_ai_http):
+			_ai_http.cancel_request()
+	if is_instance_valid(submit_button):
+		submit_button.disabled = false
+
+func _check_ai_or_demo_answer() -> void:
+	if _ai_busy:
+		return
+	var answer: String = answer_input.text.strip_edges()
 	var d: Dictionary = QUESTIONS[current_lang]
 	if answer.is_empty():
 		result_label.text = str(d["empty"])
 		return
-	var normalized := answer.to_lower()
+	if answer.length() > 1200:
+		result_label.text = "回答が長すぎます。" if current_lang == "jp" else "အဖြေစာသား အရမ်းရှည်နေပါတယ်။"
+		return
+	if not _is_ai_configured():
+		_check_demo_answer()
+		return
+
+	_ai_busy = true
+	submit_button.disabled = true
+	result_label.text = "AIが回答を確認しています…" if current_lang == "jp" else "AI က အဖြေစစ်နေပါတယ်…"
+	status_label.text = "AI CHECK · WAITING"
+	var payload: String = JSON.stringify({"language": current_lang, "answer": answer})
+	var headers := PackedStringArray(["Content-Type: application/json"])
+	var err: Error = _ai_http.request(AIConfig.API_URL, headers, HTTPClient.METHOD_POST, payload)
+	if err != OK:
+		_ai_busy = false
+		submit_button.disabled = false
+		_show_ai_error()
+
+func _on_ai_request_completed(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
+	if not _ai_busy:
+		return
+	_ai_busy = false
+	submit_button.disabled = false
+	var response_data: Variant = JSON.parse_string(body.get_string_from_utf8())
+	if result != HTTPRequest.RESULT_SUCCESS or response_code != 200 or not (response_data is Dictionary):
+		_show_ai_error()
+		return
+	var verdict: Variant = response_data.get("correct", null)
+	if typeof(verdict) != TYPE_BOOL:
+		_show_ai_error()
+		return
+	last_evaluation_source = "ai"
+	_show_check_result(bool(verdict))
+	status_label.text = "AI CHECK · GEMINI"
+
+func _show_ai_error() -> void:
+	# Don't mark an answer wrong when the server/network failed.
+	status_label.text = "AI CHECK · CONNECTION ERROR"
+	result_label.text = "AIに接続できません。少し待って再試行してください。" if current_lang == "jp" else "AI နဲ့ မချိတ်ဆက်နိုင်သေးပါ။ ခဏနေပြီး ထပ်စမ်းပါ။"
+
+func _show_check_result(correct: bool) -> void:
+	var d: Dictionary = QUESTIONS[current_lang]
+	if correct:
+		last_eval_state = "good"
+		question_label.visible = false
+		feedback_divider.visible = false
+		feedback_label.visible = true
+		bubble.add_theme_stylebox_override("panel", _style("dcfce7", "4ade80"))
+		feedback_label.add_theme_color_override("font_color", Color("14532d"))
+		result_label.text = (str(d["demo"]) if last_evaluation_source == "offline" else "") + str(d["good"])
+		_play_voice("good")
+	else:
+		last_eval_state = "needs"
+		question_label.visible = true
+		question_label.text = str(d["question"])
+		feedback_divider.visible = true
+		feedback_label.visible = true
+		bubble.add_theme_stylebox_override("panel", _style("dbeafe", "f87171"))
+		feedback_divider.color = Color("f87171")
+		feedback_label.add_theme_color_override("font_color", Color("b91c1c"))
+		result_label.text = (str(d["demo"]) if last_evaluation_source == "offline" else "") + str(d["needs"])
+		_play_voice("needs")
+
+func _check_demo_answer() -> void:
+	# Safe offline DEMO mode when no Worker URL has been configured yet.
+	var answer: String = answer_input.text.strip_edges()
+	if answer.is_empty():
+		result_label.text = str(QUESTIONS[current_lang]["empty"])
+		return
+	last_evaluation_source = "offline"
+	var normalized: String = answer.to_lower()
 	var names := ["pipe shaft", "pipe-shaft", "パイプシャフト", "配管スペース", "ပိုက်လိုင်း", "ပိုက်တွေ", "ပိုက်များ", "ပိုက်"]
 	var pipes := ["pipe", "plumb", "給排水", "配管", "給水", "排水", "ရေပိုက်", "ရေဆိုးပိုက်", "ပိုက်"]
 	var matched_name := false
@@ -542,26 +685,7 @@ func _check_demo_answer() -> void:
 	var has_placement := normalized.contains("space") or normalized.contains("shaft") or normalized.contains("スペース") or normalized.contains("通す") or normalized.contains("場所") or normalized.contains("နေရာ") or normalized.contains("ဖြတ်သန်း") or normalized.contains("ထား")
 	var looks_relevant := matched_name and matched_pipe and has_placement
 
-	if looks_relevant:
-		last_eval_state = "good"
-		question_label.visible = false
-		feedback_divider.visible = false
-		feedback_label.visible = true
-		bubble.add_theme_stylebox_override("panel", _style("dcfce7", "4ade80"))
-		feedback_label.add_theme_color_override("font_color", Color("14532d"))
-		result_label.text = str(d["demo"]) + str(d["good"])
-		_play_voice("good")
-	else:
-		last_eval_state = "needs"
-		question_label.visible = true
-		question_label.text = str(d["question"])
-		feedback_divider.visible = true
-		feedback_label.visible = true
-		bubble.add_theme_stylebox_override("panel", _style("dbeafe", "f87171"))
-		feedback_divider.color = Color("f87171")
-		feedback_label.add_theme_color_override("font_color", Color("b91c1c"))
-		result_label.text = str(d["demo"]) + str(d["needs"])
-		_play_voice("needs")
+	_show_check_result(looks_relevant)
 
 # ---------------- Stage 2 Voice & Subtitle Animation ----------------
 func _voice_path(kind: String) -> String:
@@ -739,6 +863,9 @@ func _create_reference_popup(tex: Texture2D) -> void:
 func _open_reference_popup() -> void:
 	if popup_window != null:
 		popup_window.popup_centered(Vector2i(1050, 700))
+		# Re-play a short hint whenever the plan is opened enlarged.
+		if is_instance_valid(popup_viewer):
+			popup_viewer.play_ps_hint()
 
 func _play_entrance_fade() -> void:
 	var overlay := ColorRect.new()

@@ -1,0 +1,1 @@
+Cloudflare > sketch-challenge-ai > Edit code > worker.js. Replace its code with the supplied worker.js and click Deploy. Existing GEMINI_API_KEY Secret stays in Cloudflare. Never paste it in JavaScript.
