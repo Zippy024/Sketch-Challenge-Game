@@ -1,5 +1,7 @@
 extends Control
 
+const Progress = preload("res://GameProgress.gd")
+
 const QUESTIONS := {
 	"jp": {
 		"name": "細川さん（女性）",
@@ -47,6 +49,7 @@ class PlanViewer extends Control:
 		plan_texture = tex
 		allow_open = open_on_click
 		clip_contents = true
+		texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 		mouse_filter = Control.MOUSE_FILTER_STOP
 		custom_minimum_size = Vector2(300, 200)
 
@@ -111,6 +114,8 @@ var mm_button: Button
 var status_label: Label
 var popup_window: Window
 var popup_viewer: PlanViewer
+var _pause_menu: Control
+var _voice_paused_for_menu: bool = false
 
 # အသံနှင့် စာသား တစ်ပြိုင်တည်းပြသရန် Variables
 var voice_player: AudioStreamPlayer
@@ -134,7 +139,7 @@ func _ready() -> void:
 
 	_build_ui()
 	_apply_web_readability(self)
-	_change_language("jp")
+	_change_language(Progress.get_language())
 	_play_entrance_fade()
 
 # Shared font policy: keep Stage 2 desktop appearance; bundle fonts for browsers.
@@ -146,7 +151,7 @@ func _setup_multilang_font() -> void:
 	theme = BILINGUAL_THEME
 
 func _apply_web_readability(_node: Node) -> void:
-	# Preserve original UI colors on desktop and web.
+	# Preserve the successful bundled-font rendering on desktop and Web.
 	pass
 
 func _style(bg: String, edge: String = "cad7e8", radius: int = 10) -> StyleBoxFlat:
@@ -194,7 +199,7 @@ func _modern_button_style(button: Button, kind: String = "secondary") -> void:
 func _btn(t: String, min_width: float = 85.0) -> Button:
 	var b := Button.new()
 	b.text = t
-	b.custom_minimum_size = Vector2(min_width, 42)
+	b.custom_minimum_size = Vector2(min_width, 37)
 	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	b.add_theme_font_size_override("font_size", 15)
 	_modern_button_style(b, "primary" if t == "Check Answer" else ("back" if t == "Back to Stage 1" else "secondary"))
@@ -228,23 +233,29 @@ func _build_ui() -> void:
 	var header := HBoxContainer.new()
 	header.add_theme_constant_override("separation", 6)
 	left.add_child(header)
-	var title := _label("STAGE 2  |  CUSTOMER QUESTION", 18)
+	var title := _label("STAGE 2", 19, "1f3c56")
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
 
 	jp_button = Button.new()
 	jp_button.text = "日本語"
-	jp_button.custom_minimum_size = Vector2(76, 34)
+	jp_button.custom_minimum_size = Vector2(53, 29)
+	jp_button.add_theme_font_size_override("font_size", 12)
 	jp_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	jp_button.pressed.connect(func(): _change_language("jp"))
 	header.add_child(jp_button)
 
 	mm_button = Button.new()
 	mm_button.text = "မြန်မာ"
-	mm_button.custom_minimum_size = Vector2(76, 34)
+	mm_button.custom_minimum_size = Vector2(53, 29)
+	mm_button.add_theme_font_size_override("font_size", 12)
 	mm_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	mm_button.pressed.connect(func(): _change_language("mm"))
 	header.add_child(mm_button)
+
+	var menu_button := _make_levels_menu_button()
+	menu_button.pressed.connect(_open_game_menu)
+	header.add_child(menu_button)
 
 	var customer_panel := PanelContainer.new()
 	customer_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -262,7 +273,7 @@ func _build_ui() -> void:
 	avatar.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	avatar.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	avatar.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	var avatar_path := "res://customer_portrait.png"
+	var avatar_path := "res://customer_portrait_ui.png"
 	if ResourceLoader.exists(avatar_path):
 		avatar.texture = load(avatar_path) as Texture2D
 	var avatar_shader := Shader.new()
@@ -289,7 +300,7 @@ void fragment() {
 	bubble = PanelContainer.new()
 	bubble.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bubble.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	bubble.add_theme_stylebox_override("panel", _style("dbeafe", "93c5fd"))
+	bubble.add_theme_stylebox_override("panel", _style("ffffff", "d6e2ef"))
 	customer_row.add_child(bubble)
 
 	var bubble_box := VBoxContainer.new()
@@ -308,6 +319,9 @@ void fragment() {
 	voice_controls.add_theme_constant_override("separation", 3)
 	voice_controls.size_flags_horizontal = Control.SIZE_SHRINK_END
 	name_voice_row.add_child(voice_controls)
+
+	var customer_question_subtitle := _label("CUSTOMER QUESTION", 11, "64748b")
+	bubble_box.add_child(customer_question_subtitle)
 
 	voice_replay_button = Button.new()
 	voice_replay_button.text = ""
@@ -462,6 +476,7 @@ func _update_lang_buttons_style() -> void:
 		jp_button.add_theme_color_override("font_color", Color("1e293b"))
 
 func _change_language(lang: String) -> void:
+	Progress.set_language(lang)
 	_stop_voice()
 	current_lang = lang
 	_update_lang_buttons_style()
@@ -502,7 +517,7 @@ func _reset_answer() -> void:
 	question_label.text = str(QUESTIONS[current_lang]["question"])
 	feedback_divider.visible = false
 	feedback_label.visible = false
-	bubble.add_theme_stylebox_override("panel", _style("dbeafe", "93c5fd"))
+	bubble.add_theme_stylebox_override("panel", _style("ffffff", "d6e2ef"))
 	answer_input.grab_focus()
 
 func _check_demo_answer() -> void:
@@ -734,3 +749,54 @@ func _play_entrance_fade() -> void:
 	var tween := create_tween()
 	tween.tween_property(overlay, "modulate:a", 0.0, 0.65).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	tween.tween_callback(overlay.queue_free)
+
+func _make_levels_menu_button() -> Button:
+	var btn := Button.new()
+	btn.text = "LEVELS"
+	btn.custom_minimum_size = Vector2(65, 30)
+	btn.add_theme_font_size_override("font_size", 12)
+	btn.add_theme_color_override("font_color", Color("216a58"))
+	btn.add_theme_color_override("font_hover_color", Color("124b3d"))
+	btn.add_theme_color_override("font_pressed_color", Color("124b3d"))
+	btn.add_theme_color_override("font_focus_color", Color("216a58"))
+	for state in ["normal", "hover", "pressed", "focus"]:
+		var style := StyleBoxFlat.new()
+		style.bg_color = Color("f5fbf8") if state == "normal" else Color("def1e9")
+		style.border_color = Color("a7cbbb")
+		style.set_border_width_all(1)
+		style.set_corner_radius_all(9)
+		style.set_content_margin_all(5)
+		btn.add_theme_stylebox_override(state, style)
+	btn.tooltip_text = "Pause and view levels"
+	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	return btn
+
+
+func _open_game_menu() -> void:
+	if is_instance_valid(_pause_menu):
+		return
+	_voice_paused_for_menu = voice_player != null and voice_player.playing and not voice_player.stream_paused
+	if _voice_paused_for_menu:
+		voice_player.stream_paused = true
+	var overlay := preload("res://GameMenu.tscn").instantiate() as Control
+	overlay.set("is_pause_overlay", true)
+	overlay.set("pause_level", 2)
+	overlay.process_mode = Node.PROCESS_MODE_ALWAYS
+	overlay.connect("resume_requested", Callable(self, "_resume_from_game_menu"))
+	_pause_menu = overlay
+	add_child(overlay)
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	get_tree().paused = true
+
+
+func _resume_from_game_menu() -> void:
+	get_tree().paused = false
+	if is_instance_valid(_pause_menu):
+		_pause_menu.queue_free()
+	_pause_menu = null
+	var chosen_lang: String = Progress.get_language()
+	if chosen_lang != current_lang:
+		_change_language(chosen_lang)
+	elif _voice_paused_for_menu and voice_player != null:
+		voice_player.stream_paused = false
+	_voice_paused_for_menu = false

@@ -1,0 +1,40 @@
+SKETCH CHALLENGE — GODOT 4.7.2 MENU UPDATE
+===========================================
+
+New:
+- Custom game landing screen (GameMenu.tscn + GameMenu.gd)
+- START GAME -> SELECT A LEVEL -> Stage 1 or Stage 2
+- Levels 3–6 visible as Coming Soon
+- Level 2 unlocks after the player passes Level 1; saved in user://sketch_challenge_progress.cfg
+- MENU button on both existing stages; smaller Japanese/Myanmar language buttons
+- Language preference saved across scenes
+- Godot boot splash logo hidden and project icon replaced with SketchChallengeIcon.png
+
+Preserved:
+- The original bilingual theme, Japanese and Myanmar font assets
+- Stage 1 drawing canvas, voice/timing, reference plan and answer checker
+- Stage 2 PS question, voice, manual/demo evaluation and popup
+
+INSTALL:
+1. Extract ZIP to a NEW folder, without overwriting your current working project.
+2. Launch project.godot using Godot 4.7.2.
+3. Press F5 (Run Project). The NEW GAME MENU should appear first.
+4. Select START GAME -> LEVEL 1 -> START LEVEL 1. Test audio and drawing.
+5. After a correct Level 1 answer, return to the level list to see Level 2 unlocked.
+6. Test switching JP/MM language in both levels, and MENU buttons.
+7. When testing is complete, copy the project source into your GitHub Desktop cloned repository.
+   Preserve the already working .github/workflows/main.yml file.
+8. Commit & Push. Allow GitHub Actions to build the Web export from project.godot.
+9. Open https://zippy024.github.io/Sketch-Challenge-Game/ and hard refresh.
+
+IMPORTANT:
+- Do not put Gemini/OpenAI API keys into Godot GDScript, JavaScript, project.godot,
+  public GitHub code, or a browser-exported game. These can be extracted by users.
+- For a later online AI answer checker, use a secure hosted backend API with secrets
+  stored in server-side environment variables. No live AI has been added yet.
+- Browser audio usually requires at least one user click; the START LEVEL button
+  has been intentionally kept to provide a clear user interaction before audio.
+- Browser/Web export testing must still be done in your environment.
+
+The .godot import cache and pre-built Web Game folder are deliberately NOT bundled.
+Use your successful GitHub Actions workflow to generate the Web build from source.

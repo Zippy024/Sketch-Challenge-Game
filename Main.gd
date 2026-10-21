@@ -1,6 +1,7 @@
 extends Control
 
 const CanvasScript = preload("res://DrawingCanvas.gd")
+const Progress = preload("res://GameProgress.gd")
 
 # Reference ပုံအမှန်ကို မူရင်းအတိုင်း ပြသပေးပြီး နှိပ်လိုက်ပါက ပုံအကြီး ချဲ့ကြည့်နိုင်သည့် Viewer
 class ReferencePlanViewer extends Control:
@@ -124,7 +125,7 @@ class StaticCustomerAvatar extends TextureRect:
 		stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 
-		var avatar_path := "res://customer_portrait.png"
+		var avatar_path := "res://customer_portrait_ui.png"
 		if ResourceLoader.exists(avatar_path):
 			texture = load(avatar_path) as Texture2D
 
@@ -195,6 +196,8 @@ var voice_caption: Control
 var voice_segment_times: Array[float] = []
 var voice_segment_texts: Array[String] = []
 var voice_last_visible: int = -1
+var _pause_menu: Control
+var _voice_paused_for_menu: bool = false
 
 var current_lang: String = "jp" # "jp" သို့မဟုတ် "mm"
 var last_eval_state: String = "none" # "none", "correct", "wrong"
@@ -231,10 +234,17 @@ func _ready() -> void:
 	voice_player = AudioStreamPlayer.new()
 	add_child(voice_player)
 	voice_player.finished.connect(_on_voice_finished)
+	current_lang = Progress.get_language()
 	_build_ui()
+	speaker_name_label.text = DIALOGUE_TEXTS[current_lang]["speaker"]
 	_apply_web_readability(self)
 	_update_lang_buttons_style()
-	_show_intro_screen()
+	if Progress.launch_from_level_menu:
+		Progress.launch_from_level_menu = false
+		game_has_started = true
+		_run_conversation()
+	else:
+		_show_intro_screen()
 
 # Use bundled fonts on Web; retain the preferred desktop font appearance.
 # These paths must exactly match the files under res://Font/.
@@ -267,9 +277,9 @@ func _show_intro_screen() -> void:
 	center.add_child(stack)
 
 	var heading := Label.new()
-	heading.text = "SKETCH CHALLENGE"
+	heading.text = "LEVEL 01  /  CUSTOMER REQUEST"
 	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	heading.add_theme_font_size_override("font_size", 36)
+	heading.add_theme_font_size_override("font_size", 31)
 	heading.add_theme_color_override("font_color", Color.WHITE)
 	stack.add_child(heading)
 
@@ -288,7 +298,7 @@ func _show_intro_screen() -> void:
 	stack.add_child(languages)
 
 	var start := Button.new()
-	start.text = "START GAME"
+	start.text = "START LEVEL 1"
 	start.custom_minimum_size = Vector2(260, 62)
 	start.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	start.add_theme_font_size_override("font_size", 22)
@@ -306,7 +316,7 @@ func _show_intro_screen() -> void:
 	stack.add_child(start)
 
 	var hint := Label.new()
-	hint.text = "Press START GAME to enable customer audio."
+	hint.text = "Press START LEVEL 1 to hear your customer."
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hint.add_theme_font_size_override("font_size", 13)
 	hint.add_theme_color_override("font_color", Color("94a3b8"))
@@ -332,7 +342,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 # Browser-only readability adjustment. Desktop UI is intentionally unchanged.
 func _apply_web_readability(_node: Node) -> void:
-	# Preserve original UI colors on desktop and web.
+	# Preserve the successful bundled-font rendering on desktop and Web.
 	pass
 
 func _style(bg: String, border: String = "cbd5e1") -> StyleBoxFlat:
@@ -391,7 +401,7 @@ func _modern_button_style(button: Button, kind: String = "secondary") -> void:
 func _button(value: String, action: Callable, min_w: float = 80.0) -> Button:
 	var b: Button = Button.new()
 	b.text = value
-	b.custom_minimum_size = Vector2(min_w, 40)
+	b.custom_minimum_size = Vector2(min_w, 36)
 	b.pressed.connect(action)
 	_modern_button_style(b, "primary" if value in ["OK", "Start (描き始める)", "Start (စတင်ဆွဲမည်)"] else ("warning" if value == "Try Again" else "secondary"))
 	return b
@@ -461,23 +471,29 @@ func _build_ui() -> void:
 	left_top_bar.add_theme_constant_override("separation", 6)
 	left.add_child(left_top_bar)
 
-	var stage_title: Label = _label("STAGE 1  |  CUSTOMER REQUEST", 18)
+	var stage_title: Label = _label("STAGE 1", 19, "1f3c56")
 	stage_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	left_top_bar.add_child(stage_title)
 
 	jp_lang_btn = Button.new()
 	jp_lang_btn.text = "日本語"
-	jp_lang_btn.custom_minimum_size = Vector2(76, 34)
+	jp_lang_btn.custom_minimum_size = Vector2(53, 29)
+	jp_lang_btn.add_theme_font_size_override("font_size", 12)
 	jp_lang_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	jp_lang_btn.pressed.connect(func(): _switch_language("jp"))
 	left_top_bar.add_child(jp_lang_btn)
 
 	mm_lang_btn = Button.new()
 	mm_lang_btn.text = "မြန်မာ"
-	mm_lang_btn.custom_minimum_size = Vector2(76, 34)
+	mm_lang_btn.custom_minimum_size = Vector2(53, 29)
+	mm_lang_btn.add_theme_font_size_override("font_size", 12)
 	mm_lang_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	mm_lang_btn.pressed.connect(func(): _switch_language("mm"))
 	left_top_bar.add_child(mm_lang_btn)
+
+	var menu_button := _make_levels_menu_button()
+	menu_button.pressed.connect(_open_game_menu)
+	left_top_bar.add_child(menu_button)
 
 	# Conversation Box
 	var chat_panel: PanelContainer = PanelContainer.new()
@@ -505,7 +521,7 @@ func _build_ui() -> void:
 	dialog_bubble = PanelContainer.new()
 	dialog_bubble.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	dialog_bubble.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	dialog_bubble.add_theme_stylebox_override("panel", _style("dbeafe", "93c5fd"))
+	dialog_bubble.add_theme_stylebox_override("panel", _style("ffffff", "d6e2ef"))
 	row.add_child(dialog_bubble)
 
 	var bubble_vbox: VBoxContainer = VBoxContainer.new()
@@ -527,6 +543,9 @@ func _build_ui() -> void:
 	voice_controls.add_theme_constant_override("separation", 3)
 	voice_controls.size_flags_horizontal = Control.SIZE_SHRINK_END
 	name_voice_row.add_child(voice_controls)
+
+	var customer_request_subtitle := _label("CUSTOMER REQUEST", 11, "64748b")
+	bubble_vbox.add_child(customer_request_subtitle)
 
 	voice_replay_button = _button("", _replay_voice, 26)
 	voice_stop_button = _button("", _toggle_voice_pause, 26)
@@ -587,16 +606,28 @@ func _build_ui() -> void:
 
 	again_button = Button.new()
 	again_button.text = "Try Again"
-	again_button.custom_minimum_size = Vector2(125, 36)
+	# V9: compact, legible retry action instead of the oversized solid-red button.
+	again_button.custom_minimum_size = Vector2(101, 30)
 	again_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	var again_style: StyleBoxFlat = _style("dc2626", "b91c1c")
-	var again_hover: StyleBoxFlat = _style("b91c1c", "991b1b")
+	var again_style := StyleBoxFlat.new()
+	again_style.bg_color = Color("fff7f5")
+	again_style.border_color = Color("e9a29a")
+	again_style.set_border_width_all(1)
+	again_style.set_corner_radius_all(8)
+	again_style.set_content_margin_all(4)
+	var again_hover: StyleBoxFlat = again_style.duplicate() as StyleBoxFlat
+	again_hover.bg_color = Color("ffe9e6")
+	again_hover.border_color = Color("ce5b50")
+	var again_pressed: StyleBoxFlat = again_style.duplicate() as StyleBoxFlat
+	again_pressed.bg_color = Color("fbd5d0")
 	again_button.add_theme_stylebox_override("normal", again_style)
 	again_button.add_theme_stylebox_override("hover", again_hover)
-	again_button.add_theme_stylebox_override("pressed", again_hover)
-	again_button.add_theme_color_override("font_color", Color("ffffff"))
-	again_button.add_theme_color_override("font_hover_color", Color("ffffff"))
-	again_button.add_theme_font_size_override("font_size", 13)
+	again_button.add_theme_stylebox_override("pressed", again_pressed)
+	again_button.add_theme_stylebox_override("focus", again_hover)
+	again_button.add_theme_color_override("font_color", Color("ad3832"))
+	again_button.add_theme_color_override("font_hover_color", Color("952a25"))
+	again_button.add_theme_color_override("font_pressed_color", Color("952a25"))
+	again_button.add_theme_font_size_override("font_size", 12)
 	again_button.pressed.connect(_on_again_pressed)
 	again_button_row.add_child(again_button)
 
@@ -724,6 +755,7 @@ func _update_lang_buttons_style() -> void:
 		jp_lang_btn.add_theme_color_override("font_color", Color("1e293b"))
 
 func _switch_language(lang: String) -> void:
+	Progress.set_language(lang)
 	if current_lang == lang:
 		return
 	_stop_voice()
@@ -836,7 +868,7 @@ func _type_rich_text(target_rich: RichTextLabel, bbcode_msg: String, duration: f
 		target_rich.visible_characters = i
 		if i % 10 == 0:
 			_scroll_dialog_to_bottom()
-		await get_tree().create_timer(delay).timeout
+		await get_tree().create_timer(delay, false).timeout
 	target_rich.visible_characters = -1
 	await _scroll_dialog_to_bottom()
 
@@ -851,7 +883,7 @@ func _type_text(target_label: Label, message: String, duration: float = 1.6) -> 
 		target_label.text += message.substr(i, 1)
 		if i % 10 == 0:
 			_scroll_dialog_to_bottom()
-		await get_tree().create_timer(delay).timeout
+		await get_tree().create_timer(delay, false).timeout
 	await _scroll_dialog_to_bottom()
 
 func _reveal_reference_after_talk() -> void:
@@ -921,7 +953,7 @@ func _reset_feedback_ui() -> void:
 	feedback_label.visible = false
 	feedback_label.text = ""
 	again_button_row.visible = false
-	dialog_bubble.add_theme_stylebox_override("panel", _style("dbeafe", "93c5fd"))
+	dialog_bubble.add_theme_stylebox_override("panel", _style("ffffff", "d6e2ef"))
 
 func _on_again_pressed() -> void:
 	typing_token += 1
@@ -940,6 +972,7 @@ func _confirm() -> void:
 	var is_correct: bool = canvas.analyze_reference()
 
 	if is_correct:
+		Progress.unlock_level(2)
 		last_eval_state = "correct"
 		request_label.visible = false
 		feedback_divider.visible = false
@@ -1143,7 +1176,7 @@ func _start_auto_stage_transition() -> void:
 
 func _run_stage_transition() -> void:
 	# Keep the customer response visible briefly, then fade to Stage 2.
-	await get_tree().create_timer(0.75).timeout
+	await get_tree().create_timer(0.75, false).timeout
 	if not is_inside_tree() or last_eval_state != "correct":
 		stage_transition_running = false
 		return
@@ -1164,3 +1197,56 @@ func _run_stage_transition() -> void:
 		push_error("Cannot open res://stage_2.tscn")
 		stage_transition_running = false
 		fade.queue_free()
+
+# Subtle outlined control, matching the level selector without a solid grey block.
+func _make_levels_menu_button() -> Button:
+	var btn := Button.new()
+	btn.text = "LEVELS"
+	btn.custom_minimum_size = Vector2(65, 30)
+	btn.add_theme_font_size_override("font_size", 12)
+	btn.add_theme_color_override("font_color", Color("216a58"))
+	btn.add_theme_color_override("font_hover_color", Color("124b3d"))
+	btn.add_theme_color_override("font_pressed_color", Color("124b3d"))
+	btn.add_theme_color_override("font_focus_color", Color("216a58"))
+	for state in ["normal", "hover", "pressed", "focus"]:
+		var style := StyleBoxFlat.new()
+		style.bg_color = Color("f5fbf8") if state == "normal" else Color("def1e9")
+		style.border_color = Color("a7cbbb")
+		style.set_border_width_all(1)
+		style.set_corner_radius_all(9)
+		style.set_content_margin_all(5)
+		btn.add_theme_stylebox_override(state, style)
+	btn.tooltip_text = "Pause and view levels"
+	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	return btn
+
+
+# Show the menu ON TOP of the running scene. Do not lose the drawing or timer.
+func _open_game_menu() -> void:
+	if is_instance_valid(_pause_menu):
+		return
+	_voice_paused_for_menu = voice_player != null and voice_player.playing and not voice_player.stream_paused
+	if _voice_paused_for_menu:
+		voice_player.stream_paused = true
+	var overlay := preload("res://GameMenu.tscn").instantiate() as Control
+	overlay.set("is_pause_overlay", true)
+	overlay.set("pause_level", 1)
+	overlay.process_mode = Node.PROCESS_MODE_ALWAYS
+	overlay.connect("resume_requested", Callable(self, "_resume_from_game_menu"))
+	_pause_menu = overlay
+	add_child(overlay)
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	get_tree().paused = true
+
+
+func _resume_from_game_menu() -> void:
+	get_tree().paused = false
+	if is_instance_valid(_pause_menu):
+		_pause_menu.queue_free()
+	_pause_menu = null
+	var chosen_lang: String = Progress.get_language()
+	if chosen_lang != current_lang:
+		_switch_language(chosen_lang)
+	elif _voice_paused_for_menu and voice_player != null:
+		voice_player.stream_paused = false
+	_voice_paused_for_menu = false
