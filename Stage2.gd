@@ -158,7 +158,16 @@ var feedback_divider: ColorRect
 var feedback_label: Label
 var answer_title: Label
 var answer_input: TextEdit
-var result_label: Label
+# Option A: Challenge Progress panel (keeps customer voice in the left bubble).
+var progress_card: PanelContainer
+var progress_badge: Label
+var progress_title: Label
+var progress_description: Label
+var progress_bar: ProgressBar
+var progress_percent: Label
+var progress_actions: HBoxContainer
+var progress_replay_button: Button
+var progress_levels_button: Button
 var submit_button: Button
 var reset_button: Button
 var jp_button: Button
@@ -501,17 +510,176 @@ void fragment() {
 	submit_button.pressed.connect(_check_ai_or_demo_answer)
 	reset_button.pressed.connect(_reset_answer)
 
-	var result_panel := PanelContainer.new()
-	result_panel.custom_minimum_size.y = 110
-	result_panel.add_theme_stylebox_override("panel", _style("ffffff"))
-	right.add_child(result_panel)
-	result_label = _label("", 17)
-	result_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	result_panel.add_child(result_label)
+	# The bottom panel is player progress, NOT a second copy of customer speech.
+	_build_progress_panel(right)
 
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	right.add_child(spacer)
+
+# ---------------- Option A: challenge progress panel ----------------
+func _build_progress_panel(parent: VBoxContainer) -> void:
+	progress_card = PanelContainer.new()
+	# Compact fixed-height result card; the bottom spacer gets leftover space.
+	progress_card.custom_minimum_size.y = 156
+	progress_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	progress_card.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	progress_card.add_theme_stylebox_override("panel", _style("ffffff", "d6e2ef", 13))
+	parent.add_child(progress_card)
+
+	var content := VBoxContainer.new()
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content.add_theme_constant_override("separation", 7)
+	progress_card.add_child(content)
+
+	var header_row := HBoxContainer.new()
+	header_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header_row.add_theme_constant_override("separation", 12)
+	content.add_child(header_row)
+	var heading := _label("CHALLENGE PROGRESS", 13, "475569")
+	heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	heading.autowrap_mode = TextServer.AUTOWRAP_OFF
+	heading.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	header_row.add_child(heading)
+	progress_badge = _label("WAITING", 12, "64748b")
+	# Important: shrink-right + word-wrap made WAITING one letter per line,
+	# stretching the entire panel down the screen. Reserve badge width.
+	progress_badge.autowrap_mode = TextServer.AUTOWRAP_OFF
+	progress_badge.custom_minimum_size = Vector2(140, 22)
+	progress_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	progress_badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	progress_badge.size_flags_horizontal = Control.SIZE_SHRINK_END
+	progress_badge.clip_text = true
+	header_row.add_child(progress_badge)
+
+	progress_title = _label("", 17, "1f3c56")
+	progress_title.custom_minimum_size.y = 26
+	content.add_child(progress_title)
+	progress_description = _label("", 14, "64748b")
+	content.add_child(progress_description)
+
+	progress_bar = ProgressBar.new()
+	progress_bar.min_value = 0.0
+	progress_bar.max_value = 100.0
+	progress_bar.value = 0.0
+	progress_bar.show_percentage = false
+	progress_bar.custom_minimum_size.y = 9
+	progress_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var track := StyleBoxFlat.new()
+	track.bg_color = Color("e2e8f0")
+	track.set_corner_radius_all(6)
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = Color("16a34a")
+	fill.set_corner_radius_all(6)
+	progress_bar.add_theme_stylebox_override("background", track)
+	progress_bar.add_theme_stylebox_override("fill", fill)
+	content.add_child(progress_bar)
+
+	var bottom_row := HBoxContainer.new()
+	bottom_row.add_theme_constant_override("separation", 10)
+	content.add_child(bottom_row)
+	progress_percent = _label("0%", 12, "64748b")
+	progress_percent.autowrap_mode = TextServer.AUTOWRAP_OFF
+	progress_percent.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bottom_row.add_child(progress_percent)
+
+	progress_actions = HBoxContainer.new()
+	progress_actions.add_theme_constant_override("separation", 8)
+	progress_actions.size_flags_horizontal = Control.SIZE_SHRINK_END
+	bottom_row.add_child(progress_actions)
+
+	progress_replay_button = _btn("Replay Stage 2", 117)
+	progress_replay_button.custom_minimum_size.y = 31
+	progress_replay_button.add_theme_font_size_override("font_size", 12)
+	progress_replay_button.pressed.connect(_replay_stage_two)
+	progress_actions.add_child(progress_replay_button)
+
+	progress_levels_button = _btn("View Levels", 104)
+	progress_levels_button.custom_minimum_size.y = 31
+	progress_levels_button.add_theme_font_size_override("font_size", 12)
+	_modern_button_style(progress_levels_button, "primary")
+	progress_levels_button.pressed.connect(_open_game_menu)
+	progress_actions.add_child(progress_levels_button)
+	progress_actions.visible = false
+	_set_progress_state("pending")
+
+func _replay_stage_two() -> void:
+	_reset_answer()
+	_play_voice("question")
+
+func _set_progress_state(state: String, message: String = "") -> void:
+	if progress_card == null:
+		return
+	var jp: bool = current_lang == "jp"
+	var title: String = ""
+	var detail: String = ""
+	var badge: String = ""
+	var border_color: String = "d6e2ef"
+	var bg_color: String = "ffffff"
+	var badge_color: String = "64748b"
+	var pct: int = 0
+	match state:
+		"completed":
+			title = "Stage 2 Completed" if not jp else "ステージ2 クリア"
+			detail = "Customer question task finished." if not jp else "お客様の質問への回答が完了しました。"
+			badge = "COMPLETED"
+			bg_color = "f0fdf4"
+			border_color = "86efac"
+			badge_color = "15803d"
+			pct = 100
+		"incorrect":
+			title = "Challenge In Progress" if not jp else "チャレンジ進行中"
+			detail = "Revise your explanation and try again." if not jp else "説明を見直してもう一度試してください。"
+			badge = "NOT COMPLETED"
+			bg_color = "fff7f7"
+			border_color = "fecaca"
+			badge_color = "b91c1c"
+		"checking":
+			title = "Checking your answer..." if not jp else "AIが回答を確認中…"
+			detail = "Please wait for the result." if not jp else "結果が出るまでお待ちください。"
+			badge = "CHECKING"
+		"error":
+			title = "AI Connection Error" if not jp else "AIとの接続エラー"
+			detail = "Please try again. This is not a wrong answer." if not jp else "後ほど再試行してください。誤答扱いにはなりません。"
+			badge = "RETRY"
+			bg_color = "fffaf0"
+			border_color = "fed7aa"
+			badge_color = "9a3412"
+		"invalid":
+			title = "Answer needed" if not jp else "回答を入力してください"
+			detail = message
+			badge = "WAITING"
+		_:
+			title = "Stage 2 — Customer Question" if not jp else "ステージ2・お客様の質問"
+			detail = "Explain PS in your own words." if not jp else "PSの意味を自分の言葉で説明してください。"
+			badge = "WAITING"
+	if current_lang == "mm":
+		match state:
+			"completed":
+				title = "Stage 2 Completed"
+				detail = "Customer မေးခွန်းကို အောင်မြင်စွာ ဖြေဆိုပြီးပါပြီ။"
+			"incorrect":
+				title = "Challenge In Progress"
+				detail = "အဖြေကို ပြန်စဉ်းစားပြီး ထပ်မံဖြေဆိုနိုင်ပါတယ်။"
+			"checking":
+				detail = "AI က အဖြေစစ်နေပါတယ်။ ခဏစောင့်ပါ။"
+			"error":
+				detail = "AI ချိတ်ဆက်မှု မအောင်မြင်ပါ။ အဖြေမှားတယ်လို့ မသတ်မှတ်ပါ။"
+			"pending":
+				detail = "PS အကြောင်းကို ကိုယ့်စကားနဲ့ ရှင်းပြပါ။"
+	progress_card.add_theme_stylebox_override("panel", _style(bg_color, border_color, 13))
+	progress_title.text = title
+	progress_description.text = detail
+	progress_badge.text = badge
+	progress_badge.add_theme_color_override("font_color", Color(badge_color))
+	progress_bar.value = float(pct)
+	progress_percent.text = "100% COMPLETED" if pct == 100 else "0% · IN PROGRESS"
+	progress_percent.add_theme_color_override("font_color", Color(badge_color))
+	progress_actions.visible = state == "completed"
+	if progress_levels_button != null:
+		progress_levels_button.text = "レベル一覧" if jp else "View Levels"
+	if progress_replay_button != null:
+		progress_replay_button.text = "もう一度" if jp else "Replay Stage 2"
 
 func _update_lang_buttons_style() -> void:
 	var active_s: StyleBoxFlat = _style("2563eb", "1d4ed8")
@@ -549,20 +717,20 @@ func _change_language(lang: String) -> void:
 		question_label.visible = false
 		feedback_divider.visible = false
 		feedback_label.visible = true
-		result_label.text = (str(d["demo"]) if last_evaluation_source == "offline" else "") + str(d["good"])
+		_set_progress_state("completed")
 		_play_voice("good")
 	elif last_eval_state == "needs":
 		question_label.visible = true
 		question_label.text = str(d["question"])
 		feedback_divider.visible = true
 		feedback_label.visible = true
-		result_label.text = (str(d["demo"]) if last_evaluation_source == "offline" else "") + str(d["needs"])
+		_set_progress_state("incorrect")
 		_play_voice("needs")
 	else:
 		question_label.visible = true
 		feedback_divider.visible = false
 		feedback_label.visible = false
-		result_label.text = ""
+		_set_progress_state("pending")
 		_play_voice("question")
 
 func _reset_answer() -> void:
@@ -570,7 +738,7 @@ func _reset_answer() -> void:
 	_stop_voice()
 	last_eval_state = "none"
 	answer_input.clear()
-	result_label.text = ""
+	_set_progress_state("pending")
 	question_label.visible = true
 	question_label.text = str(QUESTIONS[current_lang]["question"])
 	feedback_divider.visible = false
@@ -596,10 +764,10 @@ func _check_ai_or_demo_answer() -> void:
 	var answer: String = answer_input.text.strip_edges()
 	var d: Dictionary = QUESTIONS[current_lang]
 	if answer.is_empty():
-		result_label.text = str(d["empty"])
+		_set_progress_state("invalid", str(d["empty"]))
 		return
 	if answer.length() > 1200:
-		result_label.text = "回答が長すぎます。" if current_lang == "jp" else "အဖြေစာသား အရမ်းရှည်နေပါတယ်။"
+		_set_progress_state("invalid", "回答が長すぎます。" if current_lang == "jp" else "အဖြေစာသား အရမ်းရှည်နေပါတယ်။")
 		return
 	if not _is_ai_configured():
 		_check_demo_answer()
@@ -607,7 +775,7 @@ func _check_ai_or_demo_answer() -> void:
 
 	_ai_busy = true
 	submit_button.disabled = true
-	result_label.text = "AIが回答を確認しています…" if current_lang == "jp" else "AI က အဖြေစစ်နေပါတယ်…"
+	_set_progress_state("checking")
 	status_label.text = "AI CHECK · WAITING"
 	var payload: String = JSON.stringify({"language": current_lang, "answer": answer})
 	var headers := PackedStringArray(["Content-Type: application/json"])
@@ -637,7 +805,7 @@ func _on_ai_request_completed(result: int, response_code: int, _headers: PackedS
 func _show_ai_error() -> void:
 	# Don't mark an answer wrong when the server/network failed.
 	status_label.text = "AI CHECK · CONNECTION ERROR"
-	result_label.text = "AIに接続できません。少し待って再試行してください。" if current_lang == "jp" else "AI နဲ့ မချိတ်ဆက်နိုင်သေးပါ။ ခဏနေပြီး ထပ်စမ်းပါ။"
+	_set_progress_state("error")
 
 func _show_check_result(correct: bool) -> void:
 	var d: Dictionary = QUESTIONS[current_lang]
@@ -648,7 +816,7 @@ func _show_check_result(correct: bool) -> void:
 		feedback_label.visible = true
 		bubble.add_theme_stylebox_override("panel", _style("dcfce7", "4ade80"))
 		feedback_label.add_theme_color_override("font_color", Color("14532d"))
-		result_label.text = (str(d["demo"]) if last_evaluation_source == "offline" else "") + str(d["good"])
+		_set_progress_state("completed")
 		_play_voice("good")
 	else:
 		last_eval_state = "needs"
@@ -659,14 +827,14 @@ func _show_check_result(correct: bool) -> void:
 		bubble.add_theme_stylebox_override("panel", _style("dbeafe", "f87171"))
 		feedback_divider.color = Color("f87171")
 		feedback_label.add_theme_color_override("font_color", Color("b91c1c"))
-		result_label.text = (str(d["demo"]) if last_evaluation_source == "offline" else "") + str(d["needs"])
+		_set_progress_state("incorrect")
 		_play_voice("needs")
 
 func _check_demo_answer() -> void:
 	# Safe offline DEMO mode when no Worker URL has been configured yet.
 	var answer: String = answer_input.text.strip_edges()
 	if answer.is_empty():
-		result_label.text = str(QUESTIONS[current_lang]["empty"])
+		_set_progress_state("invalid", str(QUESTIONS[current_lang]["empty"]))
 		return
 	last_evaluation_source = "offline"
 	var normalized: String = answer.to_lower()
