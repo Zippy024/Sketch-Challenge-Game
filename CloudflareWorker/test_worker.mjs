@@ -1,0 +1,32 @@
+import assert from 'node:assert/strict';
+import {readFile,writeFile} from 'node:fs/promises';
+const source=await readFile(new URL('./worker.js',import.meta.url),'utf8');
+await writeFile(new URL('./worker_for_test.mjs',import.meta.url),source);
+const {default: worker} = await import('./worker_for_test.mjs');
+const endpoint='https://sketch-challenge-ai.wyan244202.workers.dev/check';
+const params={method:'POST',headers:{'Content-Type':'application/json','Origin':'https://zippy024.github.io'},body:JSON.stringify({language:'mm',answer:'PS is the vertical space for pipes'})};
+const original=globalThis.fetch;
+const mock=(f)=>globalThis.fetch=async (...args)=>f(...args);
+const googleAnswer=(correct)=>new Response(JSON.stringify({candidates:[{content:{parts:[{text:JSON.stringify({correct})}]}}]}),{status:200});
+const urls=[];
+try {
+  mock(async (u)=>{urls.push(u);return googleAnswer(true)});
+  let r=await worker.fetch(new Request(endpoint,params),{GEMINI_API_KEY:'fake'});
+  let d=await r.json();
+  assert.equal(d.correct,true);assert.equal(d.model,'gemini-3.8-flash');assert.equal(urls.length,1);
+  urls.length=0;
+  mock(async (u)=>{urls.push(u);return urls.length===1 ? new Response('quota',{status:429}): googleAnswer(false)});
+  r=await worker.fetch(new Request(endpoint,params),{GEMINI_API_KEY:'fake'});d=await r.json();
+  assert.equal(d.correct,false);assert.equal(d.model,'gemini-3.5-flash-lite');assert.equal(urls.length,2);
+  urls.length=0;
+  mock(async (u)=>{urls.push(u);return new Response('unavailable',{status:429})});
+  r=await worker.fetch(new Request(endpoint,params),{GEMINI_API_KEY:'fake'});d=await r.json();
+  assert.equal(r.status,503);assert.equal(d.fallback,'local');assert.equal(urls.length,3);
+  urls.length=0;
+  mock(async (u)=>{urls.push(u);return new Response('Unauthorized',{status:401})});
+  r=await worker.fetch(new Request(endpoint,params),{GEMINI_API_KEY:'fake'});d=await r.json();
+  assert.equal(r.status,503);assert.equal(urls.length,1);
+  const bad=await worker.fetch(new Request(endpoint,{...params,headers:{'Content-Type':'application/json','Origin':'https://evil.example'}}),{GEMINI_API_KEY:'fake'});
+  assert.equal(bad.status,403);
+  console.log('V14 WORKER TESTS PASS (primary, backup, all down, auth and CORS)');
+} finally {globalThis.fetch=original;}

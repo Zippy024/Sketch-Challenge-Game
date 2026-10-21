@@ -193,7 +193,7 @@ var fallback_duration: float = 1.8
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_ai_http = HTTPRequest.new()
-	_ai_http.timeout = 22.0
+	_ai_http.timeout = 40.0 # Three backend models can take about 30 seconds total.
 	add_child(_ai_http)
 	_ai_http.request_completed.connect(_on_ai_request_completed)
 	_setup_multilang_font()
@@ -711,7 +711,7 @@ func _change_language(lang: String) -> void:
 	answer_input.placeholder_text = str(d["answer_hint"])
 	submit_button.text = str(d["check"])
 	reset_button.text = str(d["reset"])
-	status_label.text = "AI CHECK (Gemini)" if _is_ai_configured() else str(d["offline"])
+	status_label.text = "AI CHECK · 3 MODELS" if _is_ai_configured() else "LOCAL CHECK · OFFLINE"
 
 	if last_eval_state == "good":
 		question_label.visible = false
@@ -719,6 +719,8 @@ func _change_language(lang: String) -> void:
 		feedback_label.visible = true
 		_set_progress_state("completed")
 		_play_voice("good")
+		if last_evaluation_source == "local":
+			status_label.text = "LOCAL CHECK · APPROXIMATE"
 	elif last_eval_state == "needs":
 		question_label.visible = true
 		question_label.text = str(d["question"])
@@ -726,6 +728,8 @@ func _change_language(lang: String) -> void:
 		feedback_label.visible = true
 		_set_progress_state("incorrect")
 		_play_voice("needs")
+		if last_evaluation_source == "local":
+			status_label.text = "LOCAL CHECK · APPROXIMATE"
 	else:
 		question_label.visible = true
 		feedback_divider.visible = false
@@ -737,6 +741,8 @@ func _reset_answer() -> void:
 	_cancel_ai_request()
 	_stop_voice()
 	last_eval_state = "none"
+	last_evaluation_source = "none"
+	status_label.text = "AI CHECK · 3 MODELS" if _is_ai_configured() else "LOCAL CHECK · OFFLINE"
 	answer_input.clear()
 	_set_progress_state("pending")
 	question_label.visible = true
@@ -776,14 +782,14 @@ func _check_ai_or_demo_answer() -> void:
 	_ai_busy = true
 	submit_button.disabled = true
 	_set_progress_state("checking")
-	status_label.text = "AI CHECK · WAITING"
+	status_label.text = "AI CHECK · TRYING MODELS"
 	var payload: String = JSON.stringify({"language": current_lang, "answer": answer})
 	var headers := PackedStringArray(["Content-Type: application/json"])
 	var err: Error = _ai_http.request(AIConfig.API_URL, headers, HTTPClient.METHOD_POST, payload)
 	if err != OK:
 		_ai_busy = false
 		submit_button.disabled = false
-		_show_ai_error()
+		_check_demo_answer() # Network or request setup failed: local fallback.
 
 func _on_ai_request_completed(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
 	if not _ai_busy:
@@ -791,19 +797,20 @@ func _on_ai_request_completed(result: int, response_code: int, _headers: PackedS
 	_ai_busy = false
 	submit_button.disabled = false
 	var response_data: Variant = JSON.parse_string(body.get_string_from_utf8())
-	if result != HTTPRequest.RESULT_SUCCESS or response_code != 200 or not (response_data is Dictionary):
-		_show_ai_error()
-		return
-	var verdict: Variant = response_data.get("correct", null)
-	if typeof(verdict) != TYPE_BOOL:
-		_show_ai_error()
-		return
-	last_evaluation_source = "ai"
-	_show_check_result(bool(verdict))
-	status_label.text = "AI CHECK · GEMINI"
+	if result == HTTPRequest.RESULT_SUCCESS and response_code == 200 and response_data is Dictionary:
+		var verdict: Variant = response_data.get("correct", null)
+		if typeof(verdict) == TYPE_BOOL:
+			var model: String = str(response_data.get("model", "Gemini"))
+			last_evaluation_source = model
+			_show_check_result(bool(verdict))
+			status_label.text = "AI CHECK · " + model
+			return
+	# HTTP 429, 503, timeout, invalid JSON, etc.: The Worker already tried all
+	# available AI models. NEVER mislabel an AI outage as a wrong AI answer.
+	_check_demo_answer()
 
 func _show_ai_error() -> void:
-	# Don't mark an answer wrong when the server/network failed.
+	# Kept as an optional manual error UI; routine outages use local fallback.
 	status_label.text = "AI CHECK · CONNECTION ERROR"
 	_set_progress_state("error")
 
@@ -830,30 +837,33 @@ func _show_check_result(correct: bool) -> void:
 		_set_progress_state("incorrect")
 		_play_voice("needs")
 
+func _has_any_keyword(text: String, options: Array[String]) -> bool:
+	for word in options:
+		if text.contains(word):
+			return true
+	return false
+
 func _check_demo_answer() -> void:
-	# Safe offline DEMO mode when no Worker URL has been configured yet.
+	# V14 offline / local fallback. Keyword and pattern check is APPROXIMATE,
+	# not equivalent to Gemini multilingual semantic evaluation.
 	var answer: String = answer_input.text.strip_edges()
 	if answer.is_empty():
 		_set_progress_state("invalid", str(QUESTIONS[current_lang]["empty"]))
 		return
-	last_evaluation_source = "offline"
-	var normalized: String = answer.to_lower()
-	var names := ["pipe shaft", "pipe-shaft", "パイプシャフト", "配管スペース", "ပိုက်လိုင်း", "ပိုက်တွေ", "ပိုက်များ", "ပိုက်"]
-	var pipes := ["pipe", "plumb", "給排水", "配管", "給水", "排水", "ရေပိုက်", "ရေဆိုးပိုက်", "ပိုက်"]
-	var matched_name := false
-	var matched_pipe := false
-	for item in names:
-		if normalized.contains(item):
-			matched_name = true
-			break
-	for item in pipes:
-		if normalized.contains(item):
-			matched_pipe = true
-			break
-	var has_placement := normalized.contains("space") or normalized.contains("shaft") or normalized.contains("スペース") or normalized.contains("通す") or normalized.contains("場所") or normalized.contains("နေရာ") or normalized.contains("ဖြတ်သန်း") or normalized.contains("ထား")
-	var looks_relevant := matched_name and matched_pipe and has_placement
-
-	_show_check_result(looks_relevant)
+	last_evaluation_source = "local"
+	var s: String = answer.to_lower().replace("　", " ").replace("\n", " ")
+	# Explicit wrong meanings must never be credited simply for saying "pipe".
+	var wrong: Array[String] = ["pipe shift", "pipe-shift", "pipe shifts", "pipe size", "パイプシフト", "配管の移動"]
+	var negative: bool = _has_any_keyword(s, wrong)
+	# Directly naming what PS stands for is acceptable for this question.
+	var precise: Array[String] = ["pipe shaft", "pipe-shaft", "pipeshaft", "plumbing shaft", "piping shaft", "service shaft", "パイプシャフト", "配管シャフト", "配管スペース", "ပိုက်ရှပ်", "ပိုက်ခန်း", "ရေပိုက်ခန်း"]
+	var has_name: bool = _has_any_keyword(s, precise)
+	# Alternate wording: pipes/services + a vertical space/shaft/location.
+	var pipe_words: Array[String] = ["pipe", "plumb", "drain", "water supply", "配管", "給排水", "給水", "排水", "パイプ", "ရေပိုက်", "ရေဆင်းပိုက်", "ရေဆိုးပိုက်", "ပိုက်တွေ", "ပိုက်များ", "ပိုက်လိုင်း"]
+	var place_words: Array[String] = ["shaft", "vertical", "duct", "space", "pass through", "run through", "service cavity", "通す", "通る", "シャフト", "縦", "竪", "空間", "場所", "スペース", "ဒေါင်လိုက်", "နေရာ", "အခန်း", "ဖြတ်သန်း", "လမ်းကြောင်း", "သွားတဲ့", "သွားသော"]
+	var concept_matches: bool = _has_any_keyword(s, pipe_words) and _has_any_keyword(s, place_words)
+	_show_check_result(not negative and (has_name or concept_matches))
+	status_label.text = "LOCAL CHECK · APPROXIMATE"
 
 # ---------------- Stage 2 Voice & Subtitle Animation ----------------
 func _voice_path(kind: String) -> String:
