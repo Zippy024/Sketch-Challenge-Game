@@ -830,7 +830,7 @@ func _build_reference_popup(tex: Texture2D) -> void:
 	header.add_child(_button("Zoom +", func(): popup_viewer.zoom_by(1.28), 85))
 	header.add_child(_button("Zoom -", func(): popup_viewer.zoom_by(0.78), 85))
 	header.add_child(_button("100%", func(): popup_viewer.reset_zoom(), 75))
-	header.add_child(_button("✕ Close", func(): popup_overlay.visible = false, 90))
+	header.add_child(_button("Close", func(): popup_overlay.visible = false, 90))
 
 	var viewer_frame: PanelContainer = PanelContainer.new()
 	viewer_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
