@@ -21,6 +21,8 @@ const LOCKED := Color("a3afb4")
 var is_pause_overlay: bool = false
 var pause_level: int = 0
 var _body: VBoxContainer
+var _top_bar: Control
+var _bottom_bar: Control
 var _jp_button: Button
 var _mm_button: Button
 var _scroll: ScrollContainer
@@ -93,7 +95,7 @@ func _build_frame() -> void:
 	bg.add_child(back_photo)
 	back_photo.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var veil := ColorRect.new()
-	veil.color = Color(0.45, 0.90, 0.82, 0.23)
+	veil.color = Color(0.45, 0.90, 0.82, 0.05)
 	veil.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	bg.add_child(veil)
 	veil.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -103,6 +105,7 @@ func _build_frame() -> void:
 	bg.add_child(outer)
 	var top := PanelContainer.new()
 	top.custom_minimum_size.y = 62
+	_top_bar = top
 	top.add_theme_stylebox_override("panel", _style(Color(0.87, 1.0, 0.97, 0.85), Color(1, 1, 1, 0.85), 14, 0))
 	outer.add_child(top)
 	var header_margin := MarginContainer.new()
@@ -160,6 +163,7 @@ func _build_frame() -> void:
 	aligner.add_child(right_gutter)
 	var footer := PanelContainer.new()
 	footer.custom_minimum_size.y = 25
+	_bottom_bar = footer
 	footer.add_theme_stylebox_override("panel", _style(Color(0.86, 1.0, 0.97, 0.75), BORDER, 0))
 	outer.add_child(footer)
 	footer.add_child(_label("SKETCH CHALLENGE  •  DRAW  /  DESIGN  /  LEARN", 10, MUTED, true))
@@ -192,20 +196,23 @@ func _clear() -> void:
 # language buttons and actions are genuine Godot Controls (not screenshot text).
 func _show_home() -> void:
 	_clear()
+	_top_bar.visible = false
+	_bottom_bar.visible = false
+	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	var hero := PanelContainer.new()
-	hero.custom_minimum_size.y = 608
+	hero.custom_minimum_size.y = 665
 	hero.clip_contents = true
-	hero.add_theme_stylebox_override("panel", _style(Color(0.03, 0.29, 0.27, 0.16), Color(1, 1, 1, 0.38), 22))
+	hero.add_theme_stylebox_override("panel", _style(Color(0.03, 0.29, 0.27, 0.035), Color(1, 1, 1, 0.15), 22))
 	_body.add_child(hero)
 	var stage := Control.new()
-	stage.custom_minimum_size.y = 608
+	stage.custom_minimum_size.y = 665
 	hero.add_child(stage)
 	var glass := PanelContainer.new()
 	glass.anchor_left = 0.035
 	glass.anchor_top = 0.04
-	glass.anchor_right = 0.68
+	glass.anchor_right = 0.73
 	glass.anchor_bottom = 0.96
-	glass.add_theme_stylebox_override("panel", _style(Color(0.025, 0.27, 0.27, 0.88), Color(0.72, 1, 0.94, 0.65), 26, 18))
+	glass.add_theme_stylebox_override("panel", _style(Color(0.025, 0.31, 0.29, 0.80), Color(0.72, 1, 0.94, 0.65), 26, 18))
 	stage.add_child(glass)
 	var padding := MarginContainer.new()
 	for side in ["left", "right"]:
@@ -278,8 +285,11 @@ func _show_home() -> void:
 
 func _show_language_select() -> void:
 	_clear()
+	_top_bar.visible = false
+	_bottom_bar.visible = false
+	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	var area := CenterContainer.new()
-	area.custom_minimum_size.y = 610
+	area.custom_minimum_size.y = 665
 	_body.add_child(area)
 	var glass := PanelContainer.new()
 	glass.custom_minimum_size = Vector2(860, 480)
@@ -289,7 +299,7 @@ func _show_language_select() -> void:
 	stack.alignment = BoxContainer.ALIGNMENT_CENTER
 	stack.add_theme_constant_override("separation", 16)
 	glass.add_child(stack)
-	stack.add_child(_label("◎", 39, GREEN_DARK, true))
+	stack.add_child(_label("◉", 39, GREEN_DARK, true))
 	stack.add_child(_label("Select Language", 37, INK, true))
 	stack.add_child(_label("Please choose your language.", 18, MUTED, true))
 	var space := Control.new()
@@ -299,11 +309,11 @@ func _show_language_select() -> void:
 	choices.alignment = BoxContainer.ALIGNMENT_CENTER
 	choices.add_theme_constant_override("separation", 22)
 	stack.add_child(choices)
-	var jp := _button("🇯🇵  日本語   ›", false, 300, 95)
+	var jp := _button("JP   日本語   ›", false, 300, 95)
 	jp.add_theme_font_size_override("font_size", 25)
 	jp.pressed.connect(func() -> void: _choose_language("jp"))
 	choices.add_child(jp)
-	var mm := _button("🇲🇲  မြန်မာ   ›", true, 300, 95)
+	var mm := _button("MM   မြန်မာ   ›", true, 300, 95)
 	mm.add_theme_font_size_override("font_size", 25)
 	mm.pressed.connect(func() -> void: _choose_language("mm"))
 	choices.add_child(mm)
@@ -319,6 +329,9 @@ func _choose_language(lang: String) -> void:
 
 func _show_achievements() -> void:
 	_clear()
+	_top_bar.visible = false
+	_bottom_bar.visible = false
+	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	var panel := PanelContainer.new()
 	panel.add_theme_stylebox_override("panel", _style(Color(0.82, 1, 0.95, 0.89), WHITE, 22, 28))
 	_body.add_child(panel)
@@ -422,6 +435,9 @@ func _level_row(n: int) -> Button:
 
 func _show_levels() -> void:
 	_clear()
+	_top_bar.visible = false
+	_bottom_bar.visible = false
+	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	var glass := PanelContainer.new()
 	glass.custom_minimum_size.y = 603
 	glass.add_theme_stylebox_override("panel", _style(Color(0.70, 0.95, 0.91, 0.75), Color(1, 1, 1, 0.84), 26, 20))
@@ -467,6 +483,9 @@ func _resume_paused() -> void:
 
 func _show_help() -> void:
 	_clear()
+	_top_bar.visible = true
+	_bottom_bar.visible = true
+	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	_body.add_child(_label("HOW TO PLAY", 31, INK))
 	var panel := PanelContainer.new()
 	panel.add_theme_stylebox_override("panel", _style(WHITE, BORDER, 18, 30))
