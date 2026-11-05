@@ -265,7 +265,7 @@ func _show_intro_screen() -> void:
 	request_label.visible_characters = -1
 	intro_overlay = ColorRect.new()
 	intro_overlay.name = "GameIntroOverlay"
-	intro_overlay.color = Color("101d35")
+	intro_overlay.color = Color("101d1c")
 	intro_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(intro_overlay)
 	intro_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -307,10 +307,10 @@ func _show_intro_screen() -> void:
 	start.add_theme_color_override("font_color", Color.WHITE)
 	start.add_theme_color_override("font_hover_color", Color.WHITE)
 	var normal := StyleBoxFlat.new()
-	normal.bg_color = Color("2563eb")
+	normal.bg_color = Color("187457")
 	normal.set_corner_radius_all(12)
 	var hover := normal.duplicate() as StyleBoxFlat
-	hover.bg_color = Color("1d4ed8")
+	hover.bg_color = Color("238e69")
 	start.add_theme_stylebox_override("normal", normal)
 	start.add_theme_stylebox_override("hover", hover)
 	start.add_theme_stylebox_override("pressed", hover)
@@ -348,6 +348,8 @@ func _apply_web_readability(_node: Node) -> void:
 	pass
 
 func _style(bg: String, border: String = "cbd5e1") -> StyleBoxFlat:
+	var fills := {"e9eef5": "101d1c", "f1f5f9": "192c29", "e2e8f0": "203934", "e5f6f0": "192c29", "def4ee": "101d1c", "d7f2e8": "203934", "ffffff": "223934", "ebfffa": "213b33"}
+	bg = fills.get(bg, bg)
 	var s: StyleBoxFlat = StyleBoxFlat.new()
 	s.bg_color = Color(bg)
 	s.border_color = Color(border)
@@ -360,6 +362,8 @@ func _style(bg: String, border: String = "cbd5e1") -> StyleBoxFlat:
 	return s
 
 func _label(value: String, font_size: int, color: String = "17233b") -> Label:
+	var text_colors := {"17233b": "f4f1e9", "1f3c56": "f4f1e9", "1d4ed8": "87d3ae", "064e44": "87d3ae", "64748b": "b6c7c1", "475569": "b6c7c1", "0f172a": "f4f1e9"}
+	color = text_colors.get(color, color)
 	var l: Label = Label.new()
 	l.text = value
 	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -369,6 +373,8 @@ func _label(value: String, font_size: int, color: String = "17233b") -> Label:
 	return l
 
 func _rich_label(font_size: int, color: String = "17233b") -> RichTextLabel:
+	if color == "17233b":
+		color = "f4f1e9"
 	var r: RichTextLabel = RichTextLabel.new()
 	r.bbcode_enabled = true
 	r.fit_content = true
@@ -380,14 +386,14 @@ func _rich_label(font_size: int, color: String = "17233b") -> RichTextLabel:
 	return r
 
 func _modern_button_style(button: Button, kind: String = "secondary") -> void:
-	var backgrounds := {"primary": "2563eb", "secondary": "ffffff", "back": "dbeafe", "warning": "fff0d9"}
-	var borders := {"primary": "1d4ed8", "secondary": "93c5fd", "back": "93c5fd", "warning": "fdba74"}
-	var hovers := {"primary": "1d4ed8", "secondary": "eff6ff", "back": "bfdbfe", "warning": "ffedd5"}
-	var ink := "ffffff" if kind == "primary" else ("9a3412" if kind == "warning" else "1e40af")
+	var backgrounds := {"primary": "187457", "secondary": "263e37", "back": "2a4e41", "warning": "593e31"}
+	var borders := {"primary": "238e69", "secondary": "64877b", "back": "64877b", "warning": "fdba74"}
+	var hovers := {"primary": "238e69", "secondary": "31554a", "back": "315b4b", "warning": "ffedd5"}
+	var ink := "f4f1e9" if kind == "primary" else ("9a3412" if kind == "warning" else "f4f1e9")
 	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
 		var style := StyleBoxFlat.new()
-		style.bg_color = Color(hovers.get(kind, "eff6ff")) if state in ["hover", "pressed"] else Color(backgrounds.get(kind, "ffffff"))
-		style.border_color = Color(borders.get(kind, "93c5fd"))
+		style.bg_color = Color(hovers.get(kind, "31554a")) if state in ["hover", "pressed"] else Color(backgrounds.get(kind, "f4f1e9"))
+		style.border_color = Color(borders.get(kind, "64877b"))
 		style.set_border_width_all(1)
 		style.set_corner_radius_all(10)
 		style.content_margin_left = 14
@@ -473,7 +479,7 @@ func _build_ui() -> void:
 	left_top_bar.add_theme_constant_override("separation", 6)
 	left.add_child(left_top_bar)
 
-	var stage_title: Label = _label("STAGE 1", 19, "1f3c56")
+	var stage_title: Label = _label("STAGE 1  /  LAYOUT CHALLENGE", 19, "1f3c56")
 	stage_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	left_top_bar.add_child(stage_title)
 
@@ -684,6 +690,9 @@ func _build_ui() -> void:
 	right.add_child(toolbar)
 
 	var _create_styled_btn = func(txt: String, cb: Callable, bg_hex: String, fg_hex: String, hover_hex: String, w: float = 85.0) -> Button:
+		bg_hex = "263e37" if bg_hex == "f1f5f9" else ("593e31" if bg_hex == "fee2e2" else bg_hex)
+		fg_hex = "f4f1e9" if fg_hex == "334155" else ("ffcdaf" if fg_hex == "991b1b" else fg_hex)
+		hover_hex = "31554a" if hover_hex == "e2e8f0" else ("754736" if hover_hex == "fecaca" else hover_hex)
 		var b: Button = _button(txt, cb, w)
 		var s: StyleBoxFlat = _style(bg_hex, hover_hex)
 		var h: StyleBoxFlat = _style(hover_hex, bg_hex)
@@ -738,8 +747,8 @@ func _build_ui() -> void:
 	_build_reference_popup(loaded_tex)
 
 func _update_lang_buttons_style() -> void:
-	var active_s: StyleBoxFlat = _style("2563eb", "1d4ed8")
-	var inactive_s: StyleBoxFlat = _style("ffffff", "cbd5e1")
+	var active_s: StyleBoxFlat = _style("187457", "87d3ae")
+	var inactive_s: StyleBoxFlat = _style("263e37", "64877b")
 
 	if current_lang == "jp":
 		jp_lang_btn.add_theme_stylebox_override("normal", active_s)
