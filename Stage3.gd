@@ -8,6 +8,7 @@ const UI_THEME: Theme = preload("res://WebBilingualTheme.tres")
 const PORTRAIT: Texture2D = preload("res://customer_portrait_ui.png")
 const ConsoleAnimations = preload("res://ConceptCAnimations.gd")
 const ConsoleAtmosphere = preload("res://ConceptCAtmosphere.gd")
+const ConsoleStageHUD = preload("res://ConceptCStageHUD.gd")
 var IMAGES_Q1: Array[Texture2D] = []
 var IMAGES_Q2: Array[Texture2D] = []
 const BG := Color("101d1c")
@@ -131,13 +132,20 @@ func _refresh() -> void:
 	photo_dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var atmosphere := ConsoleAtmosphere.new()
 	background.add_child(atmosphere)
+	var hud := ConsoleStageHUD.new(3)
+	background.add_child(hud)
+	hud.anchor_right = 1.0
+	hud.offset_left = 15.0
+	hud.offset_right = -15.0
+	hud.offset_top = 9.0
+	hud.offset_bottom = 54.0
 	var frame := HBoxContainer.new()
 	frame.add_theme_constant_override("separation", 14)
 	background.add_child(frame)
 	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	frame.offset_left = 15
 	frame.offset_right = -15
-	frame.offset_top = 15
+	frame.offset_top = 62
 	frame.offset_bottom = -15
 	var left := _panel()
 	left.custom_minimum_size.x = 450
