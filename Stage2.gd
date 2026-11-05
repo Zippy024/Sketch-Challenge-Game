@@ -2,6 +2,8 @@ extends Control
 
 const Progress = preload("res://GameProgress.gd")
 const AIConfig = preload("res://AIConfig.gd")
+const ConsoleAnimations = preload("res://ConceptCAnimations.gd")
+const ConsoleAtmosphere = preload("res://ConceptCAtmosphere.gd")
 
 const QUESTIONS := {
 	"jp": {
@@ -272,6 +274,7 @@ func _btn(t: String, min_width: float = 85.0) -> Button:
 	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	b.add_theme_font_size_override("font_size", 15)
 	_modern_button_style(b, "primary" if t == "Check Answer" else ("back" if t == "Back to Stage 1" else "secondary"))
+	ConsoleAnimations.animate_button(b)
 	return b
 
 func _build_ui() -> void:
@@ -279,6 +282,8 @@ func _build_ui() -> void:
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	background.add_theme_stylebox_override("panel", _style("def4ee"))
 	add_child(background)
+	var atmosphere := ConsoleAtmosphere.new()
+	background.add_child(atmosphere)
 
 	var outside := MarginContainer.new()
 	for s in ["left", "right", "top", "bottom"]:
