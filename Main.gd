@@ -2,7 +2,7 @@ extends Control
 
 const CanvasScript = preload("res://DrawingCanvas.gd")
 const Progress = preload("res://GameProgress.gd")
-const StageClearScreen = preload("res://StageClearScreen.gd")
+const StageCompleteOverlay = preload("res://StageCompleteOverlay.gd")
 
 # Reference ပုံအမှန်ကို မူရင်းအတိုင်း ပြသပေးပြီး နှိပ်လိုက်ပါက ပုံအကြီး ချဲ့ကြည့်နိုင်သည့် Viewer
 class ReferencePlanViewer extends Control:
@@ -180,7 +180,7 @@ var start_button: Button
 var again_button_row: HBoxContainer
 var again_button: Button
 var stage_transition_running: bool = false
-var _stage_clear_overlay: Control
+var _completion_overlay: Control
 var intro_overlay: ColorRect
 var game_has_started: bool = false
 var status_label: Label
@@ -984,6 +984,7 @@ func _confirm() -> void:
 		_set_status("Please wait for the customer to finish speaking.", false, true)
 		feedback_label.text = DIALOGUE_TEXTS[current_lang]["correct"]
 		_play_voice("correct")
+		_schedule_stage_one_complete()
 	else:
 		last_eval_state = "wrong"
 		canvas.set_drawing_enabled(false)
@@ -1169,32 +1170,51 @@ func _on_voice_finished() -> void:
 			_start_auto_stage_transition()
 
 
+func _schedule_stage_one_complete() -> void:
+	# ZIP V22 flow: if Web blocks or drops the end of the voice,
+	# still open the interactive Stage 1 completion after a short fallback.
+	var wait_time: float = 1.8
+	if voice_player != null and voice_player.playing and voice_player.stream != null:
+		wait_time = maxf(wait_time, voice_player.stream.get_length() + 0.12)
+	await get_tree().create_timer(wait_time, false).timeout
+	if is_inside_tree() and last_eval_state == "correct":
+		_start_auto_stage_transition()
+
+
 func _start_auto_stage_transition() -> void:
 	if stage_transition_running or last_eval_state != "correct" or not is_inside_tree():
 		return
-	if is_instance_valid(_stage_clear_overlay):
+	if is_instance_valid(_completion_overlay):
 		return
-	_stage_clear_overlay = StageClearScreen.new()
-	add_child(_stage_clear_overlay)
-	_stage_clear_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_stage_clear_overlay.next_requested.connect(_continue_from_stage_clear)
-	_stage_clear_overlay.levels_requested.connect(_show_levels_from_stage_clear)
+	var jp: bool = current_lang == "jp"
+	_completion_overlay = StageCompleteOverlay.new()
+	_completion_overlay.configure(
+		"ステージ1 クリア！" if jp else "Stage 1 Complete!",
+		"図面が完成しました！" if jp else "ပုံဆွဲခြင်း အောင်မြင်ပါပြီ။",
+		"次のステージ" if jp else "Next Stage",
+		"レベル一覧" if jp else "Levels",
+		"", true, false
+	)
+	add_child(_completion_overlay)
+	_completion_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_completion_overlay.next_requested.connect(_continue_to_stage_two)
+	_completion_overlay.levels_requested.connect(_complete_to_levels)
 
-func _continue_from_stage_clear() -> void:
-	if is_instance_valid(_stage_clear_overlay):
-		_stage_clear_overlay.queue_free()
-		_stage_clear_overlay = null
-	if stage_transition_running:
+
+func _continue_to_stage_two() -> void:
+	if last_eval_state != "correct" or stage_transition_running:
 		return
+	if is_instance_valid(_completion_overlay):
+		_completion_overlay.queue_free()
+		_completion_overlay = null
 	stage_transition_running = true
 	_run_stage_transition()
 
-func _show_levels_from_stage_clear() -> void:
-	if is_instance_valid(_stage_clear_overlay):
-		_stage_clear_overlay.queue_free()
-		_stage_clear_overlay = null
+
+func _complete_to_levels() -> void:
 	Progress.show_levels_on_open = true
 	get_tree().change_scene_to_file("res://GameMenu.tscn")
+
 
 func _run_stage_transition() -> void:
 	# Keep the customer response visible briefly, then fade to Stage 2.
