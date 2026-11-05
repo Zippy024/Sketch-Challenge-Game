@@ -6,6 +6,8 @@ signal resume_requested
 
 const Progress = preload("res://GameProgress.gd")
 const BilingualTheme: Theme = preload("res://WebBilingualTheme.tres")
+const ConsoleAnimations = preload("res://ConceptCAnimations.gd")
+const ConsoleAtmosphere = preload("res://ConceptCAtmosphere.gd")
 
 const BG := Color("dcece7")
 const WHITE := Color("ffffff")
@@ -78,13 +80,14 @@ func _button(title: String, primary: bool = false, min_w: float = 165.0, min_h: 
 	b.custom_minimum_size = Vector2(min_w, min_h)
 	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	b.add_theme_font_size_override("font_size", 16)
-	b.add_theme_color_override("font_color", Color("182520") if primary else C_INK)
-	b.add_theme_color_override("font_hover_color", Color("17241e") if primary else WHITE)
-	b.add_theme_color_override("font_pressed_color", Color("17241e") if primary else WHITE)
-	b.add_theme_stylebox_override("normal", _console_style(Color("d7ae7a") if primary else Color("20322e"), Color("ffe0ac") if primary else Color("527068"), 13, 10, 3 if primary else 0))
-	b.add_theme_stylebox_override("hover", _console_style(Color("edca96") if primary else Color("2c5146"), Color("ffebc5") if primary else C_MINT, 13, 10, 5))
-	b.add_theme_stylebox_override("pressed", _console_style(Color("bf945e") if primary else Color("254338"), C_COPPER, 13, 10, 0))
+	b.add_theme_color_override("font_color", WHITE if primary else C_INK)
+	b.add_theme_color_override("font_hover_color", WHITE)
+	b.add_theme_color_override("font_pressed_color", WHITE)
+	b.add_theme_stylebox_override("normal", _console_style(Color("187457") if primary else Color("20322e"), C_MINT if primary else Color("527068"), 13, 10, 3 if primary else 0))
+	b.add_theme_stylebox_override("hover", _console_style(Color("238e69") if primary else Color("2c5146"), Color("baf5d7") if primary else C_MINT, 13, 10, 5))
+	b.add_theme_stylebox_override("pressed", _console_style(Color("125c46") if primary else Color("254338"), C_MINT, 13, 10, 0))
 	b.add_theme_stylebox_override("focus", _style(Color.TRANSPARENT, C_COPPER, 13))
+	ConsoleAnimations.animate_button(b)
 	return b
 
 
@@ -144,6 +147,8 @@ func _build_frame() -> void:
 	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	base.add_child(dim)
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var atmosphere := ConsoleAtmosphere.new()
+	base.add_child(atmosphere)
 	var outer := VBoxContainer.new()
 	outer.add_theme_constant_override("separation", 0)
 	base.add_child(outer)
@@ -167,7 +172,7 @@ func _build_frame() -> void:
 	brand_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	brand_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	header.add_child(brand_icon)
-	var brand := _label("KITCHEN LAYOUT GAME", 18, C_INK)
+	var brand := _label("KITCHEN DECORATION GAME", 18, C_INK)
 	brand.autowrap_mode = TextServer.AUTOWRAP_OFF
 	brand.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(brand)
@@ -250,6 +255,10 @@ func _show_home() -> void:
 	stage.custom_minimum_size.y = 602
 	stage.add_theme_constant_override("separation", 22)
 	_body.add_child(stage)
+	var stage_entrance := create_tween()
+	stage_entrance.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	stage.modulate.a = 0.0
+	stage_entrance.tween_property(stage, "modulate:a", 1.0, 0.55)
 	var menu := _c_panel(Color(0.052, 0.107, 0.105, 0.92), Color("a99070"), 19, 25)
 	menu.custom_minimum_size.x = 585
 	menu.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
@@ -258,16 +267,20 @@ func _show_home() -> void:
 	column.add_theme_constant_override("separation", 9)
 	menu.add_child(column)
 	column.add_child(_label("KITCHEN DESIGN TRAINING", 14, C_COPPER))
-	var heading := _label("Kitchen\nLayout Game", 45, C_INK)
+	var heading := _label("Kitchen\nDecoration Game", 42, C_INK)
 	heading.autowrap_mode = TextServer.AUTOWRAP_OFF
 	column.add_child(heading)
+	# Slow loop; stops automatically when leaving the intro/home page.
+	var logo_pulse := create_tween().bind_node(heading).set_loops()
+	logo_pulse.tween_property(heading, "modulate:a", 0.82, 1.8).set_trans(Tween.TRANS_SINE)
+	logo_pulse.tween_property(heading, "modulate:a", 1.0, 1.8).set_trans(Tween.TRANS_SINE)
 	column.add_child(_thin_rule())
 	column.add_child(_label("SKETCH    /    CHOOSE MATERIALS    /    LEARN", 13, C_COPPER))
 	column.add_child(_label("A practical kitchen design challenge.\nListen to customer requests, sketch accurate layouts,\nand learn to select the right kitchen components.", 16, C_MUTED))
 	var divider := Control.new()
 	divider.custom_minimum_size.y = 12
 	column.add_child(divider)
-	var begin := _icon_button("Start Training", preload("res://MenuAssets/play_green.png"), true, 0, 53, _show_language_select)
+	var begin := _icon_button("Start Training", preload("res://MenuAssets/play_white.png"), true, 0, 53, _show_language_select)
 	begin.add_theme_font_size_override("font_size", 20)
 	column.add_child(begin)
 	column.add_child(_icon_button("Select a Level", preload("res://MenuAssets/levels_white.png"), false, 0, 45, _show_levels))
@@ -314,13 +327,13 @@ func _show_information(title_text: String, details: String) -> void:
 	_bottom_bar.show()
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size.y = 380
-	panel.add_theme_stylebox_override("panel", _style(Color(0.80, 1, 0.95, 0.88), WHITE, 24, 30))
+	panel.add_theme_stylebox_override("panel", _style(Color("192e2b"), C_COPPER, 24, 30))
 	_body.add_child(panel)
 	var stack := VBoxContainer.new()
 	stack.add_theme_constant_override("separation", 24)
 	panel.add_child(stack)
-	stack.add_child(_label(title_text, 30, INK, true))
-	stack.add_child(_label(details, 17, MUTED, true))
+	stack.add_child(_label(title_text, 30, C_INK, true))
+	stack.add_child(_label(details, 17, C_MUTED, true))
 	var back := _button("← Back to Home", true, 190, 48)
 	back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	back.pressed.connect(_show_home)
@@ -372,15 +385,15 @@ func _show_achievements() -> void:
 	_bottom_bar.visible = false
 	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", _style(Color(0.82, 1, 0.95, 0.89), WHITE, 22, 28))
+	panel.add_theme_stylebox_override("panel", _style(Color("192e2b"), C_COPPER, 22, 28))
 	_body.add_child(panel)
 	var stack := VBoxContainer.new()
 	stack.add_theme_constant_override("separation", 18)
 	panel.add_child(stack)
-	stack.add_child(_label("ACHIEVEMENTS", 30, INK, true))
-	stack.add_child(_label("Stage progress is earned by completing in-game challenges.", 17, MUTED, true))
-	stack.add_child(_label("Stage 1: " + ("Cleared ✓" if Progress.is_level_unlocked(2) else "Not yet cleared"), 19, GREEN_DARK, true))
-	stack.add_child(_label("More achievements will appear as new stages are released.", 15, MUTED, true))
+	stack.add_child(_label("ACHIEVEMENTS", 30, C_INK, true))
+	stack.add_child(_label("Stage progress is earned by completing in-game challenges.", 17, C_MUTED, true))
+	stack.add_child(_label("Stage 1: " + ("Cleared ✓" if Progress.is_level_unlocked(2) else "Not yet cleared"), 19, C_MINT, true))
+	stack.add_child(_label("More achievements will appear as new stages are released.", 15, C_MUTED, true))
 	var back := _button("Back to Home", true, 200, 44)
 	back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	back.pressed.connect(_show_home)
@@ -484,7 +497,11 @@ func _show_levels() -> void:
 	var heading := _label("SELECT YOUR MISSION", 31, C_INK, true)
 	heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	ribbon.add_child(heading)
-	var state := _label("●   3 / 3 AVAILABLE", 15, C_MINT)
+	var unlocked_count: int = 0
+	for stage_id in range(1, 4):
+		if Progress.is_level_unlocked(stage_id):
+			unlocked_count += 1
+	var state := _label("●   %d / 3 UNLOCKED" % unlocked_count, 15, C_MINT)
 	state.custom_minimum_size.x = 185
 	ribbon.add_child(state)
 	_body.add_child(_label("Choose any available stage to play.", 15, C_INK, true))
@@ -494,52 +511,65 @@ func _show_levels() -> void:
 	_body.add_child(guide)
 	var panel := _c_panel(Color(0.057, 0.102, 0.103, 0.94), Color("907758"), 20, 14)
 	_body.add_child(panel)
+	panel.modulate.a = 0.0
+	var level_entrance := create_tween()
+	level_entrance.tween_property(panel, "modulate:a", 1.0, 0.45)
 	var stack := VBoxContainer.new()
 	stack.add_theme_constant_override("separation", 8)
 	panel.add_child(stack)
 	stack.add_child(_label("AVAILABLE MISSIONS", 15, C_COPPER))
-	var cards := HBoxContainer.new()
-	cards.add_theme_constant_override("separation", 12)
+	var cards := VBoxContainer.new()
+	cards.add_theme_constant_override("separation", 9)
 	stack.add_child(cards)
 	for stage in range(1, 4):
 		cards.add_child(_mission_card(stage))
 	stack.add_child(_thin_rule())
 	stack.add_child(_label("COMING SOON", 13, C_COPPER))
-	var locked := HBoxContainer.new()
-	locked.add_theme_constant_override("separation", 12)
+	var locked := VBoxContainer.new()
+	locked.add_theme_constant_override("separation", 8)
 	stack.add_child(locked)
 	for stage in range(4, 7):
 		locked.add_child(_locked_card(stage))
 
 func _mission_card(stage: int) -> PanelContainer:
-	var card := _c_panel(Color("192e2b"), Color("587369"), 15, 11)
-	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	card.custom_minimum_size.y = 258
-	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 5)
-	card.add_child(column)
-	column.add_child(_label("MISSION %02d" % stage, 13, C_COPPER))
+	# Compact horizontal list rows: the preview, description and live Play action
+	# remain independent controls, not part of a flattened screenshot.
+	var unlocked: bool = Progress.is_level_unlocked(stage)
+	var card := _c_panel(Color("192e2b") if unlocked else Color("202c2b"), Color("63877a") if unlocked else Color("4b5b56"), 14, 12)
+	card.custom_minimum_size.y = 106
+	var line := HBoxContainer.new()
+	line.add_theme_constant_override("separation", 17)
+	card.add_child(line)
+	var number := _label("%02d" % stage, 30, C_COPPER if unlocked else LOCKED, true)
+	number.custom_minimum_size.x = 46
+	line.add_child(number)
 	var preview := TextureRect.new()
 	preview.texture = preload("res://reference_sketch.png") if stage == 1 else (preload("res://MenuAssets/Level2.png") if stage == 2 else preload("res://MenuAssets/Level3.png"))
 	preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	preview.custom_minimum_size.y = 117
-	preview.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	preview.custom_minimum_size = Vector2(170, 76)
 	preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	column.add_child(preview)
-	column.add_child(_label("STAGE %d" % stage, 19, C_INK))
+	line.add_child(preview)
+	var info := VBoxContainer.new()
+	info.alignment = BoxContainer.ALIGNMENT_CENTER
+	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info.add_theme_constant_override("separation", 3)
+	line.add_child(info)
+	info.add_child(_label("STAGE %02d" % stage, 19, C_INK if unlocked else LOCKED))
 	var detail := "LDK Boundary Drawing" if stage == 1 else ("Pipe Shaft Q&A" if stage == 2 else "S-Class Kitchen Selection")
-	column.add_child(_label(detail, 14, C_MUTED))
-	var play := _button("▶   Play Mission", true, 0, 36)
-	play.add_theme_font_size_override("font_size", 15)
-	play.pressed.connect(_start_level.bind(stage))
-	column.add_child(play)
+	info.add_child(_label(detail, 15, C_MUTED if unlocked else LOCKED))
+	info.add_child(_label("AVAILABLE TO PLAY" if unlocked else "COMPLETE THE PREVIOUS STAGE TO UNLOCK", 11, C_MINT if unlocked else LOCKED))
+	var play := _button("▶   PLAY" if unlocked else "LOCKED", unlocked, 150, 46)
+	play.disabled = not unlocked
+	if unlocked:
+		play.pressed.connect(_start_level.bind(stage))
+	line.add_child(play)
 	return card
 
 func _locked_card(stage: int) -> PanelContainer:
 	var card := _c_panel(Color(0.14, 0.18, 0.19, 0.91), Color("4d5954"), 13, 10)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	card.custom_minimum_size.y = 60
+	card.custom_minimum_size.y = 52
 	var line := HBoxContainer.new()
 	line.add_theme_constant_override("separation", 12)
 	card.add_child(line)
@@ -566,20 +596,20 @@ func _show_help() -> void:
 	_top_bar.visible = true
 	_bottom_bar.visible = true
 	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	_body.add_child(_label("HOW TO PLAY", 31, INK))
+	_body.add_child(_label("HOW TO PLAY", 31, C_INK))
 	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", _style(WHITE, BORDER, 18, 30))
+	panel.add_theme_stylebox_override("panel", _style(Color("192e2b"), C_COPPER, 18, 30))
 	_body.add_child(panel)
 	var contents := VBoxContainer.new()
 	contents.add_theme_constant_override("separation", 18)
 	panel.add_child(contents)
-	contents.add_child(_label("01  LISTEN TO THE CUSTOMER", 19, GREEN))
-	contents.add_child(_label("Choose Japanese or Myanmar, listen to the customer and review the layout request.", 16, MUTED))
-	contents.add_child(_label("02  DRAW THE REQUESTED PLAN", 19, GREEN))
-	contents.add_child(_label("Use the grid tools to sketch the requested walls and press OK to check your layout.", 16, MUTED))
-	contents.add_child(_label("03  ANSWER THE CUSTOMER", 19, GREEN))
-	contents.add_child(_label("Finish Level 1 to unlock the Pipe Shaft Q&A in Level 2.", 16, MUTED))
-	contents.add_child(_label("Progress and language selection are saved on this device.", 14, MUTED))
+	contents.add_child(_label("01  LISTEN TO THE CUSTOMER", 19, C_MINT))
+	contents.add_child(_label("Choose Japanese or Myanmar, listen to the customer and review the layout request.", 16, C_MUTED))
+	contents.add_child(_label("02  DRAW THE REQUESTED PLAN", 19, C_MINT))
+	contents.add_child(_label("Use the grid tools to sketch the requested walls and press OK to check your layout.", 16, C_MUTED))
+	contents.add_child(_label("03  ANSWER THE CUSTOMER", 19, C_MINT))
+	contents.add_child(_label("Finish Level 1 to unlock the Pipe Shaft Q&A in Level 2.", 16, C_MUTED))
+	contents.add_child(_label("Progress and language selection are saved on this device.", 14, C_MUTED))
 	var go := _button("BACK TO HOME", true, 190, 46)
 	go.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	go.pressed.connect(_show_home)
@@ -589,14 +619,14 @@ func _show_help() -> void:
 func _show_settings() -> void:
 	_reset_armed = false
 	_clear()
-	_body.add_child(_label("SETTINGS", 31, INK))
+	_body.add_child(_label("SETTINGS", 31, C_INK))
 	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", _style(WHITE, BORDER, 18, 30))
+	panel.add_theme_stylebox_override("panel", _style(Color("192e2b"), C_COPPER, 18, 30))
 	_body.add_child(panel)
 	var contents := VBoxContainer.new()
 	contents.add_theme_constant_override("separation", 20)
 	panel.add_child(contents)
-	contents.add_child(_label("LANGUAGE", 18, GREEN))
+	contents.add_child(_label("LANGUAGE", 18, C_MINT))
 	var languages := HBoxContainer.new()
 	contents.add_child(languages)
 	var japanese := _button("日本語", false, 140, 48)
@@ -605,7 +635,7 @@ func _show_settings() -> void:
 	var myanmar := _button("မြန်မာ", false, 140, 48)
 	myanmar.pressed.connect(func() -> void: _set_language("mm"))
 	languages.add_child(myanmar)
-	contents.add_child(_label("GAME VOLUME", 18, GREEN))
+	contents.add_child(_label("GAME VOLUME", 18, C_MINT))
 	var volume := HSlider.new()
 	volume.min_value = 0.0
 	volume.max_value = 1.0
@@ -614,8 +644,8 @@ func _show_settings() -> void:
 	volume.custom_minimum_size = Vector2(300, 36)
 	volume.value_changed.connect(_on_volume_changed)
 	contents.add_child(volume)
-	contents.add_child(_label("SAVED GAME PROGRESS", 18, GREEN))
-	contents.add_child(_label("Resetting progress will lock Level 2 until you complete Level 1 again.", 14, MUTED))
+	contents.add_child(_label("SAVED GAME PROGRESS", 18, C_MINT))
+	contents.add_child(_label("Resetting progress will lock Level 2 until you complete Level 1 again.", 14, C_MUTED))
 	var reset := _button("RESET LEVEL PROGRESS", false, 255, 45)
 	reset.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	reset.pressed.connect(_on_reset_progress_pressed.bind(reset))

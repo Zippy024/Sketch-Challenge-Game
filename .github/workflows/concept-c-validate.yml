@@ -1,0 +1,43 @@
+name: Validate Concept C Godot Build
+
+on:
+  push:
+    branches:
+      - feature/concept-c-stage-console-20261105
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Godot 4.7.2
+        run: |
+          wget -q https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          unzip -q Godot_v4.7.2-stable_linux.x86_64.zip
+          chmod +x Godot_v4.7.2-stable_linux.x86_64
+          sudo mv Godot_v4.7.2-stable_linux.x86_64 /usr/local/bin/godot
+          wget -q https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz
+          mkdir -p ~/.local/share/godot/export_templates/4.7.2.stable
+          unzip -q Godot_v4.7.2-stable_export_templates.tpz -d templates
+          cp templates/templates/* ~/.local/share/godot/export_templates/4.7.2.stable/
+      - name: Import and validate scripts
+        run: godot --headless --editor --path . --import
+      - name: Export test web build
+        run: |
+          mkdir -p web
+          godot --headless --path . --export-release "Web" web/index.html
+          test -s web/index.html
+          test -s web/index.wasm
+      - name: Save preview build
+        uses: actions/upload-artifact@v4
+        with:
+          name: concept-c-web-preview
+          path: web/
+          retention-days: 7

@@ -6,15 +6,18 @@ const Progress = preload("res://GameProgress.gd")
 const StageCompleteOverlay = preload("res://StageCompleteOverlay.gd")
 const UI_THEME: Theme = preload("res://WebBilingualTheme.tres")
 const PORTRAIT: Texture2D = preload("res://customer_portrait_ui.png")
+const ConsoleAnimations = preload("res://ConceptCAnimations.gd")
+const ConsoleAtmosphere = preload("res://ConceptCAtmosphere.gd")
+const ConsoleStageHUD = preload("res://ConceptCStageHUD.gd")
 var IMAGES_Q1: Array[Texture2D] = []
 var IMAGES_Q2: Array[Texture2D] = []
-const BG := Color("e9eef5")
-const PANEL := Color("f1f5f9")
-const TEXT := Color("1f3c56")
-const SUBTEXT := Color("6b7f98")
-const BLUE := Color("2563eb")
-const GREEN := Color("15803d")
-const OUTLINE := Color("d6e2ef")
+const BG := Color("101d1c")
+const PANEL := Color("192c29")
+const TEXT := Color("f4f1e9")
+const SUBTEXT := Color("b6c7c1")
+const BLUE := Color("87d3ae")
+const GREEN := Color("54c894")
+const OUTLINE := Color("597469")
 const NAMES: Array[String] = ["カウンター", "キッチンボード", "フード", "腰壁", "その他"]
 const EN_PARTS: Array[String] = ["Countertop", "Kitchen board", "Range hood", "Half wall", "Other fixtures"]
 
@@ -36,6 +39,7 @@ func _ready() -> void:
 	_load_stage3_atlas()
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_refresh()
+	ConsoleAnimations.animate_screen(self)
 
 
 func _load_stage3_atlas() -> void:
@@ -86,12 +90,13 @@ func _btn(t: String, main: bool = false, w: float = 92.0) -> Button:
 	b.text = t
 	b.custom_minimum_size = Vector2(w, 36)
 	b.add_theme_font_size_override("font_size", 12)
-	b.add_theme_color_override("font_color", Color.WHITE if main else BLUE)
-	b.add_theme_color_override("font_hover_color", Color.WHITE if main else BLUE)
-	b.add_theme_stylebox_override("normal", _style(BLUE if main else Color.WHITE, BLUE if main else OUTLINE))
-	b.add_theme_stylebox_override("hover", _style(Color("1d4ed8") if main else Color("e7f0ff"), BLUE))
-	b.add_theme_stylebox_override("pressed", _style(Color("1d4ed8") if main else Color("e7f0ff"), BLUE))
+	b.add_theme_color_override("font_color", Color.WHITE if main else TEXT)
+	b.add_theme_color_override("font_hover_color", Color.WHITE)
+	b.add_theme_stylebox_override("normal", _style(Color("187457") if main else Color("263e37"), BLUE if main else OUTLINE))
+	b.add_theme_stylebox_override("hover", _style(Color("238e69") if main else Color("31554a"), BLUE))
+	b.add_theme_stylebox_override("pressed", _style(Color("125c46") if main else Color("31554a"), BLUE))
 	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	ConsoleAnimations.animate_button(b)
 	return b
 
 
@@ -113,13 +118,34 @@ func _refresh() -> void:
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	background.add_theme_stylebox_override("panel", _style(BG, BG, 0))
 	add_child(background)
+	var kitchen_photo := TextureRect.new()
+	kitchen_photo.texture = preload("res://MenuAssets/ConceptC_Home_Background.jpg")
+	kitchen_photo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	kitchen_photo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	kitchen_photo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	background.add_child(kitchen_photo)
+	kitchen_photo.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var photo_dim := ColorRect.new()
+	photo_dim.color = Color(0.04, 0.09, 0.08, 0.69)
+	photo_dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	background.add_child(photo_dim)
+	photo_dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var atmosphere := ConsoleAtmosphere.new()
+	background.add_child(atmosphere)
+	var hud := ConsoleStageHUD.new(3)
+	background.add_child(hud)
+	hud.anchor_right = 1.0
+	hud.offset_left = 15.0
+	hud.offset_right = -15.0
+	hud.offset_top = 9.0
+	hud.offset_bottom = 54.0
 	var frame := HBoxContainer.new()
 	frame.add_theme_constant_override("separation", 14)
 	background.add_child(frame)
 	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	frame.offset_left = 15
 	frame.offset_right = -15
-	frame.offset_top = 15
+	frame.offset_top = 62
 	frame.offset_bottom = -15
 	var left := _panel()
 	left.custom_minimum_size.x = 450
@@ -138,16 +164,16 @@ func _refresh() -> void:
 	var header := HBoxContainer.new()
 	header.add_theme_constant_override("separation", 6)
 	contents.add_child(header)
-	var heading := _label("STAGE 3", 19, TEXT, false)
+	var heading := _label("STAGE 3  /  KITCHEN MATERIALS", 19, TEXT, false)
 	heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(heading)
 	var jp := _btn("日本語", false, 62)
 	var mm := _btn("မြန်မာ", false, 64)
 	var levels := _btn("LEVELS", false, 72)
-	levels.add_theme_stylebox_override("normal", _style(Color("f8fcfa"), Color("a5d6bc"), 10))
-	levels.add_theme_stylebox_override("hover", _style(Color("e6f5ee"), Color("82c6a5"), 10))
-	levels.add_theme_color_override("font_color", Color("297b62"))
-	levels.add_theme_color_override("font_hover_color", Color("297b62"))
+	levels.add_theme_stylebox_override("normal", _style(Color("263e37"), Color("64877b"), 10))
+	levels.add_theme_stylebox_override("hover", _style(Color("31554a"), BLUE, 10))
+	levels.add_theme_color_override("font_color", TEXT)
+	levels.add_theme_color_override("font_hover_color", TEXT)
 	for button in [jp, mm, levels]:
 		button.custom_minimum_size.y = 36
 		header.add_child(button)
@@ -157,11 +183,11 @@ func _refresh() -> void:
 	for pair in [[jp, "jp"], [mm, "mm"]]:
 		var button: Button = pair[0]
 		if current_lang == pair[1]:
-			button.add_theme_stylebox_override("normal", _style(BLUE, BLUE))
+			button.add_theme_stylebox_override("normal", _style(Color("187457"), BLUE))
 			button.add_theme_color_override("font_color", Color.WHITE)
 	var customer := _panel()
 	customer.custom_minimum_size.y = 230
-	customer.add_theme_stylebox_override("panel", _style(Color("e1e9f5")))
+	customer.add_theme_stylebox_override("panel", _style(Color("203934")))
 	contents.add_child(customer)
 	var customer_row := HBoxContainer.new()
 	customer_row.add_theme_constant_override("separation", 12)
@@ -194,7 +220,7 @@ void fragment() {
 	customer_row.add_child(face)
 	var talk_card := _panel()
 	talk_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	talk_card.add_theme_stylebox_override("panel", _style(Color.WHITE))
+	talk_card.add_theme_stylebox_override("panel", _style(Color("203934")))
 	customer_row.add_child(talk_card)
 	var talk_pad := MarginContainer.new()
 	for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
@@ -207,7 +233,7 @@ void fragment() {
 	_left_dialogue.add_child(_label("CUSTOMER QUESTION", 12, SUBTEXT, false))
 	_left_dialogue.add_child(_label(_question_text(), 16))
 	var info := _panel()
-	info.add_theme_stylebox_override("panel", _style(Color.WHITE))
+	info.add_theme_stylebox_override("panel", _style(Color("203934")))
 	contents.add_child(info)
 	var info_pad := MarginContainer.new()
 	for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
@@ -249,7 +275,7 @@ void fragment() {
 		_feedback.text = "ちょっと違うようです。もう一度選んでください。" if current_lang == "jp" else "မမှန်သေးပါ။ ပြန်ရွေးပါ။"
 		_feedback.add_theme_color_override("font_color", Color("c24144"))
 	var progress_panel := PanelContainer.new()
-	progress_panel.add_theme_stylebox_override("panel", _style(Color.WHITE, OUTLINE, 13))
+	progress_panel.add_theme_stylebox_override("panel", _style(Color("203934"), OUTLINE, 13))
 	right_col.add_child(progress_panel)
 	var progress_box := VBoxContainer.new()
 	progress_box.add_theme_constant_override("separation", 8)
@@ -267,7 +293,7 @@ void fragment() {
 	_progress_bar.max_value = 7
 	_progress_bar.value = step
 	_progress_bar.show_percentage = false
-	_progress_bar.add_theme_stylebox_override("background", _style(Color("dce6f2"), Color("dce6f2"), 5))
+	_progress_bar.add_theme_stylebox_override("background", _style(Color("101d1c"), Color("101d1c"), 5))
 	_progress_bar.add_theme_stylebox_override("fill", _style(GREEN, GREEN, 5))
 	progress_box.add_child(_progress_bar)
 
@@ -317,7 +343,7 @@ func _draw_choices() -> void:
 
 	var surface := PanelContainer.new()
 	surface.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	surface.add_theme_stylebox_override("panel", _style(Color.WHITE, OUTLINE, 12))
+	surface.add_theme_stylebox_override("panel", _style(Color("142622"), OUTLINE, 12))
 	_answer_area.add_child(surface)
 
 	var cards := GridContainer.new()
@@ -334,13 +360,14 @@ func _draw_choices() -> void:
 		option.text = ""
 		option.custom_minimum_size = Vector2(128, 240)
 		option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		option.add_theme_stylebox_override("normal", _style(Color.WHITE, OUTLINE, 9))
-		option.add_theme_stylebox_override("hover", _style(Color("f9fbfd"), Color("b5c6d9"), 9))
-		option.add_theme_stylebox_override("pressed", _style(Color("f7faff"), Color("b5c6d9"), 9))
+		option.add_theme_stylebox_override("normal", _style(Color("263e37"), OUTLINE, 9))
+		option.add_theme_stylebox_override("hover", _style(Color("31554a"), BLUE, 9))
+		option.add_theme_stylebox_override("pressed", _style(Color("21483b"), BLUE, 9))
 		option.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 		option.focus_mode = Control.FOCUS_NONE
 		option.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		cards.add_child(option)
+		ConsoleAnimations.animate_button(option)
 
 		var option_col := VBoxContainer.new()
 		option_col.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -485,7 +512,7 @@ func _resume_from_game_menu() -> void:
 class KitchenDiagram extends Control:
 	signal item_selected(which: int)
 	var zones: Array[Rect2] = []
-	var tip_colors: Array[Color] = [Color("72bbdf"), Color("c2d7e7"), Color("8ba6c5"), Color("d4c4b1"), Color("f3d8ab")]
+	var tip_colors: Array[Color] = [Color("87d3ae"), Color("d7ab78"), Color("91a6a0"), Color("ccb49c"), Color("e5c79c")]
 
 	func _ready() -> void:
 		mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
@@ -495,39 +522,39 @@ class KitchenDiagram extends Control:
 		# A deliberately simple schematic, not a substituted 3D model asset.
 		var w: float = size.x
 		var h: float = size.y
-		draw_rect(Rect2(Vector2.ZERO, size), Color.WHITE, true)
+		draw_rect(Rect2(Vector2.ZERO, size), Color("10211e"), true)
 		var sx: float = w / 650.0
 		var sy: float = h / 390.0
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2(sx,sy))
-		draw_rect(Rect2(0,0,650,390),Color("f7fafc"))
-		draw_rect(Rect2(0,307,650,83),Color("e9d8c3"))
+		draw_rect(Rect2(0,0,650,390),Color("172b27"))
+		draw_rect(Rect2(0,307,650,83),Color("514b42"))
 		# rear wall section
-		draw_rect(Rect2(83,62,480,246),Color("f5f5f4"))
-		draw_rect(Rect2(83,62,480,246),Color("c8cfd8"),false,2)
+		draw_rect(Rect2(83,62,480,246),Color("3a4a43"))
+		draw_rect(Rect2(83,62,480,246),Color("718b80"),false,2)
 		# upper kitchen board
-		draw_rect(Rect2(205,83,316,78),Color("cbdce8"))
+		draw_rect(Rect2(205,83,316,78),Color("5b786c"))
 		for x in [280,357,435]:
-			draw_line(Vector2(x,83),Vector2(x,161),Color("8198ac"),2)
+			draw_line(Vector2(x,83),Vector2(x,161),Color("324a41"),2)
 		# hood above hob
-		draw_rect(Rect2(105,76,85,43),Color("8fa6bb"))
-		draw_rect(Rect2(127,119,41,9),Color("758ea8"))
+		draw_rect(Rect2(105,76,85,43),Color("ab8263"))
+		draw_rect(Rect2(127,119,41,9),Color("705740"))
 		# tall side fixture
-		draw_rect(Rect2(532,171,45,134),Color("f0d6a8"))
+		draw_rect(Rect2(532,171,45,134),Color("8a7e67"))
 		# half wall in front
-		draw_rect(Rect2(90,270,480,42),Color("dbc7b2"))
+		draw_rect(Rect2(90,270,480,42),Color("7b705f"))
 		# lower base cabinet
-		draw_rect(Rect2(104,205,432,95),Color("e6f1f8"))
+		draw_rect(Rect2(104,205,432,95),Color("587366"))
 		for x in [204,303,403]:
-			draw_line(Vector2(x,205),Vector2(x,300),Color("a2b5c9"),2)
+			draw_line(Vector2(x,205),Vector2(x,300),Color("344e44"),2)
 		# countertop slab
-		draw_colored_polygon(PackedVector2Array([Vector2(93,194),Vector2(508,194),Vector2(536,215),Vector2(104,215)]),Color("90d4f0"))
-		draw_line(Vector2(93,194),Vector2(508,194),Color("3a8ba9"),3)
+		draw_colored_polygon(PackedVector2Array([Vector2(93,194),Vector2(508,194),Vector2(536,215),Vector2(104,215)]),Color("c9c6b7"))
+		draw_line(Vector2(93,194),Vector2(508,194),Color("87d3ae"),3)
 		# sink and faucet
-		draw_rect(Rect2(325,196,80,17),Color("a0b7c5"))
-		draw_arc(Vector2(362,190),18,PI,TAU,20,Color("627f92"),3)
+		draw_rect(Rect2(325,196,80,17),Color("a2a9a1"))
+		draw_arc(Vector2(362,190),18,PI,TAU,20,Color("d7ab78"),3)
 		# cooktop
 		for center in [Vector2(156,208),Vector2(186,208)]:
-			draw_arc(center,9,0,TAU,20,Color("64798e"),2)
+			draw_arc(center,9,0,TAU,20,Color("a2b7aa"),2)
 		# clickable outlines identify the five conceptual elements.
 		zones = [Rect2(89,181,445,44),Rect2(205,77,323,94),Rect2(100,70,99,68),Rect2(88,260,488,58),Rect2(531,161,58,150)]
 		for r in zones:
