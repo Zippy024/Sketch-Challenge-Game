@@ -1,7 +1,7 @@
 extends Control
 
-# V8: native interactive menu over a clean kitchen-background photo. Level list is text-only.
-# Compatible with the existing Stage 1/2 scenes, saved progression and pause/resume.
+# Concept C — Modern Training Console. Native Godot controls, no screenshot-based buttons.
+# Stage 1/2/3 game scripts and answer evaluation remain unchanged.
 signal resume_requested
 
 const Progress = preload("res://GameProgress.gd")
@@ -16,6 +16,12 @@ const GREEN_DARK := Color("006858")
 const GREEN_PALE := Color("c9f7ea")
 const BORDER := Color("d6e0e0")
 const GOLD := Color("d5ac72")
+const C_DARK := Color("101d1c")
+const C_PANEL := Color("152825")
+const C_INK := Color("f4f1e9")
+const C_MUTED := Color("b6c7c1")
+const C_COPPER := Color("d7ab78")
+const C_MINT := Color("87d3ae")
 const LOCKED := Color("a3afb4")
 
 var is_pause_overlay: bool = false
@@ -28,11 +34,6 @@ var _mm_button: Button
 var _scroll: ScrollContainer
 var _volume_value: float = 0.85
 var _reset_armed: bool = false
-var _reference_layer: Control
-var _reference_canvas: Control
-const REF_SIZE := Vector2(1672.0, 941.0)
-const REF_HOME := preload("res://MenuAssets/MenuReferenceHome.webp")
-const REF_LEVELS := preload("res://MenuAssets/MenuReferenceLevels.webp")
 
 
 func _ready() -> void:
@@ -40,7 +41,6 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_build_frame()
 	resized.connect(_fit_content)
-	resized.connect(_sync_reference_layout)
 	_fit_content()
 	if is_pause_overlay or Progress.show_levels_on_open:
 		Progress.show_levels_on_open = false
@@ -76,68 +76,107 @@ func _button(title: String, primary: bool = false, min_w: float = 165.0, min_h: 
 	b.text = title
 	b.custom_minimum_size = Vector2(min_w, min_h)
 	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	b.add_theme_font_size_override("font_size", 15)
-	b.add_theme_color_override("font_color", WHITE if primary else INK)
-	b.add_theme_color_override("font_hover_color", WHITE if primary else GREEN)
-	b.add_theme_color_override("font_pressed_color", WHITE if primary else GREEN)
-	b.add_theme_stylebox_override("normal", _style(GREEN if primary else WHITE, GREEN if primary else BORDER, 12, 9))
-	b.add_theme_stylebox_override("hover", _style(GREEN_DARK if primary else GREEN_PALE, GREEN, 12, 9))
-	b.add_theme_stylebox_override("pressed", _style(GREEN_DARK if primary else GREEN_PALE, GREEN, 12, 9))
-	b.add_theme_stylebox_override("focus", _style(Color.TRANSPARENT, GOLD, 12, 0))
+	b.add_theme_font_size_override("font_size", 16)
+	b.add_theme_color_override("font_color", Color("182520") if primary else C_INK)
+	b.add_theme_color_override("font_hover_color", Color("17241e") if primary else WHITE)
+	b.add_theme_color_override("font_pressed_color", Color("17241e") if primary else WHITE)
+	b.add_theme_stylebox_override("normal", _console_style(Color("d7ae7a") if primary else Color("20322e"), Color("ffe0ac") if primary else Color("527068"), 13, 10, 3 if primary else 0))
+	b.add_theme_stylebox_override("hover", _console_style(Color("edca96") if primary else Color("2c5146"), Color("ffebc5") if primary else C_MINT, 13, 10, 5))
+	b.add_theme_stylebox_override("pressed", _console_style(Color("bf945e") if primary else Color("254338"), C_COPPER, 13, 10, 0))
+	b.add_theme_stylebox_override("focus", _style(Color.TRANSPARENT, C_COPPER, 13))
 	return b
 
 
+func _console_style(fill: Color, line: Color, radius: int = 15, inset: int = 10, shadow: int = 0) -> StyleBoxFlat:
+	var style := _style(fill, line, radius, inset)
+	if shadow > 0:
+		style.shadow_size = shadow
+		style.shadow_color = Color(0.0, 0.0, 0.0, 0.31)
+		style.shadow_offset = Vector2(0, 3)
+	return style
+
+
+func _icon_button(title: String, image: Texture2D, primary: bool, w: float, h: float, callback: Callable) -> Button:
+	var btn := _button(title, primary, w, h)
+	btn.icon = image
+	btn.expand_icon = false
+	btn.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	btn.add_theme_constant_override("icon_max_width", 22)
+	btn.pressed.connect(callback)
+	return btn
+
+
+func _c_panel(fill: Color = C_PANEL, edge: Color = C_COPPER, rounding: int = 22, padding: int = 18) -> PanelContainer:
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", _console_style(fill, edge, rounding, padding, 8))
+	return p
+
+
+func _section_heading(value: String, font_size: int = 22) -> Label:
+	return _label(value, font_size, C_INK)
+
+
+func _thin_rule() -> ColorRect:
+	var line := ColorRect.new()
+	line.color = Color("836e52")
+	line.custom_minimum_size.y = 1
+	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return line
+
 func _build_frame() -> void:
-	var bg := PanelContainer.new()
-	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	bg.add_theme_stylebox_override("panel", _style(Color("d0e7e0"), Color("d0e7e0"), 0))
-	add_child(bg)
+	var base := PanelContainer.new()
+	base.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	base.add_theme_stylebox_override("panel", _style(C_DARK, C_DARK, 0))
+	add_child(base)
+	# This is a separate kitchen photograph; all controls and text are live Godot UI.
 	var photo := TextureRect.new()
-	photo.texture = preload("res://MenuAssets/KitchenIntroV8.jpg")
+	photo.texture = preload("res://MenuAssets/KitchenHero.jpg")
 	photo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	photo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	photo.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	photo.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	bg.add_child(photo)
+	base.add_child(photo)
 	photo.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var colorwash := ColorRect.new()
-	colorwash.color = Color(0.04, 0.20, 0.18, 0.30)
-	colorwash.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	bg.add_child(colorwash)
-	colorwash.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var dim := ColorRect.new()
+	dim.color = Color(0.025, 0.043, 0.040, 0.51)
+	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	base.add_child(dim)
+	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var outer := VBoxContainer.new()
 	outer.add_theme_constant_override("separation", 0)
-	bg.add_child(outer)
-	var top := PanelContainer.new()
-	top.custom_minimum_size.y = 76
-	_top_bar = top
-	top.add_theme_stylebox_override("panel", _style(Color(0.02, 0.26, 0.24, 0.83), Color(0.63, 1, 0.90, 0.35), 0, 0))
-	outer.add_child(top)
-	var header_pad := MarginContainer.new()
-	header_pad.add_theme_constant_override("margin_left", 28)
-	header_pad.add_theme_constant_override("margin_right", 28)
-	header_pad.add_theme_constant_override("margin_top", 10)
-	header_pad.add_theme_constant_override("margin_bottom", 10)
-	top.add_child(header_pad)
+	base.add_child(outer)
+	_top_bar = PanelContainer.new()
+	_top_bar.custom_minimum_size.y = 65
+	_top_bar.add_theme_stylebox_override("panel", _style(Color(0.05, 0.10, 0.095, 0.94), Color("5c715f"), 0))
+	outer.add_child(_top_bar)
+	var head_pad := MarginContainer.new()
+	head_pad.add_theme_constant_override("margin_left", 30)
+	head_pad.add_theme_constant_override("margin_right", 30)
+	head_pad.add_theme_constant_override("margin_top", 8)
+	head_pad.add_theme_constant_override("margin_bottom", 8)
+	_top_bar.add_child(head_pad)
 	var header := HBoxContainer.new()
 	header.add_theme_constant_override("separation", 12)
-	header_pad.add_child(header)
-	var logo := TextureRect.new()
-	logo.texture = preload("res://Branding/SketchChallengeLogo.png")
-	logo.custom_minimum_size = Vector2(52, 52)
-	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	header.add_child(logo)
-	var brand := _label("Kitchen Layout Game", 23, WHITE)
+	head_pad.add_child(header)
+	var brand_icon := TextureRect.new()
+	brand_icon.texture = preload("res://Branding/SketchChallengeLogo.png")
+	brand_icon.custom_minimum_size = Vector2(43, 43)
+	brand_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	brand_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	brand_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	header.add_child(brand_icon)
+	var brand := _label("KITCHEN LAYOUT GAME", 18, C_INK)
 	brand.autowrap_mode = TextServer.AUTOWRAP_OFF
 	brand.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(brand)
-	_jp_button = _button("日本語", false, 100, 42)
-	_mm_button = _button("မြန်မာ", false, 105, 42)
-	for language_button in [_jp_button, _mm_button]:
-		language_button.add_theme_font_size_override("font_size", 15)
-		header.add_child(language_button)
+	var badge := _label("3D DESIGN TRAINING", 12, C_COPPER)
+	badge.custom_minimum_size.x = 175
+	header.add_child(badge)
+	_jp_button = _button("日本語", false, 90, 41)
+	_mm_button = _button("မြန်မာ", false, 90, 41)
+	for lang_btn in [_jp_button, _mm_button]:
+		lang_btn.add_theme_font_size_override("font_size", 13)
+		header.add_child(lang_btn)
 	_jp_button.pressed.connect(func() -> void: _set_language("jp"))
 	_mm_button.pressed.connect(func() -> void: _set_language("mm"))
 	_update_lang_buttons()
@@ -149,28 +188,27 @@ func _build_frame() -> void:
 	outer.add_child(_scroll)
 	var margin := MarginContainer.new()
 	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	margin.add_theme_constant_override("margin_left", 28)
-	margin.add_theme_constant_override("margin_right", 28)
-	margin.add_theme_constant_override("margin_top", 26)
-	margin.add_theme_constant_override("margin_bottom", 25)
+	margin.add_theme_constant_override("margin_left", 30)
+	margin.add_theme_constant_override("margin_right", 30)
+	margin.add_theme_constant_override("margin_top", 23)
+	margin.add_theme_constant_override("margin_bottom", 18)
 	_scroll.add_child(margin)
-	var aligner := HBoxContainer.new()
-	aligner.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	margin.add_child(aligner)
+	var align := HBoxContainer.new()
+	align.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	margin.add_child(align)
 	_body = VBoxContainer.new()
+	_body.add_theme_constant_override("separation", 14)
 	_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_body.add_theme_constant_override("separation", 15)
-	aligner.add_child(_body)
-	var footer := PanelContainer.new()
-	_bottom_bar = footer
-	footer.custom_minimum_size.y = 22
-	footer.add_theme_stylebox_override("panel", _style(Color(0.02, 0.24, 0.22, 0.65), Color(0.36, 0.86, 0.75, 0.25), 0, 0))
-	outer.add_child(footer)
-	footer.add_child(_label("SKETCH CHALLENGE    •    DRAW / DESIGN / LEARN", 10, Color("d6fff2"), true))
+	align.add_child(_body)
+	_bottom_bar = PanelContainer.new()
+	_bottom_bar.custom_minimum_size.y = 23
+	_bottom_bar.add_theme_stylebox_override("panel", _style(Color(0.045, 0.10, 0.10, 0.88), Color("4c564b"), 0))
+	outer.add_child(_bottom_bar)
+	_bottom_bar.add_child(_label("DESIGN  /  SKETCH  /  SELECT MATERIALS  /  LEARN", 10, C_COPPER, true))
 
 func _fit_content() -> void:
 	if _body != null:
-		_body.custom_minimum_size.x = minf(1350.0, maxf(320.0, size.x - 60.0))
+		_body.custom_minimum_size.x = 0.0
 
 func _set_language(lang: String) -> void:
 	Progress.set_language(lang)
@@ -182,88 +220,77 @@ func _update_lang_buttons() -> void:
 		if not is_instance_valid(b):
 			continue
 		var selected: bool = (b == _jp_button and Progress.get_language() == "jp") or (b == _mm_button and Progress.get_language() == "mm")
-		b.add_theme_stylebox_override("normal", _style(Color("008f78") if selected else Color(0.72, 1, 0.94, 0.19), Color("70ffdf") if selected else Color(0.78, 1, 0.95, 0.75), 24, 7))
-		b.add_theme_stylebox_override("hover", _style(Color("00b593"), Color("aaffec"), 24, 7))
+		b.add_theme_stylebox_override("normal", _console_style(Color("476452") if selected else Color("20332e"), C_MINT if selected else Color("4e615b"), 12, 7))
+		b.add_theme_stylebox_override("hover", _console_style(Color("345749"), C_MINT, 12, 7))
 		b.add_theme_color_override("font_color", WHITE)
 		b.add_theme_color_override("font_hover_color", WHITE)
 
 func _clear() -> void:
-	if is_instance_valid(_reference_layer):
-		_reference_layer.queue_free()
-	_reference_layer = null
-	_reference_canvas = null
 	_scroll.show()
-	for c in _body.get_children():
-		_body.remove_child(c)
-		c.queue_free()
-	_scroll.scroll_vertical = 0
-
-
-# V8: The background is only a photograph. All headings, card graphics,
-# language buttons and actions are genuine Godot Controls (not screenshot text).
-func _show_home() -> void:
-	_clear()
 	_top_bar.show()
 	_bottom_bar.show()
-	_scroll.show()
-	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	var layout := HBoxContainer.new()
-	layout.custom_minimum_size.y = 680
-	layout.add_theme_constant_override("separation", 25)
-	_body.add_child(layout)
-	var panel := PanelContainer.new()
-	panel.custom_minimum_size.x = 810
-	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	panel.add_theme_stylebox_override("panel", _style(Color(0.73, 0.95, 0.91, 0.79), Color(0.92, 1.0, 0.98, 0.97), 32, 27))
-	layout.add_child(panel)
-	var content := VBoxContainer.new()
-	content.add_theme_constant_override("separation", 13)
-	panel.add_child(content)
-	var heading_logo := TextureRect.new()
-	heading_logo.texture = preload("res://Branding/SketchChallengeLogo.png")
-	heading_logo.custom_minimum_size = Vector2(106, 106)
-	heading_logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	heading_logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	heading_logo.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	content.add_child(heading_logo)
-	var heading := _label("Kitchen Layout Game", 43, Color("064e46"), true)
-	heading.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	content.add_child(heading)
-	content.add_child(_label("DRAW   •   DESIGN   •   LEARN", 21, Color("007c6e"), true))
-	var text := _label("Learn kitchen planning through real customer requests.\nDraw floor plans, design layouts, and build your skills step by step.", 17, Color("2d5053"), true)
-	content.add_child(text)
-	var expanding := Control.new()
-	expanding.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	content.add_child(expanding)
-	var start := _button("▶   Start Game", true, 335, 72)
-	start.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	start.add_theme_font_size_override("font_size", 26)
-	start.add_theme_stylebox_override("normal", _style(Color("00a68c"), Color("75ffe4"), 28, 12))
-	start.add_theme_stylebox_override("hover", _style(Color("007d6a"), Color("b2fff2"), 28, 12))
-	start.pressed.connect(_show_language_select)
-	content.add_child(start)
-	var row_one := HBoxContainer.new()
-	row_one.alignment = BoxContainer.ALIGNMENT_CENTER
-	row_one.add_theme_constant_override("separation", 10)
-	content.add_child(row_one)
-	_add_home_button(row_one, "How to Play", _show_help)
-	_add_home_button(row_one, "Settings", _show_settings)
-	_add_home_button(row_one, "Player Profile", _show_profile)
-	var row_two := HBoxContainer.new()
-	row_two.alignment = BoxContainer.ALIGNMENT_CENTER
-	row_two.add_theme_constant_override("separation", 10)
-	content.add_child(row_two)
-	_add_home_button(row_two, "My Progress", _show_progress)
-	_add_home_button(row_two, "Achievements", _show_achievements)
-	if is_pause_overlay:
-		var back := _button("← Back to Game", true, 190, 45)
-		back.pressed.connect(_resume_paused)
-		content.add_child(back)
-	var right_space := Control.new()
-	right_space.custom_minimum_size.x = 80
-	right_space.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	layout.add_child(right_space)
+	for child in _body.get_children():
+		_body.remove_child(child)
+		child.queue_free()
+	_scroll.scroll_vertical = 0
 
+func _show_home() -> void:
+	_clear()
+	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	var spread := HBoxContainer.new()
+	spread.custom_minimum_size.y = 603
+	spread.add_theme_constant_override("separation", 22)
+	_body.add_child(spread)
+	var menu := _c_panel(Color(0.055, 0.117, 0.111, 0.94), Color("b99767"), 22, 26)
+	menu.custom_minimum_size.x = 488
+	menu.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	menu.size_flags_stretch_ratio = 0.52
+	spread.add_child(menu)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 11)
+	menu.add_child(column)
+	column.add_child(_label("THE KITCHEN DESIGN TRAINING EXPERIENCE", 13, C_COPPER))
+	var title := _label("Kitchen\nLayout Game", 45, C_INK)
+	title.autowrap_mode = TextServer.AUTOWRAP_OFF
+	column.add_child(title)
+	column.add_child(_thin_rule())
+	column.add_child(_label("DESIGN   /   SKETCH   /   MATERIAL   /   REALIZE", 13, C_COPPER))
+	column.add_child(_label("Practice reading customer requests, drawing accurate layouts, and selecting the right kitchen design.", 16, C_MUTED))
+	var filler := Control.new()
+	filler.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	column.add_child(filler)
+	column.add_child(_icon_button("Start Training", preload("res://MenuAssets/play_green.png"), true, 0, 60, _show_language_select))
+	column.add_child(_icon_button("Select a Level", preload("res://MenuAssets/levels_white.png"), false, 0, 48, _show_levels))
+	column.add_child(_icon_button("Training Guide", preload("res://MenuAssets/book_white.png"), false, 0, 48, _show_help))
+	column.add_child(_icon_button("My Progress", preload("res://MenuAssets/levels_white.png"), false, 0, 48, _show_progress))
+	var last := HBoxContainer.new()
+	last.add_theme_constant_override("separation", 9)
+	column.add_child(last)
+	var achievements := _button("Achievements", false, 0, 46)
+	achievements.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	achievements.pressed.connect(_show_achievements)
+	last.add_child(achievements)
+	var settings := _icon_button("Settings", preload("res://MenuAssets/settings_white.png"), false, 0, 46, _show_settings)
+	settings.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	last.add_child(settings)
+	if is_pause_overlay:
+		var resume := _button("← Back to Game", true, 0, 46)
+		resume.pressed.connect(_resume_paused)
+		column.add_child(resume)
+	var scene := VBoxContainer.new()
+	scene.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scene.size_flags_stretch_ratio = 0.48
+	spread.add_child(scene)
+	var scene_top := Control.new()
+	scene_top.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scene.add_child(scene_top)
+	var caption := _c_panel(Color(0.06, 0.14, 0.13, 0.82), Color("876f50"), 15, 17)
+	caption.size_flags_horizontal = Control.SIZE_SHRINK_END
+	scene.add_child(caption)
+	var caption_stack := VBoxContainer.new()
+	caption.add_child(caption_stack)
+	caption_stack.add_child(_label("01  /  DESIGN STUDIO", 15, C_COPPER))
+	caption_stack.add_child(_label("Real projects. Practical challenges.", 17, C_INK))
 
 func _add_home_button(parent: HBoxContainer, label_text: String, action: Callable) -> void:
 	var b := _button(label_text, false, 195, 60)
@@ -302,42 +329,38 @@ func _show_information(title_text: String, details: String) -> void:
 
 func _show_language_select() -> void:
 	_clear()
-	_top_bar.visible = false
-	_bottom_bar.visible = false
-	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	var area := CenterContainer.new()
-	area.custom_minimum_size.y = 665
-	_body.add_child(area)
-	var glass := PanelContainer.new()
-	glass.custom_minimum_size = Vector2(860, 480)
-	glass.add_theme_stylebox_override("panel", _style(Color(0.83, 1.0, 0.96, 0.78), Color(1, 1, 1, 0.91), 28, 30))
-	area.add_child(glass)
-	var stack := VBoxContainer.new()
-	stack.alignment = BoxContainer.ALIGNMENT_CENTER
-	stack.add_theme_constant_override("separation", 16)
-	glass.add_child(stack)
-	stack.add_child(_label("◉", 39, GREEN_DARK, true))
-	stack.add_child(_label("Select Language", 37, INK, true))
-	stack.add_child(_label("Please choose your language.", 18, MUTED, true))
-	var space := Control.new()
-	space.custom_minimum_size.y = 18
-	stack.add_child(space)
-	var choices := HBoxContainer.new()
-	choices.alignment = BoxContainer.ALIGNMENT_CENTER
-	choices.add_theme_constant_override("separation", 22)
-	stack.add_child(choices)
-	var jp := _button("JP   日本語   ›", false, 300, 95)
-	jp.add_theme_font_size_override("font_size", 25)
+	var alignment := CenterContainer.new()
+	alignment.custom_minimum_size.y = 610
+	_body.add_child(alignment)
+	var panel := _c_panel(Color(0.065, 0.15, 0.14, 0.96), C_COPPER, 24, 30)
+	panel.custom_minimum_size = Vector2(680, 430)
+	alignment.add_child(panel)
+	var content := VBoxContainer.new()
+	content.alignment = BoxContainer.ALIGNMENT_CENTER
+	content.add_theme_constant_override("separation", 17)
+	panel.add_child(content)
+	content.add_child(_label("01  /  SELECT LANGUAGE", 16, C_COPPER, true))
+	content.add_child(_label("Choose your language", 34, C_INK, true))
+	content.add_child(_label("Customer dialogue and questions are available in Japanese and Myanmar.", 16, C_MUTED, true))
+	var spacer := Control.new()
+	spacer.custom_minimum_size.y = 18
+	content.add_child(spacer)
+	var options := HBoxContainer.new()
+	options.alignment = BoxContainer.ALIGNMENT_CENTER
+	options.add_theme_constant_override("separation", 17)
+	content.add_child(options)
+	var jp := _button("JP   日本語", false, 260, 78)
+	jp.add_theme_font_size_override("font_size", 23)
 	jp.pressed.connect(func() -> void: _choose_language("jp"))
-	choices.add_child(jp)
-	var mm := _button("MM   မြန်မာ   ›", true, 300, 95)
-	mm.add_theme_font_size_override("font_size", 25)
+	options.add_child(jp)
+	var mm := _button("MM   မြန်မာ", false, 260, 78)
+	mm.add_theme_font_size_override("font_size", 23)
 	mm.pressed.connect(func() -> void: _choose_language("mm"))
-	choices.add_child(mm)
-	var back := _button("← Back", false, 130, 38)
-	back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	back.pressed.connect(_show_home)
-	stack.add_child(back)
+	options.add_child(mm)
+	var go_back := _button("← Back to Menu", false, 180, 41)
+	go_back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	go_back.pressed.connect(_show_home)
+	content.add_child(go_back)
 
 func _choose_language(lang: String) -> void:
 	Progress.set_language(lang)
@@ -451,115 +474,100 @@ func _level_row(n: int) -> Button:
 
 func _show_levels() -> void:
 	_clear()
-	_top_bar.show()
-	_bottom_bar.show()
-	_scroll.show()
 	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	var heading_bar := HBoxContainer.new()
-	heading_bar.add_theme_constant_override("separation", 14)
-	_body.add_child(heading_bar)
-	var back := _button("← Back to Game" if is_pause_overlay else "← Back to Home", false, 195, 48)
-	back.add_theme_stylebox_override("normal", _style(Color(0.67, 0.96, 0.89, 0.88), Color("adfff0"), 24, 9))
+	var ribbon := HBoxContainer.new()
+	ribbon.add_theme_constant_override("separation", 15)
+	_body.add_child(ribbon)
+	var back := _button("← Back to Game" if is_pause_overlay else "← Main Menu", false, 183, 44)
 	back.pressed.connect(_resume_paused if is_pause_overlay else _show_home)
-	heading_bar.add_child(back)
-	var heading := _label("SELECT A LEVEL", 34, WHITE, true)
+	ribbon.add_child(back)
+	var heading := _label("SELECT YOUR MISSION", 32, C_INK, true)
 	heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	heading_bar.add_child(heading)
-	var status := _button("●   3 / 3 AVAILABLE", true, 190, 46)
-	status.disabled = true
-	status.add_theme_stylebox_override("disabled", _style(Color("007c68"), Color("83ffe0"), 24, 10))
-	status.add_theme_color_override("font_disabled_color", WHITE)
-	heading_bar.add_child(status)
-	_body.add_child(_label("Choose any available stage to play.", 17, Color("e9fff8"), true))
-	var guide := _button("Mission Guide", true, 235, 52)
+	ribbon.add_child(heading)
+	var available := _label("3 / 3 AVAILABLE", 15, C_COPPER)
+	available.custom_minimum_size.x = 145
+	ribbon.add_child(available)
+	var intro := _label("Complete real kitchen layout challenges, one design at a time.", 16, C_MUTED, true)
+	_body.add_child(intro)
+	var guide := _button("Training Guide", false, 196, 43)
 	guide.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	guide.pressed.connect(_show_help)
 	_body.add_child(guide)
-	var list_panel := PanelContainer.new()
-	list_panel.add_theme_stylebox_override("panel", _style(Color(0.70, 0.94, 0.89, 0.77), Color(0.90, 1, 0.97, 0.93), 28, 23))
-	_body.add_child(list_panel)
-	var list := VBoxContainer.new()
-	list.add_theme_constant_override("separation", 11)
-	list_panel.add_child(list)
-	for n in range(1, 7):
-		list.add_child(_level_row(n))
-
-func _sync_reference_layout() -> void:
-	if not is_instance_valid(_reference_canvas):
-		return
-	var factor: float = minf(size.x / REF_SIZE.x, size.y / REF_SIZE.y)
-	_reference_canvas.size = REF_SIZE
-	_reference_canvas.scale = Vector2(factor, factor)
-	_reference_canvas.position = (size - REF_SIZE * factor) * 0.5
-
-
-func _reference_button(hit_area: Rect2, action: Callable) -> void:
-	if not is_instance_valid(_reference_canvas):
-		return
-	var hit := Button.new()
-	hit.text = ""
-	hit.position = hit_area.position
-	hit.size = hit_area.size
-	hit.mouse_filter = Control.MOUSE_FILTER_STOP
-	hit.focus_mode = Control.FOCUS_NONE
-	hit.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	var clear := _style(Color.TRANSPARENT, Color.TRANSPARENT, 16)
-	var hover := _style(Color(0.0, 0.93, 0.73, 0.12), Color(0.72, 1, 0.91, 0.38), 16)
-	hit.add_theme_stylebox_override("normal", clear)
-	hit.add_theme_stylebox_override("hover", hover)
-	hit.add_theme_stylebox_override("pressed", hover)
-	hit.add_theme_stylebox_override("focus", clear)
-	hit.pressed.connect(action)
-	_reference_canvas.add_child(hit)
+	var mission_panel := _c_panel(Color(0.07, 0.14, 0.14, 0.94), Color("876f50"), 22, 18)
+	_body.add_child(mission_panel)
+	var missions := VBoxContainer.new()
+	missions.add_theme_constant_override("separation", 15)
+	mission_panel.add_child(missions)
+	missions.add_child(_label("AVAILABLE MISSIONS", 15, C_COPPER))
+	var cards := HBoxContainer.new()
+	cards.add_theme_constant_override("separation", 13)
+	missions.add_child(cards)
+	for n in range(1, 4):
+		cards.add_child(_mission_card(n))
+	missions.add_child(_thin_rule())
+	missions.add_child(_label("COMING SOON", 13, C_COPPER))
+	var locked_row := HBoxContainer.new()
+	locked_row.add_theme_constant_override("separation", 12)
+	missions.add_child(locked_row)
+	for n in range(4, 7):
+		locked_row.add_child(_locked_card(n))
 
 
-func _show_reference_screen(levels: bool) -> void:
-	_top_bar.hide()
-	_bottom_bar.hide()
-	_scroll.hide()
-	_reference_layer = Control.new()
-	_reference_layer.mouse_filter = Control.MOUSE_FILTER_PASS
-	_reference_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(_reference_layer)
-	var letterbox := ColorRect.new()
-	letterbox.color = Color("dceee9")
-	letterbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	letterbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_reference_layer.add_child(letterbox)
-	_reference_canvas = Control.new()
-	_reference_canvas.custom_minimum_size = REF_SIZE
-	_reference_canvas.size = REF_SIZE
-	_reference_canvas.mouse_filter = Control.MOUSE_FILTER_PASS
-	_reference_layer.add_child(_reference_canvas)
-	var picture := TextureRect.new()
-	picture.texture = REF_LEVELS if levels else REF_HOME
-	picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	picture.stretch_mode = TextureRect.STRETCH_SCALE
-	picture.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
-	picture.size = REF_SIZE
-	picture.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_reference_canvas.add_child(picture)
-	_sync_reference_layout()
-	call_deferred("_sync_reference_layout")
-	if levels:
-		_reference_button(Rect2(103, 142, 222, 63), _resume_paused if is_pause_overlay else _show_home)
-		_reference_button(Rect2(338, 145, 66, 65), _show_home)
-		_reference_button(Rect2(688, 246, 282, 65), _show_help)
-		_reference_button(Rect2(1285, 30, 145, 61), _set_language.bind("jp"))
-		_reference_button(Rect2(1433, 30, 150, 61), _set_language.bind("mm"))
-		# Entire stage row is clickable, not only its PLAY region.
-		_reference_button(Rect2(134, 350, 1388, 92), _start_level.bind(1))
-		_reference_button(Rect2(134, 441, 1388, 82), _start_level.bind(2))
-		_reference_button(Rect2(134, 526, 1388, 79), _start_level.bind(3))
-	else:
-		_reference_button(Rect2(1352, 32, 277, 71), _resume_paused if is_pause_overlay else _show_levels)
-		_reference_button(Rect2(133, 505, 286, 151), _show_language_select)
-		_reference_button(Rect2(431, 504, 245, 151), _show_help)
-		_reference_button(Rect2(681, 504, 239, 151), _show_settings)
-		_reference_button(Rect2(131, 671, 255, 96), _show_achievements)
-		_reference_button(Rect2(390, 671, 263, 96), _show_levels)
-		_reference_button(Rect2(660, 671, 259, 96), _show_achievements)
+func _mission_card(stage: int) -> Button:
+	var mission := Button.new()
+	mission.text = ""
+	mission.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	mission.custom_minimum_size = Vector2(0, 284)
+	mission.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	mission.add_theme_stylebox_override("normal", _console_style(Color("192f2b"), Color("5c7368"), 16, 0, 2))
+	mission.add_theme_stylebox_override("hover", _console_style(Color("23463e"), C_COPPER, 16, 0, 5))
+	mission.add_theme_stylebox_override("pressed", _console_style(Color("2d5141"), C_COPPER, 16))
+	mission.add_theme_stylebox_override("focus", _style(Color.TRANSPARENT, C_COPPER, 16))
+	mission.pressed.connect(_start_level.bind(stage))
+	var insets := MarginContainer.new()
+	insets.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	insets.add_theme_constant_override("margin_left", 12)
+	insets.add_theme_constant_override("margin_right", 12)
+	insets.add_theme_constant_override("margin_top", 11)
+	insets.add_theme_constant_override("margin_bottom", 11)
+	insets.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	mission.add_child(insets)
+	var vertical := VBoxContainer.new()
+	vertical.add_theme_constant_override("separation", 7)
+	vertical.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	insets.add_child(vertical)
+	vertical.add_child(_label("MISSION  %02d" % stage, 13, C_COPPER))
+	var preview := TextureRect.new()
+	preview.texture = preload("res://reference_sketch.png") if stage == 1 else (preload("res://MenuAssets/Level2.png") if stage == 2 else preload("res://MenuAssets/Level3.png"))
+	preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	preview.custom_minimum_size.y = 119
+	preview.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vertical.add_child(preview)
+	vertical.add_child(_label("STAGE %d" % stage, 21, C_INK))
+	var description := "Draw the LDK boundary" if stage == 1 else ("Pipe Shaft Q&A" if stage == 2 else "S-Class Kitchen selection")
+	vertical.add_child(_label(description, 14, C_MUTED))
+	vertical.add_child(_label("▶   PLAY MISSION", 14, C_MINT))
+	return mission
 
+
+func _locked_card(stage: int) -> PanelContainer:
+	var card := _c_panel(Color(0.14, 0.18, 0.19, 0.96), Color("49534f"), 13, 13)
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.custom_minimum_size.y = 64
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	card.add_child(row)
+	var number := _label("%02d" % stage, 23, Color("808d85"))
+	number.custom_minimum_size.x = 43
+	row.add_child(number)
+	var words := VBoxContainer.new()
+	words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(words)
+	words.add_child(_label("COMING SOON", 14, Color("b2b5ab")))
+	words.add_child(_label("Locked mission", 12, Color("78877e")))
+	return card
 
 func _resume_paused() -> void:
 	if is_pause_overlay:
