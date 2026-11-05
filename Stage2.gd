@@ -2,9 +2,7 @@ extends Control
 
 const Progress = preload("res://GameProgress.gd")
 const AIConfig = preload("res://AIConfig.gd")
-const ConsoleAnimations = preload("res://ConceptCAnimations.gd")
-const ConsoleAtmosphere = preload("res://ConceptCAtmosphere.gd")
-const ConsoleStageHUD = preload("res://ConceptCStageHUD.gd")
+const StageCompleteOverlay = preload("res://StageCompleteOverlay.gd")
 
 const QUESTIONS := {
 	"jp": {
@@ -151,6 +149,8 @@ class PlanViewer extends Control:
 
 var current_lang := "jp"
 var last_eval_state := "none" # "none", "good", "needs"
+var _completion_overlay: Control
+var _completion_serial: int = 0
 var last_evaluation_source: String = "offline"
 var _ai_http: HTTPRequest
 var _ai_busy: bool = false
@@ -223,8 +223,6 @@ func _apply_web_readability(_node: Node) -> void:
 	pass
 
 func _style(bg: String, edge: String = "cad7e8", radius: int = 10) -> StyleBoxFlat:
-	var fills := {"e9eef5": "101d1c", "f1f5f9": "192c29", "e2e8f0": "203934", "e5f6f0": "192c29", "def4ee": "101d1c", "d7f2e8": "203934", "ffffff": "223934", "ebfffa": "213b33"}
-	bg = fills.get(bg, bg)
 	var st := StyleBoxFlat.new()
 	st.bg_color = Color(bg)
 	st.border_color = Color(edge)
@@ -237,8 +235,6 @@ func _style(bg: String, edge: String = "cad7e8", radius: int = 10) -> StyleBoxFl
 	return st
 
 func _label(t: String, sz: int = 16, c: String = "17233b") -> Label:
-	var text_colors := {"17233b": "f4f1e9", "1f3c56": "f4f1e9", "1d4ed8": "87d3ae", "064e44": "87d3ae", "64748b": "b6c7c1", "475569": "b6c7c1", "0f172a": "f4f1e9"}
-	c = text_colors.get(c, c)
 	var l := Label.new()
 	l.text = t
 	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -248,10 +244,10 @@ func _label(t: String, sz: int = 16, c: String = "17233b") -> Label:
 	return l
 
 func _modern_button_style(button: Button, kind: String = "secondary") -> void:
-	var backgrounds := {"primary": "187457", "secondary": "263e37", "back": "2a4e41", "warning": "593e31"}
-	var borders := {"primary": "87d3ae", "secondary": "64877b", "back": "87d3ae", "warning": "fdba74"}
-	var hovers := {"primary": "238e69", "secondary": "31554a", "back": "315b4b", "warning": "6e4635"}
-	var ink := "ffffff" if kind == "primary" else ("ffcdaf" if kind == "warning" else "f4f1e9")
+	var backgrounds := {"primary": "008c76", "secondary": "ebfffa", "back": "d8fff1", "warning": "fff0d9"}
+	var borders := {"primary": "59e0c0", "secondary": "9bd6c9", "back": "9bd6c9", "warning": "fdba74"}
+	var hovers := {"primary": "006858", "secondary": "ddfff3", "back": "c2fbea", "warning": "ffedd5"}
+	var ink := "ffffff" if kind == "primary" else ("9a3412" if kind == "warning" else "006858")
 	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
 		var style := StyleBoxFlat.new()
 		style.bg_color = Color(hovers.get(kind, "eff6ff")) if state in ["hover", "pressed"] else Color(backgrounds.get(kind, "ffffff"))
@@ -275,7 +271,6 @@ func _btn(t: String, min_width: float = 85.0) -> Button:
 	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	b.add_theme_font_size_override("font_size", 15)
 	_modern_button_style(b, "primary" if t == "Check Answer" else ("back" if t == "Back to Stage 1" else "secondary"))
-	ConsoleAnimations.animate_button(b)
 	return b
 
 func _build_ui() -> void:
@@ -283,19 +278,10 @@ func _build_ui() -> void:
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	background.add_theme_stylebox_override("panel", _style("def4ee"))
 	add_child(background)
-	var atmosphere := ConsoleAtmosphere.new()
-	background.add_child(atmosphere)
-	var hud := ConsoleStageHUD.new(2)
-	background.add_child(hud)
-	hud.anchor_right = 1.0
-	hud.offset_left = 15.0
-	hud.offset_right = -15.0
-	hud.offset_top = 9.0
-	hud.offset_bottom = 54.0
 
 	var outside := MarginContainer.new()
 	for s in ["left", "right", "top", "bottom"]:
-		outside.add_theme_constant_override("margin_" + s, 62 if s == "top" else 15)
+		outside.add_theme_constant_override("margin_" + s, 15)
 	background.add_child(outside)
 
 	var split := HSplitContainer.new()
@@ -315,7 +301,7 @@ func _build_ui() -> void:
 	var header := HBoxContainer.new()
 	header.add_theme_constant_override("separation", 6)
 	left.add_child(header)
-	var title := _label("STAGE 2  /  PIPE SHAFT Q&A", 19, "1f3c56")
+	var title := _label("STAGE 2", 19, "1f3c56")
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
 
@@ -497,16 +483,16 @@ void fragment() {
 	answer_input.add_theme_font_size_override("font_size", 18)
 	answer_input.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
 	# Modern light answer editor, including focus/readonly states.
-	answer_input.add_theme_color_override("background_color", Color("142622"))
-	answer_input.add_theme_color_override("font_color", Color("f4f1e9"))
-	answer_input.add_theme_color_override("font_placeholder_color", Color("b6c7c1"))
-	answer_input.add_theme_color_override("caret_color", Color("87d3ae"))
+	answer_input.add_theme_color_override("background_color", Color("ffffff"))
+	answer_input.add_theme_color_override("font_color", Color("17233b"))
+	answer_input.add_theme_color_override("font_placeholder_color", Color("94a3b8"))
+	answer_input.add_theme_color_override("caret_color", Color("008c76"))
 	answer_input.add_theme_color_override("selection_color", Color("bfdbfe"))
-	answer_input.add_theme_color_override("current_line_color", Color("203a34"))
+	answer_input.add_theme_color_override("current_line_color", Color("f8fafc"))
 	for state in ["normal", "focus", "read_only"]:
 		var editor_style := StyleBoxFlat.new()
-		editor_style.bg_color = Color("142622")
-		editor_style.border_color = Color("87d3ae") if state == "focus" else Color("64877b")
+		editor_style.bg_color = Color("ffffff")
+		editor_style.border_color = Color("008c76") if state == "focus" else Color("cbd5e1")
 		editor_style.set_border_width_all(2 if state == "focus" else 1)
 		editor_style.set_corner_radius_all(14)
 		editor_style.content_margin_left = 18
@@ -699,22 +685,22 @@ func _set_progress_state(state: String, message: String = "") -> void:
 		progress_replay_button.text = "もう一度" if jp else "Replay Stage 2"
 
 func _update_lang_buttons_style() -> void:
-	var active_s: StyleBoxFlat = _style("187457", "87d3ae")
-	var inactive_s: StyleBoxFlat = _style("263e37", "64877b")
+	var active_s: StyleBoxFlat = _style("008c76", "006858")
+	var inactive_s: StyleBoxFlat = _style("ffffff", "cbd5e1")
 	if current_lang == "jp":
 		jp_button.add_theme_stylebox_override("normal", active_s)
 		jp_button.add_theme_stylebox_override("hover", active_s)
 		jp_button.add_theme_color_override("font_color", Color("ffffff"))
 		mm_button.add_theme_stylebox_override("normal", inactive_s)
 		mm_button.add_theme_stylebox_override("hover", inactive_s)
-		mm_button.add_theme_color_override("font_color", Color("f4f1e9"))
+		mm_button.add_theme_color_override("font_color", Color("1e293b"))
 	else:
 		mm_button.add_theme_stylebox_override("normal", active_s)
 		mm_button.add_theme_stylebox_override("hover", active_s)
 		mm_button.add_theme_color_override("font_color", Color("ffffff"))
 		jp_button.add_theme_stylebox_override("normal", inactive_s)
 		jp_button.add_theme_stylebox_override("hover", inactive_s)
-		jp_button.add_theme_color_override("font_color", Color("f4f1e9"))
+		jp_button.add_theme_color_override("font_color", Color("1e293b"))
 
 func _change_language(lang: String) -> void:
 	_cancel_ai_request()
@@ -736,6 +722,7 @@ func _change_language(lang: String) -> void:
 		feedback_label.visible = true
 		_set_progress_state("completed")
 		_play_voice("good")
+		_schedule_completion()
 		if last_evaluation_source == "local":
 			status_label.text = "LOCAL CHECK · APPROXIMATE"
 	elif last_eval_state == "needs":
@@ -755,6 +742,10 @@ func _change_language(lang: String) -> void:
 		_play_voice("question")
 
 func _reset_answer() -> void:
+	_completion_serial += 1
+	if is_instance_valid(_completion_overlay):
+		_completion_overlay.queue_free()
+		_completion_overlay = null
 	_cancel_ai_request()
 	_stop_voice()
 	last_eval_state = "none"
@@ -843,6 +834,7 @@ func _show_check_result(correct: bool) -> void:
 		_set_progress_state("completed")
 		_play_voice("good")
 	else:
+		_completion_serial += 1
 		last_eval_state = "needs"
 		question_label.visible = true
 		question_label.text = str(d["question"])
@@ -853,6 +845,56 @@ func _show_check_result(correct: bool) -> void:
 		feedback_label.add_theme_color_override("font_color", Color("b91c1c"))
 		_set_progress_state("incorrect")
 		_play_voice("needs")
+
+func _schedule_completion() -> void:
+	# ZIP V22 customer-voice completion, with a Web-safe fallback delay.
+	_completion_serial += 1
+	var expected: int = _completion_serial
+	var wait_time: float = 1.8
+	if voice_player != null and voice_player.playing and voice_player.stream != null:
+		wait_time = maxf(wait_time, voice_player.stream.get_length() + 0.12)
+	await get_tree().create_timer(wait_time, false).timeout
+	if not is_inside_tree() or expected != _completion_serial or last_eval_state != "good":
+		return
+	_show_stage_complete_overlay()
+
+
+func _show_stage_complete_overlay() -> void:
+	if not is_inside_tree() or last_eval_state != "good" or is_instance_valid(_completion_overlay):
+		return
+	var jp: bool = current_lang == "jp"
+	_completion_overlay = StageCompleteOverlay.new()
+	_completion_overlay.configure(
+		"ステージ2 クリア！" if jp else "Stage 2 Complete!",
+		"お客様の質問に答えました！" if jp else "Customer မေးခွန်းကို မှန်ကန်စွာ ဖြေဆိုပြီးပါပြီ။",
+		"次のステージ" if jp else "Next Stage",
+		"レベル一覧" if jp else "Levels",
+		"もう一度" if jp else "Replay",
+		true, true
+	)
+	add_child(_completion_overlay)
+	_completion_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_completion_overlay.next_requested.connect(_stage2_complete_next)
+	_completion_overlay.levels_requested.connect(_stage2_complete_levels)
+	_completion_overlay.replay_requested.connect(_stage2_complete_replay)
+
+
+func _stage2_complete_next() -> void:
+	_completion_serial += 1
+	get_tree().change_scene_to_file("res://stage_3.tscn")
+
+
+func _stage2_complete_levels() -> void:
+	_completion_serial += 1
+	Progress.show_levels_on_open = true
+	get_tree().change_scene_to_file("res://GameMenu.tscn")
+
+
+func _stage2_complete_replay() -> void:
+	_completion_serial += 1
+	_reset_answer()
+	_play_voice("question")
+
 
 func _has_any_keyword(text: String, options: Array[String]) -> bool:
 	for word in options:
