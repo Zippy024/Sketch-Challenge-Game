@@ -5,6 +5,7 @@ const Progress = preload("res://GameProgress.gd")
 const StageClearScreen = preload("res://StageClearScreen.gd")
 const ConsoleAnimations = preload("res://ConceptCAnimations.gd")
 const ConsoleAtmosphere = preload("res://ConceptCAtmosphere.gd")
+const ConsoleStageHUD = preload("res://ConceptCStageHUD.gd")
 
 # Reference ပုံအမှန်ကို မူရင်းအတိုင်း ပြသပေးပြီး နှိပ်လိုက်ပါက ပုံအကြီး ချဲ့ကြည့်နိုင်သည့် Viewer
 class ReferencePlanViewer extends Control:
@@ -458,11 +459,18 @@ func _build_ui() -> void:
 	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	for side in ["left", "right", "top", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 14)
+		margin.add_theme_constant_override("margin_" + side, 62 if side == "top" else 14)
 	base.add_child(margin)
 	var atmosphere := ConsoleAtmosphere.new()
 	base.add_child(atmosphere)
 	base.move_child(atmosphere, 0)
+	var hud := ConsoleStageHUD.new(1)
+	base.add_child(hud)
+	hud.anchor_right = 1.0
+	hud.offset_left = 15.0
+	hud.offset_right = -15.0
+	hud.offset_top = 9.0
+	hud.offset_bottom = 54.0
 
 	var split: HSplitContainer = HSplitContainer.new()
 	split.size_flags_horizontal = Control.SIZE_EXPAND_FILL
