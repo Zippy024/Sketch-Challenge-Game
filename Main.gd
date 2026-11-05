@@ -2,6 +2,7 @@ extends Control
 
 const CanvasScript = preload("res://DrawingCanvas.gd")
 const Progress = preload("res://GameProgress.gd")
+const StageClearScreen = preload("res://StageClearScreen.gd")
 
 # Reference ပုံအမှန်ကို မူရင်းအတိုင်း ပြသပေးပြီး နှိပ်လိုက်ပါက ပုံအကြီး ချဲ့ကြည့်နိုင်သည့် Viewer
 class ReferencePlanViewer extends Control:
@@ -179,6 +180,7 @@ var start_button: Button
 var again_button_row: HBoxContainer
 var again_button: Button
 var stage_transition_running: bool = false
+var _stage_clear_overlay: Control
 var intro_overlay: ColorRect
 var game_has_started: bool = false
 var status_label: Label
@@ -1170,9 +1172,29 @@ func _on_voice_finished() -> void:
 func _start_auto_stage_transition() -> void:
 	if stage_transition_running or last_eval_state != "correct" or not is_inside_tree():
 		return
+	if is_instance_valid(_stage_clear_overlay):
+		return
+	_stage_clear_overlay = StageClearScreen.new()
+	add_child(_stage_clear_overlay)
+	_stage_clear_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_stage_clear_overlay.next_requested.connect(_continue_from_stage_clear)
+	_stage_clear_overlay.levels_requested.connect(_show_levels_from_stage_clear)
+
+func _continue_from_stage_clear() -> void:
+	if is_instance_valid(_stage_clear_overlay):
+		_stage_clear_overlay.queue_free()
+		_stage_clear_overlay = null
+	if stage_transition_running:
+		return
 	stage_transition_running = true
-	_set_status("Stage 2 is starting automatically...", false, true)
 	_run_stage_transition()
+
+func _show_levels_from_stage_clear() -> void:
+	if is_instance_valid(_stage_clear_overlay):
+		_stage_clear_overlay.queue_free()
+		_stage_clear_overlay = null
+	Progress.show_levels_on_open = true
+	get_tree().change_scene_to_file("res://GameMenu.tscn")
 
 func _run_stage_transition() -> void:
 	# Keep the customer response visible briefly, then fade to Stage 2.
