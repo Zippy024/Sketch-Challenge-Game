@@ -3,6 +3,8 @@ extends Control
 const CanvasScript = preload("res://DrawingCanvas.gd")
 const Progress = preload("res://GameProgress.gd")
 const StageClearScreen = preload("res://StageClearScreen.gd")
+const ConsoleAnimations = preload("res://ConceptCAnimations.gd")
+const ConsoleAtmosphere = preload("res://ConceptCAtmosphere.gd")
 
 # Reference ပုံအမှန်ကို မူရင်းအတိုင်း ပြသပေးပြီး နှိပ်လိုက်ပါက ပုံအကြီး ချဲ့ကြည့်နိုင်သည့် Viewer
 class ReferencePlanViewer extends Control:
@@ -238,6 +240,7 @@ func _ready() -> void:
 	voice_player.finished.connect(_on_voice_finished)
 	current_lang = Progress.get_language()
 	_build_ui()
+	ConsoleAnimations.animate_screen(self)
 	speaker_name_label.text = DIALOGUE_TEXTS[current_lang]["speaker"]
 	_apply_web_readability(self)
 	_update_lang_buttons_style()
@@ -412,6 +415,7 @@ func _button(value: String, action: Callable, min_w: float = 80.0) -> Button:
 	b.custom_minimum_size = Vector2(min_w, 36)
 	b.pressed.connect(action)
 	_modern_button_style(b, "primary" if value in ["OK", "Start (描き始める)", "Start (စတင်ဆွဲမည်)"] else ("warning" if value == "Try Again" else "secondary"))
+	ConsoleAnimations.animate_button(b)
 	return b
 
 
@@ -456,6 +460,9 @@ func _build_ui() -> void:
 	for side in ["left", "right", "top", "bottom"]:
 		margin.add_theme_constant_override("margin_" + side, 14)
 	base.add_child(margin)
+	var atmosphere := ConsoleAtmosphere.new()
+	base.add_child(atmosphere)
+	base.move_child(atmosphere, 0)
 
 	var split: HSplitContainer = HSplitContainer.new()
 	split.size_flags_horizontal = Control.SIZE_EXPAND_FILL
