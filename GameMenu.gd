@@ -28,6 +28,11 @@ var _mm_button: Button
 var _scroll: ScrollContainer
 var _volume_value: float = 0.85
 var _reset_armed: bool = false
+var _reference_layer: Control
+var _reference_canvas: Control
+const REF_SIZE := Vector2(1672.0, 941.0)
+const REF_HOME := preload("res://MenuAssets/MenuReferenceHome.webp")
+const REF_LEVELS := preload("res://MenuAssets/MenuReferenceLevels.webp")
 
 
 func _ready() -> void:
@@ -35,6 +40,7 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_build_frame()
 	resized.connect(_fit_content)
+	resized.connect(_sync_reference_layout)
 	_fit_content()
 	if is_pause_overlay or Progress.show_levels_on_open:
 		Progress.show_levels_on_open = false
@@ -186,6 +192,12 @@ func _update_lang_buttons() -> void:
 
 
 func _clear() -> void:
+	if is_instance_valid(_reference_layer):
+		_reference_layer.hide()
+		_reference_layer.queue_free()
+	_reference_layer = null
+	_reference_canvas = null
+	_scroll.show()
 	for c in _body.get_children():
 		_body.remove_child(c)
 		c.queue_free()
@@ -196,92 +208,7 @@ func _clear() -> void:
 # language buttons and actions are genuine Godot Controls (not screenshot text).
 func _show_home() -> void:
 	_clear()
-	_top_bar.visible = false
-	_bottom_bar.visible = false
-	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	var hero := PanelContainer.new()
-	hero.custom_minimum_size.y = 665
-	hero.clip_contents = true
-	hero.add_theme_stylebox_override("panel", _style(Color(0.03, 0.29, 0.27, 0.035), Color(1, 1, 1, 0.15), 22))
-	_body.add_child(hero)
-	var stage := Control.new()
-	stage.custom_minimum_size.y = 665
-	hero.add_child(stage)
-	var glass := PanelContainer.new()
-	glass.anchor_left = 0.035
-	glass.anchor_top = 0.04
-	glass.anchor_right = 0.73
-	glass.anchor_bottom = 0.96
-	glass.add_theme_stylebox_override("panel", _style(Color(0.025, 0.31, 0.29, 0.80), Color(0.72, 1, 0.94, 0.65), 26, 18))
-	stage.add_child(glass)
-	var padding := MarginContainer.new()
-	for side in ["left", "right"]:
-		padding.add_theme_constant_override("margin_" + side, 18)
-	padding.add_theme_constant_override("margin_top", 12)
-	padding.add_theme_constant_override("margin_bottom", 12)
-	glass.add_child(padding)
-	var stack := VBoxContainer.new()
-	stack.add_theme_constant_override("separation", 12)
-	padding.add_child(stack)
-	var heading := HBoxContainer.new()
-	heading.add_theme_constant_override("separation", 20)
-	stack.add_child(heading)
-	var logo := TextureRect.new()
-	logo.texture = preload("res://MenuAssets/v8_house_white.png")
-	logo.custom_minimum_size = Vector2(112, 112)
-	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	heading.add_child(logo)
-	var titles := VBoxContainer.new()
-	titles.add_theme_constant_override("separation", 0)
-	heading.add_child(titles)
-	var title1 := _label("Kitchen", 49, WHITE)
-	title1.autowrap_mode = TextServer.AUTOWRAP_OFF
-	titles.add_child(title1)
-	var title2 := _label("Layout Game", 49, Color("79ffe2"))
-	title2.autowrap_mode = TextServer.AUTOWRAP_OFF
-	titles.add_child(title2)
-	stack.add_child(_label("DRAW  •  DESIGN  •  LEARN", 19, Color("eafff9"), true))
-	var description := _label("Learn kitchen planning through real customer requests.\nDraw floor plans, design layouts, and build your skills step by step.", 15, Color("ebfff9"), true)
-	stack.add_child(description)
-	var gap := Control.new()
-	gap.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	stack.add_child(gap)
-	var start := _button("▶  Start Game", true, 330, 62)
-	start.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	start.add_theme_font_size_override("font_size", 22)
-	start.add_theme_stylebox_override("normal", _style(Color("00a890"), Color("85ffdf"), 28, 10))
-	start.add_theme_stylebox_override("hover", _style(Color("008775"), Color("b6fff3"), 28, 10))
-	start.pressed.connect(_show_language_select)
-	stack.add_child(start)
-	var actions := HBoxContainer.new()
-	actions.alignment = BoxContainer.ALIGNMENT_CENTER
-	actions.add_theme_constant_override("separation", 12)
-	stack.add_child(actions)
-	for label in ["How to Play", "Settings", "Achievements"]:
-		var b := _button(label, false, 150, 48)
-		b.add_theme_stylebox_override("normal", _style(Color(0.65, 0.94, 0.88, 0.38), Color(0.90, 1, 1, 0.72), 20, 9))
-		b.add_theme_color_override("font_color", WHITE)
-		b.add_theme_color_override("font_hover_color", GREEN_DARK)
-		if label == "How to Play":
-			b.pressed.connect(_show_help)
-		elif label == "Settings":
-			b.pressed.connect(_show_settings)
-		else:
-			b.pressed.connect(_show_achievements)
-		actions.add_child(b)
-	if is_pause_overlay:
-		var resume := _button("← BACK TO GAME", false, 168, 41)
-		resume.position = Vector2(0, 0)
-		resume.anchor_left = 1.0
-		resume.anchor_right = 1.0
-		resume.offset_left = -195
-		resume.offset_right = -22
-		resume.offset_top = 20
-		resume.offset_bottom = 61
-		resume.pressed.connect(_resume_paused)
-		stage.add_child(resume)
+	_show_reference_screen(false)
 
 func _show_language_select() -> void:
 	_clear()
@@ -435,44 +362,87 @@ func _level_row(n: int) -> Button:
 
 func _show_levels() -> void:
 	_clear()
-	_top_bar.visible = false
-	_bottom_bar.visible = false
-	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	var glass := PanelContainer.new()
-	glass.custom_minimum_size.y = 603
-	glass.add_theme_stylebox_override("panel", _style(Color(0.70, 0.95, 0.91, 0.75), Color(1, 1, 1, 0.84), 26, 20))
-	_body.add_child(glass)
-	var stack := VBoxContainer.new()
-	stack.add_theme_constant_override("separation", 9)
-	glass.add_child(stack)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 15)
-	stack.add_child(row)
-	var back := _button("← Back to Game" if is_pause_overlay else "← Back", false, 154, 44)
-	back.pressed.connect(_resume_paused if is_pause_overlay else _show_home)
-	row.add_child(back)
-	var title := _label("⌂  Select a Level", 30, INK, true)
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(title)
-	var available_count := 3
-	row.add_child(_label("%d / 6 Available" % available_count, 14, GREEN_DARK, true))
-	stack.add_child(_label("Choose any available stage to play.", 16, MUTED, true))
-	var gap := Control.new()
-	gap.custom_minimum_size.y = 7
-	stack.add_child(gap)
-	var card := PanelContainer.new()
-	card.add_theme_stylebox_override("panel", _style(Color(0.88, 1, 0.97, 0.49), Color(1, 1, 1, 0.93), 21, 17))
-	stack.add_child(card)
-	var list := VBoxContainer.new()
-	list.add_theme_constant_override("separation", 9)
-	card.add_child(list)
-	for n in range(1, 7):
-		list.add_child(_level_row(n))
-	if is_pause_overlay:
-		var home := _button("Home", false, 130, 37)
-		home.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		home.pressed.connect(_show_home)
-		stack.add_child(home)
+	_show_reference_screen(true)
+
+# Visuals on these two screens come directly from the owner's design-reference images.
+# The input regions below are real, focusable Godot Button controls.
+# The screenshot artwork is never used for game logic or answer validation.
+func _sync_reference_layout() -> void:
+	if not is_instance_valid(_reference_canvas):
+		return
+	var factor: float = minf(size.x / REF_SIZE.x, size.y / REF_SIZE.y)
+	_reference_canvas.size = REF_SIZE
+	_reference_canvas.scale = Vector2(factor, factor)
+	_reference_canvas.position = (size - REF_SIZE * factor) * 0.5
+
+
+func _reference_button(hit_area: Rect2, action: Callable) -> void:
+	if not is_instance_valid(_reference_canvas):
+		return
+	var hit := Button.new()
+	hit.text = ""
+	hit.position = hit_area.position
+	hit.size = hit_area.size
+	hit.mouse_filter = Control.MOUSE_FILTER_STOP
+	hit.focus_mode = Control.FOCUS_NONE
+	hit.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	var clear := _style(Color.TRANSPARENT, Color.TRANSPARENT, 16)
+	var hover := _style(Color(0.0, 0.93, 0.73, 0.12), Color(0.72, 1, 0.91, 0.38), 16)
+	hit.add_theme_stylebox_override("normal", clear)
+	hit.add_theme_stylebox_override("hover", hover)
+	hit.add_theme_stylebox_override("pressed", hover)
+	hit.add_theme_stylebox_override("focus", clear)
+	hit.pressed.connect(action)
+	_reference_canvas.add_child(hit)
+
+
+func _show_reference_screen(levels: bool) -> void:
+	_top_bar.hide()
+	_bottom_bar.hide()
+	_scroll.hide()
+	_reference_layer = Control.new()
+	_reference_layer.mouse_filter = Control.MOUSE_FILTER_PASS
+	_reference_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(_reference_layer)
+	var letterbox := ColorRect.new()
+	letterbox.color = Color("dceee9")
+	letterbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	letterbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_reference_layer.add_child(letterbox)
+	_reference_canvas = Control.new()
+	_reference_canvas.custom_minimum_size = REF_SIZE
+	_reference_canvas.size = REF_SIZE
+	_reference_canvas.mouse_filter = Control.MOUSE_FILTER_PASS
+	_reference_layer.add_child(_reference_canvas)
+	var picture := TextureRect.new()
+	picture.texture = REF_LEVELS if levels else REF_HOME
+	picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	picture.stretch_mode = TextureRect.STRETCH_SCALE
+	picture.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	picture.size = REF_SIZE
+	picture.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_reference_canvas.add_child(picture)
+	_sync_reference_layout()
+	call_deferred("_sync_reference_layout")
+	if levels:
+		_reference_button(Rect2(103, 142, 222, 63), _resume_paused if is_pause_overlay else _show_home)
+		_reference_button(Rect2(338, 145, 66, 65), _show_home)
+		_reference_button(Rect2(688, 246, 282, 65), _show_help)
+		_reference_button(Rect2(1285, 30, 145, 61), _set_language.bind("jp"))
+		_reference_button(Rect2(1433, 30, 150, 61), _set_language.bind("mm"))
+		# Entire stage row is clickable, not only its PLAY region.
+		_reference_button(Rect2(134, 350, 1388, 92), _start_level.bind(1))
+		_reference_button(Rect2(134, 441, 1388, 82), _start_level.bind(2))
+		_reference_button(Rect2(134, 526, 1388, 79), _start_level.bind(3))
+	else:
+		_reference_button(Rect2(1352, 32, 277, 71), _resume_paused if is_pause_overlay else _show_levels)
+		_reference_button(Rect2(133, 505, 286, 151), _show_language_select)
+		_reference_button(Rect2(431, 504, 245, 151), _show_help)
+		_reference_button(Rect2(681, 504, 239, 151), _show_settings)
+		_reference_button(Rect2(131, 671, 255, 96), _show_achievements)
+		_reference_button(Rect2(390, 671, 263, 96), _show_levels)
+		_reference_button(Rect2(660, 671, 259, 96), _show_achievements)
+
 
 func _resume_paused() -> void:
 	if is_pause_overlay:
