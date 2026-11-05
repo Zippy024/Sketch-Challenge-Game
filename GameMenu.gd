@@ -388,8 +388,8 @@ func _tile_style(primary: bool, hovered: bool) -> StyleBoxFlat:
 	return style
 
 func _level_row(n: int) -> Button:
-	var available: bool = n <= 2 and Progress.is_level_unlocked(n)
-	var future: bool = n >= 3
+	var available: bool = n <= 3 and Progress.is_level_unlocked(n)
+	var future: bool = n >= 4
 	var row := Button.new()
 	row.text = ""
 	row.custom_minimum_size = Vector2(0, 61)
@@ -427,8 +427,8 @@ func _level_row(n: int) -> Button:
 	line.add_child(text_col)
 	text_col.add_child(_label(("Stage %d" % n) if not future else "Coming Soon", 19 if not future else 17, INK if available else MUTED))
 	if not future:
-		text_col.add_child(_label("Draw the LDK boundary" if n == 1 else "PS Q&A · Explain PS to the customer", 12, MUTED))
-	var action := _label("▶ PLAY" if available else "🔒", 16, GREEN_DARK if available else MUTED, true)
+		text_col.add_child(_label("Draw the LDK boundary" if n == 1 else ("PS Q&A · Explain PS to the customer" if n == 2 else "S-Class Kitchen · Layout and parts"), 12, MUTED))
+	var action := _label("PLAY" if available else "LOCK", 16, GREEN_DARK if available else MUTED, true)
 	action.custom_minimum_size.x = 102
 	line.add_child(action)
 	return row
@@ -454,7 +454,7 @@ func _show_levels() -> void:
 	var title := _label("⌂  Select a Level", 30, INK, true)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(title)
-	var available_count := 2 if Progress.is_level_unlocked(2) else 1
+	var available_count := 3
 	row.add_child(_label("%d / 6 Available" % available_count, 14, GREEN_DARK, true))
 	stack.add_child(_label("Choose any available stage to play.", 16, MUTED, true))
 	var gap := Control.new()
@@ -563,12 +563,12 @@ func _on_volume_changed(value: float) -> void:
 
 
 func _start_level(level: int) -> void:
-	if level > 2 or not Progress.is_level_unlocked(level):
+	if level > 3 or not Progress.is_level_unlocked(level):
 		return
 	Progress.launch_from_level_menu = (level == 1)
 	if is_pause_overlay:
 		get_tree().paused = false
-	var target: String = "res://main.tscn" if level == 1 else "res://stage_2.tscn"
+	var target: String = "res://main.tscn" if level == 1 else ("res://stage_2.tscn" if level == 2 else "res://stage_3.tscn")
 	var result: Error = get_tree().change_scene_to_file(target)
 	if result != OK:
 		Progress.launch_from_level_menu = false

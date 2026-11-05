@@ -39,7 +39,7 @@ static func set_language(lang: String) -> void:
 
 static func is_level_unlocked(level: int) -> bool:
 	_ensure_loaded()
-	return level == 1 or (level == 2 and _stage1_cleared)
+	return level >= 1 and level <= 3
 
 static func unlock_level(level: int) -> void:
 	_ensure_loaded()
@@ -50,7 +50,7 @@ static func unlock_level(level: int) -> void:
 
 static func get_highest_unlocked() -> int:
 	_ensure_loaded()
-	return 2 if _stage1_cleared else 1
+	return 3
 
 # Testing option: reset level unlocks, keeping the chosen language.
 static func reset_progress() -> void:
