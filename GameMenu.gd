@@ -130,7 +130,7 @@ func _build_frame() -> void:
 	add_child(base)
 	# This is a separate kitchen photograph; all controls and text are live Godot UI.
 	var photo := TextureRect.new()
-	photo.texture = preload("res://MenuAssets/KitchenHero.jpg")
+	photo.texture = preload("res://MenuAssets/KitchenIntroV8.jpg")
 	photo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	photo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	photo.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
