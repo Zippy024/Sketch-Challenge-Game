@@ -6,6 +6,8 @@ signal resume_requested
 
 const Progress = preload("res://GameProgress.gd")
 const BilingualTheme: Theme = preload("res://WebBilingualTheme.tres")
+const ConsoleAnimations = preload("res://ConceptCAnimations.gd")
+const ConsoleAtmosphere = preload("res://ConceptCAtmosphere.gd")
 
 const BG := Color("dcece7")
 const WHITE := Color("ffffff")
@@ -85,6 +87,7 @@ func _button(title: String, primary: bool = false, min_w: float = 165.0, min_h: 
 	b.add_theme_stylebox_override("hover", _console_style(Color("238e69") if primary else Color("2c5146"), Color("baf5d7") if primary else C_MINT, 13, 10, 5))
 	b.add_theme_stylebox_override("pressed", _console_style(Color("125c46") if primary else Color("254338"), C_MINT, 13, 10, 0))
 	b.add_theme_stylebox_override("focus", _style(Color.TRANSPARENT, C_COPPER, 13))
+	ConsoleAnimations.animate_button(b)
 	return b
 
 
@@ -144,6 +147,8 @@ func _build_frame() -> void:
 	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	base.add_child(dim)
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var atmosphere := ConsoleAtmosphere.new()
+	base.add_child(atmosphere)
 	var outer := VBoxContainer.new()
 	outer.add_theme_constant_override("separation", 0)
 	base.add_child(outer)
@@ -250,6 +255,10 @@ func _show_home() -> void:
 	stage.custom_minimum_size.y = 602
 	stage.add_theme_constant_override("separation", 22)
 	_body.add_child(stage)
+	var stage_entrance := create_tween()
+	stage_entrance.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	stage.modulate.a = 0.0
+	stage_entrance.tween_property(stage, "modulate:a", 1.0, 0.55)
 	var menu := _c_panel(Color(0.052, 0.107, 0.105, 0.92), Color("a99070"), 19, 25)
 	menu.custom_minimum_size.x = 585
 	menu.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
@@ -502,6 +511,9 @@ func _show_levels() -> void:
 	_body.add_child(guide)
 	var panel := _c_panel(Color(0.057, 0.102, 0.103, 0.94), Color("907758"), 20, 14)
 	_body.add_child(panel)
+	panel.modulate.a = 0.0
+	var level_entrance := create_tween()
+	level_entrance.tween_property(panel, "modulate:a", 1.0, 0.45)
 	var stack := VBoxContainer.new()
 	stack.add_theme_constant_override("separation", 8)
 	panel.add_child(stack)
