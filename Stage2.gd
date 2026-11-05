@@ -484,12 +484,12 @@ void fragment() {
 	answer_input.add_theme_font_size_override("font_size", 18)
 	answer_input.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
 	# Modern light answer editor, including focus/readonly states.
-	answer_input.add_theme_color_override("background_color", Color("ffffff"))
+	answer_input.add_theme_color_override("background_color", Color("142622"))
 	answer_input.add_theme_color_override("font_color", Color("f4f1e9"))
 	answer_input.add_theme_color_override("font_placeholder_color", Color("b6c7c1"))
 	answer_input.add_theme_color_override("caret_color", Color("87d3ae"))
 	answer_input.add_theme_color_override("selection_color", Color("bfdbfe"))
-	answer_input.add_theme_color_override("current_line_color", Color("f8fafc"))
+	answer_input.add_theme_color_override("current_line_color", Color("203a34"))
 	for state in ["normal", "focus", "read_only"]:
 		var editor_style := StyleBoxFlat.new()
 		editor_style.bg_color = Color("142622")
@@ -694,14 +694,14 @@ func _update_lang_buttons_style() -> void:
 		jp_button.add_theme_color_override("font_color", Color("ffffff"))
 		mm_button.add_theme_stylebox_override("normal", inactive_s)
 		mm_button.add_theme_stylebox_override("hover", inactive_s)
-		mm_button.add_theme_color_override("font_color", Color("1e293b"))
+		mm_button.add_theme_color_override("font_color", Color("f4f1e9"))
 	else:
 		mm_button.add_theme_stylebox_override("normal", active_s)
 		mm_button.add_theme_stylebox_override("hover", active_s)
 		mm_button.add_theme_color_override("font_color", Color("ffffff"))
 		jp_button.add_theme_stylebox_override("normal", inactive_s)
 		jp_button.add_theme_stylebox_override("hover", inactive_s)
-		jp_button.add_theme_color_override("font_color", Color("1e293b"))
+		jp_button.add_theme_color_override("font_color", Color("f4f1e9"))
 
 func _change_language(lang: String) -> void:
 	_cancel_ai_request()
