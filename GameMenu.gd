@@ -505,7 +505,7 @@ func _show_levels() -> void:
 	header.add_child(_label("●  %d / 3 UNLOCKED" % unlocked_count, 13, C_MINT))
 
 	var panel := _c_panel(Color(0.057, 0.102, 0.103, 0.91), Color("907758"), 18, 13)
-	panel.custom_minimum_size.x = 1000
+	panel.custom_minimum_size.x = 950
 	panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_body.add_child(panel)
 	var column := VBoxContainer.new()
@@ -519,8 +519,8 @@ func _show_levels() -> void:
 		rows.add_child(_mission_card(stage))
 	column.add_child(_thin_rule())
 	column.add_child(_label("COMING SOON  /  04—06", 12, C_COPPER))
-	var locked := HBoxContainer.new()
-	locked.add_theme_constant_override("separation", 9)
+	var locked := VBoxContainer.new()
+	locked.add_theme_constant_override("separation", 6)
 	column.add_child(locked)
 	for stage in range(4, 7):
 		locked.add_child(_locked_card(stage))
@@ -565,7 +565,7 @@ func _mission_card(stage: int) -> PanelContainer:
 func _locked_card(stage: int) -> PanelContainer:
 	var card := _c_panel(Color(0.14, 0.18, 0.19, 0.91), Color("4d5954"), 12, 8)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	card.custom_minimum_size.y = 50
+	card.custom_minimum_size.y = 43
 	var line := HBoxContainer.new()
 	line.add_theme_constant_override("separation", 8)
 	card.add_child(line)
