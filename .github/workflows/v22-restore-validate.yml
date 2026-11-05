@@ -1,0 +1,43 @@
+name: Validate V22 gameplay and Concept C menu
+
+on:
+  push:
+    branches:
+      - fix/v22-stage-process-concept-c-ui-20261105
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Godot 4.7.2 and export templates
+        run: |
+          wget -q https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          unzip -q Godot_v4.7.2-stable_linux.x86_64.zip
+          chmod +x Godot_v4.7.2-stable_linux.x86_64
+          sudo mv Godot_v4.7.2-stable_linux.x86_64 /usr/local/bin/godot
+          wget -q https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz
+          mkdir -p ~/.local/share/godot/export_templates/4.7.2.stable
+          unzip -q Godot_v4.7.2-stable_export_templates.tpz -d templates
+          cp templates/templates/* ~/.local/share/godot/export_templates/4.7.2.stable/
+      - name: Import project and compile scripts
+        run: godot --headless --editor --path . --import
+      - name: Export test game
+        run: |
+          mkdir -p web
+          godot --headless --path . --export-release "Web" web/index.html
+          test -s web/index.html
+          test -s web/index.wasm
+      - name: Save diagnostic web export
+        uses: actions/upload-artifact@v4
+        with:
+          name: v22-concept-c-game-test
+          path: web/
+          retention-days: 7
