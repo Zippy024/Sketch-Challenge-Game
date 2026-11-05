@@ -388,8 +388,8 @@ func _rich_label(font_size: int, color: String = "17233b") -> RichTextLabel:
 func _modern_button_style(button: Button, kind: String = "secondary") -> void:
 	var backgrounds := {"primary": "187457", "secondary": "263e37", "back": "2a4e41", "warning": "593e31"}
 	var borders := {"primary": "238e69", "secondary": "64877b", "back": "64877b", "warning": "fdba74"}
-	var hovers := {"primary": "238e69", "secondary": "31554a", "back": "315b4b", "warning": "ffedd5"}
-	var ink := "f4f1e9" if kind == "primary" else ("9a3412" if kind == "warning" else "f4f1e9")
+	var hovers := {"primary": "238e69", "secondary": "31554a", "back": "315b4b", "warning": "6e4635"}
+	var ink := "f4f1e9" if kind == "primary" else ("ffcdaf" if kind == "warning" else "f4f1e9")
 	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
 		var style := StyleBoxFlat.new()
 		style.bg_color = Color(hovers.get(kind, "31554a")) if state in ["hover", "pressed"] else Color(backgrounds.get(kind, "f4f1e9"))
@@ -646,8 +646,8 @@ func _build_ui() -> void:
 	ref_title_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	ref_title_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	ref_title_btn.add_theme_font_size_override("font_size", 17)
-	ref_title_btn.add_theme_color_override("font_color", Color("17233b"))
-	ref_title_btn.add_theme_color_override("font_hover_color", Color("2563eb"))
+	ref_title_btn.add_theme_color_override("font_color", Color("f4f1e9"))
+	ref_title_btn.add_theme_color_override("font_hover_color", Color("87d3ae"))
 	ref_title_btn.pressed.connect(_open_reference_popup)
 	left.add_child(ref_title_btn)
 
@@ -756,14 +756,14 @@ func _update_lang_buttons_style() -> void:
 		jp_lang_btn.add_theme_color_override("font_color", Color("ffffff"))
 		mm_lang_btn.add_theme_stylebox_override("normal", inactive_s)
 		mm_lang_btn.add_theme_stylebox_override("hover", inactive_s)
-		mm_lang_btn.add_theme_color_override("font_color", Color("1e293b"))
+		mm_lang_btn.add_theme_color_override("font_color", Color("f4f1e9"))
 	else:
 		mm_lang_btn.add_theme_stylebox_override("normal", active_s)
 		mm_lang_btn.add_theme_stylebox_override("hover", active_s)
 		mm_lang_btn.add_theme_color_override("font_color", Color("ffffff"))
 		jp_lang_btn.add_theme_stylebox_override("normal", inactive_s)
 		jp_lang_btn.add_theme_stylebox_override("hover", inactive_s)
-		jp_lang_btn.add_theme_color_override("font_color", Color("1e293b"))
+		jp_lang_btn.add_theme_color_override("font_color", Color("f4f1e9"))
 
 func _switch_language(lang: String) -> void:
 	Progress.set_language(lang)
@@ -926,7 +926,7 @@ func _set_status(value: String, error: bool, success: bool = false) -> void:
 		status_label.add_theme_color_override("font_color", Color("14532d"))
 	else:
 		status_panel.add_theme_stylebox_override("panel", _style("ffffff"))
-		status_label.add_theme_color_override("font_color", Color("17233b"))
+		status_label.add_theme_color_override("font_color", Color("f4f1e9"))
 
 func _on_drawing_status(message: String) -> void:
 	if is_drawing_started:
