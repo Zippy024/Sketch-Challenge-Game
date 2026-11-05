@@ -6,6 +6,8 @@ const Progress = preload("res://GameProgress.gd")
 const StageCompleteOverlay = preload("res://StageCompleteOverlay.gd")
 const UI_THEME: Theme = preload("res://WebBilingualTheme.tres")
 const PORTRAIT: Texture2D = preload("res://customer_portrait_ui.png")
+const ConsoleAnimations = preload("res://ConceptCAnimations.gd")
+const ConsoleAtmosphere = preload("res://ConceptCAtmosphere.gd")
 var IMAGES_Q1: Array[Texture2D] = []
 var IMAGES_Q2: Array[Texture2D] = []
 const BG := Color("101d1c")
@@ -36,6 +38,7 @@ func _ready() -> void:
 	_load_stage3_atlas()
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_refresh()
+	ConsoleAnimations.animate_screen(self)
 
 
 func _load_stage3_atlas() -> void:
@@ -92,6 +95,7 @@ func _btn(t: String, main: bool = false, w: float = 92.0) -> Button:
 	b.add_theme_stylebox_override("hover", _style(Color("238e69") if main else Color("31554a"), BLUE))
 	b.add_theme_stylebox_override("pressed", _style(Color("125c46") if main else Color("31554a"), BLUE))
 	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	ConsoleAnimations.animate_button(b)
 	return b
 
 
@@ -125,6 +129,8 @@ func _refresh() -> void:
 	photo_dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	background.add_child(photo_dim)
 	photo_dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var atmosphere := ConsoleAtmosphere.new()
+	background.add_child(atmosphere)
 	var frame := HBoxContainer.new()
 	frame.add_theme_constant_override("separation", 14)
 	background.add_child(frame)
@@ -353,6 +359,7 @@ func _draw_choices() -> void:
 		option.focus_mode = Control.FOCUS_NONE
 		option.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		cards.add_child(option)
+		ConsoleAnimations.animate_button(option)
 
 		var option_col := VBoxContainer.new()
 		option_col.mouse_filter = Control.MOUSE_FILTER_IGNORE
