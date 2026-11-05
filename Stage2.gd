@@ -4,6 +4,7 @@ const Progress = preload("res://GameProgress.gd")
 const AIConfig = preload("res://AIConfig.gd")
 const ConsoleAnimations = preload("res://ConceptCAnimations.gd")
 const ConsoleAtmosphere = preload("res://ConceptCAtmosphere.gd")
+const ConsoleStageHUD = preload("res://ConceptCStageHUD.gd")
 
 const QUESTIONS := {
 	"jp": {
@@ -284,10 +285,17 @@ func _build_ui() -> void:
 	add_child(background)
 	var atmosphere := ConsoleAtmosphere.new()
 	background.add_child(atmosphere)
+	var hud := ConsoleStageHUD.new(2)
+	background.add_child(hud)
+	hud.anchor_right = 1.0
+	hud.offset_left = 15.0
+	hud.offset_right = -15.0
+	hud.offset_top = 9.0
+	hud.offset_bottom = 54.0
 
 	var outside := MarginContainer.new()
 	for s in ["left", "right", "top", "bottom"]:
-		outside.add_theme_constant_override("margin_" + s, 15)
+		outside.add_theme_constant_override("margin_" + s, 62 if s == "top" else 15)
 	background.add_child(outside)
 
 	var split := HSplitContainer.new()
