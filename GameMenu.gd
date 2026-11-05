@@ -167,7 +167,7 @@ func _build_frame() -> void:
 	brand_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	brand_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	header.add_child(brand_icon)
-	var brand := _label("KITCHEN LAYOUT GAME", 18, C_INK)
+	var brand := _label("KITCHEN DECORATION GAME", 18, C_INK)
 	brand.autowrap_mode = TextServer.AUTOWRAP_OFF
 	brand.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(brand)
@@ -258,9 +258,13 @@ func _show_home() -> void:
 	column.add_theme_constant_override("separation", 9)
 	menu.add_child(column)
 	column.add_child(_label("KITCHEN DESIGN TRAINING", 14, C_COPPER))
-	var heading := _label("Kitchen\nLayout Game", 45, C_INK)
+	var heading := _label("Kitchen\nDecoration Game", 42, C_INK)
 	heading.autowrap_mode = TextServer.AUTOWRAP_OFF
 	column.add_child(heading)
+	# Slow loop; stops automatically when leaving the intro/home page.
+	var logo_pulse := create_tween().bind_node(heading).set_loops()
+	logo_pulse.tween_property(heading, "modulate:a", 0.82, 1.8).set_trans(Tween.TRANS_SINE)
+	logo_pulse.tween_property(heading, "modulate:a", 1.0, 1.8).set_trans(Tween.TRANS_SINE)
 	column.add_child(_thin_rule())
 	column.add_child(_label("SKETCH    /    CHOOSE MATERIALS    /    LEARN", 13, C_COPPER))
 	column.add_child(_label("A practical kitchen design challenge.\nListen to customer requests, sketch accurate layouts,\nand learn to select the right kitchen components.", 16, C_MUTED))
@@ -314,13 +318,13 @@ func _show_information(title_text: String, details: String) -> void:
 	_bottom_bar.show()
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size.y = 380
-	panel.add_theme_stylebox_override("panel", _style(Color(0.80, 1, 0.95, 0.88), WHITE, 24, 30))
+	panel.add_theme_stylebox_override("panel", _style(Color("192e2b"), C_COPPER, 24, 30))
 	_body.add_child(panel)
 	var stack := VBoxContainer.new()
 	stack.add_theme_constant_override("separation", 24)
 	panel.add_child(stack)
-	stack.add_child(_label(title_text, 30, INK, true))
-	stack.add_child(_label(details, 17, MUTED, true))
+	stack.add_child(_label(title_text, 30, C_INK, true))
+	stack.add_child(_label(details, 17, C_MUTED, true))
 	var back := _button("← Back to Home", true, 190, 48)
 	back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	back.pressed.connect(_show_home)
@@ -372,15 +376,15 @@ func _show_achievements() -> void:
 	_bottom_bar.visible = false
 	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", _style(Color(0.82, 1, 0.95, 0.89), WHITE, 22, 28))
+	panel.add_theme_stylebox_override("panel", _style(Color("192e2b"), C_COPPER, 22, 28))
 	_body.add_child(panel)
 	var stack := VBoxContainer.new()
 	stack.add_theme_constant_override("separation", 18)
 	panel.add_child(stack)
-	stack.add_child(_label("ACHIEVEMENTS", 30, INK, true))
-	stack.add_child(_label("Stage progress is earned by completing in-game challenges.", 17, MUTED, true))
-	stack.add_child(_label("Stage 1: " + ("Cleared ✓" if Progress.is_level_unlocked(2) else "Not yet cleared"), 19, GREEN_DARK, true))
-	stack.add_child(_label("More achievements will appear as new stages are released.", 15, MUTED, true))
+	stack.add_child(_label("ACHIEVEMENTS", 30, C_INK, true))
+	stack.add_child(_label("Stage progress is earned by completing in-game challenges.", 17, C_MUTED, true))
+	stack.add_child(_label("Stage 1: " + ("Cleared ✓" if Progress.is_level_unlocked(2) else "Not yet cleared"), 19, C_MINT, true))
+	stack.add_child(_label("More achievements will appear as new stages are released.", 15, C_MUTED, true))
 	var back := _button("Back to Home", true, 200, 44)
 	back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	back.pressed.connect(_show_home)
@@ -580,20 +584,20 @@ func _show_help() -> void:
 	_top_bar.visible = true
 	_bottom_bar.visible = true
 	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	_body.add_child(_label("HOW TO PLAY", 31, INK))
+	_body.add_child(_label("HOW TO PLAY", 31, C_INK))
 	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", _style(WHITE, BORDER, 18, 30))
+	panel.add_theme_stylebox_override("panel", _style(Color("192e2b"), C_COPPER, 18, 30))
 	_body.add_child(panel)
 	var contents := VBoxContainer.new()
 	contents.add_theme_constant_override("separation", 18)
 	panel.add_child(contents)
-	contents.add_child(_label("01  LISTEN TO THE CUSTOMER", 19, GREEN))
-	contents.add_child(_label("Choose Japanese or Myanmar, listen to the customer and review the layout request.", 16, MUTED))
-	contents.add_child(_label("02  DRAW THE REQUESTED PLAN", 19, GREEN))
-	contents.add_child(_label("Use the grid tools to sketch the requested walls and press OK to check your layout.", 16, MUTED))
-	contents.add_child(_label("03  ANSWER THE CUSTOMER", 19, GREEN))
-	contents.add_child(_label("Finish Level 1 to unlock the Pipe Shaft Q&A in Level 2.", 16, MUTED))
-	contents.add_child(_label("Progress and language selection are saved on this device.", 14, MUTED))
+	contents.add_child(_label("01  LISTEN TO THE CUSTOMER", 19, C_MINT))
+	contents.add_child(_label("Choose Japanese or Myanmar, listen to the customer and review the layout request.", 16, C_MUTED))
+	contents.add_child(_label("02  DRAW THE REQUESTED PLAN", 19, C_MINT))
+	contents.add_child(_label("Use the grid tools to sketch the requested walls and press OK to check your layout.", 16, C_MUTED))
+	contents.add_child(_label("03  ANSWER THE CUSTOMER", 19, C_MINT))
+	contents.add_child(_label("Finish Level 1 to unlock the Pipe Shaft Q&A in Level 2.", 16, C_MUTED))
+	contents.add_child(_label("Progress and language selection are saved on this device.", 14, C_MUTED))
 	var go := _button("BACK TO HOME", true, 190, 46)
 	go.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	go.pressed.connect(_show_home)
@@ -603,14 +607,14 @@ func _show_help() -> void:
 func _show_settings() -> void:
 	_reset_armed = false
 	_clear()
-	_body.add_child(_label("SETTINGS", 31, INK))
+	_body.add_child(_label("SETTINGS", 31, C_INK))
 	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", _style(WHITE, BORDER, 18, 30))
+	panel.add_theme_stylebox_override("panel", _style(Color("192e2b"), C_COPPER, 18, 30))
 	_body.add_child(panel)
 	var contents := VBoxContainer.new()
 	contents.add_theme_constant_override("separation", 20)
 	panel.add_child(contents)
-	contents.add_child(_label("LANGUAGE", 18, GREEN))
+	contents.add_child(_label("LANGUAGE", 18, C_MINT))
 	var languages := HBoxContainer.new()
 	contents.add_child(languages)
 	var japanese := _button("日本語", false, 140, 48)
@@ -619,7 +623,7 @@ func _show_settings() -> void:
 	var myanmar := _button("မြန်မာ", false, 140, 48)
 	myanmar.pressed.connect(func() -> void: _set_language("mm"))
 	languages.add_child(myanmar)
-	contents.add_child(_label("GAME VOLUME", 18, GREEN))
+	contents.add_child(_label("GAME VOLUME", 18, C_MINT))
 	var volume := HSlider.new()
 	volume.min_value = 0.0
 	volume.max_value = 1.0
@@ -628,8 +632,8 @@ func _show_settings() -> void:
 	volume.custom_minimum_size = Vector2(300, 36)
 	volume.value_changed.connect(_on_volume_changed)
 	contents.add_child(volume)
-	contents.add_child(_label("SAVED GAME PROGRESS", 18, GREEN))
-	contents.add_child(_label("Resetting progress will lock Level 2 until you complete Level 1 again.", 14, MUTED))
+	contents.add_child(_label("SAVED GAME PROGRESS", 18, C_MINT))
+	contents.add_child(_label("Resetting progress will lock Level 2 until you complete Level 1 again.", 14, C_MUTED))
 	var reset := _button("RESET LEVEL PROGRESS", false, 255, 45)
 	reset.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	reset.pressed.connect(_on_reset_progress_pressed.bind(reset))
