@@ -2,6 +2,7 @@ extends Control
 
 const Progress = preload("res://GameProgress.gd")
 const AIConfig = preload("res://AIConfig.gd")
+const StageCompleteOverlay = preload("res://StageCompleteOverlay.gd")
 
 const QUESTIONS := {
 	"jp": {
@@ -148,6 +149,8 @@ class PlanViewer extends Control:
 
 var current_lang := "jp"
 var last_eval_state := "none" # "none", "good", "needs"
+var _completion_overlay: Control
+var _completion_serial: int = 0
 var last_evaluation_source: String = "offline"
 var _ai_http: HTTPRequest
 var _ai_busy: bool = false
@@ -719,6 +722,7 @@ func _change_language(lang: String) -> void:
 		feedback_label.visible = true
 		_set_progress_state("completed")
 		_play_voice("good")
+		_schedule_completion()
 		if last_evaluation_source == "local":
 			status_label.text = "LOCAL CHECK · APPROXIMATE"
 	elif last_eval_state == "needs":
@@ -738,6 +742,10 @@ func _change_language(lang: String) -> void:
 		_play_voice("question")
 
 func _reset_answer() -> void:
+	_completion_serial += 1
+	if is_instance_valid(_completion_overlay):
+		_completion_overlay.queue_free()
+		_completion_overlay = null
 	_cancel_ai_request()
 	_stop_voice()
 	last_eval_state = "none"
@@ -826,6 +834,7 @@ func _show_check_result(correct: bool) -> void:
 		_set_progress_state("completed")
 		_play_voice("good")
 	else:
+		_completion_serial += 1
 		last_eval_state = "needs"
 		question_label.visible = true
 		question_label.text = str(d["question"])
@@ -836,6 +845,56 @@ func _show_check_result(correct: bool) -> void:
 		feedback_label.add_theme_color_override("font_color", Color("b91c1c"))
 		_set_progress_state("incorrect")
 		_play_voice("needs")
+
+func _schedule_completion() -> void:
+	# ZIP V22 customer-voice completion, with a Web-safe fallback delay.
+	_completion_serial += 1
+	var expected: int = _completion_serial
+	var wait_time: float = 1.8
+	if voice_player != null and voice_player.playing and voice_player.stream != null:
+		wait_time = maxf(wait_time, voice_player.stream.get_length() + 0.12)
+	await get_tree().create_timer(wait_time, false).timeout
+	if not is_inside_tree() or expected != _completion_serial or last_eval_state != "good":
+		return
+	_show_stage_complete_overlay()
+
+
+func _show_stage_complete_overlay() -> void:
+	if not is_inside_tree() or last_eval_state != "good" or is_instance_valid(_completion_overlay):
+		return
+	var jp: bool = current_lang == "jp"
+	_completion_overlay = StageCompleteOverlay.new()
+	_completion_overlay.configure(
+		"ステージ2 クリア！" if jp else "Stage 2 Complete!",
+		"お客様の質問に答えました！" if jp else "Customer မေးခွန်းကို မှန်ကန်စွာ ဖြေဆိုပြီးပါပြီ။",
+		"次のステージ" if jp else "Next Stage",
+		"レベル一覧" if jp else "Levels",
+		"もう一度" if jp else "Replay",
+		true, true
+	)
+	add_child(_completion_overlay)
+	_completion_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_completion_overlay.next_requested.connect(_stage2_complete_next)
+	_completion_overlay.levels_requested.connect(_stage2_complete_levels)
+	_completion_overlay.replay_requested.connect(_stage2_complete_replay)
+
+
+func _stage2_complete_next() -> void:
+	_completion_serial += 1
+	get_tree().change_scene_to_file("res://stage_3.tscn")
+
+
+func _stage2_complete_levels() -> void:
+	_completion_serial += 1
+	Progress.show_levels_on_open = true
+	get_tree().change_scene_to_file("res://GameMenu.tscn")
+
+
+func _stage2_complete_replay() -> void:
+	_completion_serial += 1
+	_reset_answer()
+	_play_voice("question")
+
 
 func _has_any_keyword(text: String, options: Array[String]) -> bool:
 	for word in options:
