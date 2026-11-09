@@ -50,6 +50,15 @@ func _ready() -> void:
 		_show_levels()
 	else:
 		_show_splash()
+	# The HTML Web shell must not dismiss its loading artwork until this
+	# actual menu scene has entered the tree and completed its UI setup.
+	if OS.has_feature("web"):
+		call_deferred("_notify_web_menu_ready")
+
+
+func _notify_web_menu_ready() -> void:
+	if OS.has_feature("web") and is_inside_tree() and is_instance_valid(_body):
+		JavaScriptBridge.eval("window.__sketchSceneReady = true;", true)
 
 
 func _style(bg: Color, edge: Color = BORDER, radius: int = 15, padding: int = 0) -> StyleBoxFlat:

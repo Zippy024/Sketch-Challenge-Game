@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#0c5649">
+  <meta name="theme-color" content="#211c34">
   <title>$GODOT_PROJECT_NAME</title>
   $GODOT_HEAD_INCLUDE
   <!-- Inline branded favicon also avoids stale GitHub Pages icon caches. -->
@@ -11,7 +11,7 @@
   <style>
     :root { color-scheme: light; font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; }
     * { box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #102d2a; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #211c34; }
     #canvas { width: 100%; height: 100%; display: block; outline: none; touch-action: none; }
     #sketch-loading {
       position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center;
@@ -97,12 +97,49 @@
         bar.style.width = '100%';
         bar.style.background = '#b34e4e';
       }
+      // A resolved WebAssembly promise is NOT proof that Godot rendered a menu.
+      // Keep the branded splash until GameMenu.gd explicitly reports readiness.
+      window.__sketchSceneReady = false;
+      const browserErrors = [];
+      window.addEventListener('error', function (event) {
+        const detail = event.message || 'Browser script error';
+        browserErrors.push(detail);
+        console.error('Sketch Challenge browser error:', detail);
+      });
+      window.addEventListener('unhandledrejection', function (event) {
+        const detail = String(event.reason || 'Unhandled game promise');
+        browserErrors.push(detail);
+        console.error('Sketch Challenge rejected promise:', detail);
+      });
+      const startedAt = Date.now();
+      let completed = false;
+      function revealGame() {
+        if (completed) return;
+        completed = true;
+        bar.style.width = '100%';
+        percent.textContent = 'Ready';
+        splash.classList.add('hide');
+        window.setTimeout(() => splash.remove(), 450);
+      }
+      function waitForScene() {
+        if (window.__sketchSceneReady === true) {
+          // Wait a couple of frames to allow the canvas to present the scene.
+          requestAnimationFrame(() => requestAnimationFrame(revealGame));
+          return;
+        }
+        if (Date.now() - startedAt > 25000) {
+          const detail = browserErrors.slice(-2).join(' | ');
+          showError('Game scene did not start within 25 seconds.' + (detail ? ' ' + detail : ' Check WebGL and the browser console.'));
+          status.textContent = 'The game could not open. Please refresh or try another browser.';
+          return;
+        }
+        window.setTimeout(waitForScene, 200);
+      }
       engine.startGame({canvas: document.getElementById('canvas'), onProgress: setProgress})
         .then(() => {
-          bar.style.width = '100%';
-          percent.textContent = 'Ready';
-          splash.classList.add('hide');
-          window.setTimeout(() => splash.remove(), 450);
+          percent.textContent = 'Starting';
+          status.textContent = 'Opening game menu...';
+          waitForScene();
         })
         .catch(showError);
     })();
