@@ -42,12 +42,31 @@ jobs:
           cp templates/templates/* ~/.local/share/godot/export_templates/4.7.2.stable/
 
       - name: Import Godot Project
-        run: godot --headless --editor --path . --import
+        run: |
+          godot --headless --editor --path . --import 2>&1 | tee import.log
+          if grep -E 'SCRIPT ERROR:|Parse Error:|Failed to load script' import.log; then
+            echo "Godot script import failed"
+            exit 1
+          fi
+
+      - name: Check game startup and scripts
+        run: |
+          godot --headless --path . --quit-after 75 2>&1 | tee startup.log
+          if grep -E 'SCRIPT ERROR:|Parse Error:|Failed to load script|Invalid call\.|Invalid get index|Invalid set index' startup.log; then
+            echo "Godot game startup failed"
+            exit 1
+          fi
 
       - name: Export Web Game
         run: |
           mkdir -p web
-          godot --headless --path . --export-release "Web" web/index.html
+          godot --headless --path . --export-release "Web" web/index.html 2>&1 | tee export.log
+          if grep -E 'SCRIPT ERROR:|Parse Error:|Failed to load script' export.log; then
+            echo "Godot Web export contains errors"
+            exit 1
+          fi
+          test -s web/index.html
+          test -s web/index.wasm
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
