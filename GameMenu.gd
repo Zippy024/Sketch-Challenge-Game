@@ -1,4 +1,6 @@
 extends Control
+
+const ReferenceSkin = preload("res://ReferenceUISkin.gd")
 # Reference-matched blue/cyan desktop UI. Stage 1/2/3 logic remains in original files.
 # All selectable cards and controls are native Godot UI, not screenshots.
 signal resume_requested
@@ -29,7 +31,7 @@ var _bottom: Control
 var _volume_value: float = 0.85
 var _reset_armed: bool = false
 var _stats_reset_armed: bool = false
-var _chosen_stage: int = 1
+var _chosen_stage: int = 3
 var _loading_tween: Tween
 var _menu_backdrop: TextureRect
 
@@ -97,6 +99,8 @@ func _button(title: String, primary: bool = false, min_w: float = 165.0, min_h: 
 	btn.add_theme_stylebox_override("pressed", _style(Color("0878a6") if primary else Color("c4eaff"), Color("62c5e6"), 24))
 	btn.add_theme_stylebox_override("disabled", _style(Color("7e91a4"), Color("a5bbcc"), 24))
 	btn.add_theme_stylebox_override("focus", _style(Color.TRANSPARENT, Color("4cdaff"), 24))
+	if primary:
+		btn.add_theme_stylebox_override("normal", ReferenceSkin.primary_style())
 	return btn
 
 
@@ -170,7 +174,7 @@ func _build_frame() -> void:
 	head.add_theme_constant_override("separation", 9)
 	head_margin.add_child(head)
 	var brand_pic := TextureRect.new()
-	brand_pic.texture = preload("res://Branding/BlueprintPencilGameLogo.png")
+	brand_pic.texture = preload("res://MenuAssets/KitchenLogoGlossy.webp")
 	brand_pic.custom_minimum_size = Vector2(185, 48)
 	brand_pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	brand_pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -184,6 +188,10 @@ func _build_frame() -> void:
 		nav.add_theme_font_size_override("font_size", 13)
 		nav.pressed.connect(Callable(self, str(info[1])))
 		head.add_child(nav)
+	var settings_nav := _button("⚙", false, 42, 39)
+	settings_nav.tooltip_text = "Settings"
+	settings_nav.pressed.connect(_show_settings)
+	head.add_child(settings_nav)
 	var user_pill := PanelContainer.new()
 	user_pill.custom_minimum_size = Vector2(115, 37)
 	user_pill.add_theme_stylebox_override("panel", _style(Color("153e6d"), Color("73ddf6"), 22, 4))
@@ -285,7 +293,7 @@ func _entry_page(name_value: String) -> Control:
 func _show_loading() -> void:
 	_menu_backdrop.texture = preload("res://Modern Blue-White Kitchen Interior.png")
 	var page := _entry_page("IntroLoadingScreen")
-	_image(page, preload("res://Branding/BlueprintPencilGameLogo.png"), Rect2(320, 6, 684, 182))
+	_image(page, preload("res://MenuAssets/KitchenLogoGlossy.webp"), Rect2(320, 6, 684, 182))
 	var progress := ProgressBar.new()
 	progress.name = "LoadingBar"
 	progress.max_value = 100.0
@@ -307,9 +315,9 @@ func _show_loading() -> void:
 func _show_language() -> void:
 	_menu_backdrop.texture = preload("res://Sunny Cozy Kitchen Interior.png")
 	var page := _entry_page("ChooseLanguageScreen")
-	_image(page, preload("res://Branding/BlueprintPencilGameLogo.png"), Rect2(338, 31, 644, 196))
-	_panel(page, Rect2(440, 222, 440, 325), Color("ecf9ff"), Color("87d6f8"), 28)
-	_text(page, "SELECT LANGUAGE", 23, Rect2(488, 253, 345, 40), Color("153d66"), true)
+	_image(page, preload("res://MenuAssets/KitchenLogoGlossy.webp"), Rect2(338, 31, 644, 196))
+	_panel(page, Rect2(413, 222, 494, 337), Color(0.93, 0.98, 1.0, 0.93), Color("a9efff"), 32)
+	_text(page, "Select Language", 26, Rect2(488, 253, 345, 40), Color("153d66"), true)
 	var options := OptionButton.new()
 	options.name = "LanguageDropdown"
 	options.custom_minimum_size = Vector2(350, 52)
@@ -341,46 +349,46 @@ func _show_language() -> void:
 		_set_language("mm" if options.selected == 1 else "jp")
 		_show_home()
 	)
-	_place(page, continue_button, Rect2(505, 425, 310, 58))
-	_text(page, "Japanese  •  Myanmar", 15, Rect2(470, 498, 380, 32), Color("5e84a4"), true)
+	_place(page, continue_button, Rect2(505, 513, 310, 58))
+	_text(page, "Japanese  •  Myanmar", 15, Rect2(470, 458, 380, 32), Color("5e84a4"), true)
 
 
 func _show_home() -> void:
-	_menu_backdrop.texture = preload("res://MenuAssets/LanguageBackground.png")
+	_menu_backdrop.texture = preload("res://Sunny Cozy Kitchen Interior.png")
 	var page := _entry_page("MainMenuScreen")
-	_panel(page, Rect2(104, 3, 1112, 666), Color(0.93, 0.98, 1.0, 0.66), Color("d8f9ff"), 28)
-	_image(page, preload("res://Branding/BlueprintPencilGameLogo.png"), Rect2(302, 12, 705, 210))
-	# Menu buttons are live and deliberately stacked, as in the reference.
-	var menu_back := _panel(page, Rect2(150, 246, 440, 368), Color(0.96, 0.99, 1.0, 0.87), Color("bbecfa"), 26)
-	var start := _button("▶   START GAME", true, 347, 60)
-	start.add_theme_font_size_override("font_size", 22)
-	start.pressed.connect(_show_levels)
-	_place(page, start, Rect2(192, 271, 352, 60))
-	var sel := _button("▤   SELECT LEVEL", false, 347, 55)
-	sel.pressed.connect(_show_levels)
-	_place(page, sel, Rect2(192, 349, 352, 55))
-	var guide := _button("▦   GAME GUIDE", false, 347, 55)
-	guide.pressed.connect(_show_help)
-	_place(page, guide, Rect2(192, 424, 352, 55))
-	var settings := _button("⚙   SETTINGS", false, 347, 55)
-	settings.pressed.connect(_show_settings)
-	_place(page, settings, Rect2(192, 499, 352, 55))
-	# A framed kitchenette only; never an image used as a non-clickable menu overlay.
-	_panel(page, Rect2(625, 242, 527, 344), Color(0.84, 0.94, 0.99, 0.82), Color("b1ecfe"), 22)
-	_image(page, preload("res://MenuAssets/Intro3DKitchenArt.png"), Rect2(622, 231, 542, 365))
-	_panel(page, Rect2(866, 598, 270, 38), Color("114d7e"), Color("77e2fc"), 21)
-	_text(page, "SKETCH  •  Q&A  •  MATERIALS", 13, Rect2(872, 602, 254, 27), Color("e9fbff"), true)
+	_image(page, preload("res://MenuAssets/KitchenHero.jpg"), Rect2(650, -10, 800, 830), true)
+	_panel(page, Rect2(30, 12, 625, 665), Color(0.88, 0.96, 1.0, 0.88), Color("d8f9ff"), 32)
+	_image(page, preload("res://MenuAssets/KitchenLogoGlossy.webp"), Rect2(86, 18, 500, 206))
+	var labels := ["Start Game", "Select Level", "Game Guide", "Settings"]
+	var actions: Array[Callable] = [_show_levels, _show_levels, _show_help, _show_settings]
+	for i in range(labels.size()):
+		var btn := _button(labels[i], i == 0, 440, 68)
+		btn.name = ["StartGame", "SelectLevel", "GameGuide", "Settings"][i]
+		btn.icon = [preload("res://MenuAssets/play_white.png"), preload("res://MenuAssets/levels_green.png"), preload("res://MenuAssets/book_green.png"), preload("res://MenuAssets/settings_green.png")][i]
+		btn.expand_icon = true
+		for state in ["normal", "hover", "pressed", "focus"]:
+			var inset_style := btn.get_theme_stylebox(state).duplicate() as StyleBox
+			inset_style.content_margin_left = 70
+			inset_style.content_margin_right = 45
+			btn.add_theme_stylebox_override(state, inset_style)
+		btn.add_theme_constant_override("icon_max_width", 25)
+		btn.add_theme_font_size_override("font_size", 23)
+		btn.pressed.connect(actions[i])
+		_place(page, btn, Rect2(119, 253 + i * 87, 440, 68))
+	_panel(page, Rect2(1113, 18, 173, 43), Color("15566f"), Color("8deafb"), 24)
+	_text(page, "◉  Trainee", 18, Rect2(1125, 23, 150, 32), WHITE, true)
+	_text(page, "SKETCH  ·  PLAN  ·  CREATE", 15, Rect2(140, 620, 400, 30), Color("376c87"), true)
 	if is_pause_overlay:
-		var resume := _button("←  BACK TO GAME", false, 194, 38)
+		var resume := _button("← Back to Game", true, 220, 44)
 		resume.pressed.connect(_resume_paused)
-		_place(page, resume, Rect2(171, 565, 193, 38))
+		_place(page, resume, Rect2(861, 618, 220, 44))
 
 
 func _selected_name(n: int) -> String:
 	match n:
-		1: return "LDK Boundary Drawing"
-		2: return "Pipe Shaft Q&A"
-		3: return "S-Class Kitchen Selection"
+		1: return "LDK Boundary\nDrawing"
+		2: return "Pipe Shaft\nQ&A"
+		3: return "S-Class\nKitchen Selection"
 		4: return "Island Layout Planning"
 		5: return "Lighting & Atmosphere"
 		_: return "Final Kitchen Design"
@@ -427,27 +435,31 @@ func _stage_card(page: Control, n: int, x: float, y: float, w: float, h: float) 
 	_place(page, btn, Rect2(x, y, w, h))
 	# Curved dark blueprint ribbon, image, description and genuine play button.
 	_panel(btn, Rect2(4, 4, w - 8, 33), Color("064b75") if available else Color("4b6175"), Color("63e4f5") if selected else Color("b1cedd"), 13)
-	_text(btn, ("▶   " if selected else "") + "STAGE %02d" % n, 15, Rect2(7, 8, w-14, 27), Color("ffffff"), true)
-	var photo := _image(btn, _stage_image(n), Rect2(8, 43, w - 16, 122 if selected else 110), true)
+	_text(btn, "STAGE %02d" % n, 15, Rect2(7, 8, w-14, 27), Color("ffffff"), true)
+	var photo := _image(btn, _stage_image(n), Rect2(8, 43, w - 16, 136 if selected else 110), true)
 	photo.modulate = WHITE if available else Color("bac5d0")
-	_text(btn, _selected_name(n), 15 if selected else 13, Rect2(6, 171 if selected else 159, w-12, 38), INK if available else Color("e7f1f7"), true)
+	_text(btn, _selected_name(n), 15 if selected else 13, Rect2(6, 187 if selected else 159, w-12, 46), INK if available else Color("e7f1f7"), true)
 	if selected:
-		var play := _button("▶  Play  »", true, w-37, 40)
+		var play := _button("Play  »", true, w-37, 40)
 		play.name = "SelectedPlayButton"
+		play.icon = preload("res://MenuAssets/play_white.png")
+		play.expand_icon = true
+		play.add_theme_constant_override("icon_max_width", 18)
 		play.add_theme_font_size_override("font_size", 17)
 		play.pressed.connect(_start_level.bind(n))
 		_place(btn, play, Rect2(18, h-54, w-36, 40))
 	else:
-		var hint := "SELECT" if available else "🔒  Locked"
+		var hint := ("✓ COMPLETED" if n == 1 and Extras.stage1_completed() else "AVAILABLE") if available else "🔒  Locked"
 		_text(btn, hint, 12, Rect2(7, h-41, w-14, 30), Color("0b7eac") if available else Color("ecf2f7"), true)
 	if selected:
 		btn.move_to_front()
 
 
 func _show_levels() -> void:
+	_menu_backdrop.texture = preload("res://Sunny Cozy Kitchen Interior.png")
 	var page := _page("StageSelectionScreen", 659)
 	# A restrained showroom with floating light blue cards and a cyan stage rail.
-	_panel(page, Rect2(14, 6, 1292, 642), Color(0.94, 0.99, 1.0, 0.62), Color("a9def6"), 25)
+	_panel(page, Rect2(14, 6, 1292, 642), Color(0.90, 0.97, 1.0, 0.82), Color("a9def6"), 25)
 	_text(page, "Select a Stage", 35, Rect2(345, 22, 628, 55), Color("103c67"), true)
 	_text(page, "Progress through kitchen design missions step by step.", 16, Rect2(333, 79, 654, 28), Color("4f7998"), true)
 	# Architectural blueprint ornament, not decorative UI screenshot.

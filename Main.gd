@@ -1,5 +1,7 @@
 extends Control
 
+const ReferenceSkin = preload("res://ReferenceUISkin.gd")
+
 const CanvasScript = preload("res://DrawingCanvas.gd")
 const Progress = preload("res://GameProgress.gd")
 
@@ -378,16 +380,16 @@ func _rich_label(font_size: int, color: String = "17233b") -> RichTextLabel:
 	return r
 
 func _modern_button_style(button: Button, kind: String = "secondary") -> void:
-	var backgrounds := {"primary": "2563eb", "secondary": "ffffff", "back": "dbeafe", "warning": "fff0d9"}
-	var borders := {"primary": "1d4ed8", "secondary": "93c5fd", "back": "93c5fd", "warning": "fdba74"}
-	var hovers := {"primary": "1d4ed8", "secondary": "eff6ff", "back": "bfdbfe", "warning": "ffedd5"}
+	var backgrounds := {"primary": "008aa8", "secondary": "ffffff", "back": "dbeafe", "warning": "fff0d9"}
+	var borders := {"primary": "006c8e", "secondary": "93c5fd", "back": "93c5fd", "warning": "fdba74"}
+	var hovers := {"primary": "006c8e", "secondary": "eff6ff", "back": "bfdbfe", "warning": "ffedd5"}
 	var ink := "ffffff" if kind == "primary" else ("9a3412" if kind == "warning" else "1e40af")
 	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
 		var style := StyleBoxFlat.new()
 		style.bg_color = Color(hovers.get(kind, "eff6ff")) if state in ["hover", "pressed"] else Color(backgrounds.get(kind, "ffffff"))
 		style.border_color = Color(borders.get(kind, "93c5fd"))
 		style.set_border_width_all(1)
-		style.set_corner_radius_all(10)
+		style.set_corner_radius_all(23)
 		style.content_margin_left = 14
 		style.content_margin_right = 14
 		style.content_margin_top = 8
@@ -396,6 +398,8 @@ func _modern_button_style(button: Button, kind: String = "secondary") -> void:
 	for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_disabled_color"]:
 		button.add_theme_color_override(state, Color(ink))
 	button.add_theme_font_size_override("font_size", 14)
+	if kind == "primary":
+		button.add_theme_stylebox_override("normal", ReferenceSkin.primary_style())
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 
 func _button(value: String, action: Callable, min_w: float = 80.0) -> Button:
@@ -440,7 +444,17 @@ func _build_ui() -> void:
 	var base: PanelContainer = PanelContainer.new()
 	add_child(base)
 	base.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	base.add_theme_stylebox_override("panel", _style("e9eef5"))
+	var backdrop := TextureRect.new()
+	backdrop.texture = preload("res://Sunny Cozy Kitchen Interior.png")
+	backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(backdrop)
+	move_child(backdrop, 0)
+	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var glass := _style("e9f7ff", "b4eafa")
+	glass.bg_color.a = 0.83
+	base.add_theme_stylebox_override("panel", glass)
 
 	var margin: MarginContainer = MarginContainer.new()
 	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -452,13 +466,32 @@ func _build_ui() -> void:
 	var split: HSplitContainer = HSplitContainer.new()
 	split.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	split.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	split.split_offset = 490
-	margin.add_child(split)
+	split.split_offset = 360
+	var shell := VBoxContainer.new()
+	shell.add_theme_constant_override("separation", 14)
+	margin.add_child(shell)
+	var header := HBoxContainer.new()
+	header.custom_minimum_size.y = 52
+	header.add_theme_constant_override("separation", 12)
+	shell.add_child(header)
+	var logo := TextureRect.new()
+	logo.texture = preload("res://MenuAssets/KitchenLogoGlossy.webp")
+	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	logo.custom_minimum_size = Vector2(143, 50)
+	header.add_child(logo)
+	var title := _label("STAGE 01   |   LDK Boundary Drawing", 19, "123d59")
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(title)
+	header.add_child(_button("Guide", _show_drawing_guide, 90))
+	header.add_child(_button("Reset View", _reset_view, 110))
+	header.add_child(_button("‹ Back", _open_game_menu, 95))
+	shell.add_child(split)
 
 	# --- ဘယ်ဘက်ခြမ်း ---
 	var left_panel: PanelContainer = PanelContainer.new()
-	left_panel.custom_minimum_size.x = 450
-	left_panel.add_theme_stylebox_override("panel", _style("f1f5f9"))
+	left_panel.custom_minimum_size.x = 350
+	left_panel.add_theme_stylebox_override("panel", _style("edf8ff", "b8dfed"))
 	split.add_child(left_panel)
 
 	var left: VBoxContainer = VBoxContainer.new()
@@ -665,7 +698,7 @@ func _build_ui() -> void:
 	right_panel.custom_minimum_size.x = 580
 	right_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	right_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	right_panel.add_theme_stylebox_override("panel", _style("f1f5f9"))
+	right_panel.add_theme_stylebox_override("panel", _style("edf8ff", "b8dfed"))
 	split.add_child(right_panel)
 
 	var right: VBoxContainer = VBoxContainer.new()
@@ -674,10 +707,10 @@ func _build_ui() -> void:
 	right.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	right_panel.add_child(right)
 
-	right.add_child(_label("Layout Drawing Area", 22))
-	right.add_child(_label("1 Small Grid = 100 mm (e.g., 1,000 mm = 10 grids) | Click points to draw (straight or angled) | Drag = Move", 13, "475569"))
+	right.add_child(_label("BLUEPRINT STUDIO", 17, "176381"))
+	right.add_child(_label("Unit: mm  •  Grid: 100 mm  •  Click to draw  /  Drag to adjust  /  Middle-drag to pan", 12, "39748c"))
 
-	var toolbar: HBoxContainer = HBoxContainer.new()
+	var toolbar: VBoxContainer = VBoxContainer.new()
 	toolbar.add_theme_constant_override("separation", 6)
 	right.add_child(toolbar)
 
@@ -712,7 +745,22 @@ func _build_ui() -> void:
 	canvas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	canvas.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	canvas.drawing_status_changed.connect(_on_drawing_status)
-	right.add_child(canvas)
+	var board := HBoxContainer.new()
+	board.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	board.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	board.add_theme_constant_override("separation", 10)
+	right.remove_child(toolbar)
+	right.add_child(board)
+	var board_frame := PanelContainer.new()
+	board_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	board_frame.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var board_style := _style("103f59", "89f3ff")
+	board_style.shadow_color = Color(0.0, 0.6, 0.8, 0.2)
+	board_style.shadow_size = 8
+	board_frame.add_theme_stylebox_override("panel", board_style)
+	board.add_child(board_frame)
+	board_frame.add_child(canvas)
+	board.add_child(toolbar)
 	canvas.set_drawing_enabled(true)
 
 	var footer: HBoxContainer = HBoxContainer.new()
@@ -724,13 +772,14 @@ func _build_ui() -> void:
 	status_panel.add_theme_stylebox_override("panel", _style("ffffff"))
 	footer.add_child(status_panel)
 
-	status_label = _label("Draw the requested layout, then click OK.", 14)
+	status_label = _label("Draw the requested layout, then check your answer.", 14)
 	status_label.custom_minimum_size.y = 45
 	status_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	status_panel.add_child(status_label)
 
 	footer.add_child(_button("Clear", _clear))
-	ok_button = _button("OK", _confirm)
+	ok_button = _button("Check Answer  ✓", _confirm, 185)
+	_modern_button_style(ok_button, "primary")
 	footer.add_child(ok_button)
 
 	_build_reference_popup(loaded_tex)
@@ -902,7 +951,7 @@ func _run_conversation() -> void:
 	request_label.visible = true
 	request_label.text = DIALOGUE_TEXTS[current_lang]["request"]
 	request_label.visible_characters = -1
-	_set_status("Draw the requested layout, then click OK.", false)
+	_set_status("Draw the requested layout, then check your answer.", false)
 	_play_voice("talk")
 
 func _set_status(value: String, error: bool, success: bool = false) -> void:
@@ -1250,3 +1299,13 @@ func _resume_from_game_menu() -> void:
 	elif _voice_paused_for_menu and voice_player != null:
 		voice_player.stream_paused = false
 	_voice_paused_for_menu = false
+
+
+func _show_drawing_guide() -> void:
+	var guide := AcceptDialog.new()
+	guide.title = "Drawing Guide"
+	guide.dialog_text = "Listen to the customer, then use the reference plan.\n\nClick to place connected walls. Drag a wall or endpoint to adjust it.\nType a length in millimetres while drawing to enter an exact distance.\nUse the mouse wheel to zoom and the middle mouse button to pan.\nUndo and Redo change the drawing; Reset View only resets the view.\nPress Check Answer when your layout is ready."
+	guide.confirmed.connect(guide.queue_free)
+	guide.canceled.connect(guide.queue_free)
+	add_child(guide)
+	guide.popup_centered(Vector2i(640, 330))

@@ -397,7 +397,7 @@ func _format_num(n: int) -> String:
 	return res
 
 func _draw() -> void:
-	draw_rect(Rect2(Vector2.ZERO, size), Color("ffffff"), true)
+	draw_rect(Rect2(Vector2.ZERO, size), Color("103f59"), true)
 	_draw_dynamic_grid()
 
 	for i in range(lines.size()):
@@ -420,7 +420,7 @@ func _draw() -> void:
 			draw_rect(Rect2(box_pos, box_size), Color("3b82f6"), false, 1.5)
 			draw_string(font, box_pos + Vector2(9, 19), display_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color("1e40af"))
 	elif drawing_enabled:
-		draw_circle(_to_screen(hover_mm), 3.8, Color("111827"))
+		draw_circle(_to_screen(hover_mm), 3.8, Color("8af4ff"))
 
 func _draw_dynamic_grid() -> void:
 	var minor_mm: float = 100.0
@@ -434,23 +434,23 @@ func _draw_dynamic_grid() -> void:
 
 		var x: float = fposmod(pan.x, sub_px)
 		while x < size.x:
-			var col: Color = Color(0.9, 0.93, 0.97, 0.5) if is_zero_approx(fposmod(x - pan.x, major_px)) else Color(0.94, 0.96, 0.98, 0.7)
+			var col: Color = Color(0.31, 0.68, 0.79, 0.28) if is_zero_approx(fposmod(x - pan.x, major_px)) else Color(0.24, 0.57, 0.70, 0.14)
 			draw_line(Vector2(x, 0), Vector2(x, size.y), col, 1.0)
 			x += sub_px
 
 		var y: float = fposmod(pan.y, sub_px)
 		while y < size.y:
-			var col: Color = Color(0.9, 0.93, 0.97, 0.5) if is_zero_approx(fposmod(y - pan.y, major_px)) else Color(0.94, 0.96, 0.98, 0.7)
+			var col: Color = Color(0.31, 0.68, 0.79, 0.28) if is_zero_approx(fposmod(y - pan.y, major_px)) else Color(0.24, 0.57, 0.70, 0.14)
 			draw_line(Vector2(0, y), Vector2(size.x, y), col, 1.0)
 			y += sub_px
 
 	var mx: float = fposmod(pan.x, major_px)
 	while mx < size.x:
-		draw_line(Vector2(mx, 0), Vector2(mx, size.y), Color("cbd5e1"), 1.2)
+		draw_line(Vector2(mx, 0), Vector2(mx, size.y), Color("30748a"), 1.2)
 		mx += major_px
 	var my: float = fposmod(pan.y, major_px)
 	while my < size.y:
-		draw_line(Vector2(0, my), Vector2(size.x, my), Color("cbd5e1"), 1.2)
+		draw_line(Vector2(0, my), Vector2(size.x, my), Color("30748a"), 1.2)
 		my += major_px
 
 func _draw_solid_wall(a_mm: Vector2, b_mm: Vector2, highlight: bool, v_state: int, is_selected: bool) -> void:
@@ -458,7 +458,7 @@ func _draw_solid_wall(a_mm: Vector2, b_mm: Vector2, highlight: bool, v_state: in
 	var b: Vector2 = _to_screen(b_mm)
 
 	var glow_col: Color = Color(0.06, 0.09, 0.16, 0.22 if is_selected else (0.16 if highlight else 0.05))
-	var line_col: Color = Color("2563eb") if is_selected else (Color("000000") if not highlight else Color("1e293b"))
+	var line_col: Color = Color("64efff") if is_selected else (Color("effdff") if not highlight else Color("b4f5ff"))
 	var text_col: Color = Color("1d4ed8") if is_selected else Color("0f172a")
 
 	if v_state == -1:
@@ -518,7 +518,7 @@ func _draw_solid_wall(a_mm: Vector2, b_mm: Vector2, highlight: bool, v_state: in
 func _draw_preview_wall(a_mm: Vector2, b_mm: Vector2) -> void:
 	var a: Vector2 = _to_screen(a_mm)
 	var b: Vector2 = _to_screen(b_mm)
-	var preview_col: Color = Color("1f2937")
+	var preview_col: Color = Color("8af4ff")
 	draw_line(a, b, Color(0.12, 0.16, 0.22, 0.15), 7.0, true)
 	draw_line(a, b, preview_col, 3.4, true)
 	draw_circle(a, 4.0, preview_col)
@@ -539,7 +539,7 @@ func _draw_preview_wall(a_mm: Vector2, b_mm: Vector2) -> void:
 		HORIZONTAL_ALIGNMENT_LEFT,
 		-1,
 		font_size,
-		Color("0f172a")
+		Color("8af4ff")
 	)
 
 func analyze_reference() -> bool:
