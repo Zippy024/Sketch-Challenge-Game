@@ -347,109 +347,118 @@ func _show_splash() -> void:
 	)
 
 
+func _home_place(parent: Control, child: Control, bounds: Rect2) -> void:
+	# Absolute screen composition for the opening hero; the surrounding
+	# layout is handled by the scroll view. No intrinsic Label min-size can
+	# collapse the panel, expand the scene, or stack letters vertically.
+	parent.add_child(child)
+	child.position = bounds.position
+	child.size = bounds.size
+
+
+func _home_right_place(parent: Control, child: Control, left: float, top: float, width_value: float, height_value: float) -> void:
+	parent.add_child(child)
+	child.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	child.offset_left = left
+	child.offset_right = left + width_value
+	child.offset_top = top
+	child.offset_bottom = top + height_value
+
+
 func _show_home() -> void:
 	_clear()
 	_set_concept_background(false)
 	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	var scene_row := HBoxContainer.new()
-	scene_row.custom_minimum_size.y = 575.0
-	scene_row.add_theme_constant_override("separation", 22)
-	_body.add_child(scene_row)
+	# Control root prevents VBox/HBox minimum sizing feedback from turning
+	# the hero into a blank area and the right features into vertical text.
+	var canvas := Control.new()
+	canvas.name = "OptionCHomeCanvas"
+	canvas.custom_minimum_size = Vector2(960, 588)
+	canvas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_body.add_child(canvas)
 
-	# Option C hero: soft white translucent pane over the real kitchen.
-	var panel := _glass(Color(1.0,1.0,0.99,0.83), Color("ffffff"), 34, 24)
-	panel.custom_minimum_size.x = 585
-	panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	scene_row.add_child(panel)
-	var stack := VBoxContainer.new()
-	stack.alignment = BoxContainer.ALIGNMENT_CENTER
-	stack.add_theme_constant_override("separation", 10)
-	panel.add_child(stack)
-	var brand_line := HBoxContainer.new()
-	brand_line.add_theme_constant_override("separation", 12)
-	brand_line.custom_minimum_size.x = 505
-	stack.add_child(brand_line)
-	var logo := TextureRect.new()
-	logo.texture = preload("res://Branding/SketchPlanPencil.svg")
-	logo.custom_minimum_size = Vector2(90,90)
-	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	brand_line.add_child(logo)
-	var headings := VBoxContainer.new()
-	headings.alignment = BoxContainer.ALIGNMENT_CENTER
-	headings.custom_minimum_size.x = 388
-	headings.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	brand_line.add_child(headings)
-	var subtitle := _label("KITCHEN DESIGN TRAINING", 12, Color("4d5b5c"))
-	subtitle.autowrap_mode = TextServer.AUTOWRAP_OFF
-	headings.add_child(subtitle)
-	var kitchen := _label("Kitchen", 44, Color("1f3533"))
+	var glass := _glass(Color(1.0, 1.0, 0.99, 0.88), Color("ffffff"), 32, 0)
+	glass.name = "HomeHeroGlass"
+	glass.set_meta("home_hero_panel", true)
+	glass.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_home_place(canvas, glass, Rect2(10, 18, 560, 520))
+
+	var emblem := TextureRect.new()
+	emblem.texture = preload("res://Branding/SketchPlanPencil.svg")
+	emblem.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	emblem.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_home_place(canvas, emblem, Rect2(36, 60, 105, 105))
+
+	var tagline := _label("KITCHEN DESIGN TRAINING", 13, Color("4d5b5c"))
+	tagline.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_home_place(canvas, tagline, Rect2(156, 61, 385, 28))
+	var kitchen := _label("Kitchen", 47, Color("193e37"))
 	kitchen.autowrap_mode = TextServer.AUTOWRAP_OFF
-	headings.add_child(kitchen)
-	var game_name := _label("Sketch Challenge", 31, Color("078b73"))
-	game_name.autowrap_mode = TextServer.AUTOWRAP_OFF
-	headings.add_child(game_name)
-	var game_kind := _label("DECORATION GAME", 17, Color("364c4b"), true)
-	game_kind.autowrap_mode = TextServer.AUTOWRAP_OFF
-	stack.add_child(game_kind)
-	var action_tag := _label("DESIGN  •  SKETCH  •  SELECT  •  LEARN", 14, Color("394f4f"), true)
-	action_tag.autowrap_mode = TextServer.AUTOWRAP_OFF
-	stack.add_child(action_tag)
-	var pitch := _label("Plan kitchen layouts, choose materials and solve real design challenges through practical missions.", 16, Color("354d4b"))
-	pitch.custom_minimum_size.x = 475
-	stack.add_child(pitch)
-	var breathing := Control.new()
-	breathing.custom_minimum_size.y = 8
-	stack.add_child(breathing)
-	var play := _button("▶   START TRAINING    »", true, 400, 60)
-	play.add_theme_font_size_override("font_size", 22)
-	play.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	play.pressed.connect(_show_language_select)
-	stack.add_child(play)
-	var shortcuts := HBoxContainer.new()
-	shortcuts.alignment = BoxContainer.ALIGNMENT_CENTER
-	shortcuts.add_theme_constant_override("separation", 9)
-	stack.add_child(shortcuts)
-	var select_level := _nav_button("▦  SELECT LEVEL", _show_levels)
-	select_level.custom_minimum_size.x = 153
-	shortcuts.add_child(select_level)
-	var guide := _nav_button("▤  TRAINING GUIDE", _show_help)
-	guide.custom_minimum_size.x = 157
-	shortcuts.add_child(guide)
-	var progress := _nav_button("▥  MY PROGRESS", _show_progress)
-	progress.custom_minimum_size.x = 145
-	shortcuts.add_child(progress)
-	if is_pause_overlay:
-		var resume := _nav_button("←  BACK TO GAME", _resume_paused)
-		stack.add_child(resume)
+	kitchen.set_meta("home_headline", true)
+	_home_place(canvas, kitchen, Rect2(156, 91, 388, 65))
+	var sketch := _label("Sketch Challenge", 33, Color("078b73"))
+	sketch.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_home_place(canvas, sketch, Rect2(156, 148, 390, 56))
 
-	var right := VBoxContainer.new()
-	right.alignment = BoxContainer.ALIGNMENT_CENTER
-	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	right.add_theme_constant_override("separation", 14)
-	scene_row.add_child(right)
-	var hologram_panel := _glass(Color(0.08,0.30,0.30,0.63), Color("8bfadf"), 25, 17)
-	hologram_panel.size_flags_horizontal = Control.SIZE_SHRINK_END
-	right.add_child(hologram_panel)
+	var subtitle := _label("DECORATION GAME", 19, Color("3b514d"), true)
+	subtitle.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_home_place(canvas, subtitle, Rect2(38, 211, 495, 29))
+	var rule := ColorRect.new()
+	rule.color = Color("63cdb1")
+	rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_home_place(canvas, rule, Rect2(72, 257, 440, 2))
+	var mission := _label("DESIGN  •  SKETCH  •  SELECT  •  LEARN", 15, Color("315c50"), true)
+	mission.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_home_place(canvas, mission, Rect2(43, 274, 488, 27))
+	var description := _label("Plan kitchen layouts, choose materials and solve real design challenges through practical missions.", 16, Color("344b47"))
+	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_home_place(canvas, description, Rect2(58, 309, 467, 66))
+
+	var start := _button("▶   START TRAINING   »", true, 430, 59)
+	start.name = "HomeStartTraining"
+	start.set_meta("home_start_button", true)
+	start.add_theme_font_size_override("font_size", 22)
+	start.pressed.connect(_show_language_select)
+	_home_place(canvas, start, Rect2(74, 388, 431, 59))
+	var level := _nav_button("▦  SELECT LEVEL", _show_levels)
+	_home_place(canvas, level, Rect2(36, 467, 158, 44))
+	var guide := _nav_button("▤  TRAINING GUIDE", _show_help)
+	_home_place(canvas, guide, Rect2(207, 467, 159, 44))
+	var progress := _nav_button("▥  MY PROGRESS", _show_progress)
+	_home_place(canvas, progress, Rect2(379, 467, 160, 44))
+
+	# Right-hand decorative cards are independently right-anchored, never
+	# packed in a VBox that can collapse to a 30px-wide strip.
+	var hologram_panel := _glass(Color(0.08, 0.30, 0.30, 0.66), Color("8bfadf"), 25, 0)
+	hologram_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_home_right_place(canvas, hologram_panel, -346, 105, 326, 195)
 	var hologram := KitchenHologram.new()
-	hologram_panel.add_child(hologram)
-	var features := _glass(Color(0.06,0.22,0.24,0.77), Color("c0ffe9"), 24, 17)
-	features.size_flags_horizontal = Control.SIZE_SHRINK_END
-	right.add_child(features)
-	var feature_list := VBoxContainer.new()
-	feature_list.add_theme_constant_override("separation", 12)
-	features.add_child(feature_list)
-	feature_list.add_child(_label("✎    SKETCH LAYOUTS", 15, C_INK))
-	feature_list.add_child(_label("▱    CHOOSE MATERIALS", 15, C_INK))
-	feature_list.add_child(_label("⬡    BUILD DESIGN SKILLS", 15, C_INK))
-	panel.modulate.a = 0.0
-	var enter := create_tween()
-	enter.tween_property(panel, "modulate:a", 1.0, 0.52).set_trans(Tween.TRANS_SINE)
-	features.modulate.a = 0.0
-	var float_in := create_tween()
-	float_in.tween_interval(0.14)
-	float_in.tween_property(features, "modulate:a", 1.0, 0.62)
+	_home_right_place(canvas, hologram, -330, 116, 294, 164)
+
+	var features := _glass(Color(0.06, 0.22, 0.24, 0.78), Color("c0ffe9"), 23, 0)
+	features.name = "HomeFeaturesGlass"
+	features.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_home_right_place(canvas, features, -318, 323, 296, 179)
+	var features_title := _label("DESIGN SKILLS", 15, Color("bcffeb"), true)
+	features_title.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_home_right_place(canvas, features_title, -302, 338, 266, 26)
+	var f1 := _label("✎   Sketch Layouts", 17, Color("ffffff"))
+	f1.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_home_right_place(canvas, f1, -290, 374, 250, 30)
+	var f2 := _label("▱   Choose Materials", 17, Color("ffffff"))
+	f2.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_home_right_place(canvas, f2, -290, 415, 250, 30)
+	var f3 := _label("⬡   Build Design Skills", 17, Color("ffffff"))
+	f3.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_home_right_place(canvas, f3, -290, 456, 250, 30)
+
+	if is_pause_overlay:
+		var resume := _nav_button("← BACK TO GAME", _resume_paused)
+		_home_place(canvas, resume, Rect2(36, 523, 210, 40))
+	glass.modulate.a = 0.0
+	var intro := create_tween()
+	intro.tween_property(glass, "modulate:a", 1.0, 0.46).set_trans(Tween.TRANS_SINE)
 
 func _add_home_button(parent: HBoxContainer, label_text: String, action: Callable) -> void:
 	var b := _button(label_text, false, 195, 60)

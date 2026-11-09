@@ -26,6 +26,37 @@ func _run() -> void:
 		return
 	menu.call("_show_home")
 	await _wait_frames()
+	var home_canvas: Control
+	var hero: Control
+	var main_headline: Control
+	var start_button: Control
+	var features_panel: Control
+	for node in menu.find_children("*", "Control", true, false):
+		if node.name == "OptionCHomeCanvas":
+			home_canvas = node
+		if node.has_meta("home_hero_panel"):
+			hero = node
+		if node.has_meta("home_headline"):
+			main_headline = node
+		if node.has_meta("home_start_button"):
+			start_button = node
+		if node.name == "HomeFeaturesGlass":
+			features_panel = node
+	if home_canvas == null or hero == null or main_headline == null or start_button == null or features_panel == null:
+		_failure("Option C hero, headline, button or feature panel missing")
+		return
+	if hero.size.x < 500.0 or hero.size.y < 480.0:
+		_failure("Home glass panel collapsed: " + str(hero.size))
+		return
+	if main_headline.size.x < 300 or start_button.size.x < 350:
+		_failure("Home text/button width collapsed")
+		return
+	if features_panel.size.x < 250 or features_panel.size.y < 140:
+		_failure("Feature cards collapsed to vertical letters: " + str(features_panel.size))
+		return
+	if hero.global_position.y < 0 or hero.global_position.y > 150:
+		_failure("Home hero is outside viewport " + str(hero.global_position))
+		return
 	var body := menu.get("_body") as VBoxContainer
 	if body == null or body.get_child_count() < 1 or body.size.x < 500.0:
 		_failure("home scene collapsed")
