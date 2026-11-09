@@ -283,11 +283,9 @@ func _entry_page(name_value: String) -> Control:
 
 
 func _show_loading() -> void:
-	_menu_backdrop.texture = preload("res://MenuAssets/LoadingBackground.png")
+	_menu_backdrop.texture = preload("res://Modern Blue-White Kitchen Interior.png")
 	var page := _entry_page("IntroLoadingScreen")
-	_panel(page, Rect2(130, 0, 1060, 680), Color(0.87, 0.96, 1.0, 0.52), Color("d8f7ff"), 24)
 	_image(page, preload("res://Branding/BlueprintPencilGameLogo.png"), Rect2(320, 6, 684, 182))
-	_image(page, preload("res://MenuAssets/Intro3DKitchenArt.png"), Rect2(190, 168, 940, 400))
 	var progress := ProgressBar.new()
 	progress.name = "LoadingBar"
 	progress.max_value = 100.0
@@ -298,7 +296,7 @@ func _show_loading() -> void:
 	progress.add_theme_stylebox_override("fill", _style(Color("27d6f4"), Color("a9fcff"), 11))
 	_place(page, progress, Rect2(421, 572, 478, 17))
 	_text(page, "Preparing your kitchen adventure...", 18, Rect2(410, 598, 500, 34), Color("1b5984"), true)
-	_loading_tween = create_tween()
+	_loading_tween = page.create_tween()
 	_loading_tween.tween_property(progress, "value", 100.0, 2.15).set_trans(Tween.TRANS_SINE)
 	_loading_tween.tween_callback(func() -> void:
 		if is_inside_tree() and is_instance_valid(page):
@@ -307,7 +305,7 @@ func _show_loading() -> void:
 
 
 func _show_language() -> void:
-	_menu_backdrop.texture = preload("res://MenuAssets/LanguageBackground.png")
+	_menu_backdrop.texture = preload("res://Sunny Cozy Kitchen Interior.png")
 	var page := _entry_page("ChooseLanguageScreen")
 	_image(page, preload("res://Branding/BlueprintPencilGameLogo.png"), Rect2(338, 31, 644, 196))
 	_panel(page, Rect2(440, 222, 440, 325), Color("ecf9ff"), Color("87d6f8"), 28)
