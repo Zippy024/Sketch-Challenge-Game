@@ -10,23 +10,24 @@ const ConsoleAnimations = preload("res://ConceptCAnimations.gd")
 const SunsetSparkles = preload("res://MenuAssets/SunsetSparkles.gd")
 const KitchenHologram = preload("res://MenuAssets/OptionCHologram.gd")
 const EntryKitchenSketch = preload("res://MenuAssets/EntryKitchenSketch.gd")
+const BlueprintMissionMap = preload("res://MenuAssets/BlueprintMissionMap.gd")
 
-const BG := Color("211c34")
+const BG := Color("0b2e55")
 const WHITE := Color("ffffff")
-const INK := Color("fff3db")
-const MUTED := Color("c9b8c7")
-const GREEN := Color("e77d4a")
-const GREEN_DARK := Color("bc5539")
-const GREEN_PALE := Color("453044")
-const BORDER := Color("61465a")
-const GOLD := Color("f9bc73")
-const C_DARK := Color("19172a")
-const C_PANEL := Color("292037")
-const C_INK := Color("fff4e6")
-const C_MUTED := Color("dcc2c5")
-const C_COPPER := Color("ffbb76")
-const C_MINT := Color("ffce80")
-const LOCKED := Color("8d8395")
+const INK := Color("eafaff")
+const MUTED := Color("b6dcf2")
+const GREEN := Color("00b8e2")
+const GREEN_DARK := Color("0674bc")
+const GREEN_PALE := Color("193e66")
+const BORDER := Color("528ebd")
+const GOLD := Color("5deaff")
+const C_DARK := Color("0b294e")
+const C_PANEL := Color("123d66")
+const C_INK := Color("eaf9ff")
+const C_MUTED := Color("b4daee")
+const C_COPPER := Color("68eaff")
+const C_MINT := Color("70defa")
+const LOCKED := Color("849cb4")
 
 var is_pause_overlay: bool = false
 var pause_level: int = 0
@@ -39,6 +40,7 @@ var _mm_button: Button
 var _scroll: ScrollContainer
 var _volume_value: float = 0.85
 var _reset_armed: bool = false
+var _selected_level: int = 1
 
 
 func _ready() -> void:
@@ -91,21 +93,23 @@ func _label(value: String, font_size: int = 16, color: Color = INK, centered: bo
 
 
 func _button(title: String, primary: bool = false, min_w: float = 165.0, min_h: float = 46.0) -> Button:
-	var b := Button.new()
-	b.text = title
-	b.custom_minimum_size = Vector2(min_w, min_h)
-	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	b.add_theme_font_size_override("font_size", 16)
-	b.add_theme_color_override("font_color", Color("ffffff"))
-	b.add_theme_color_override("font_hover_color", Color("ffffff"))
-	b.add_theme_color_override("font_pressed_color", Color("ffffff"))
-	b.add_theme_stylebox_override("normal", _console_style(Color("12ae8c") if primary else Color(0.15,0.18,0.21,0.85), Color("9bffe1") if primary else Color("a4c7bf"), 25, 9, 8 if primary else 2))
-	b.add_theme_stylebox_override("hover", _console_style(Color("1ad8ac") if primary else Color("415257"), Color("e1fff1"), 25, 9, 12))
-	b.add_theme_stylebox_override("pressed", _console_style(Color("0d967a") if primary else Color("26373b"), Color("b8ffe8"), 25, 9, 3))
-	b.add_theme_stylebox_override("disabled", _console_style(Color("66686d"), Color("a4a7a8"), 25, 9))
-	b.add_theme_stylebox_override("focus", _style(Color.TRANSPARENT, Color("a2ffe3"), 25))
-	ConsoleAnimations.animate_button(b)
-	return b
+	var button := Button.new()
+	button.text = title
+	button.custom_minimum_size = Vector2(min_w, min_h)
+	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	button.add_theme_font_size_override("font_size", 16)
+	button.add_theme_color_override("font_color", Color("ffffff"))
+	button.add_theme_color_override("font_hover_color", Color("ffffff"))
+	button.add_theme_color_override("font_pressed_color", Color("ffffff"))
+	var body_color := Color("07b5db") if primary else Color("194b79")
+	var border_color := Color("a3f4ff") if primary else Color("7ec4f0")
+	button.add_theme_stylebox_override("normal", _console_style(body_color, border_color, 22, 8, 4))
+	button.add_theme_stylebox_override("hover", _console_style(Color("04d3f4") if primary else Color("256ca0"), Color("e2fbff"), 22, 8, 10))
+	button.add_theme_stylebox_override("pressed", _console_style(Color("0878b7"), Color("b3f0ff"), 22, 8, 2))
+	button.add_theme_stylebox_override("disabled", _console_style(Color("697b91"), Color("9eb6c7"), 22, 8))
+	button.add_theme_stylebox_override("focus", _style(Color.TRANSPARENT, Color("d4faff"), 22))
+	ConsoleAnimations.animate_button(button)
+	return button
 
 func _console_style(fill: Color, line: Color, radius: int = 15, inset: int = 10, shadow: int = 0) -> StyleBoxFlat:
 	var style := _style(fill, line, radius, inset)
@@ -159,17 +163,17 @@ func _glass(fill: Color, edge: Color = Color("f6e1d3"), radius: int = 22, paddin
 
 
 func _nav_button(title: String, callback: Callable) -> Button:
-	var b := _button(title, false, 125, 38)
-	b.add_theme_font_size_override("font_size", 13)
-	b.add_theme_stylebox_override("normal", _console_style(Color(0.98,0.98,0.98,0.80), Color("ffffff"), 23, 7, 3))
-	b.add_theme_stylebox_override("hover", _console_style(Color("d3fff1"), Color("6bdec3"), 23, 7, 8))
-	b.add_theme_stylebox_override("pressed", _console_style(Color("b6f4e5"), Color("4aba9f"), 23, 7, 1))
-	b.add_theme_color_override("font_color", Color("263434"))
-	b.add_theme_color_override("font_hover_color", Color("172d2a"))
-	b.add_theme_color_override("font_pressed_color", Color("172d2a"))
+	var button := _button(title, false, 122, 39)
+	button.add_theme_font_size_override("font_size", 13)
+	button.add_theme_color_override("font_color", Color("143c69"))
+	button.add_theme_color_override("font_hover_color", Color("085c94"))
+	button.add_theme_color_override("font_pressed_color", Color("085c94"))
+	button.add_theme_stylebox_override("normal", _console_style(Color("eaf8ff"), Color("aedff7"), 19, 5, 2))
+	button.add_theme_stylebox_override("hover", _console_style(Color("c9f3ff"), Color("4dd6fb"), 19, 5, 7))
+	button.add_theme_stylebox_override("pressed", _console_style(Color("b6e9fa"), Color("3cbfe9"), 19, 5, 1))
 	if not callback.is_null():
-		b.pressed.connect(callback)
-	return b
+		button.pressed.connect(callback)
+	return button
 
 func _build_frame() -> void:
 	# Full-viewport controls: no PanelContainer sizing feedback into the header.
@@ -287,8 +291,8 @@ func _update_lang_buttons() -> void:
 		if not is_instance_valid(b):
 			continue
 		var selected: bool = (b == _jp_button and Progress.get_language() == "jp") or (b == _mm_button and Progress.get_language() == "mm")
-		b.add_theme_stylebox_override("normal", _console_style(Color("117d6a") if selected else Color("314749"), Color("b7ffe9") if selected else Color("aac8be"), 12, 6))
-		b.add_theme_stylebox_override("hover", _console_style(Color("1da58c"), Color("d4fff3"), 12, 6))
+		b.add_theme_stylebox_override("normal", _console_style(Color("047daf") if selected else Color("21527a"), Color("9defff") if selected else Color("adcfe1"), 12, 6))
+		b.add_theme_stylebox_override("hover", _console_style(Color("159acb"), Color("d4faff"), 12, 6))
 		b.add_theme_color_override("font_color", WHITE)
 
 func _clear() -> void:
@@ -405,6 +409,91 @@ func _home_right_place(parent: Control, child: Control, left: float, top: float,
 	child.offset_right = left + width_value
 	child.offset_top = top
 	child.offset_bottom = top + height_value
+
+
+func _blueprint_canvas(page_name: String) -> Control:
+	_clear()
+	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	var root := Control.new()
+	root.name = page_name + "Root"
+	root.custom_minimum_size = Vector2(1320, 648)
+	root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_body.add_child(root)
+	var stage := Control.new()
+	stage.name = page_name
+	root.add_child(stage)
+	stage.anchor_left = 0.5
+	stage.anchor_right = 0.5
+	stage.anchor_top = 0.0
+	stage.anchor_bottom = 0.0
+	stage.offset_left = -660
+	stage.offset_right = 660
+	stage.offset_top = 0
+	stage.offset_bottom = 648
+	return stage
+
+
+func _ui_put(parent: Control, child: Control, region: Rect2) -> void:
+	parent.add_child(child)
+	child.position = region.position
+	child.size = region.size
+
+
+func _ui_text(parent: Control, words: String, size_px: int, region: Rect2, color: Color, center: bool = false) -> Label:
+	var label := _label(words, size_px, color, center)
+	label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_ui_put(parent, label, region)
+	return label
+
+
+func _select_map_stage(stage: int) -> void:
+	if stage > 3 or not Progress.is_level_unlocked(stage):
+		return
+	_selected_level = stage
+	_show_levels()
+
+
+func _map_stage_card(stage: int) -> Button:
+	var available: bool = stage <= 3 and Progress.is_level_unlocked(stage)
+	var selected: bool = available and stage == _selected_level
+	var item := Button.new()
+	item.name = "BlueprintMission%02d" % stage
+	item.set_meta("mission_stage", stage)
+	item.custom_minimum_size = Vector2(274, 183)
+	item.disabled = not available
+	item.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if available else Control.CURSOR_ARROW
+	item.add_theme_stylebox_override("normal", _console_style(Color("ecfaff"), Color("48e5ff") if selected else Color("b9e9fb"), 19, 0, 9 if selected else 3))
+	item.add_theme_stylebox_override("hover", _console_style(Color("d2f4ff"), Color("70eafa"), 19, 0, 12))
+	item.add_theme_stylebox_override("pressed", _console_style(Color("bdeafa"), Color("5cd5f0"), 19, 0, 2))
+	item.add_theme_stylebox_override("disabled", _console_style(Color("8ea3b6"), Color("879eaf"), 19, 0, 1))
+	item.text = ""
+	if available:
+		item.pressed.connect(_select_map_stage.bind(stage))
+		ConsoleAnimations.animate_button(item)
+	var thumbnails: Array[Texture2D] = [
+		preload("res://reference_sketch.png"), preload("res://MenuAssets/Level2.png"),
+		preload("res://MenuAssets/Level3.png"), preload("res://MenuAssets/Level4.png"),
+		preload("res://MenuAssets/Level5.png"), preload("res://MenuAssets/Level6.png")
+	]
+	var picture := TextureRect.new()
+	picture.texture = thumbnails[stage - 1]
+	picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	picture.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	picture.modulate = Color.WHITE if available else Color("c4cbd4")
+	_ui_put(item, picture, Rect2(9, 8, 256, 100))
+	var separator := ColorRect.new()
+	separator.color = Color("72cef1") if available else Color("829bad")
+	separator.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(item, separator, Rect2(9, 110, 256, 2))
+	_ui_text(item, "STAGE %02d" % stage, 14, Rect2(14, 116, 248, 23), Color("135a8d") if available else Color("3c4a5d"), true)
+	var titles: Array[String] = [
+		"LDK Boundary Drawing", "Pipe Shaft Q&A", "S-Class Kitchen Selection",
+		"Island Layout Planning", "Lighting & Atmosphere", "Final Kitchen Design"
+	]
+	_ui_text(item, titles[stage - 1], 15, Rect2(8, 140, 258, 24), Color("153952") if available else Color("4c5460"), true)
+	_ui_text(item, "SELECTED  ✓" if selected else ("SELECT TO PLAY" if available else "LOCKED  •  COMING SOON"), 11, Rect2(8, 165, 258, 16), Color("067eac") if available else Color("45586a"), true)
+	return item
 
 
 func _show_home() -> void:
@@ -596,7 +685,7 @@ func _show_language_select() -> void:
 func _choose_language(lang: String) -> void:
 	Progress.set_language(lang)
 	_update_lang_buttons()
-	_show_levels()
+	_show_home()
 
 func _show_achievements() -> void:
 	_clear()
