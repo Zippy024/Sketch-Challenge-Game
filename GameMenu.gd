@@ -51,7 +51,12 @@ func _ready() -> void:
 		Progress.show_levels_on_open = false
 		_show_levels()
 	else:
-		_show_splash()
+		# Web users already saw the branded progress intro in the HTML shell.
+		# Switch directly to the language screen to avoid two loading screens.
+		if OS.has_feature("web"):
+			_show_language_select()
+		else:
+			_show_splash()
 	# The HTML Web shell must not dismiss its loading artwork until this
 	# actual menu scene has entered the tree and completed its UI setup.
 	if OS.has_feature("web"):
