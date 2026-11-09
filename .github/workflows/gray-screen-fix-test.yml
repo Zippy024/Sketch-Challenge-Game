@@ -7,6 +7,7 @@ on:
       - fix/menu-container-overflow-20261109
       - feature/original-game-flow-sunset-menu-20261109
       - feature/bright-glass-kitchen-main-levels-20261109
+      - design/option-c-single-style-glass-20261109
   workflow_dispatch:
 permissions:
   contents: read

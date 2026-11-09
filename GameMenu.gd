@@ -8,6 +8,7 @@ const Progress = preload("res://GameProgress.gd")
 const BilingualTheme: Theme = preload("res://WebBilingualTheme.tres")
 const ConsoleAnimations = preload("res://ConceptCAnimations.gd")
 const SunsetSparkles = preload("res://MenuAssets/SunsetSparkles.gd")
+const KitchenHologram = preload("res://MenuAssets/OptionCHologram.gd")
 
 const BG := Color("211c34")
 const WHITE := Color("ffffff")
@@ -89,14 +90,14 @@ func _button(title: String, primary: bool = false, min_w: float = 165.0, min_h: 
 	b.custom_minimum_size = Vector2(min_w, min_h)
 	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	b.add_theme_font_size_override("font_size", 16)
-	b.add_theme_color_override("font_color", Color("fff7ed"))
+	b.add_theme_color_override("font_color", Color("ffffff"))
 	b.add_theme_color_override("font_hover_color", Color("ffffff"))
 	b.add_theme_color_override("font_pressed_color", Color("ffffff"))
-	b.add_theme_stylebox_override("normal", _console_style(Color("e77844") if primary else Color(0.17,0.15,0.25,0.94), Color("ffcc83") if primary else Color("81627d"), 16, 10, 5 if primary else 2))
-	b.add_theme_stylebox_override("hover", _console_style(Color("fa995b") if primary else Color("4a3258"), Color("ffe4a9"), 16, 10, 7))
-	b.add_theme_stylebox_override("pressed", _console_style(Color("b8513b") if primary else Color("352239"), Color("ffbf72"), 16, 10, 1))
-	b.add_theme_stylebox_override("disabled", _console_style(Color("45404e"), Color("82768b"), 16, 10))
-	b.add_theme_stylebox_override("focus", _style(Color.TRANSPARENT, Color("ffe4a9"), 16))
+	b.add_theme_stylebox_override("normal", _console_style(Color("12ae8c") if primary else Color(0.15,0.18,0.21,0.85), Color("9bffe1") if primary else Color("a4c7bf"), 25, 9, 8 if primary else 2))
+	b.add_theme_stylebox_override("hover", _console_style(Color("1ad8ac") if primary else Color("415257"), Color("e1fff1"), 25, 9, 12))
+	b.add_theme_stylebox_override("pressed", _console_style(Color("0d967a") if primary else Color("26373b"), Color("b8ffe8"), 25, 9, 3))
+	b.add_theme_stylebox_override("disabled", _console_style(Color("66686d"), Color("a4a7a8"), 25, 9))
+	b.add_theme_stylebox_override("focus", _style(Color.TRANSPARENT, Color("a2ffe3"), 25))
 	ConsoleAnimations.animate_button(b)
 	return b
 
@@ -152,14 +153,17 @@ func _glass(fill: Color, edge: Color = Color("f6e1d3"), radius: int = 22, paddin
 
 
 func _nav_button(title: String, callback: Callable) -> Button:
-	var b := _button(title, false, 125, 37)
+	var b := _button(title, false, 125, 38)
 	b.add_theme_font_size_override("font_size", 13)
-	b.add_theme_stylebox_override("normal", _console_style(Color(0.94,0.91,0.93,0.70), Color("d6a68f"), 18, 5))
-	b.add_theme_stylebox_override("hover", _console_style(Color(1,0.96,0.92,0.98), Color("ec9860"), 18, 5))
-	b.add_theme_color_override("font_color", Color("2d253e"))
-	b.add_theme_color_override("font_hover_color", Color("251b36"))
+	b.add_theme_stylebox_override("normal", _console_style(Color(0.98,0.98,0.98,0.80), Color("ffffff"), 23, 7, 3))
+	b.add_theme_stylebox_override("hover", _console_style(Color("d3fff1"), Color("6bdec3"), 23, 7, 8))
+	b.add_theme_stylebox_override("pressed", _console_style(Color("b6f4e5"), Color("4aba9f"), 23, 7, 1))
+	b.add_theme_color_override("font_color", Color("263434"))
+	b.add_theme_color_override("font_hover_color", Color("172d2a"))
+	b.add_theme_color_override("font_pressed_color", Color("172d2a"))
+	if not callback.is_null():
+		b.pressed.connect(callback)
 	return b
-
 
 func _build_frame() -> void:
 	# Full-viewport controls: no PanelContainer sizing feedback into the header.
@@ -179,7 +183,7 @@ func _build_frame() -> void:
 	photo.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 	var light := ColorRect.new()
-	light.color = Color(0.98, 0.88, 0.91, 0.10)
+	light.color = Color(0.93, 1.0, 0.95, 0.06)
 	light.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	base.add_child(light)
 	light.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -191,7 +195,7 @@ func _build_frame() -> void:
 	outer.add_theme_constant_override("separation", 0)
 	base.add_child(outer)
 	outer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_top_bar = _glass(Color(1, 0.975, 0.97, 0.88), Color("fff6e4"), 0, 4)
+	_top_bar = _glass(Color(1, 1, 1, 0.88), Color("f6ffff"), 0, 4)
 	_top_bar.custom_minimum_size.y = 66
 	_top_bar.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	outer.add_child(_top_bar)
@@ -211,13 +215,13 @@ func _build_frame() -> void:
 	emblem.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	header.add_child(emblem)
-	var brand := _label("KITCHEN SKETCH CHALLENGE", 17, Color("302538"))
+	var brand := _label("KITCHEN SKETCH CHALLENGE", 17, Color("203b37"))
 	brand.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	brand.autowrap_mode = TextServer.AUTOWRAP_OFF
 	header.add_child(brand)
 	header.add_child(_nav_button("HOME", _show_home))
 	header.add_child(_nav_button("ALL STAGES", _show_levels))
-	var trainee := _glass(Color(0.18,0.13,0.24,0.82), Color("dbaf89"), 20, 7)
+	var trainee := _glass(Color(0.11,0.22,0.23,0.87), Color("aefce9"), 20, 7)
 	header.add_child(trainee)
 	var trainee_text := _label("TRAINEE", 12, C_INK, true)
 	trainee_text.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -250,7 +254,7 @@ func _build_frame() -> void:
 	_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_body.add_theme_constant_override("separation", 13)
 	margin.add_child(_body)
-	_bottom_bar = _glass(Color(0.19,0.14,0.24,0.85), Color("d3ad90"), 0, 1)
+	_bottom_bar = _glass(Color(0.11,0.23,0.22,0.77), Color("d4ffed"), 0, 1)
 	_bottom_bar.custom_minimum_size.y = 25
 	_bottom_bar.size_flags_vertical = Control.SIZE_SHRINK_END
 	outer.add_child(_bottom_bar)
@@ -276,8 +280,8 @@ func _update_lang_buttons() -> void:
 		if not is_instance_valid(b):
 			continue
 		var selected: bool = (b == _jp_button and Progress.get_language() == "jp") or (b == _mm_button and Progress.get_language() == "mm")
-		b.add_theme_stylebox_override("normal", _console_style(Color("6e3e59") if selected else Color("2a2239"), Color("ffc98a") if selected else Color("886477"), 12, 6))
-		b.add_theme_stylebox_override("hover", _console_style(Color("86516c"), Color("ffe2ad"), 12, 6))
+		b.add_theme_stylebox_override("normal", _console_style(Color("117d6a") if selected else Color("314749"), Color("b7ffe9") if selected else Color("aac8be"), 12, 6))
+		b.add_theme_stylebox_override("hover", _console_style(Color("1da58c"), Color("d4fff3"), 12, 6))
 		b.add_theme_color_override("font_color", WHITE)
 
 func _clear() -> void:
@@ -298,7 +302,7 @@ func _show_splash() -> void:
 	var alignment := CenterContainer.new()
 	alignment.custom_minimum_size.y = 560.0
 	_body.add_child(alignment)
-	var panel := _c_panel(Color(0.08, 0.055, 0.16, 0.85), Color("ffc889"), 30, 30)
+	var panel := _glass(Color(1,1,1,0.89), Color("d2fff0"), 30, 30)
 	panel.custom_minimum_size = Vector2(560, 360)
 	alignment.add_child(panel)
 	var content := VBoxContainer.new()
@@ -313,9 +317,9 @@ func _show_splash() -> void:
 	mark.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	content.add_child(mark)
-	content.add_child(_label("KITCHEN SKETCH CHALLENGE", 30, C_COPPER, true))
-	content.add_child(_label("D E C O R A T I O N   G A M E", 15, C_INK, true))
-	var caption := _label("LOADING YOUR DESIGN ADVENTURE...", 13, C_MUTED, true)
+	content.add_child(_label("KITCHEN SKETCH CHALLENGE", 30, Color("158c76"), true))
+	content.add_child(_label("D E C O R A T I O N   G A M E", 15, Color("264944"), true))
+	var caption := _label("LOADING YOUR DESIGN ADVENTURE...", 13, Color("5b7872"), true)
 	content.add_child(caption)
 	var bar := ProgressBar.new()
 	bar.custom_minimum_size = Vector2(440, 20)
@@ -323,10 +327,10 @@ func _show_splash() -> void:
 	bar.max_value = 100
 	bar.value = 0
 	bar.show_percentage = false
-	bar.add_theme_stylebox_override("background", _console_style(Color("302741"), Color("7b5063"), 12, 2))
-	bar.add_theme_stylebox_override("fill", _console_style(Color("ffa44d"), Color("ffd88c"), 12, 2))
+	bar.add_theme_stylebox_override("background", _console_style(Color("dcece7"), Color("a5d6c9"), 12, 2))
+	bar.add_theme_stylebox_override("fill", _console_style(Color("21c39c"), Color("ccffee"), 12, 2))
 	content.add_child(bar)
-	var progress := _label("0%", 13, C_COPPER, true)
+	var progress := _label("0%", 13, Color("148e76"), true)
 	content.add_child(progress)
 	panel.modulate.a = 0.0
 	var fade := create_tween()
@@ -345,93 +349,92 @@ func _show_splash() -> void:
 
 func _show_home() -> void:
 	_clear()
+	_set_concept_background(false)
 	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	var scene_row := HBoxContainer.new()
-	scene_row.custom_minimum_size.y = 585
-	scene_row.add_theme_constant_override("separation", 26)
+	scene_row.custom_minimum_size.y = 575.0
+	scene_row.add_theme_constant_override("separation", 22)
 	_body.add_child(scene_row)
 
-	# Reference layout: bright frosted hero left, unobstructed kitchen right.
-	var panel := _glass(Color(1, 0.98, 0.97, 0.86), Color("fff8ee"), 29, 29)
-	panel.custom_minimum_size.x = 560
+	# Option C hero: soft white translucent pane over the real kitchen.
+	var panel := _glass(Color(1.0,1.0,0.99,0.83), Color("ffffff"), 34, 24)
+	panel.custom_minimum_size.x = 565
 	panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	scene_row.add_child(panel)
 	var stack := VBoxContainer.new()
 	stack.alignment = BoxContainer.ALIGNMENT_CENTER
-	stack.add_theme_constant_override("separation", 11)
+	stack.add_theme_constant_override("separation", 10)
 	panel.add_child(stack)
-	var header_line := HBoxContainer.new()
-	header_line.add_theme_constant_override("separation", 16)
-	stack.add_child(header_line)
+	var brand_line := HBoxContainer.new()
+	brand_line.add_theme_constant_override("separation", 16)
+	stack.add_child(brand_line)
 	var logo := TextureRect.new()
 	logo.texture = preload("res://Branding/SketchPlanPencil.svg")
-	logo.custom_minimum_size = Vector2(100,100)
+	logo.custom_minimum_size = Vector2(105,105)
 	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	header_line.add_child(logo)
-	var headline := VBoxContainer.new()
-	headline.alignment = BoxContainer.ALIGNMENT_CENTER
-	header_line.add_child(headline)
-	headline.add_child(_label("KITCHEN DESIGN TRAINING", 12, Color("72516c")))
-	headline.add_child(_label("Kitchen", 43, Color("292235")))
-	headline.add_child(_label("Sketch Challenge", 33, Color("b85c44")))
-	stack.add_child(_label("DECORATION GAME", 18, Color("674763"), true))
-	var info := _label("DESIGN  •  SKETCH  •  SELECT  •  LEARN", 13, Color("634e62"), true)
-	stack.add_child(info)
-	stack.add_child(_label("A practical kitchen design training game. Plan layouts, answer customer questions and choose kitchen materials.", 16, Color("3f3748")))
-	var spacer := Control.new()
-	spacer.custom_minimum_size.y = 12
-	stack.add_child(spacer)
-	var start := _button("▶   START TRAINING   ››", true, 420, 60)
-	start.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	start.add_theme_font_size_override("font_size", 22)
-	start.pressed.connect(_show_language_select)
-	stack.add_child(start)
-	var actions := HBoxContainer.new()
-	actions.alignment = BoxContainer.ALIGNMENT_CENTER
-	actions.add_theme_constant_override("separation", 8)
-	stack.add_child(actions)
-	var levels := _nav_button("SELECT LEVEL", _show_levels)
-	levels.custom_minimum_size.x = 142
-	actions.add_child(levels)
-	var help := _nav_button("TRAINING GUIDE", _show_help)
-	help.custom_minimum_size.x = 150
-	actions.add_child(help)
-	var progress := _nav_button("MY PROGRESS", _show_progress)
-	progress.custom_minimum_size.x = 132
-	actions.add_child(progress)
+	brand_line.add_child(logo)
+	var headings := VBoxContainer.new()
+	headings.alignment = BoxContainer.ALIGNMENT_CENTER
+	brand_line.add_child(headings)
+	headings.add_child(_label("K I T C H E N   D E S I G N   T R A I N I N G", 11, Color("4d5b5c")))
+	headings.add_child(_label("Kitchen", 44, Color("1f3533")))
+	headings.add_child(_label("Sketch Challenge", 33, Color("078b73")))
+	stack.add_child(_label("DECORATION GAME", 17, Color("364c4b"), true))
+	stack.add_child(_label("DESIGN  •  SKETCH  •  SELECT  •  LEARN", 14, Color("394f4f"), true))
+	stack.add_child(_label("Plan kitchen layouts, choose materials and solve real design challenges through practical missions.", 16, Color("354d4b")))
+	var breathing := Control.new()
+	breathing.custom_minimum_size.y = 8
+	stack.add_child(breathing)
+	var play := _button("▶   START TRAINING    »", true, 400, 60)
+	play.add_theme_font_size_override("font_size", 22)
+	play.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	play.pressed.connect(_show_language_select)
+	stack.add_child(play)
+	var shortcuts := HBoxContainer.new()
+	shortcuts.alignment = BoxContainer.ALIGNMENT_CENTER
+	shortcuts.add_theme_constant_override("separation", 9)
+	stack.add_child(shortcuts)
+	var select_level := _nav_button("▦  SELECT LEVEL", _show_levels)
+	select_level.custom_minimum_size.x = 153
+	shortcuts.add_child(select_level)
+	var guide := _nav_button("▤  TRAINING GUIDE", _show_help)
+	guide.custom_minimum_size.x = 157
+	shortcuts.add_child(guide)
+	var progress := _nav_button("▥  MY PROGRESS", _show_progress)
+	progress.custom_minimum_size.x = 145
+	shortcuts.add_child(progress)
 	if is_pause_overlay:
-		var resume := _button("← BACK TO GAME", false, 240, 42)
-		resume.pressed.connect(_resume_paused)
+		var resume := _nav_button("←  BACK TO GAME", _resume_paused)
 		stack.add_child(resume)
 
 	var right := VBoxContainer.new()
-	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	right.alignment = BoxContainer.ALIGNMENT_CENTER
-	right.add_theme_constant_override("separation", 16)
+	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right.add_theme_constant_override("separation", 14)
 	scene_row.add_child(right)
-	var feature := _glass(Color(0.20,0.15,0.25,0.70), Color("f8d4a1"), 23, 22)
-	feature.size_flags_horizontal = Control.SIZE_SHRINK_END
-	right.add_child(feature)
-	var feature_text := VBoxContainer.new()
-	feature_text.add_theme_constant_override("separation", 14)
-	feature.add_child(feature_text)
-	feature_text.add_child(_label("YOUR DESIGN ADVENTURE", 14, Color("ffe7b7"), true))
-	feature_text.add_child(_label("✎  Sketch Layouts", 18, C_INK))
-	feature_text.add_child(_label("▱  Choose Materials", 18, C_INK))
-	feature_text.add_child(_label("✧  Build Design Skills", 18, C_INK))
-	var sub := _glass(Color(0.98,0.94,0.96,0.84), Color("fff0dd"), 20, 14)
-	sub.size_flags_horizontal = Control.SIZE_SHRINK_END
-	right.add_child(sub)
-	sub.add_child(_label("3 PLAYABLE STAGES   •   MORE COMING SOON", 14, Color("58445c"), true))
+	var hologram_panel := _glass(Color(0.08,0.30,0.30,0.63), Color("8bfadf"), 25, 17)
+	hologram_panel.size_flags_horizontal = Control.SIZE_SHRINK_END
+	right.add_child(hologram_panel)
+	var hologram := KitchenHologram.new()
+	hologram_panel.add_child(hologram)
+	var features := _glass(Color(0.06,0.22,0.24,0.77), Color("c0ffe9"), 24, 17)
+	features.size_flags_horizontal = Control.SIZE_SHRINK_END
+	right.add_child(features)
+	var feature_list := VBoxContainer.new()
+	feature_list.add_theme_constant_override("separation", 12)
+	features.add_child(feature_list)
+	feature_list.add_child(_label("✎    SKETCH LAYOUTS", 15, C_INK))
+	feature_list.add_child(_label("▱    CHOOSE MATERIALS", 15, C_INK))
+	feature_list.add_child(_label("⬡    BUILD DESIGN SKILLS", 15, C_INK))
 	panel.modulate.a = 0.0
-	var entrance := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	entrance.tween_property(panel, "modulate:a", 1.0, 0.60)
-	feature.modulate.a = 0.0
-	var drift := create_tween()
-	drift.tween_interval(0.16)
-	drift.tween_property(feature, "modulate:a", 1.0, 0.60)
+	var enter := create_tween()
+	enter.tween_property(panel, "modulate:a", 1.0, 0.52).set_trans(Tween.TRANS_SINE)
+	features.modulate.a = 0.0
+	var float_in := create_tween()
+	float_in.tween_interval(0.14)
+	float_in.tween_property(features, "modulate:a", 1.0, 0.62)
 
 func _add_home_button(parent: HBoxContainer, label_text: String, action: Callable) -> void:
 	var b := _button(label_text, false, 195, 60)
@@ -473,16 +476,16 @@ func _show_language_select() -> void:
 	var alignment := CenterContainer.new()
 	alignment.custom_minimum_size.y = 610
 	_body.add_child(alignment)
-	var panel := _c_panel(Color(0.065, 0.15, 0.14, 0.96), C_COPPER, 24, 30)
+	var panel := _glass(Color(1,1,1,0.90), Color("baffeb"), 24, 30)
 	panel.custom_minimum_size = Vector2(680, 430)
 	alignment.add_child(panel)
 	var content := VBoxContainer.new()
 	content.alignment = BoxContainer.ALIGNMENT_CENTER
 	content.add_theme_constant_override("separation", 17)
 	panel.add_child(content)
-	content.add_child(_label("01  /  SELECT LANGUAGE", 16, C_COPPER, true))
-	content.add_child(_label("Choose your language", 34, C_INK, true))
-	content.add_child(_label("Customer dialogue and questions are available in Japanese and Myanmar.", 16, C_MUTED, true))
+	content.add_child(_label("01  /  SELECT LANGUAGE", 16, Color("0b9d7e"), true))
+	content.add_child(_label("Choose your language", 34, Color("1f3d39"), true))
+	content.add_child(_label("Customer dialogue and questions are available in Japanese and Myanmar.", 16, Color("54736e"), true))
 	var spacer := Control.new()
 	spacer.custom_minimum_size.y = 18
 	content.add_child(spacer)
@@ -617,88 +620,79 @@ func _show_levels() -> void:
 	_clear()
 	_set_concept_background(true)
 	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	var page_header := HBoxContainer.new()
+	page_header.add_theme_constant_override("separation", 14)
+	_body.add_child(page_header)
+	var home := _nav_button("⌂  HOME", _resume_paused if is_pause_overlay else _show_home)
+	page_header.add_child(home)
+	var title := _label("TRAINING MISSIONS   /   SELECT A STAGE", 24, Color("203b37"))
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	page_header.add_child(title)
+	var prog := _nav_button("▥  PROGRESS", _show_progress)
+	page_header.add_child(prog)
 
-	var header := HBoxContainer.new()
-	header.add_theme_constant_override("separation", 15)
-	_body.add_child(header)
-	var back := _nav_button("←  HOME", _resume_paused if is_pause_overlay else _show_home)
-	header.add_child(back)
-	var headline := _label("TRAINING MISSIONS  /  SELECT A STAGE", 26, Color("342a3a"), true)
-	headline.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header.add_child(headline)
-	var prog_btn := _nav_button("MY PROGRESS", _show_progress)
-	header.add_child(prog_btn)
-
-	var board := _glass(Color(1.0, 0.975, 0.965, 0.85), Color("fff8eb"), 28, 18)
-	board.custom_minimum_size.y = 545
+	var board := _glass(Color(1,1,1,0.83), Color("ffffff"), 29, 20)
+	board.custom_minimum_size.y = 570
 	_body.add_child(board)
 	var layout := VBoxContainer.new()
-	layout.add_theme_constant_override("separation", 12)
+	layout.add_theme_constant_override("separation", 17)
 	board.add_child(layout)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 18)
-	row.custom_minimum_size.y = 390
-	layout.add_child(row)
+	var stage_row := HBoxContainer.new()
+	stage_row.custom_minimum_size.y = 424
+	stage_row.add_theme_constant_override("separation", 16)
+	layout.add_child(stage_row)
+	var intro := VBoxContainer.new()
+	intro.custom_minimum_size.x = 228
+	intro.add_theme_constant_override("separation", 12)
+	stage_row.add_child(intro)
+	intro.add_child(_label("T R A I N I N G   M I S S I O N S", 12, Color("3e6e66")))
+	intro.add_child(_label("Select a Stage", 30, Color("1c3633")))
+	intro.add_child(_label("Progress through hands-on kitchen design missions and build your skills step by step.", 15, Color("4c5755")))
+	var pad := Control.new()
+	pad.custom_minimum_size.y = 16
+	intro.add_child(pad)
+	var summary := _glass(Color(1,1,1,0.95), Color("d9e2df"), 22, 14)
+	intro.add_child(summary)
+	var stats := VBoxContainer.new()
+	stats.add_theme_constant_override("separation", 8)
+	summary.add_child(stats)
+	stats.add_child(_label("TRAINING PROGRESS", 14, Color("234e48")))
+	stats.add_child(_label("3 / 6  STAGES AVAILABLE", 19, Color("127e68")))
+	stats.add_child(_label("Stage 04–06 coming soon", 12, Color("62726f")))
+	var bar := ProgressBar.new()
+	bar.custom_minimum_size.y = 12
+	bar.show_percentage = false
+	bar.min_value = 0
+	bar.max_value = 6
+	bar.value = 3
+	bar.add_theme_stylebox_override("background", _console_style(Color("cfd6d5"), Color.TRANSPARENT, 10, 0))
+	bar.add_theme_stylebox_override("fill", _console_style(Color("0dbd97"), Color.TRANSPARENT, 10, 0))
+	stats.add_child(bar)
 
-	var left := VBoxContainer.new()
-	left.custom_minimum_size.x = 234
-	left.add_theme_constant_override("separation", 13)
-	row.add_child(left)
-	left.add_child(_label("KITCHEN DESIGN", 13, Color("aa6a4c")))
-	left.add_child(_label("Select a Stage", 30, Color("2b2738")))
-	left.add_child(_label("Progress through real kitchen design missions and build your skills step by step.", 15, Color("584a57")))
-	var space := Control.new()
-	space.custom_minimum_size.y = 10
-	left.add_child(space)
-	var summary := _glass(Color(0.99,0.93,0.91,0.94), Color("ebc7a3"), 19, 13)
-	left.add_child(summary)
-	var progress_col := VBoxContainer.new()
-	progress_col.add_theme_constant_override("separation", 7)
-	summary.add_child(progress_col)
-	progress_col.add_child(_label("TRAINING PROGRESS", 14, Color("4a3346")))
-	progress_col.add_child(_label("3 / 6  PLAYABLE", 21, Color("bd6b47")))
-	progress_col.add_child(_label("Stages 1–3 available", 13, Color("6c5a66")))
-	var progress := ProgressBar.new()
-	progress.custom_minimum_size.y = 12
-	progress.min_value = 0
-	progress.max_value = 6
-	progress.value = 3
-	progress.show_percentage = false
-	progress.add_theme_stylebox_override("background", _console_style(Color("d4c8cf"), Color.TRANSPARENT, 9, 0))
-	progress.add_theme_stylebox_override("fill", _console_style(Color("d98655"), Color.TRANSPARENT, 9, 0))
-	progress_col.add_child(progress)
-	var level_guide := _glass(Color(0.19,0.14,0.25,0.92), Color("f4cc9a"), 19, 12)
-	left.add_child(level_guide)
-	var guide_text := VBoxContainer.new()
-	guide_text.add_theme_constant_override("separation", 5)
-	level_guide.add_child(guide_text)
-	guide_text.add_child(_label("GAME GUIDE", 12, Color("ffcf91")))
-	guide_text.add_child(_label("01  Sketch Layout", 13, C_INK))
-	guide_text.add_child(_label("02  Pipe Shaft Q&A", 13, C_INK))
-	guide_text.add_child(_label("03  Select Materials", 13, C_INK))
+	var mission_area := VBoxContainer.new()
+	mission_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	mission_area.add_theme_constant_override("separation", 12)
+	stage_row.add_child(mission_area)
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 8)
+	mission_area.add_child(actions)
+	var mission_title := _label("DESIGN CHALLENGES", 16, Color("255247"))
+	mission_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	actions.add_child(mission_title)
+	var left := _nav_button("‹", Callable())
+	left.custom_minimum_size.x = 42
+	actions.add_child(left)
+	var right := _nav_button("›", Callable())
+	right.custom_minimum_size.x = 42
+	actions.add_child(right)
 
-	var right := VBoxContainer.new()
-	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	right.add_theme_constant_override("separation", 10)
-	row.add_child(right)
-	var row_heading := HBoxContainer.new()
-	right.add_child(row_heading)
-	var all_label := _label("DESIGN CHALLENGES", 17, Color("433341"))
-	all_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row_heading.add_child(all_label)
-	var left_arrow := _nav_button("‹", func() -> void: pass)
-	left_arrow.custom_minimum_size.x = 40
-	row_heading.add_child(left_arrow)
-	var right_arrow := _nav_button("›", func() -> void: pass)
-	right_arrow.custom_minimum_size.x = 40
-	row_heading.add_child(right_arrow)
 	var strip := ScrollContainer.new()
+	strip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	strip.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	strip.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	strip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	strip.custom_minimum_size.y = 327
+	strip.custom_minimum_size.y = 330
 	strip.clip_contents = true
-	right.add_child(strip)
+	mission_area.add_child(strip)
 	var cards := HBoxContainer.new()
 	cards.add_theme_constant_override("separation", 13)
 	strip.add_child(cards)
@@ -706,67 +700,67 @@ func _show_levels() -> void:
 		var card := _stage_card(stage)
 		cards.add_child(card)
 		card.modulate.a = 0.0
-		var intro := create_tween()
-		intro.tween_interval(float(stage - 1) * 0.08)
-		intro.tween_property(card, "modulate:a", 1.0, 0.4).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	left_arrow.pressed.connect(func() -> void: strip.scroll_horizontal = maxi(0, strip.scroll_horizontal - 270))
-	right_arrow.pressed.connect(func() -> void: strip.scroll_horizontal += 270)
-	right.add_child(_label("‹  Scroll to discover more levels  ›", 12, Color("786473"), true))
+		var opening := create_tween()
+		opening.tween_interval(float(stage-1) * 0.08)
+		opening.tween_property(card, "modulate:a", 1.0, 0.40).set_trans(Tween.TRANS_SINE)
+	left.pressed.connect(func() -> void: strip.scroll_horizontal = maxi(0, strip.scroll_horizontal - 250))
+	right.pressed.connect(func() -> void: strip.scroll_horizontal += 250)
+	mission_area.add_child(_label("‹  SCROLL TO DISCOVER ALL SIX MISSIONS  ›", 12, Color("4a7770"), true))
 
-	var separator := ColorRect.new()
-	separator.custom_minimum_size.y = 2
-	separator.color = Color("d7a777")
-	separator.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	layout.add_child(separator)
-	var path := HBoxContainer.new()
-	path.alignment = BoxContainer.ALIGNMENT_CENTER
-	path.add_theme_constant_override("separation", 20)
-	layout.add_child(path)
+	var line := ColorRect.new()
+	line.custom_minimum_size.y = 2
+	line.color = Color("8de4cd")
+	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layout.add_child(line)
+	var progression := HBoxContainer.new()
+	progression.alignment = BoxContainer.ALIGNMENT_CENTER
+	progression.add_theme_constant_override("separation", 12)
+	layout.add_child(progression)
 	for stage in range(1, 7):
-		var token := _glass(Color("ffead1") if stage <= 3 else Color("d8d0d7"), Color("e09a60") if stage <= 3 else Color("aca2aa"), 30, 9)
-		path.add_child(token)
-		token.add_child(_label("%02d" % stage, 14, Color("a85c3e") if stage <= 3 else Color("736c77"), true))
+		var dot := _glass(Color("d9fff1") if stage <= 3 else Color("e0e4e5"), Color("70dabb") if stage <= 3 else Color("b8bdc1"), 28, 7)
+		progression.add_child(dot)
+		dot.add_child(_label("%02d" % stage, 13, Color("117b64") if stage <= 3 else Color("7a8386"), true))
 		if stage < 6:
-			path.add_child(_label("━━━━", 14, Color("cd977d") if stage < 3 else Color("b6a9b2"), true))
-	layout.add_child(_label("STAGE 04—06  •  COMING SOON", 13, Color("7b6574"), true))
+			progression.add_child(_label("━━━━", 12, Color("79d4bc") if stage < 3 else Color("bec4c4"), true))
+	layout.add_child(_label("STAGE 01–03  AVAILABLE      •      STAGE 04–06  COMING SOON", 12, Color("62736f"), true))
 	board.modulate.a = 0.0
-	var fade := create_tween()
-	fade.tween_property(board, "modulate:a", 1.0, 0.52).set_trans(Tween.TRANS_SINE)
+	var appear := create_tween()
+	appear.tween_property(board, "modulate:a", 1.0, 0.48).set_trans(Tween.TRANS_SINE)
 
 func _stage_card(stage: int) -> Button:
-	var available: bool = stage <= 3 and Progress.is_level_unlocked(stage)
+	var unlocked: bool = stage <= 3 and Progress.is_level_unlocked(stage)
 	var card := Button.new()
 	card.set_meta("mission_stage", stage)
 	card.text = ""
-	card.custom_minimum_size = Vector2(203, 296)
-	card.disabled = not available
-	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if available else Control.CURSOR_ARROW
-	var background := Color(1,0.985,0.97,0.96) if available else Color(0.69,0.66,0.69,0.91)
-	card.add_theme_stylebox_override("normal", _console_style(background, Color("eeb47e") if available else Color("a49ba4"), 20, 5, 8))
-	card.add_theme_stylebox_override("disabled", _console_style(background, Color("9d96a1"), 20, 5, 2))
-	card.add_theme_stylebox_override("hover", _console_style(Color("fff3e6"), Color("f0a15e"), 20, 5, 13))
-	card.add_theme_stylebox_override("pressed", _console_style(Color("f6dec8"), Color("df8b54"), 20, 5, 4))
-	if available:
+	card.custom_minimum_size = Vector2(218, 310)
+	card.disabled = not unlocked
+	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if unlocked else Control.CURSOR_ARROW
+	var active_background := Color(0.08,0.20,0.21,0.93)
+	var locked_background := Color(0.35,0.37,0.40,0.90)
+	card.add_theme_stylebox_override("normal", _console_style(active_background if unlocked else locked_background, Color("8bffe0") if unlocked else Color("aeb5b8"), 21, 5, 9))
+	card.add_theme_stylebox_override("disabled", _console_style(locked_background, Color("adb0b2"), 21, 5, 1))
+	card.add_theme_stylebox_override("hover", _console_style(Color("165a50"), Color("c5ffea"), 21, 5, 16))
+	card.add_theme_stylebox_override("pressed", _console_style(Color("10735e"), Color("e4fff1"), 21, 5, 4))
+	if unlocked:
 		card.pressed.connect(_start_level.bind(stage))
 		ConsoleAnimations.animate_button(card)
 
 	var pad := MarginContainer.new()
 	pad.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	pad.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	for margin in ["margin_left","margin_right"]:
-		pad.add_theme_constant_override(margin, 10)
-	for margin in ["margin_top","margin_bottom"]:
-		pad.add_theme_constant_override(margin, 8)
+	pad.add_theme_constant_override("margin_left", 9)
+	pad.add_theme_constant_override("margin_right", 9)
+	pad.add_theme_constant_override("margin_top", 8)
+	pad.add_theme_constant_override("margin_bottom", 8)
 	card.add_child(pad)
 	var body := VBoxContainer.new()
-	body.add_theme_constant_override("separation", 5)
 	body.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	body.add_theme_constant_override("separation", 5)
 	pad.add_child(body)
-	var status := "● AVAILABLE" if available else "◆ LOCKED"
-	var pill := _label(status, 12, Color("9a543c") if available else Color("665b65"), true)
-	body.add_child(pill)
-	var thumb := TextureRect.new()
-	var textures: Array[Texture2D] = [
+	var state := _label("▶  AVAILABLE" if unlocked else "▣  LOCKED", 12, Color("afffe7") if unlocked else Color("eeeeee"), true)
+	body.add_child(state)
+	var preview := TextureRect.new()
+	var thumbnails: Array[Texture2D] = [
 		preload("res://reference_sketch.png"),
 		preload("res://MenuAssets/Level2.png"),
 		preload("res://MenuAssets/Level3.png"),
@@ -774,19 +768,22 @@ func _stage_card(stage: int) -> Button:
 		preload("res://MenuAssets/Level5.png"),
 		preload("res://MenuAssets/Level6.png")
 	]
-	thumb.texture = textures[stage - 1]
-	thumb.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	thumb.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	thumb.custom_minimum_size = Vector2(174, 153)
-	thumb.modulate = Color.WHITE if available else Color("bcb2b8")
-	thumb.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	body.add_child(thumb)
-	body.add_child(_label("STAGE %02d" % stage, 12, Color("8c6349") if available else Color("736872")))
-	var names: Array[String] = ["LDK Boundary Drawing","Pipe Shaft Q&A","S-Class Kitchen Selection","Island Layout Planning","Lighting & Atmosphere","Final Kitchen Design"]
-	var title := _label(names[stage - 1], 16, Color("2f2a36") if available else Color("635c68"), true)
-	title.custom_minimum_size.y = 38
-	body.add_child(title)
-	body.add_child(_label("✦  PLAY MISSION" if available else "🔒  COMING SOON", 13, Color("c7794d") if available else Color("766c76"), true))
+	preview.texture = thumbnails[stage - 1]
+	preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	preview.custom_minimum_size = Vector2(193, 165)
+	preview.modulate = Color.WHITE if unlocked else Color("b4b6bb")
+	preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	body.add_child(preview)
+	body.add_child(_label("STAGE %02d" % stage, 13, Color("d5ffef") if unlocked else Color("e9e9ec")))
+	var names: Array[String] = [
+		"LDK Boundary Drawing", "Pipe Shaft Q&A", "S-Class Kitchen Selection",
+		"Island Layout Planning", "Lighting & Atmosphere", "Final Kitchen Design"
+	]
+	var name := _label(names[stage-1], 16, Color("ffffff") if unlocked else Color("e7e5e7"), true)
+	name.custom_minimum_size.y = 44
+	body.add_child(name)
+	body.add_child(_label("✦  START MISSION" if unlocked else "COMPLETE PRIOR STAGES", 12, Color("9dffe0") if unlocked else Color("d7d7db"), true))
 	return card
 
 func _mission_card(stage: int) -> PanelContainer:
