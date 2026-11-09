@@ -8,6 +8,7 @@ on:
       - feature/original-game-flow-sunset-menu-20261109
       - feature/bright-glass-kitchen-main-levels-20261109
       - design/option-c-single-style-glass-20261109
+      - feature/stage3-original-flow-optionc-ui-20261109
   workflow_dispatch:
 permissions:
   contents: read
@@ -39,6 +40,11 @@ jobs:
           godot --headless --path . --script res://Tests/MenuSmoke.gd 2>&1 | tee menu_smoke.log
           grep -q 'MENU_SMOKE_OK:' menu_smoke.log
           if grep -E 'MENU_SMOKE_FAIL:|SCRIPT ERROR:|Failed to load script' menu_smoke.log; then exit 1; fi
+      - name: Check Stage3 game logic and glass layout
+        run: |
+          godot --headless --path . --script res://Tests/Stage3Smoke.gd 2>&1 | tee stage3_smoke.log
+          grep -q 'STAGE3_SMOKE_OK:' stage3_smoke.log
+          if grep -E 'STAGE3_SMOKE_FAIL:|SCRIPT ERROR:|Failed to load script' stage3_smoke.log; then exit 1; fi
       - name: Export
         run: |
           mkdir web
