@@ -14,12 +14,21 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 [application]
 
+<<<<<<< Updated upstream
 config/name="Kitchen Sketch Challenge | Decoration Game"
 run/main_scene="res://GameMenu.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 boot_splash/bg_color=Color(0.07, 0.05, 0.13, 1)
 boot_splash/show_image=false
 config/icon="res://Branding/SketchPlanPencil.svg"
+=======
+config/name="Kitchen Decoration Game | Sketch Challenge"
+run/main_scene="res://GameMenu.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+boot_splash/bg_color=Color(0.69, 0.86, 0.97, 1)
+boot_splash/image="res://Branding/BlueprintPencilGameLogo.png"
+config/icon="res://Branding/BlueprintPencilIcon.png"
+>>>>>>> Stashed changes
 
 [display]
 
