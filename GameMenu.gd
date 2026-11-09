@@ -194,6 +194,25 @@ func _build_frame() -> void:
 	backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	backdrop.modulate = Color.WHITE
+	# Gently restore edge clarity in the existing soft-focus kitchen artwork.
+	# This only affects the menu backdrop; game scenes remain untouched.
+	var sharpen := Shader.new()
+	sharpen.code = """
+shader_type canvas_item;
+render_mode unshaded;
+void fragment() {
+    vec2 px = TEXTURE_PIXEL_SIZE;
+    vec4 center = texture(TEXTURE, UV);
+    vec3 neighbors = texture(TEXTURE, UV + vec2(px.x, 0.0)).rgb
+        + texture(TEXTURE, UV - vec2(px.x, 0.0)).rgb
+        + texture(TEXTURE, UV + vec2(0.0, px.y)).rgb
+        + texture(TEXTURE, UV - vec2(0.0, px.y)).rgb;
+    COLOR = vec4(clamp(center.rgb * 2.0 - neighbors * 0.25, 0.0, 1.0), center.a);
+}
+"""
+	var sharpen_material := ShaderMaterial.new()
+	sharpen_material.shader = sharpen
+	backdrop.material = sharpen_material
 	base.add_child(backdrop)
 	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var light := ColorRect.new()
