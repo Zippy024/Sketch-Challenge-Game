@@ -388,43 +388,39 @@ func _showroom_title(parent: Control, left: float, top: float, width_value: floa
 
 
 func _show_splash() -> void:
-	var scene := _entry_canvas("EntryLoadingScreen")
-
-	# Third reference layout: big branded title, one floating kitchen
-	# blueprint, centered loading bar; no photographic background.
-	var logo := TextureRect.new()
-	logo.texture = preload("res://Branding/SketchPlanPencil.svg")
-	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_entry_add(scene, logo, Rect2(497, 4, 102, 102))
-	var title := _entry_centered_label("Kitchen", 60, Rect2(210, 98, 680, 74), Color("13699e"), scene)
-	title.add_theme_constant_override("outline_size", 4)
-	title.add_theme_color_override("font_outline_color", Color("f1fbff"))
-	var subtitle := _entry_centered_label("Decoration Game", 39, Rect2(225, 160, 650, 51), Color("0a487e"), scene)
-	subtitle.add_theme_constant_override("outline_size", 3)
-	subtitle.add_theme_color_override("font_outline_color", Color("f6fcff"))
-	var scene_art := EntryKitchenSketch.new()
-	scene_art.name = "EntryIsometricKitchen"
-	scene_art.set_meta("entry_kitchen_art", true)
-	_entry_add(scene, scene_art, Rect2(137, 193, 827, 337))
+	var canvas := _entry_canvas("EntryLoadingScreen")
+	_showroom_photo(canvas,Rect2(0,0,1100,650))
+	_showroom_title(canvas,220,27,665,60)
+	var subtitle := _ui_text(canvas,"KITCHEN DESIGN ADVENTURE",15,Rect2(350,146,400,28),Color("154d7b"),true)
+	subtitle.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var podium := ShowroomGlow.new()
+	podium.name = "LoadingGlowingPlatform"
+	_ui_put(canvas,podium,Rect2(131,325,838,236))
+	var viewport_box := SubViewportContainer.new()
+	viewport_box.name = "EntryIsometricKitchen"
+	viewport_box.set_meta("entry_kitchen_art",true)
+	viewport_box.stretch = true
+	viewport_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(canvas,viewport_box,Rect2(180,163,740,369))
+	var kitchen_view := KitchenDiorama3D.new()
+	kitchen_view.mission = 1
+	viewport_box.add_child(kitchen_view)
 	var bar := ProgressBar.new()
 	bar.name = "EntryLoadingProgress"
-	bar.custom_minimum_size = Vector2(450, 18)
+	bar.custom_minimum_size = Vector2(444,18)
 	bar.show_percentage = false
 	bar.max_value = 100
-	bar.value = 0.0
-	bar.add_theme_stylebox_override("background", _console_style(Color("d0e6f5"), Color("65bde9"), 12, 2))
-	bar.add_theme_stylebox_override("fill", _console_style(Color("06bade"), Color("c5f9ff"), 12, 2))
-	_entry_add(scene, bar, Rect2(323, 548, 455, 18))
-	_entry_centered_label("Loading...", 17, Rect2(330, 579, 440, 29), Color("155880"), scene)
-	scene.modulate.a = 0.0
-	var intro := create_tween()
-	intro.tween_property(scene, "modulate:a", 1.0, 0.32)
+	bar.value = 0
+	bar.add_theme_stylebox_override("background", _console_style(Color("c6e2f4"),Color("6caed7"),13,1))
+	bar.add_theme_stylebox_override("fill", _console_style(Color("1bcbeb"),Color("d6fbff"),13,1))
+	_ui_put(canvas,bar,Rect2(328,561,444,17))
+	_ui_text(canvas,"Loading...",16,Rect2(400,587,300,30),Color("174b77"),true)
+	canvas.modulate.a = 0.0
+	create_tween().tween_property(canvas,"modulate:a",1.0,0.4)
 	var loading := create_tween()
-	loading.tween_property(bar, "value", 100.0, 1.75).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	loading.tween_property(bar,"value",100.0,1.9).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	loading.tween_callback(func() -> void:
-		if is_inside_tree() and is_instance_valid(scene):
+		if is_inside_tree() and is_instance_valid(canvas):
 			_show_language_select()
 	)
 
@@ -547,71 +543,59 @@ func _show_home() -> void:
 	var canvas := _blueprint_canvas("OptionCHomeCanvas")
 	_top_bar.hide()
 	_bottom_bar.hide()
-	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-
-	# Third reference: one bright, full-width hero (no kitchen photo at all).
-	var glass := _glass(Color(0.96, 0.99, 1.0, 0.89), Color("f5fdff"), 32, 0)
-	glass.name = "HomeHeroGlass"
-	glass.set_meta("home_hero_panel", true)
-	glass.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ui_put(canvas, glass, Rect2(24, 15, 1272, 588))
-
-	var logo := TextureRect.new()
-	logo.texture = preload("res://Branding/SketchPlanPencil.svg")
-	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ui_put(canvas, logo, Rect2(336, 27, 104, 104))
-	var heading := _ui_text(canvas, "Kitchen", 58, Rect2(440, 37, 545, 69), Color("0d6199"), true)
-	heading.set_meta("home_headline", true)
-	_ui_text(canvas, "Decoration Game", 40, Rect2(402, 105, 605, 62), Color("083d71"), true)
-	_ui_text(canvas, "DESIGN  •  SKETCH  •  SELECT  •  LEARN", 14, Rect2(410, 164, 490, 30), Color("3b78a0"), true)
-
-	var trainee := _glass(Color("124c7d"), Color("a0ecff"), 22, 0)
-	trainee.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ui_put(canvas, trainee, Rect2(1127, 33, 135, 43))
-	_ui_text(canvas, "TRAINEE", 15, Rect2(1143, 41, 104, 28), Color("effaff"), true)
-
-	# Primary menu is vertically stacked, matching the supplied screenshot.
-	var side := _glass(Color(0.94,0.98,1.0,0.89), Color("c4eaff"), 27, 0)
-	side.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ui_put(canvas, side, Rect2(69, 222, 410, 332))
-	var start := _button("▶    START GAME", true, 360, 66)
+	_showroom_photo(canvas,Rect2(0,0,1320,638))
+	# Reference image: bright left content zone and visible warm kitchen on right.
+	var right := TextureRect.new()
+	right.texture = preload("res://MenuAssets/KitchenHero.jpg")
+	right.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	right.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	right.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(canvas,right,Rect2(713,0,607,638))
+	var left_wash := ColorRect.new()
+	left_wash.color = Color(0.80,0.92,1.0,0.73)
+	left_wash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(canvas,left_wash,Rect2(0,0,723,638))
+	var edge := ColorRect.new()
+	edge.color = Color(0.31,0.73,0.95,0.42)
+	edge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(canvas,edge,Rect2(710,0,3,638))
+	var hero := _glass(Color(0.94,0.98,1,0.07),Color.TRANSPARENT,24,0)
+	hero.name = "HomeHeroGlass"
+	hero.set_meta("home_hero_panel",true)
+	hero.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(canvas,hero,Rect2(22,24,675,573))
+	_showroom_title(canvas,58,58,630,62)
+	var headline := _ui_text(canvas,"DESIGN  •  SKETCH  •  SELECT",15,Rect2(145,214,442,26),Color("1a5c87"),true)
+	headline.name = "HomeHeadline"
+	headline.set_meta("home_headline",true)
+	var start := _button("▶   START GAME",true,363,65)
 	start.name = "HomeStartTraining"
-	start.set_meta("home_start_button", true)
-	start.add_theme_font_size_override("font_size", 23)
+	start.set_meta("home_start_button",true)
+	start.add_theme_font_size_override("font_size",22)
 	start.pressed.connect(_show_levels)
-	_ui_put(canvas, start, Rect2(94, 255, 360, 64))
-	var level := _nav_button("▦    SELECT LEVEL", _show_levels)
-	level.add_theme_font_size_override("font_size", 17)
-	_ui_put(canvas, level, Rect2(118, 334, 313, 53))
-	var guide := _nav_button("▤    GAME GUIDE", _show_help)
-	guide.add_theme_font_size_override("font_size", 17)
-	_ui_put(canvas, guide, Rect2(118, 401, 313, 53))
-	var settings := _nav_button("⚙    SETTINGS", _show_settings)
-	settings.add_theme_font_size_override("font_size", 17)
-	_ui_put(canvas, settings, Rect2(118, 467, 313, 53))
-
-	# The foreground kitchen is original vector-style architectural
-	# illustration, not a photographic background.
-	var kitchen := EntryKitchenSketch.new()
-	kitchen.name = "HomeKitchenBlueprintIllustration"
-	kitchen.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ui_put(canvas, kitchen, Rect2(485, 202, 766, 345))
-	var feature := _glass(Color(0.06, 0.33, 0.60, 0.87), Color("78eaff"), 21, 0)
-	feature.name = "HomeFeaturesGlass"
-	feature.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ui_put(canvas, feature, Rect2(801, 435, 370, 151))
-	_ui_text(canvas, "YOUR KITCHEN ADVENTURE", 18, Rect2(818, 445, 335, 37), Color("ffffff"), true)
-	_ui_text(canvas, "01  SKETCH    •    02  Q&A    •    03  MATERIALS", 14, Rect2(820, 490, 334, 29), Color("d6f7ff"), true)
-	_ui_text(canvas, "3 PLAYABLE STAGES", 15, Rect2(824, 538, 328, 31), Color("9df4ff"), true)
-
+	_ui_put(canvas,start,Rect2(173,259,365,65))
+	var select_level := _nav_button("▦   SELECT LEVEL",_show_levels)
+	select_level.add_theme_font_size_override("font_size",19)
+	_ui_put(canvas,select_level,Rect2(173,342,365,59))
+	var guide := _nav_button("▤   GAME GUIDE",_show_help)
+	guide.add_theme_font_size_override("font_size",19)
+	_ui_put(canvas,guide,Rect2(173,418,365,59))
+	var settings := _nav_button("⚙   SETTINGS",_show_settings)
+	settings.add_theme_font_size_override("font_size",19)
+	_ui_put(canvas,settings,Rect2(173,494,365,59))
+	var trainee := _glass(Color("123b61"),Color("7ddaf3"),24,0)
+	trainee.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(canvas,trainee,Rect2(1110,26,160,46))
+	_ui_text(canvas,"◉  TRAINEE",15,Rect2(1119,34,142,30),Color("e1faff"),true)
+	var features := _glass(Color(0.05,0.25,0.48,0.13),Color("a8f1ff"),24,0)
+	features.name = "HomeFeaturesGlass"
+	features.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(canvas,features,Rect2(760,138,510,386))
 	if is_pause_overlay:
-		var resume := _nav_button("←  BACK TO GAME", _resume_paused)
-		_ui_put(canvas, resume, Rect2(87, 566, 210, 42))
-	glass.modulate.a = 0.0
-	var entrance := create_tween()
-	entrance.tween_property(glass, "modulate:a", 1.0, 0.42).set_trans(Tween.TRANS_SINE)
+		var resume := _nav_button("←  BACK TO GAME",_resume_paused)
+		_ui_put(canvas,resume,Rect2(193,572,320,43))
+	canvas.modulate.a = 0
+	create_tween().tween_property(canvas,"modulate:a",1.0,0.43)
 
 func _add_home_button(parent: HBoxContainer, label_text: String, action: Callable) -> void:
 	var b := _button(label_text, false, 195, 60)
@@ -649,66 +633,48 @@ func _show_information(title_text: String, details: String) -> void:
 	stack.add_child(back)
 
 func _show_language_select() -> void:
-	var scene := _entry_canvas("EntryLanguageScreen")
-
-	# A single white/ice-blue selector over the same image-free background.
-	var logo := TextureRect.new()
-	logo.texture = preload("res://Branding/SketchPlanPencil.svg")
-	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_entry_add(scene, logo, Rect2(511, 41, 78, 78))
-	_entry_centered_label("Kitchen", 52, Rect2(260, 116, 590, 72), Color("0d689f"), scene)
-	_entry_centered_label("Decoration Game", 35, Rect2(244, 177, 620, 53), Color("164978"), scene)
-	var decoration := EntryKitchenSketch.new()
-	decoration.name = "LanguageKitchenDiagram"
-	decoration.set_meta("entry_kitchen_art", true)
-	decoration.modulate.a = 0.27
-	_entry_add(scene, decoration, Rect2(245, 201, 610, 320))
-
-	var panel := _glass(Color(0.96, 0.99, 1.0, 0.97), Color("84cbef"), 25, 0)
+	var canvas := _entry_canvas("EntryLanguageScreen")
+	_showroom_photo(canvas,Rect2(0,0,1100,650))
+	_showroom_title(canvas,236,35,630,59)
+	var panel := _glass(Color(0.94,0.98,1.0,0.94),Color("96dafa"),25,0)
 	panel.name = "LanguageDropdownPanel"
-	panel.set_meta("entry_language_panel", true)
-	_entry_add(scene, panel, Rect2(374, 273, 354, 278))
-	_entry_centered_label("SELECT LANGUAGE", 19, Rect2(389, 302, 324, 38), Color("153d66"), scene)
-
+	panel.set_meta("entry_language_panel",true)
+	_ui_put(canvas,panel,Rect2(365,199,370,319))
+	_ui_text(canvas,"SELECT LANGUAGE",20,Rect2(387,216,323,38),Color("123d6f"),true)
 	var menu := OptionButton.new()
 	menu.name = "EntryLanguageDropdown"
-	menu.set_meta("entry_language_dropdown", true)
-	menu.custom_minimum_size = Vector2(296, 55)
-	menu.add_theme_font_size_override("font_size", 20)
-	for color_name in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
-		menu.add_theme_color_override(color_name, Color("164e7e"))
-	menu.add_theme_stylebox_override("normal", _console_style(Color("ffffff"), Color("82cdef"), 15, 9, 2))
-	menu.add_theme_stylebox_override("hover", _console_style(Color("dff4ff"), Color("4bbce9"), 15, 9, 5))
-	menu.add_theme_stylebox_override("pressed", _console_style(Color("cdefff"), Color("1bb1df"), 15, 9, 1))
-	menu.add_theme_stylebox_override("focus", _console_style(Color.TRANSPARENT, Color("50c8ed"), 15, 0, 0))
+	menu.set_meta("entry_language_dropdown",true)
+	menu.custom_minimum_size = Vector2(302,53)
+	menu.add_theme_font_size_override("font_size",19)
+	for theme_color in ["font_color","font_hover_color","font_pressed_color","font_focus_color"]:
+		menu.add_theme_color_override(theme_color, Color("18486b"))
+	menu.add_theme_stylebox_override("normal",_console_style(Color("ffffff"),Color("8cd4f2"),15,8,2))
+	menu.add_theme_stylebox_override("hover",_console_style(Color("e8f7ff"),Color("47b9ea"),15,8,5))
+	menu.add_theme_stylebox_override("pressed",_console_style(Color("cdefff"),Color("3ec3ec"),15,8,1))
 	var popup := menu.get_popup()
-	popup.add_theme_stylebox_override("panel", _console_style(Color("f3faff"), Color("8ed4f3"), 14, 12, 6))
-	popup.add_theme_stylebox_override("hover", _console_style(Color("c6edff"), Color("59bfec"), 10, 10))
-	popup.add_theme_color_override("font_color", Color("164d7b"))
-	popup.add_theme_color_override("font_hover_color", Color("114d82"))
-	popup.add_theme_color_override("font_disabled_color", Color("8aafc5"))
-	popup.add_theme_font_size_override("font_size", 18)
-	menu.add_item("日本語", 0)
-	menu.add_item("မြန်မာ", 1)
-	menu.add_item("English (Coming Soon)", 2)
-	menu.set_item_disabled(2, true)
-	menu.select(1 if Progress.get_language() == "mm" else 0)
-	_entry_add(scene, menu, Rect2(403, 356, 296, 55))
-
-	var go := _button("Continue   »", true, 296, 53)
-	go.name = "LanguageContinue"
-	go.set_meta("entry_language_continue", true)
-	go.add_theme_font_size_override("font_size", 20)
-	go.pressed.connect(func() -> void:
-		_choose_language("mm" if menu.selected == 1 else "jp")
+	popup.add_theme_stylebox_override("panel",_console_style(Color("f4faff"),Color("8bcef0"),14,10,5))
+	popup.add_theme_stylebox_override("hover",_console_style(Color("b8e8ff"),Color("6dc6e9"),12,8,2))
+	popup.add_theme_color_override("font_color",Color("184869"))
+	popup.add_theme_color_override("font_hover_color",Color("0b4f79"))
+	popup.add_theme_color_override("font_disabled_color",Color("829caf"))
+	popup.add_theme_font_size_override("font_size",18)
+	menu.add_item("日本語",0)
+	menu.add_item("မြန်မာ",1)
+	menu.add_item("English (Coming Soon)",2)
+	menu.set_item_disabled(2,true)
+	menu.select(1 if Progress.get_language()=="mm" else 0)
+	_ui_put(canvas,menu,Rect2(398,288,304,53))
+	var continue_button := _button("Continue    »",true,300,55)
+	continue_button.name = "LanguageContinue"
+	continue_button.set_meta("entry_language_continue",true)
+	continue_button.add_theme_font_size_override("font_size",20)
+	continue_button.pressed.connect(func() -> void:
+		_choose_language("mm" if menu.selected==1 else "jp")
 	)
-	_entry_add(scene, go, Rect2(403, 444, 296, 54))
-	_entry_centered_label("Japanese  •  Myanmar", 13, Rect2(405, 508, 294, 23), Color("597d99"), scene)
-	scene.modulate.a = 0.0
-	var intro := create_tween()
-	intro.tween_property(scene, "modulate:a", 1.0, 0.35)
+	_ui_put(canvas,continue_button,Rect2(400,400,300,55))
+	_ui_text(canvas,"JAPANESE   •   MYANMAR",13,Rect2(397,467,303,23),Color("487da0"),true)
+	canvas.modulate.a = 0
+	create_tween().tween_property(canvas,"modulate:a",1.0,0.36)
 
 func _choose_language(lang: String) -> void:
 	Progress.set_language(lang)
