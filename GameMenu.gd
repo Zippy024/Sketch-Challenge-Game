@@ -192,7 +192,8 @@ func _build_frame() -> void:
 	base.add_child(outer)
 	outer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_top_bar = _glass(Color(1, 0.975, 0.97, 0.88), Color("fff6e4"), 0, 4)
-	_top_bar.custom_minimum_size.y = 70
+	_top_bar.custom_minimum_size.y = 66
+	_top_bar.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	outer.add_child(_top_bar)
 	var head_pad := MarginContainer.new()
 	head_pad.add_theme_constant_override("margin_left", 21)
@@ -210,17 +211,17 @@ func _build_frame() -> void:
 	emblem.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	header.add_child(emblem)
-	var brand := _label("KITCHEN SKETCH CHALLENGE", 19, Color("302538"))
+	var brand := _label("KITCHEN SKETCH CHALLENGE", 17, Color("302538"))
 	brand.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	brand.autowrap_mode = TextServer.AUTOWRAP_OFF
 	header.add_child(brand)
 	header.add_child(_nav_button("HOME", _show_home))
 	header.add_child(_nav_button("ALL STAGES", _show_levels))
-	header.add_child(_nav_button("GAME GUIDE", _show_help))
-	header.add_child(_nav_button("PROGRESS", _show_progress))
 	var trainee := _glass(Color(0.18,0.13,0.24,0.82), Color("dbaf89"), 20, 7)
 	header.add_child(trainee)
-	var trainee_text := _label("TRAINEE  •  LEVEL 1–3", 12, C_INK, true)
+	var trainee_text := _label("TRAINEE", 12, C_INK, true)
+	trainee_text.autowrap_mode = TextServer.AUTOWRAP_OFF
+	trainee.custom_minimum_size.x = 105
 	trainee.add_child(trainee_text)
 	_jp_button = _button("日本語", false, 74, 36)
 	_mm_button = _button("မြန်မာ", false, 74, 36)
@@ -251,6 +252,7 @@ func _build_frame() -> void:
 	margin.add_child(_body)
 	_bottom_bar = _glass(Color(0.19,0.14,0.24,0.85), Color("d3ad90"), 0, 1)
 	_bottom_bar.custom_minimum_size.y = 25
+	_bottom_bar.size_flags_vertical = Control.SIZE_SHRINK_END
 	outer.add_child(_bottom_bar)
 	_bottom_bar.add_child(_label("DESIGN  •  SKETCH  •  SELECT MATERIALS  •  LEARN", 11, C_INK, true))
 
