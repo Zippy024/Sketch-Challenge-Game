@@ -623,7 +623,12 @@ func _show_levels() -> void:
 	cards.add_theme_constant_override("separation", 15)
 	holder.add_child(cards)
 	for stage in range(1, 7):
-		cards.add_child(_stage_card(stage))
+		var card := _stage_card(stage)
+		cards.add_child(card)
+		card.modulate.a = 0.0
+		var card_entrance := create_tween()
+		card_entrance.tween_interval(float(stage - 1) * 0.10)
+		card_entrance.tween_property(card, "modulate:a", 1.0, 0.36).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 	var path := HBoxContainer.new()
 	path.alignment = BoxContainer.ALIGNMENT_CENTER
