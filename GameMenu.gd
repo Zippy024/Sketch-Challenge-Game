@@ -497,99 +497,79 @@ func _map_stage_card(stage: int) -> Button:
 
 
 func _show_home() -> void:
-	_clear()
 	_set_concept_background(false)
-	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	# Control root prevents VBox/HBox minimum sizing feedback from turning
-	# the hero into a blank area and the right features into vertical text.
-	var canvas := Control.new()
-	canvas.name = "OptionCHomeCanvas"
-	canvas.custom_minimum_size = Vector2(960, 588)
-	canvas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_body.add_child(canvas)
-
-	var glass := _glass(Color(1.0, 1.0, 0.99, 0.88), Color("ffffff"), 32, 0)
-	glass.name = "HomeHeroGlass"
-	glass.set_meta("home_hero_panel", true)
-	glass.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_home_place(canvas, glass, Rect2(10, 18, 560, 520))
-
+	var canvas := _blueprint_canvas("OptionCHomeCanvas")
+	var photo := TextureRect.new()
+	photo.texture = preload("res://MenuAssets/KitchenIntroV8.jpg")
+	photo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	photo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	photo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	photo.modulate = Color("cbe9ff")
+	_ui_put(canvas, photo, Rect2(0, 0, 1320, 636))
+	var tint := ColorRect.new()
+	tint.color = Color(0.72, 0.90, 1.0, 0.21)
+	tint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(canvas, tint, Rect2(0, 0, 1320, 636))
+	var shadow := _glass(Color(0.91, 0.97, 1.0, 0.94), Color("ffffff"), 32, 0)
+	shadow.name = "HomeHeroGlass"
+	shadow.set_meta("home_hero_panel", true)
+	shadow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(canvas, shadow, Rect2(19, 19, 542, 578))
 	var emblem := TextureRect.new()
 	emblem.texture = preload("res://Branding/SketchPlanPencil.svg")
 	emblem.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	emblem.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_home_place(canvas, emblem, Rect2(36, 60, 105, 105))
-
-	var tagline := _label("KITCHEN DESIGN TRAINING", 13, Color("4d5b5c"))
-	tagline.autowrap_mode = TextServer.AUTOWRAP_OFF
-	_home_place(canvas, tagline, Rect2(156, 61, 385, 28))
-	var kitchen := _label("Kitchen", 47, Color("193e37"))
-	kitchen.autowrap_mode = TextServer.AUTOWRAP_OFF
-	kitchen.set_meta("home_headline", true)
-	_home_place(canvas, kitchen, Rect2(156, 91, 388, 65))
-	var sketch := _label("Sketch Challenge", 33, Color("078b73"))
-	sketch.autowrap_mode = TextServer.AUTOWRAP_OFF
-	_home_place(canvas, sketch, Rect2(156, 148, 390, 56))
-
-	var subtitle := _label("DECORATION GAME", 19, Color("3b514d"), true)
-	subtitle.autowrap_mode = TextServer.AUTOWRAP_OFF
-	_home_place(canvas, subtitle, Rect2(38, 211, 495, 29))
+	_ui_put(canvas, emblem, Rect2(52, 55, 108, 108))
+	_ui_text(canvas, "KITCHEN DESIGN TRAINING", 14, Rect2(171, 66, 356, 32), Color("286797"))
+	var title := _ui_text(canvas, "Kitchen", 53, Rect2(171, 106, 350, 73), Color("063f78"))
+	title.set_meta("home_headline", true)
+	_ui_text(canvas, "Decoration Game", 33, Rect2(171, 169, 358, 49), Color("0783b5"))
+	_ui_text(canvas, "DESIGN  •  SKETCH  •  SELECT  •  LEARN", 14, Rect2(64, 257, 470, 32), Color("265d84"), true)
 	var rule := ColorRect.new()
-	rule.color = Color("63cdb1")
+	rule.color = Color("63d7fb")
 	rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_home_place(canvas, rule, Rect2(72, 257, 440, 2))
-	var mission := _label("DESIGN  •  SKETCH  •  SELECT  •  LEARN", 15, Color("315c50"), true)
-	mission.autowrap_mode = TextServer.AUTOWRAP_OFF
-	_home_place(canvas, mission, Rect2(43, 274, 488, 27))
-	var description := _label("Plan kitchen layouts, choose materials and solve real design challenges through practical missions.", 16, Color("344b47"))
-	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_home_place(canvas, description, Rect2(58, 309, 467, 66))
-
-	var start := _button("▶   START TRAINING   »", true, 430, 59)
+	_ui_put(canvas, rule, Rect2(83, 302, 412, 2))
+	var copy := _label("Draw kitchen layouts, answer customer questions and choose the right materials. Make every design count.", 17, Color("174c74"), true)
+	copy.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_ui_put(canvas, copy, Rect2(71, 315, 438, 82))
+	var start := _button("▶   START GAME    »", true, 414, 61)
 	start.name = "HomeStartTraining"
 	start.set_meta("home_start_button", true)
 	start.add_theme_font_size_override("font_size", 22)
-	start.pressed.connect(_show_language_select)
-	_home_place(canvas, start, Rect2(74, 388, 431, 59))
+	start.pressed.connect(_show_levels)
+	_ui_put(canvas, start, Rect2(82, 418, 414, 62))
 	var level := _nav_button("▦  SELECT LEVEL", _show_levels)
-	_home_place(canvas, level, Rect2(36, 467, 158, 44))
-	var guide := _nav_button("▤  TRAINING GUIDE", _show_help)
-	_home_place(canvas, guide, Rect2(207, 467, 159, 44))
-	var progress := _nav_button("▥  MY PROGRESS", _show_progress)
-	_home_place(canvas, progress, Rect2(379, 467, 160, 44))
-
-	# Right-hand decorative cards are independently right-anchored, never
-	# packed in a VBox that can collapse to a 30px-wide strip.
-	var hologram_panel := _glass(Color(0.08, 0.30, 0.30, 0.66), Color("8bfadf"), 25, 0)
-	hologram_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_home_right_place(canvas, hologram_panel, -346, 105, 326, 195)
-	var hologram := KitchenHologram.new()
-	_home_right_place(canvas, hologram, -330, 116, 294, 164)
-
-	var features := _glass(Color(0.06, 0.22, 0.24, 0.78), Color("c0ffe9"), 23, 0)
-	features.name = "HomeFeaturesGlass"
-	features.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_home_right_place(canvas, features, -318, 323, 296, 179)
-	var features_title := _label("DESIGN SKILLS", 15, Color("bcffeb"), true)
-	features_title.autowrap_mode = TextServer.AUTOWRAP_OFF
-	_home_right_place(canvas, features_title, -302, 338, 266, 26)
-	var f1 := _label("✎   Sketch Layouts", 17, Color("ffffff"))
-	f1.autowrap_mode = TextServer.AUTOWRAP_OFF
-	_home_right_place(canvas, f1, -290, 374, 250, 30)
-	var f2 := _label("▱   Choose Materials", 17, Color("ffffff"))
-	f2.autowrap_mode = TextServer.AUTOWRAP_OFF
-	_home_right_place(canvas, f2, -290, 415, 250, 30)
-	var f3 := _label("⬡   Build Design Skills", 17, Color("ffffff"))
-	f3.autowrap_mode = TextServer.AUTOWRAP_OFF
-	_home_right_place(canvas, f3, -290, 456, 250, 30)
-
+	_ui_put(canvas, level, Rect2(56, 504, 144, 48))
+	var guide := _nav_button("▤  GAME GUIDE", _show_help)
+	_ui_put(canvas, guide, Rect2(213, 504, 147, 48))
+	var settings := _nav_button("⚙  SETTINGS", _show_settings)
+	_ui_put(canvas, settings, Rect2(373, 504, 144, 48))
 	if is_pause_overlay:
-		var resume := _nav_button("← BACK TO GAME", _resume_paused)
-		_home_place(canvas, resume, Rect2(36, 523, 210, 40))
-	glass.modulate.a = 0.0
-	var intro := create_tween()
-	intro.tween_property(glass, "modulate:a", 1.0, 0.46).set_trans(Tween.TRANS_SINE)
+		var resume := _nav_button("←  BACK TO GAME", _resume_paused)
+		_ui_put(canvas, resume, Rect2(190, 560, 186, 41))
+
+	# Keep a photoreal kitchen on the right; no mint background or fake controls.
+	var image := TextureRect.new()
+	image.texture = preload("res://MenuAssets/KitchenHero.jpg")
+	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	image.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	image.modulate = Color("d4ebff")
+	_ui_put(canvas, image, Rect2(606, 32, 681, 560))
+	var border := _glass(Color(0.08, 0.24, 0.48, 0.09), Color("b4eefe"), 26, 0)
+	border.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(canvas, border, Rect2(607, 32, 680, 560))
+	var badge := _glass(Color(0.05, 0.22, 0.45, 0.85), Color("8eeeff"), 16, 0)
+	_ui_put(canvas, badge, Rect2(738, 55, 404, 55))
+	_ui_text(canvas, "THE KITCHEN DESIGN ADVENTURE", 17, Rect2(750, 67, 379, 30), Color("e4faff"), true)
+	var tags := _glass(Color(0.07, 0.27, 0.53, 0.88), Color("8fe9fe"), 21, 0)
+	_ui_put(canvas, tags, Rect2(700, 445, 500, 105))
+	_ui_text(canvas, "01  SKETCH LAYOUTS     •     02  Q&A     •     03  MATERIALS", 15, Rect2(715, 455, 470, 36), Color("e8faff"), true)
+	_ui_text(canvas, "3 PLAYABLE MISSIONS  •  MORE COMING SOON", 14, Rect2(715, 502, 470, 29), Color("a3f1ff"), true)
+	shadow.modulate.a = 0.0
+	var appear := create_tween()
+	appear.tween_property(shadow, "modulate:a", 1.0, 0.50).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 func _add_home_button(parent: HBoxContainer, label_text: String, action: Callable) -> void:
 	var b := _button(label_text, false, 195, 60)
@@ -793,121 +773,75 @@ func _level_row(n: int) -> Button:
 	return button
 
 func _show_levels() -> void:
-	_clear()
 	_set_concept_background(true)
+	var canvas := _blueprint_canvas("BlueprintLevelsCanvas")
 	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	var page_header := HBoxContainer.new()
-	page_header.add_theme_constant_override("separation", 14)
-	_body.add_child(page_header)
+	var left := _glass(Color("eff9ff"), Color("b5ebff"), 26, 0)
+	_ui_put(canvas, left, Rect2(4, 8, 266, 625))
+	_ui_text(canvas, "TRAINING MISSIONS", 14, Rect2(25, 29, 227, 29), Color("178bb9"))
+	_ui_text(canvas, "Select a Stage", 30, Rect2(25, 62, 235, 55), Color("0a2c59"))
+	var explanation := _label("Progress through kitchen sketching, customer Q&A and material selection missions.", 16, Color("24547b"))
+	explanation.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_ui_put(canvas, explanation, Rect2(28, 131, 219, 105))
+	var summary := _glass(Color("dff3ff"), Color("9cdef6"), 20, 0)
+	_ui_put(canvas, summary, Rect2(24, 260, 222, 127))
+	_ui_text(canvas, "MISSIONS AVAILABLE", 15, Rect2(38, 276, 195, 26), Color("1b5a88"))
+	_ui_text(canvas, "3 / 6", 35, Rect2(38, 306, 196, 44), Color("038fc3"), true)
+	_ui_text(canvas, "STAGES", 12, Rect2(35, 351, 201, 23), Color("1f557b"), true)
+	_ui_text(canvas, "01   LDK Boundary Drawing", 13, Rect2(30, 410, 230, 24), Color("225c85"))
+	_ui_text(canvas, "02   Pipe Shaft Q&A", 13, Rect2(30, 441, 230, 24), Color("225c85"))
+	_ui_text(canvas, "03   S-Class Kitchen Selection", 13, Rect2(30, 472, 230, 24), Color("225c85"))
+	_ui_text(canvas, "04–06   COMING SOON", 13, Rect2(30, 540, 230, 25), Color("718a9f"))
 	var home := _nav_button("⌂  HOME", _resume_paused if is_pause_overlay else _show_home)
-	page_header.add_child(home)
-	var title := _label("TRAINING MISSIONS   /   SELECT A STAGE", 24, Color("203b37"))
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	page_header.add_child(title)
-	var prog := _nav_button("▥  PROGRESS", _show_progress)
-	page_header.add_child(prog)
+	_ui_put(canvas, home, Rect2(38, 573, 185, 42))
 
-	var board := _glass(Color(1,1,1,0.83), Color("ffffff"), 29, 20)
-	board.custom_minimum_size.y = 570
-	_body.add_child(board)
-	var layout := VBoxContainer.new()
-	layout.add_theme_constant_override("separation", 17)
-	board.add_child(layout)
-	var stage_row := HBoxContainer.new()
-	stage_row.custom_minimum_size.y = 424
-	stage_row.add_theme_constant_override("separation", 16)
-	layout.add_child(stage_row)
-	var intro := VBoxContainer.new()
-	intro.custom_minimum_size.x = 228
-	intro.add_theme_constant_override("separation", 12)
-	stage_row.add_child(intro)
-	intro.add_child(_label("T R A I N I N G   M I S S I O N S", 12, Color("3e6e66")))
-	intro.add_child(_label("Select a Stage", 30, Color("1c3633")))
-	intro.add_child(_label("Progress through hands-on kitchen design missions and build your skills step by step.", 15, Color("4c5755")))
-	var pad := Control.new()
-	pad.custom_minimum_size.y = 16
-	intro.add_child(pad)
-	var summary := _glass(Color(1,1,1,0.95), Color("d9e2df"), 22, 14)
-	intro.add_child(summary)
-	var stats := VBoxContainer.new()
-	stats.add_theme_constant_override("separation", 8)
-	summary.add_child(stats)
-	stats.add_child(_label("TRAINING PROGRESS", 14, Color("234e48")))
-	stats.add_child(_label("3 / 6  STAGES AVAILABLE", 19, Color("127e68")))
-	stats.add_child(_label("Stage 04–06 coming soon", 12, Color("62726f")))
-	var bar := ProgressBar.new()
-	bar.custom_minimum_size.y = 12
-	bar.show_percentage = false
-	bar.min_value = 0
-	bar.max_value = 6
-	bar.value = 3
-	bar.add_theme_stylebox_override("background", _console_style(Color("cfd6d5"), Color.TRANSPARENT, 10, 0))
-	bar.add_theme_stylebox_override("fill", _console_style(Color("0dbd97"), Color.TRANSPARENT, 10, 0))
-	stats.add_child(bar)
+	var map_back := _glass(Color("0b3664"), Color("82dfff"), 25, 0)
+	_ui_put(canvas, map_back, Rect2(287, 8, 1025, 625))
+	var drawing := BlueprintMissionMap.new()
+	drawing.name = "BlueprintMissionRoute"
+	drawing.set_meta("blueprint_route", true)
+	_ui_put(canvas, drawing, Rect2(298, 19, 1003, 603))
+	_ui_text(canvas, "SELECT A STAGE   /   BLUEPRINT MISSION MAP", 22, Rect2(334, 27, 880, 38), Color("d2f9ff"))
+	_ui_text(canvas, "Stage 1–3 playable  •  Stage 4–6 coming soon", 13, Rect2(334, 61, 880, 24), Color("8eddf8"))
 
-	var mission_area := VBoxContainer.new()
-	mission_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	mission_area.add_theme_constant_override("separation", 12)
-	stage_row.add_child(mission_area)
-	var actions := HBoxContainer.new()
-	actions.add_theme_constant_override("separation", 8)
-	mission_area.add_child(actions)
-	var mission_title := _label("DESIGN CHALLENGES", 16, Color("255247"))
-	mission_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	actions.add_child(mission_title)
-	var left := _nav_button("‹", Callable())
-	left.custom_minimum_size.x = 42
-	actions.add_child(left)
-	var right := _nav_button("›", Callable())
-	right.custom_minimum_size.x = 42
-	actions.add_child(right)
-
-	var strip := ScrollContainer.new()
-	strip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	strip.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	strip.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	strip.custom_minimum_size.y = 325
-	strip.clip_contents = true
-	mission_area.add_child(strip)
-	var cards := HBoxContainer.new()
-	cards.add_theme_constant_override("separation", 13)
-	strip.add_child(cards)
+	# A 3×2 mission map—not a cramped spreadsheet of cards.
 	for stage in range(1, 7):
-		var card := _stage_card(stage)
-		cards.add_child(card)
+		var column: int = (stage - 1) % 3
+		var row: int = (stage - 1) / 3
+		var x: float = 332.0 + float(column)*319.0
+		var y: float = 101.0 + float(row)*198.0
+		var card := _map_stage_card(stage)
+		_ui_put(canvas, card, Rect2(x, y, 274, 183))
 		card.modulate.a = 0.0
-		var opening := create_tween()
-		opening.tween_interval(float(stage-1) * 0.08)
-		opening.tween_property(card, "modulate:a", 1.0, 0.40).set_trans(Tween.TRANS_SINE)
-	left.pressed.connect(func() -> void: strip.scroll_horizontal = maxi(0, strip.scroll_horizontal - 250))
-	right.pressed.connect(func() -> void: strip.scroll_horizontal += 250)
-	mission_area.add_child(_label("‹  SCROLL TO DISCOVER ALL SIX MISSIONS  ›", 12, Color("4a7770"), true))
+		var entrance := create_tween()
+		entrance.tween_interval(float(stage - 1)*0.075)
+		entrance.tween_property(card, "modulate:a", 1.0, 0.35).set_trans(Tween.TRANS_SINE)
 
-	var line := ColorRect.new()
-	line.custom_minimum_size.y = 2
-	line.color = Color("8de4cd")
-	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	layout.add_child(line)
-	var progression := HBoxContainer.new()
-	progression.alignment = BoxContainer.ALIGNMENT_CENTER
-	progression.add_theme_constant_override("separation", 12)
-	layout.add_child(progression)
-	for stage in range(1, 7):
-		var dot := _glass(Color("d9fff1") if stage <= 3 else Color("e0e4e5"), Color("70dabb") if stage <= 3 else Color("b8bdc1"), 28, 7)
-		dot.custom_minimum_size = Vector2(52, 38)
-		progression.add_child(dot)
-		var number := _label("%02d" % stage, 13, Color("117b64") if stage <= 3 else Color("7a8386"), true)
-		number.autowrap_mode = TextServer.AUTOWRAP_OFF
-		number.set_meta("stage_node", stage)
-		dot.add_child(number)
-		if stage < 6:
-			var connector := _label("━━━━", 12, Color("79d4bc") if stage < 3 else Color("bec4c4"), true)
-			connector.autowrap_mode = TextServer.AUTOWRAP_OFF
-			progression.add_child(connector)
-	layout.add_child(_label("STAGE 01–03  AVAILABLE      •      STAGE 04–06  COMING SOON", 12, Color("62736f"), true))
-	board.modulate.a = 0.0
-	var appear := create_tween()
-	appear.tween_property(board, "modulate:a", 1.0, 0.48).set_trans(Tween.TRANS_SINE)
+	var detail := _glass(Color("e9f7ff"), Color("93e5ff"), 19, 0)
+	detail.name = "SelectedMissionPanel"
+	detail.set_meta("mission_detail", true)
+	_ui_put(canvas, detail, Rect2(317, 496, 967, 119))
+	var thumbnails: Array[Texture2D] = [
+		preload("res://reference_sketch.png"), preload("res://MenuAssets/Level2.png"),
+		preload("res://MenuAssets/Level3.png")
+	]
+	var preview := TextureRect.new()
+	preview.texture = thumbnails[clampi(_selected_level-1, 0, 2)]
+	preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(canvas, preview, Rect2(330, 509, 164, 92))
+	_ui_text(canvas, "STAGE %02d  /  SELECTED MISSION" % _selected_level, 15, Rect2(514, 509, 510, 27), Color("0f78b2"))
+	var titles: Array[String] = ["LDK Boundary Drawing", "Pipe Shaft Q&A", "S-Class Kitchen Selection"]
+	_ui_text(canvas, titles[clampi(_selected_level-1, 0, 2)], 22, Rect2(514, 540, 515, 31), Color("0e325e"))
+	var descriptions: Array[String] = ["Sketch the living, dining and kitchen boundaries.", "Answer the customer's Pipe Shaft question.", "Choose the suitable S-Class kitchen design."]
+	_ui_text(canvas, descriptions[clampi(_selected_level-1, 0, 2)], 14, Rect2(514, 577, 500, 23), Color("346a91"))
+	var play := _button("▶  PLAY STAGE %02d" % _selected_level, true, 233, 57)
+	play.name = "SelectedMissionPlay"
+	play.set_meta("mission_play", true)
+	play.add_theme_font_size_override("font_size", 19)
+	play.pressed.connect(_start_level.bind(_selected_level))
+	_ui_put(canvas, play, Rect2(1033, 532, 232, 59))
 
 func _stage_card(stage: int) -> Button:
 	var unlocked: bool = stage <= 3 and Progress.is_level_unlocked(stage)
