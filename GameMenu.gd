@@ -8,6 +8,7 @@ const Progress = preload("res://GameProgress.gd")
 const BilingualTheme: Theme = preload("res://WebBilingualTheme.tres")
 const ConsoleAnimations = preload("res://ConceptCAnimations.gd")
 const SunsetSparkles = preload("res://MenuAssets/SunsetSparkles.gd")
+const KitchenHologram = preload("res://MenuAssets/OptionCHologram.gd")
 
 const BG := Color("211c34")
 const WHITE := Color("ffffff")
@@ -89,14 +90,14 @@ func _button(title: String, primary: bool = false, min_w: float = 165.0, min_h: 
 	b.custom_minimum_size = Vector2(min_w, min_h)
 	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	b.add_theme_font_size_override("font_size", 16)
-	b.add_theme_color_override("font_color", Color("fff7ed"))
+	b.add_theme_color_override("font_color", Color("ffffff"))
 	b.add_theme_color_override("font_hover_color", Color("ffffff"))
 	b.add_theme_color_override("font_pressed_color", Color("ffffff"))
-	b.add_theme_stylebox_override("normal", _console_style(Color("e77844") if primary else Color(0.17,0.15,0.25,0.94), Color("ffcc83") if primary else Color("81627d"), 16, 10, 5 if primary else 2))
-	b.add_theme_stylebox_override("hover", _console_style(Color("fa995b") if primary else Color("4a3258"), Color("ffe4a9"), 16, 10, 7))
-	b.add_theme_stylebox_override("pressed", _console_style(Color("b8513b") if primary else Color("352239"), Color("ffbf72"), 16, 10, 1))
-	b.add_theme_stylebox_override("disabled", _console_style(Color("45404e"), Color("82768b"), 16, 10))
-	b.add_theme_stylebox_override("focus", _style(Color.TRANSPARENT, Color("ffe4a9"), 16))
+	b.add_theme_stylebox_override("normal", _console_style(Color("12ae8c") if primary else Color(0.15,0.18,0.21,0.85), Color("9bffe1") if primary else Color("a4c7bf"), 25, 9, 8 if primary else 2))
+	b.add_theme_stylebox_override("hover", _console_style(Color("1ad8ac") if primary else Color("415257"), Color("e1fff1"), 25, 9, 12))
+	b.add_theme_stylebox_override("pressed", _console_style(Color("0d967a") if primary else Color("26373b"), Color("b8ffe8"), 25, 9, 3))
+	b.add_theme_stylebox_override("disabled", _console_style(Color("66686d"), Color("a4a7a8"), 25, 9))
+	b.add_theme_stylebox_override("focus", _style(Color.TRANSPARENT, Color("a2ffe3"), 25))
 	ConsoleAnimations.animate_button(b)
 	return b
 
@@ -152,14 +153,17 @@ func _glass(fill: Color, edge: Color = Color("f6e1d3"), radius: int = 22, paddin
 
 
 func _nav_button(title: String, callback: Callable) -> Button:
-	var b := _button(title, false, 125, 37)
+	var b := _button(title, false, 125, 38)
 	b.add_theme_font_size_override("font_size", 13)
-	b.add_theme_stylebox_override("normal", _console_style(Color(0.94,0.91,0.93,0.70), Color("d6a68f"), 18, 5))
-	b.add_theme_stylebox_override("hover", _console_style(Color(1,0.96,0.92,0.98), Color("ec9860"), 18, 5))
-	b.add_theme_color_override("font_color", Color("2d253e"))
-	b.add_theme_color_override("font_hover_color", Color("251b36"))
+	b.add_theme_stylebox_override("normal", _console_style(Color(0.98,0.98,0.98,0.80), Color("ffffff"), 23, 7, 3))
+	b.add_theme_stylebox_override("hover", _console_style(Color("d3fff1"), Color("6bdec3"), 23, 7, 8))
+	b.add_theme_stylebox_override("pressed", _console_style(Color("b6f4e5"), Color("4aba9f"), 23, 7, 1))
+	b.add_theme_color_override("font_color", Color("263434"))
+	b.add_theme_color_override("font_hover_color", Color("172d2a"))
+	b.add_theme_color_override("font_pressed_color", Color("172d2a"))
+	if not callback.is_null():
+		b.pressed.connect(callback)
 	return b
-
 
 func _build_frame() -> void:
 	# Full-viewport controls: no PanelContainer sizing feedback into the header.
@@ -345,93 +349,92 @@ func _show_splash() -> void:
 
 func _show_home() -> void:
 	_clear()
+	_set_concept_background(false)
 	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	var scene_row := HBoxContainer.new()
-	scene_row.custom_minimum_size.y = 585
-	scene_row.add_theme_constant_override("separation", 26)
+	scene_row.custom_minimum_size.y = 575.0
+	scene_row.add_theme_constant_override("separation", 22)
 	_body.add_child(scene_row)
 
-	# Reference layout: bright frosted hero left, unobstructed kitchen right.
-	var panel := _glass(Color(1, 0.98, 0.97, 0.86), Color("fff8ee"), 29, 29)
-	panel.custom_minimum_size.x = 560
+	# Option C hero: soft white translucent pane over the real kitchen.
+	var panel := _glass(Color(1.0,1.0,0.99,0.83), Color("ffffff"), 34, 24)
+	panel.custom_minimum_size.x = 565
 	panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	scene_row.add_child(panel)
 	var stack := VBoxContainer.new()
 	stack.alignment = BoxContainer.ALIGNMENT_CENTER
-	stack.add_theme_constant_override("separation", 11)
+	stack.add_theme_constant_override("separation", 10)
 	panel.add_child(stack)
-	var header_line := HBoxContainer.new()
-	header_line.add_theme_constant_override("separation", 16)
-	stack.add_child(header_line)
+	var brand_line := HBoxContainer.new()
+	brand_line.add_theme_constant_override("separation", 16)
+	stack.add_child(brand_line)
 	var logo := TextureRect.new()
 	logo.texture = preload("res://Branding/SketchPlanPencil.svg")
-	logo.custom_minimum_size = Vector2(100,100)
+	logo.custom_minimum_size = Vector2(105,105)
 	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	header_line.add_child(logo)
-	var headline := VBoxContainer.new()
-	headline.alignment = BoxContainer.ALIGNMENT_CENTER
-	header_line.add_child(headline)
-	headline.add_child(_label("KITCHEN DESIGN TRAINING", 12, Color("72516c")))
-	headline.add_child(_label("Kitchen", 43, Color("292235")))
-	headline.add_child(_label("Sketch Challenge", 33, Color("b85c44")))
-	stack.add_child(_label("DECORATION GAME", 18, Color("674763"), true))
-	var info := _label("DESIGN  •  SKETCH  •  SELECT  •  LEARN", 13, Color("634e62"), true)
-	stack.add_child(info)
-	stack.add_child(_label("A practical kitchen design training game. Plan layouts, answer customer questions and choose kitchen materials.", 16, Color("3f3748")))
-	var spacer := Control.new()
-	spacer.custom_minimum_size.y = 12
-	stack.add_child(spacer)
-	var start := _button("▶   START TRAINING   ››", true, 420, 60)
-	start.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	start.add_theme_font_size_override("font_size", 22)
-	start.pressed.connect(_show_language_select)
-	stack.add_child(start)
-	var actions := HBoxContainer.new()
-	actions.alignment = BoxContainer.ALIGNMENT_CENTER
-	actions.add_theme_constant_override("separation", 8)
-	stack.add_child(actions)
-	var levels := _nav_button("SELECT LEVEL", _show_levels)
-	levels.custom_minimum_size.x = 142
-	actions.add_child(levels)
-	var help := _nav_button("TRAINING GUIDE", _show_help)
-	help.custom_minimum_size.x = 150
-	actions.add_child(help)
-	var progress := _nav_button("MY PROGRESS", _show_progress)
-	progress.custom_minimum_size.x = 132
-	actions.add_child(progress)
+	brand_line.add_child(logo)
+	var headings := VBoxContainer.new()
+	headings.alignment = BoxContainer.ALIGNMENT_CENTER
+	brand_line.add_child(headings)
+	headings.add_child(_label("K I T C H E N   D E S I G N   T R A I N I N G", 11, Color("4d5b5c")))
+	headings.add_child(_label("Kitchen", 44, Color("1f3533")))
+	headings.add_child(_label("Sketch Challenge", 33, Color("078b73")))
+	stack.add_child(_label("DECORATION GAME", 17, Color("364c4b"), true))
+	stack.add_child(_label("DESIGN  •  SKETCH  •  SELECT  •  LEARN", 14, Color("394f4f"), true))
+	stack.add_child(_label("Plan kitchen layouts, choose materials and solve real design challenges through practical missions.", 16, Color("354d4b")))
+	var breathing := Control.new()
+	breathing.custom_minimum_size.y = 8
+	stack.add_child(breathing)
+	var play := _button("▶   START TRAINING    »", true, 400, 60)
+	play.add_theme_font_size_override("font_size", 22)
+	play.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	play.pressed.connect(_show_language_select)
+	stack.add_child(play)
+	var shortcuts := HBoxContainer.new()
+	shortcuts.alignment = BoxContainer.ALIGNMENT_CENTER
+	shortcuts.add_theme_constant_override("separation", 9)
+	stack.add_child(shortcuts)
+	var select_level := _nav_button("▦  SELECT LEVEL", _show_levels)
+	select_level.custom_minimum_size.x = 153
+	shortcuts.add_child(select_level)
+	var guide := _nav_button("▤  TRAINING GUIDE", _show_help)
+	guide.custom_minimum_size.x = 157
+	shortcuts.add_child(guide)
+	var progress := _nav_button("▥  MY PROGRESS", _show_progress)
+	progress.custom_minimum_size.x = 145
+	shortcuts.add_child(progress)
 	if is_pause_overlay:
-		var resume := _button("← BACK TO GAME", false, 240, 42)
-		resume.pressed.connect(_resume_paused)
+		var resume := _nav_button("←  BACK TO GAME", _resume_paused)
 		stack.add_child(resume)
 
 	var right := VBoxContainer.new()
-	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	right.alignment = BoxContainer.ALIGNMENT_CENTER
-	right.add_theme_constant_override("separation", 16)
+	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right.add_theme_constant_override("separation", 14)
 	scene_row.add_child(right)
-	var feature := _glass(Color(0.20,0.15,0.25,0.70), Color("f8d4a1"), 23, 22)
-	feature.size_flags_horizontal = Control.SIZE_SHRINK_END
-	right.add_child(feature)
-	var feature_text := VBoxContainer.new()
-	feature_text.add_theme_constant_override("separation", 14)
-	feature.add_child(feature_text)
-	feature_text.add_child(_label("YOUR DESIGN ADVENTURE", 14, Color("ffe7b7"), true))
-	feature_text.add_child(_label("✎  Sketch Layouts", 18, C_INK))
-	feature_text.add_child(_label("▱  Choose Materials", 18, C_INK))
-	feature_text.add_child(_label("✧  Build Design Skills", 18, C_INK))
-	var sub := _glass(Color(0.98,0.94,0.96,0.84), Color("fff0dd"), 20, 14)
-	sub.size_flags_horizontal = Control.SIZE_SHRINK_END
-	right.add_child(sub)
-	sub.add_child(_label("3 PLAYABLE STAGES   •   MORE COMING SOON", 14, Color("58445c"), true))
+	var hologram_panel := _glass(Color(0.08,0.30,0.30,0.63), Color("8bfadf"), 25, 17)
+	hologram_panel.size_flags_horizontal = Control.SIZE_SHRINK_END
+	right.add_child(hologram_panel)
+	var hologram := KitchenHologram.new()
+	hologram_panel.add_child(hologram)
+	var features := _glass(Color(0.06,0.22,0.24,0.77), Color("c0ffe9"), 24, 17)
+	features.size_flags_horizontal = Control.SIZE_SHRINK_END
+	right.add_child(features)
+	var feature_list := VBoxContainer.new()
+	feature_list.add_theme_constant_override("separation", 12)
+	features.add_child(feature_list)
+	feature_list.add_child(_label("✎    SKETCH LAYOUTS", 15, C_INK))
+	feature_list.add_child(_label("▱    CHOOSE MATERIALS", 15, C_INK))
+	feature_list.add_child(_label("⬡    BUILD DESIGN SKILLS", 15, C_INK))
 	panel.modulate.a = 0.0
-	var entrance := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	entrance.tween_property(panel, "modulate:a", 1.0, 0.60)
-	feature.modulate.a = 0.0
-	var drift := create_tween()
-	drift.tween_interval(0.16)
-	drift.tween_property(feature, "modulate:a", 1.0, 0.60)
+	var enter := create_tween()
+	enter.tween_property(panel, "modulate:a", 1.0, 0.52).set_trans(Tween.TRANS_SINE)
+	features.modulate.a = 0.0
+	var float_in := create_tween()
+	float_in.tween_interval(0.14)
+	float_in.tween_property(features, "modulate:a", 1.0, 0.62)
 
 func _add_home_button(parent: HBoxContainer, label_text: String, action: Callable) -> void:
 	var b := _button(label_text, false, 195, 60)
