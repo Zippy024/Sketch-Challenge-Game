@@ -65,6 +65,29 @@
     .load-row { color: #28618d; }
     .logo { filter: drop-shadow(0 5px 8px rgba(26,103,180,.13)); }
 
+  
+    /* Full-view cinematic intro: isometric blueprint kitchen + real file loader. */
+    #sketch-loading { padding: 12px; }
+    #sketch-loading::before { filter: saturate(.55) hue-rotate(172deg) brightness(1.3) blur(3px); opacity: .37; }
+    .splash-card {
+      width: min(1180px, 96vw); max-width: none; height: min(820px, 97vh);
+      border: 0; border-radius: 22px; box-shadow: none;
+      background: rgba(235,247,255,.50); backdrop-filter: blur(5px);
+      display:flex; flex-direction:column; align-items:center; justify-content: flex-start;
+      padding: clamp(12px,2vh,26px) 20px;
+    }
+    .brand-row { display:flex; justify-content:center; text-align:center; width:100%; }
+    .brand-row .logo { width: 62px; }
+    .brand-row h1 { font-size: clamp(28px,4.5vw,55px); line-height:1.1; text-shadow: 0 3px 0 #fff, 0 7px 16px #80b4da; }
+    .subtitle { margin: 6px 0 0; font-size:15px; }
+    .intro-kitchen-art { flex:1; min-height:0; width: min(900px,96%); display:flex; align-items:center; justify-content:center; }
+    .intro-kitchen-art svg { width:100%; height:100%; max-height:440px; overflow:visible; animation: introKitchenFloat 3.5s ease-in-out infinite; filter: drop-shadow(0 16px 25px rgba(54,120,186,.16)); }
+    .progress-track { width: min(465px,83vw); min-height:16px; margin: 6px auto 6px; }
+    .load-row { width:min(465px,83vw); font-size:14px; }
+    .foot { margin-top:12px; }
+    @keyframes introKitchenFloat { 0%,100% { transform:translateY(1px); } 50% { transform:translateY(-7px); } }
+    @media (prefers-reduced-motion: reduce) { .intro-kitchen-art svg { animation:none; } }
+
   </style>
 </head>
 <body>
@@ -76,6 +99,38 @@
         <div><div class="eyebrow">Kitchen Design Training</div><h1>Kitchen<br>Decoration Game</h1></div>
       </div>
       <p class="subtitle">Sketch · Plan · Choose Materials</p>
+      <div class="intro-kitchen-art" aria-hidden="true">
+  <svg viewBox="0 0 900 450" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="marble" x1="0" y1="0" x2=".5" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#c6e8f9"/></linearGradient>
+      <linearGradient id="cab" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f7fdff"/><stop offset="1" stop-color="#8dcced"/></linearGradient>
+      <filter id="blueglow"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    </defs>
+    <ellipse cx="451" cy="353" rx="338" ry="81" fill="#b8e5f9" opacity=".44" filter="url(#blueglow)"/>
+    <path d="M113 345Q112 290 450 286Q785 288 788 350V371Q780 417 453 418Q120 417 113 372Z" fill="#b6d8e6" stroke="#7cc6fa" stroke-width="5"/>
+    <ellipse cx="451" cy="347" rx="337" ry="77" fill="url(#marble)" stroke="#8fd9ff" stroke-width="7"/>
+    <g stroke="#328bc6" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M202 195 397 106 675 205 477 300Z" fill="#fafdff"/>
+      <path d="M202 195 397 106 397 228 202 315Z" fill="#b7e4f8"/>
+      <path d="M397 106 675 205 675 324 397 228Z" fill="url(#cab)"/>
+      <path d="M213 221 401 138 663 232 477 317Z" fill="#fff"/>
+      <path d="M232 231 403 158 596 227 481 278Z" fill="#c5eafb"/>
+      <path d="M225 242V312M302 211V280M348 190V255M460 276V365M545 263V349M604 284V360" fill="none"/>
+      <path d="M284 219 350 190 401 209 331 238Z" fill="#80bcd9"/>
+      <path d="M298 220 350 198 386 211 333 232Z" fill="#eaf8ff"/>
+      <path d="M292 217v-28c0-39 54-40 54-3v30" fill="none" stroke="#467f9a" stroke-width="5"/>
+      <path d="M506 201 597 230 634 248 540 217Z" fill="#283c57"/>
+      <circle cx="542" cy="219" r="9" fill="none" stroke="#c7e9ff"/><circle cx="572" cy="232" r="9" fill="none" stroke="#c7e9ff"/>
+      <circle cx="565" cy="213" r="9" fill="none" stroke="#c7e9ff"/><circle cx="597" cy="229" r="9" fill="none" stroke="#c7e9ff"/>
+    </g>
+    <g stroke="#1d98ea" stroke-width="2" stroke-dasharray="8 5" fill="none" opacity=".65">
+      <path d="M197 187v125l194-88V99M197 187l195-89 289 107"/>
+      <path d="M245 204v127l95-46V166"/>
+    </g>
+    <path d="M132 117 263 219" stroke="#dba456" stroke-width="16" stroke-linecap="round"/>
+    <path d="m263 219 20 16-28-6z" fill="#1d79c7"/>
+  </svg>
+</div>
       <div class="progress-track"><div class="progress-bar" id="sketch-bar"></div></div>
       <div class="load-row"><span id="status-text">Preparing your design adventure...</span><span id="status-pct">Loading</span></div>
       <div class="foot">日本語 &nbsp; / &nbsp; မြန်မာ &nbsp; · &nbsp; DESIGN TRAINING GAME</div>
