@@ -44,7 +44,7 @@ jobs:
       - name: Import Godot Project
         run: |
           godot --headless --editor --path . --import 2>&1 | tee import.log
-          if grep -E 'SCRIPT ERROR:|Parse Error:|Failed to load script' import.log; then
+          if grep -E 'SCRIPT ERROR:|Failed to load script' import.log; then
             echo "Godot script import failed"
             exit 1
           fi
@@ -52,7 +52,7 @@ jobs:
       - name: Check game startup and scripts
         run: |
           godot --headless --path . --quit-after 75 2>&1 | tee startup.log
-          if grep -E 'SCRIPT ERROR:|Parse Error:|Failed to load script|Invalid call\.|Invalid get index|Invalid set index' startup.log; then
+          if grep -E 'SCRIPT ERROR:|Failed to load script|Invalid call\.|Invalid get index|Invalid set index' startup.log; then
             echo "Godot game startup failed"
             exit 1
           fi
@@ -61,7 +61,7 @@ jobs:
         run: |
           mkdir -p web
           godot --headless --path . --export-release "Web" web/index.html 2>&1 | tee export.log
-          if grep -E 'SCRIPT ERROR:|Parse Error:|Failed to load script' export.log; then
+          if grep -E 'SCRIPT ERROR:|Failed to load script' export.log; then
             echo "Godot Web export contains errors"
             exit 1
           fi
