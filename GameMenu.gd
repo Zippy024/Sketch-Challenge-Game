@@ -569,9 +569,10 @@ func _show_home() -> void:
 	_ui_put(canvas, badge, Rect2(738, 55, 404, 55))
 	_ui_text(canvas, "THE KITCHEN DESIGN ADVENTURE", 17, Rect2(750, 67, 379, 30), Color("e4faff"), true)
 	var tags := _glass(Color(0.07, 0.27, 0.53, 0.88), Color("8fe9fe"), 21, 0)
-	_ui_put(canvas, tags, Rect2(700, 445, 500, 105))
-	_ui_text(canvas, "01  SKETCH LAYOUTS     •     02  Q&A     •     03  MATERIALS", 15, Rect2(715, 455, 470, 36), Color("e8faff"), true)
-	_ui_text(canvas, "3 PLAYABLE MISSIONS  •  MORE COMING SOON", 14, Rect2(715, 502, 470, 29), Color("a3f1ff"), true)
+	tags.name = "HomeFeaturesGlass"
+	_ui_put(canvas, tags, Rect2(700, 408, 500, 146))
+	_ui_text(canvas, "01  SKETCH LAYOUTS     •     02  Q&A     •     03  MATERIALS", 15, Rect2(715, 435, 470, 36), Color("e8faff"), true)
+	_ui_text(canvas, "3 PLAYABLE MISSIONS  •  MORE COMING SOON", 14, Rect2(715, 493, 470, 29), Color("a3f1ff"), true)
 	shadow.modulate.a = 0.0
 	var appear := create_tween()
 	appear.tween_property(shadow, "modulate:a", 1.0, 0.50).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
