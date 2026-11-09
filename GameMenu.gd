@@ -340,7 +340,7 @@ func _show_home() -> void:
 
 	var hero := VBoxContainer.new()
 	hero.alignment = BoxContainer.ALIGNMENT_CENTER
-	hero.custom_minimum_size.x = 660
+	hero.custom_minimum_size.x = 520
 	hero.add_theme_constant_override("separation", 9)
 	stage.add_child(hero)
 
@@ -370,7 +370,7 @@ func _show_home() -> void:
 	stack.add_child(_label("SKETCH  •  CHOOSE MATERIALS  •  COMPLETE", 15, Color("ffe0af"), true))
 	stack.add_child(_label("Listen to the customer, create an accurate kitchen layout and solve real design missions.", 15, C_MUTED, true))
 
-	var play := _button("▶   START TRAINING", true, 500, 70)
+	var play := _button("▶   START TRAINING", true, 430, 64)
 	play.add_theme_font_size_override("font_size", 25)
 	play.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	play.pressed.connect(_show_language_select)
@@ -626,21 +626,22 @@ func _show_levels() -> void:
 	_body.add_child(space)
 
 	var board := _c_panel(Color(0.11,0.08,0.19,0.81), Color("ffbb7b"), 29, 17)
-	board.custom_minimum_size.y = 395
+	board.custom_minimum_size.y = 0
 	_body.add_child(board)
 	var holder := VBoxContainer.new()
 	holder.add_theme_constant_override("separation", 20)
 	board.add_child(holder)
 	holder.add_child(_label("✦   KITCHEN DESIGN MISSIONS   ✦", 16, Color("ffe2b1"), true))
 
-	var mission_row := HBoxContainer.new()
+	# The original game uses a straightforward stage progression. Keep that
+	# navigation while rendering a compact 3 x 2 mission grid that fits Web.
+	var mission_row := VBoxContainer.new()
 	mission_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	mission_row.add_theme_constant_override("separation", 18)
+	mission_row.add_theme_constant_override("separation", 12)
 	holder.add_child(mission_row)
-	var guide_column := VBoxContainer.new()
-	guide_column.custom_minimum_size.x = 150
+	var guide_column := HBoxContainer.new()
 	guide_column.alignment = BoxContainer.ALIGNMENT_CENTER
-	guide_column.add_theme_constant_override("separation", 10)
+	guide_column.add_theme_constant_override("separation", 12)
 	mission_row.add_child(guide_column)
 	var face := TextureRect.new()
 	face.texture = preload("res://customer_portrait_ui.png")
@@ -664,9 +665,11 @@ void fragment() {
 	guide_column.add_child(face)
 	guide_column.add_child(_label("DESIGN GUIDE", 13, C_COPPER, true))
 	guide_column.add_child(_label("Choose your next\nchallenge!", 12, C_MUTED, true))
-	var cards := HBoxContainer.new()
-	cards.alignment = BoxContainer.ALIGNMENT_CENTER
-	cards.add_theme_constant_override("separation", 12)
+	var cards := GridContainer.new()
+	cards.columns = 3
+	cards.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	cards.add_theme_constant_override("h_separation", 22)
+	cards.add_theme_constant_override("v_separation", 14)
 	mission_row.add_child(cards)
 	for stage in range(1, 7):
 		var card := _stage_card(stage)
@@ -675,24 +678,8 @@ void fragment() {
 		var card_entrance := create_tween()
 		card_entrance.tween_interval(float(stage - 1) * 0.10)
 		card_entrance.tween_property(card, "modulate:a", 1.0, 0.36).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-
-	var path := HBoxContainer.new()
-	path.alignment = BoxContainer.ALIGNMENT_CENTER
-	path.add_theme_constant_override("separation", 0)
+	var path := _label("◆ ━━━━━ ◆ ━━━━━ ◆      ◇ ━━━━━ ◇ ━━━━━ ◇", 18, C_COPPER, true)
 	holder.add_child(path)
-	var portrait_gap := Control.new()
-	portrait_gap.custom_minimum_size.x = 168
-	path.add_child(portrait_gap)
-	for stage in range(1, 7):
-		var node := _label("◆" if stage <= 3 else "◇", 18, Color("ffd285") if stage <= 3 else Color("867890"), true)
-		node.custom_minimum_size.x = 166
-		path.add_child(node)
-		if stage < 6:
-			var connector := ColorRect.new()
-			connector.color = Color("b77b72") if stage <= 3 else Color("5d536b")
-			connector.custom_minimum_size = Vector2(12,2)
-			connector.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			path.add_child(connector)
 
 	var status := _label("03 PLAYABLE STAGES      •      04 — 06 COMING SOON", 14, C_MUTED, true)
 	_body.add_child(status)
@@ -704,7 +691,7 @@ func _stage_card(stage: int) -> Button:
 	var unlocked: bool = stage <= 3 and Progress.is_level_unlocked(stage)
 	var card := Button.new()
 	card.text = ""
-	card.custom_minimum_size = Vector2(166, 275)
+	card.custom_minimum_size = Vector2(190, 238)
 	card.disabled = not unlocked
 	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if unlocked else Control.CURSOR_ARROW
 	var fill := Color(0.19,0.12,0.25,0.96) if unlocked else Color(0.22,0.20,0.28,0.92)
@@ -742,7 +729,7 @@ func _stage_card(stage: int) -> Button:
 	preview.texture = images[stage-1]
 	preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	preview.custom_minimum_size = Vector2(140, 89)
+	preview.custom_minimum_size = Vector2(156, 82)
 	preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	preview.modulate = Color.WHITE if unlocked else Color("756d7b")
 	content.add_child(preview)
