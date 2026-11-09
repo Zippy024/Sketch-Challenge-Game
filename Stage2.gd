@@ -2,7 +2,6 @@ extends Control
 
 const Progress = preload("res://GameProgress.gd")
 const AIConfig = preload("res://AIConfig.gd")
-const StageCompleteOverlay = preload("res://StageCompleteOverlay.gd")
 
 const QUESTIONS := {
 	"jp": {
@@ -10,13 +9,13 @@ const QUESTIONS := {
 		"question": "ところで、図面にあるPSって何でしょうか？",
 		"answer_hint": "ここに回答を入力してください...",
 		"answer_title": "あなたの回答",
-		"check": "回答を送信",
+		"check": "Check Answer",
 		"empty": "まず回答を入力してください。",
 		"demo": "DEMO（AI未接続）：",
 		"good": "よくわかりました！",
 		"needs": "ちょっとよくわからないわね、、、",
 		"back": "Back to Stage 1",
-		"reset": "クリア",
+		"reset": "Clear",
 		"lang_note": "Stage 2 | Customer question",
 		"offline": "DEMO CHECK — AI will be connected later"
 	},
@@ -25,7 +24,7 @@ const QUESTIONS := {
 		"question": "စကားမစပ်၊ ပုံစံစာရွက်ထဲက PS ဆိုတာ ဘာကိုဆိုလိုတာလဲရှင်။",
 		"answer_hint": "ဒီနေရာမှာ အဖြေရေးပါ...",
 		"answer_title": "သင့်အဖြေ",
-		"check": "အဖြေပို့မည်",
+		"check": "အဖြေစစ်မည်",
 		"empty": "အရင်ဆုံး အဖြေတစ်ခု ရေးပေးပါ။",
 		"demo": "စမ်းသပ်စစ်ဆေးမှု (AI မချိတ်ရသေး): ",
 		"good": "သေချာနားလည်သွားပါပြီ!",
@@ -149,8 +148,6 @@ class PlanViewer extends Control:
 
 var current_lang := "jp"
 var last_eval_state := "none" # "none", "good", "needs"
-var _completion_overlay: Control
-var _completion_serial: int = 0
 var last_evaluation_source: String = "offline"
 var _ai_http: HTTPRequest
 var _ai_busy: bool = false
@@ -244,10 +241,10 @@ func _label(t: String, sz: int = 16, c: String = "17233b") -> Label:
 	return l
 
 func _modern_button_style(button: Button, kind: String = "secondary") -> void:
-	var backgrounds := {"primary": "008c76", "secondary": "ebfffa", "back": "d8fff1", "warning": "fff0d9"}
-	var borders := {"primary": "59e0c0", "secondary": "9bd6c9", "back": "9bd6c9", "warning": "fdba74"}
-	var hovers := {"primary": "006858", "secondary": "ddfff3", "back": "c2fbea", "warning": "ffedd5"}
-	var ink := "ffffff" if kind == "primary" else ("9a3412" if kind == "warning" else "006858")
+	var backgrounds := {"primary": "2563eb", "secondary": "ffffff", "back": "dbeafe", "warning": "fff0d9"}
+	var borders := {"primary": "1d4ed8", "secondary": "93c5fd", "back": "93c5fd", "warning": "fdba74"}
+	var hovers := {"primary": "1d4ed8", "secondary": "eff6ff", "back": "bfdbfe", "warning": "ffedd5"}
+	var ink := "ffffff" if kind == "primary" else ("9a3412" if kind == "warning" else "1e40af")
 	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
 		var style := StyleBoxFlat.new()
 		style.bg_color = Color(hovers.get(kind, "eff6ff")) if state in ["hover", "pressed"] else Color(backgrounds.get(kind, "ffffff"))
@@ -276,7 +273,7 @@ func _btn(t: String, min_width: float = 85.0) -> Button:
 func _build_ui() -> void:
 	var background := PanelContainer.new()
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	background.add_theme_stylebox_override("panel", _style("def4ee"))
+	background.add_theme_stylebox_override("panel", _style("e9eef5"))
 	add_child(background)
 
 	var outside := MarginContainer.new()
@@ -292,7 +289,7 @@ func _build_ui() -> void:
 
 	var left_card := PanelContainer.new()
 	left_card.custom_minimum_size.x = 450
-	left_card.add_theme_stylebox_override("panel", _style("e5f6f0"))
+	left_card.add_theme_stylebox_override("panel", _style("f1f5f9"))
 	split.add_child(left_card)
 	var left := VBoxContainer.new()
 	left.add_theme_constant_override("separation", 12)
@@ -329,7 +326,7 @@ func _build_ui() -> void:
 	customer_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	customer_panel.size_flags_stretch_ratio = 0.9
 	customer_panel.custom_minimum_size.y = 230
-	customer_panel.add_theme_stylebox_override("panel", _style("d7f2e8"))
+	customer_panel.add_theme_stylebox_override("panel", _style("e2e8f0"))
 	left.add_child(customer_panel)
 	var customer_row := HBoxContainer.new()
 	customer_row.add_theme_constant_override("separation", 12)
@@ -368,7 +365,7 @@ void fragment() {
 	bubble = PanelContainer.new()
 	bubble.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bubble.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	bubble.add_theme_stylebox_override("panel", _style("ffffff", "94d8c5"))
+	bubble.add_theme_stylebox_override("panel", _style("ffffff", "d6e2ef"))
 	customer_row.add_child(bubble)
 
 	var bubble_box := VBoxContainer.new()
@@ -437,7 +434,7 @@ void fragment() {
 	feedback_label.visible = false
 	bubble_box.add_child(feedback_label)
 
-	var ref_title := _btn("View Reference Plan  ↗", 200)
+	var ref_title := _btn("Reference Plan  ↗", 200)
 	ref_title.flat = true
 	ref_title.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	ref_title.pressed.connect(_open_reference_popup)
@@ -472,7 +469,7 @@ void fragment() {
 	var right := VBoxContainer.new()
 	right.add_theme_constant_override("separation", 14)
 	right_card.add_child(right)
-	right.add_child(_label("PS Q&A  ·  Your Answer", 23, "064e44"))
+	right.add_child(_label("Answer Area", 23))
 	status_label = _label("DEMO CHECK — AI will be connected later", 13, "64748b")
 	right.add_child(status_label)
 	answer_title = _label("", 18)
@@ -486,13 +483,13 @@ void fragment() {
 	answer_input.add_theme_color_override("background_color", Color("ffffff"))
 	answer_input.add_theme_color_override("font_color", Color("17233b"))
 	answer_input.add_theme_color_override("font_placeholder_color", Color("94a3b8"))
-	answer_input.add_theme_color_override("caret_color", Color("008c76"))
+	answer_input.add_theme_color_override("caret_color", Color("2563eb"))
 	answer_input.add_theme_color_override("selection_color", Color("bfdbfe"))
 	answer_input.add_theme_color_override("current_line_color", Color("f8fafc"))
 	for state in ["normal", "focus", "read_only"]:
 		var editor_style := StyleBoxFlat.new()
 		editor_style.bg_color = Color("ffffff")
-		editor_style.border_color = Color("008c76") if state == "focus" else Color("cbd5e1")
+		editor_style.border_color = Color("2563eb") if state == "focus" else Color("cbd5e1")
 		editor_style.set_border_width_all(2 if state == "focus" else 1)
 		editor_style.set_corner_radius_all(14)
 		editor_style.content_margin_left = 18
@@ -505,10 +502,10 @@ void fragment() {
 	var actions := HBoxContainer.new()
 	actions.add_theme_constant_override("separation", 10)
 	right.add_child(actions)
-	submit_button = _btn("Submit", 170)
+	submit_button = _btn("Check Answer", 150)
 	_modern_button_style(submit_button, "primary")
 	actions.add_child(submit_button)
-	reset_button = _btn("Clear", 100)
+	reset_button = _btn("Clear", 90)
 	actions.add_child(reset_button)
 	submit_button.pressed.connect(_check_ai_or_demo_answer)
 	reset_button.pressed.connect(_reset_answer)
@@ -685,7 +682,7 @@ func _set_progress_state(state: String, message: String = "") -> void:
 		progress_replay_button.text = "もう一度" if jp else "Replay Stage 2"
 
 func _update_lang_buttons_style() -> void:
-	var active_s: StyleBoxFlat = _style("008c76", "006858")
+	var active_s: StyleBoxFlat = _style("2563eb", "1d4ed8")
 	var inactive_s: StyleBoxFlat = _style("ffffff", "cbd5e1")
 	if current_lang == "jp":
 		jp_button.add_theme_stylebox_override("normal", active_s)
@@ -722,7 +719,6 @@ func _change_language(lang: String) -> void:
 		feedback_label.visible = true
 		_set_progress_state("completed")
 		_play_voice("good")
-		_schedule_completion()
 		if last_evaluation_source == "local":
 			status_label.text = "LOCAL CHECK · APPROXIMATE"
 	elif last_eval_state == "needs":
@@ -742,10 +738,6 @@ func _change_language(lang: String) -> void:
 		_play_voice("question")
 
 func _reset_answer() -> void:
-	_completion_serial += 1
-	if is_instance_valid(_completion_overlay):
-		_completion_overlay.queue_free()
-		_completion_overlay = null
 	_cancel_ai_request()
 	_stop_voice()
 	last_eval_state = "none"
@@ -834,7 +826,6 @@ func _show_check_result(correct: bool) -> void:
 		_set_progress_state("completed")
 		_play_voice("good")
 	else:
-		_completion_serial += 1
 		last_eval_state = "needs"
 		question_label.visible = true
 		question_label.text = str(d["question"])
@@ -845,56 +836,6 @@ func _show_check_result(correct: bool) -> void:
 		feedback_label.add_theme_color_override("font_color", Color("b91c1c"))
 		_set_progress_state("incorrect")
 		_play_voice("needs")
-
-func _schedule_completion() -> void:
-	# ZIP V22 customer-voice completion, with a Web-safe fallback delay.
-	_completion_serial += 1
-	var expected: int = _completion_serial
-	var wait_time: float = 1.8
-	if voice_player != null and voice_player.playing and voice_player.stream != null:
-		wait_time = maxf(wait_time, voice_player.stream.get_length() + 0.12)
-	await get_tree().create_timer(wait_time, false).timeout
-	if not is_inside_tree() or expected != _completion_serial or last_eval_state != "good":
-		return
-	_show_stage_complete_overlay()
-
-
-func _show_stage_complete_overlay() -> void:
-	if not is_inside_tree() or last_eval_state != "good" or is_instance_valid(_completion_overlay):
-		return
-	var jp: bool = current_lang == "jp"
-	_completion_overlay = StageCompleteOverlay.new()
-	_completion_overlay.configure(
-		"ステージ2 クリア！" if jp else "Stage 2 Complete!",
-		"お客様の質問に答えました！" if jp else "Customer မေးခွန်းကို မှန်ကန်စွာ ဖြေဆိုပြီးပါပြီ။",
-		"次のステージ" if jp else "Next Stage",
-		"レベル一覧" if jp else "Levels",
-		"もう一度" if jp else "Replay",
-		true, true
-	)
-	add_child(_completion_overlay)
-	_completion_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_completion_overlay.next_requested.connect(_stage2_complete_next)
-	_completion_overlay.levels_requested.connect(_stage2_complete_levels)
-	_completion_overlay.replay_requested.connect(_stage2_complete_replay)
-
-
-func _stage2_complete_next() -> void:
-	_completion_serial += 1
-	get_tree().change_scene_to_file("res://stage_3.tscn")
-
-
-func _stage2_complete_levels() -> void:
-	_completion_serial += 1
-	Progress.show_levels_on_open = true
-	get_tree().change_scene_to_file("res://GameMenu.tscn")
-
-
-func _stage2_complete_replay() -> void:
-	_completion_serial += 1
-	_reset_answer()
-	_play_voice("question")
-
 
 func _has_any_keyword(text: String, options: Array[String]) -> bool:
 	for word in options:
