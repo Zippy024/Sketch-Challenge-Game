@@ -18,7 +18,7 @@ config/name="Kitchen Sketch Challenge | Decoration Game"
 run/main_scene="res://GameMenu.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 boot_splash/bg_color=Color(0.07, 0.05, 0.13, 1)
-boot_splash/image="res://Branding/SketchChallengeSplash.png"
+boot_splash/show_image=false
 config/icon="res://Branding/SketchPlanPencil.svg"
 
 [display]
