@@ -10,6 +10,7 @@ on:
       - design/option-c-single-style-glass-20261109
       - feature/stage3-original-flow-optionc-ui-20261109
       - fix/home-absolute-optionc-layout-20261109
+      - feature/blue-entry-loading-language-20261109
   workflow_dispatch:
 permissions:
   contents: read

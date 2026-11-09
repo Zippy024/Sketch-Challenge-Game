@@ -83,10 +83,44 @@ func _run() -> void:
 	if body.size.x < 500.0 or top.size.y > 110.0:
 		_failure("level selection layout collapsed")
 		return
+	menu.call("_show_splash")
+	await _wait_frames()
+	var intro_art: Control
+	var intro_bar: ProgressBar
+	for node in menu.find_children("*", "Control", true, false):
+		if node.has_meta("entry_kitchen_art"):
+			intro_art = node
+		if node.name == "EntryLoadingProgress":
+			intro_bar = node
+	if intro_art == null or intro_bar == null or intro_art.size.x < 700 or intro_bar.size.x < 350:
+		_failure("Intro drawing or loading bar missing/collapsed")
+		return
+	if top.visible:
+		_failure("intro unexpectedly shows game navigation header")
+		return
 	menu.call("_show_language_select")
 	await _wait_frames()
+	var dropdown: OptionButton
+	var dropdown_panel: Control
+	var continue_btn: Button
+	for node in menu.find_children("*", "Control", true, false):
+		if node.has_meta("entry_language_dropdown"):
+			dropdown = node
+		if node.has_meta("entry_language_panel"):
+			dropdown_panel = node
+		if node.has_meta("entry_language_continue"):
+			continue_btn = node
+	if dropdown == null or dropdown_panel == null or continue_btn == null:
+		_failure("language dropdown, panel or continue control missing")
+		return
+	if dropdown.item_count != 3 or not dropdown.is_item_disabled(2):
+		_failure("expected Japanese, Myanmar and honest English-coming-soon option")
+		return
+	if dropdown_panel.size.x < 290 or continue_btn.size.x < 245:
+		_failure("language layout collapsed")
+		return
 	if body.get_child_count() == 0:
 		_failure("language page failed to render")
 		return
-	print("MENU_SMOKE_OK: home, levels, stage access, language; viewport " + str(menu.size))
+	print("MENU_SMOKE_OK: intro kitchen, blue loading, simple language dropdown, home, levels, stage access; viewport " + str(menu.size))
 	quit(0)

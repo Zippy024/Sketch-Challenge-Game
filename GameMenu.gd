@@ -9,6 +9,7 @@ const BilingualTheme: Theme = preload("res://WebBilingualTheme.tres")
 const ConsoleAnimations = preload("res://ConceptCAnimations.gd")
 const SunsetSparkles = preload("res://MenuAssets/SunsetSparkles.gd")
 const KitchenHologram = preload("res://MenuAssets/OptionCHologram.gd")
+const EntryKitchenSketch = preload("res://MenuAssets/EntryKitchenSketch.gd")
 
 const BG := Color("211c34")
 const WHITE := Color("ffffff")
@@ -50,7 +51,12 @@ func _ready() -> void:
 		Progress.show_levels_on_open = false
 		_show_levels()
 	else:
-		_show_splash()
+		# Web users already saw the branded progress intro in the HTML shell.
+		# Switch directly to the language screen to avoid two loading screens.
+		if OS.has_feature("web"):
+			_show_language_select()
+		else:
+			_show_splash()
 	# The HTML Web shell must not dismiss its loading artwork until this
 	# actual menu scene has entered the tree and completed its UI setup.
 	if OS.has_feature("web"):
@@ -265,6 +271,7 @@ func _set_concept_background(choose_levels: bool) -> void:
 		return
 	# Warm, daylight kitchen remains legible behind glass panels.
 	_menu_photo.texture = preload("res://MenuAssets/KitchenIntroV8.jpg") if not choose_levels else preload("res://MenuAssets/KitchenHero.jpg")
+	_menu_photo.modulate = Color.WHITE
 
 func _fit_content() -> void:
 	if _body != null:
@@ -294,58 +301,93 @@ func _clear() -> void:
 		child.queue_free()
 	_scroll.scroll_vertical = 0
 
-func _show_splash() -> void:
+func _entry_background() -> void:
+	# Blue daylight kitchen background used only during Intro + Language.
+	if is_instance_valid(_menu_photo):
+		_menu_photo.texture = preload("res://MenuAssets/KitchenIntroV8.jpg")
+		_menu_photo.modulate = Color("c7e8ff")
+	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+
+
+func _entry_canvas(name_value: String) -> Control:
 	_clear()
 	_top_bar.hide()
 	_bottom_bar.hide()
-	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	var alignment := CenterContainer.new()
-	alignment.custom_minimum_size.y = 560.0
-	_body.add_child(alignment)
-	var panel := _glass(Color(1,1,1,0.89), Color("d2fff0"), 30, 30)
-	panel.custom_minimum_size = Vector2(560, 360)
-	alignment.add_child(panel)
-	var content := VBoxContainer.new()
-	content.alignment = BoxContainer.ALIGNMENT_CENTER
-	content.add_theme_constant_override("separation", 15)
-	panel.add_child(content)
+	_entry_background()
+	var root := Control.new()
+	root.name = name_value
+	root.custom_minimum_size = Vector2(1100, 650)
+	root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_body.add_child(root)
+	# Center the fixed 1100×650 stage inside the desktop window.
+	var center := Control.new()
+	center.name = name_value + "Content"
+	root.add_child(center)
+	center.anchor_left = 0.5
+	center.anchor_right = 0.5
+	center.anchor_top = 0.0
+	center.anchor_bottom = 0.0
+	center.offset_left = -550.0
+	center.offset_right = 550.0
+	center.offset_top = 0.0
+	center.offset_bottom = 650.0
+	return center
+
+
+func _entry_add(parent: Control, child: Control, rect: Rect2) -> void:
+	parent.add_child(child)
+	child.position = rect.position
+	child.size = rect.size
+
+
+func _entry_centered_label(value: String, font_size: int, rect: Rect2, color: Color, parent: Control) -> Label:
+	var lbl := _label(value, font_size, color, true)
+	lbl.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_entry_add(parent, lbl, rect)
+	return lbl
+
+
+func _show_splash() -> void:
+	var scene := _entry_canvas("EntryLoadingScreen")
+	var tint := ColorRect.new()
+	tint.color = Color(0.83, 0.93, 1.0, 0.35)
+	tint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_entry_add(scene, tint, Rect2(0, 0, 1100, 650))
+	var heading := _entry_centered_label("Kitchen", 62, Rect2(215, 10, 670, 83), Color("267dbb"), scene)
+	heading.add_theme_constant_override("outline_size", 6)
+	heading.add_theme_color_override("font_outline_color", Color("113e71"))
+	var subtitle := _entry_centered_label("Decoration Game", 43, Rect2(185, 88, 730, 64), Color("ffffff"), scene)
+	subtitle.add_theme_constant_override("outline_size", 7)
+	subtitle.add_theme_color_override("font_outline_color", Color("123c73"))
 	var mark := TextureRect.new()
 	mark.texture = preload("res://Branding/SketchPlanPencil.svg")
-	mark.custom_minimum_size = Vector2(110, 110)
 	mark.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	mark.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	mark.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	content.add_child(mark)
-	content.add_child(_label("KITCHEN SKETCH CHALLENGE", 30, Color("158c76"), true))
-	content.add_child(_label("D E C O R A T I O N   G A M E", 15, Color("264944"), true))
-	var caption := _label("LOADING YOUR DESIGN ADVENTURE...", 13, Color("5b7872"), true)
-	content.add_child(caption)
+	_entry_add(scene, mark, Rect2(335, 151, 72, 72))
+	var scene_art := EntryKitchenSketch.new()
+	scene_art.name = "EntryIsometricKitchen"
+	scene_art.set_meta("entry_kitchen_art", true)
+	_entry_add(scene, scene_art, Rect2(168, 165, 790, 375))
 	var bar := ProgressBar.new()
-	bar.custom_minimum_size = Vector2(440, 20)
-	bar.min_value = 0
+	bar.name = "EntryLoadingProgress"
+	bar.custom_minimum_size = Vector2(400, 17)
+	bar.show_percentage = false
 	bar.max_value = 100
 	bar.value = 0
-	bar.show_percentage = false
-	bar.add_theme_stylebox_override("background", _console_style(Color("dcece7"), Color("a5d6c9"), 12, 2))
-	bar.add_theme_stylebox_override("fill", _console_style(Color("21c39c"), Color("ccffee"), 12, 2))
-	content.add_child(bar)
-	var progress := _label("0%", 13, Color("148e76"), true)
-	content.add_child(progress)
-	panel.modulate.a = 0.0
-	var fade := create_tween()
-	fade.tween_property(panel, "modulate:a", 1.0, 0.36)
-	var load_anim := create_tween()
-	load_anim.tween_property(bar, "value", 100.0, 1.65).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	load_anim.tween_callback(func() -> void:
-		if is_inside_tree():
-			_show_home()
+	bar.add_theme_stylebox_override("background", _console_style(Color("c8dbea"), Color("fff9ff"), 12, 1))
+	bar.add_theme_stylebox_override("fill", _console_style(Color("358ed1"), Color("b5edff"), 12, 1))
+	_entry_add(scene, bar, Rect2(350, 559, 400, 18))
+	_entry_centered_label("Loading...", 17, Rect2(395, 584, 320, 30), Color("254e77"), scene)
+	scene.modulate.a = 0
+	var appear := create_tween()
+	appear.tween_property(scene, "modulate:a", 1.0, 0.35)
+	var loading := create_tween()
+	loading.tween_property(bar, "value", 100.0, 1.9).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	loading.tween_callback(func() -> void:
+		if is_inside_tree() and is_instance_valid(scene):
+			_show_language_select()
 	)
-	bar.value_changed.connect(func(v: float) -> void:
-		if is_instance_valid(progress):
-			progress.text = "%d%%" % roundi(v)
-	)
-
 
 func _home_place(parent: Control, child: Control, bounds: Rect2) -> void:
 	# Absolute screen composition for the opening hero; the surrounding
@@ -496,39 +538,60 @@ func _show_information(title_text: String, details: String) -> void:
 	stack.add_child(back)
 
 func _show_language_select() -> void:
-	_clear()
-	var alignment := CenterContainer.new()
-	alignment.custom_minimum_size.y = 610
-	_body.add_child(alignment)
-	var panel := _glass(Color(1,1,1,0.90), Color("baffeb"), 24, 30)
-	panel.custom_minimum_size = Vector2(680, 430)
-	alignment.add_child(panel)
-	var content := VBoxContainer.new()
-	content.alignment = BoxContainer.ALIGNMENT_CENTER
-	content.add_theme_constant_override("separation", 17)
-	panel.add_child(content)
-	content.add_child(_label("01  /  SELECT LANGUAGE", 16, Color("0b9d7e"), true))
-	content.add_child(_label("Choose your language", 34, Color("1f3d39"), true))
-	content.add_child(_label("Customer dialogue and questions are available in Japanese and Myanmar.", 16, Color("54736e"), true))
-	var spacer := Control.new()
-	spacer.custom_minimum_size.y = 18
-	content.add_child(spacer)
-	var options := HBoxContainer.new()
-	options.alignment = BoxContainer.ALIGNMENT_CENTER
-	options.add_theme_constant_override("separation", 17)
-	content.add_child(options)
-	var jp := _button("JP   日本語", false, 260, 78)
-	jp.add_theme_font_size_override("font_size", 23)
-	jp.pressed.connect(func() -> void: _choose_language("jp"))
-	options.add_child(jp)
-	var mm := _button("MM   မြန်မာ", false, 260, 78)
-	mm.add_theme_font_size_override("font_size", 23)
-	mm.pressed.connect(func() -> void: _choose_language("mm"))
-	options.add_child(mm)
-	var go_back := _button("← Back to Menu", false, 180, 41)
-	go_back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	go_back.pressed.connect(_show_home)
-	content.add_child(go_back)
+	var scene := _entry_canvas("EntryLanguageScreen")
+	var tint := ColorRect.new()
+	tint.color = Color(0.91, 0.96, 1.0, 0.29)
+	tint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_entry_add(scene, tint, Rect2(0, 0, 1100, 650))
+	var title := _entry_centered_label("Kitchen", 59, Rect2(255, 65, 590, 76), Color("2679b1"), scene)
+	title.add_theme_constant_override("outline_size", 6)
+	title.add_theme_color_override("font_outline_color", Color("133e73"))
+	var subtitle := _entry_centered_label("Decoration Game", 42, Rect2(222, 134, 652, 60), Color("ffffff"), scene)
+	subtitle.add_theme_constant_override("outline_size", 7)
+	subtitle.add_theme_color_override("font_outline_color", Color("154373"))
+	# Simple architectural sketch placed below the title, not a chef's hat.
+	var blueprint := EntryKitchenSketch.new()
+	blueprint.name = "LanguageKitchenDiagram"
+	blueprint.set_meta("entry_kitchen_art", true)
+	_entry_add(scene, blueprint, Rect2(361, 196, 390, 191))
+
+	var panel := _glass(Color("eaf5ff"), Color("8bbce2"), 23, 0)
+	panel.name = "LanguageDropdownPanel"
+	panel.set_meta("entry_language_panel", true)
+	_entry_add(scene, panel, Rect2(391, 386, 320, 192))
+	var choose_title := _entry_centered_label("Select language", 21, Rect2(418, 397, 266, 30), Color("245f91"), scene)
+	choose_title.set_meta("language_heading", true)
+	var menu := OptionButton.new()
+	menu.name = "EntryLanguageDropdown"
+	menu.set_meta("entry_language_dropdown", true)
+	menu.custom_minimum_size = Vector2(267, 47)
+	menu.add_theme_font_size_override("font_size", 20)
+	menu.add_theme_color_override("font_color", Color("234a79"))
+	menu.add_theme_color_override("font_hover_color", Color("234a79"))
+	menu.add_theme_stylebox_override("normal", _console_style(Color("f7fcff"), Color("82bce8"), 16, 7))
+	menu.add_theme_stylebox_override("hover", _console_style(Color("ffffff"), Color("438fc8"), 16, 7))
+	menu.add_theme_stylebox_override("pressed", _console_style(Color("dcefff"), Color("438fc8"), 16, 7))
+	menu.add_item("日本語", 0)
+	menu.add_item("မြန်မာ", 1)
+	menu.add_item("English (Coming Soon)", 2)
+	menu.set_item_disabled(2, true)
+	menu.select(1 if Progress.get_language() == "mm" else 0)
+	_entry_add(scene, menu, Rect2(418, 433, 266, 47))
+	var go := Button.new()
+	go.name = "LanguageContinue"
+	go.set_meta("entry_language_continue", true)
+	go.text = "Continue  ›"
+	go.add_theme_font_size_override("font_size", 18)
+	go.add_theme_color_override("font_color", Color("ffffff"))
+	go.add_theme_stylebox_override("normal", _console_style(Color("348bd0"), Color("b2e7ff"), 17, 7))
+	go.add_theme_stylebox_override("hover", _console_style(Color("1d6fae"), Color("e5f6ff"), 17, 7))
+	go.pressed.connect(func() -> void:
+		_choose_language("mm" if menu.selected == 1 else "jp")
+	)
+	_entry_add(scene, go, Rect2(418, 494, 266, 48))
+	scene.modulate.a = 0.0
+	var enter := create_tween()
+	enter.tween_property(scene, "modulate:a", 1.0, 0.40)
 
 func _choose_language(lang: String) -> void:
 	Progress.set_language(lang)
