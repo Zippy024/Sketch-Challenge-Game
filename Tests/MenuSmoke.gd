@@ -26,6 +26,18 @@ func _run() -> void:
 		return
 	menu.call("_show_home")
 	await _wait_frames()
+	var backdrop_present := false
+	var background_photos := 0
+	for node in menu.find_children("*", "Control", true, false):
+		if node.has_meta("photo_free_background"):
+			backdrop_present = true
+	for node in menu.find_children("*", "TextureRect", true, false):
+		var image := node as TextureRect
+		if image.texture != null and ("KitchenIntroV8.jpg" in image.texture.resource_path or "KitchenHero.jpg" in image.texture.resource_path):
+			background_photos += 1
+	if not backdrop_present or background_photos > 0:
+		_failure("Menu still contains photographic kitchen backgrounds or no blue gradient")
+		return
 	var home_canvas: Control
 	var hero: Control
 	var main_headline: Control
@@ -160,8 +172,8 @@ func _run() -> void:
 		return
 	menu.call("_choose_language", "jp")
 	await _wait_frames()
-	if not top.visible:
-		_failure("language confirmation did not reveal main menu")
+	if top.visible:
+		_failure("reference main menu should show its own minimal layout, not the game HUD")
 		return
 	var found_home := false
 	for node in menu.find_children("*", "Control", true, false):
@@ -170,5 +182,5 @@ func _run() -> void:
 	if not found_home:
 		_failure("language confirmation skipped the required Main Menu")
 		return
-	print("MENU_SMOKE_OK: six real 3D kitchen dioramas, neon mission route, language/home, Stage3 select, locked Stage4-6")
+	print("MENU_SMOKE_OK: no menu photos, blue loading/language/home, six 3D stages and proper locks")
 	quit(0)

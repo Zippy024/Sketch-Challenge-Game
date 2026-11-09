@@ -13,6 +13,7 @@ on:
       - feature/blue-entry-loading-language-20261109
       - design/blueprint-ui-flow-final-20261109
       - feature/diorama-kitchen-mission-map-20261109
+      - fix/remove-all-menu-background-photos-20261109
   workflow_dispatch:
 permissions:
   contents: read
