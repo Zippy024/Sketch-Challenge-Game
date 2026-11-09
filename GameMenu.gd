@@ -733,10 +733,16 @@ func _show_levels() -> void:
 	layout.add_child(progression)
 	for stage in range(1, 7):
 		var dot := _glass(Color("d9fff1") if stage <= 3 else Color("e0e4e5"), Color("70dabb") if stage <= 3 else Color("b8bdc1"), 28, 7)
+		dot.custom_minimum_size = Vector2(52, 38)
 		progression.add_child(dot)
-		dot.add_child(_label("%02d" % stage, 13, Color("117b64") if stage <= 3 else Color("7a8386"), true))
+		var number := _label("%02d" % stage, 13, Color("117b64") if stage <= 3 else Color("7a8386"), true)
+		number.autowrap_mode = TextServer.AUTOWRAP_OFF
+		number.set_meta("stage_node", stage)
+		dot.add_child(number)
 		if stage < 6:
-			progression.add_child(_label("━━━━", 12, Color("79d4bc") if stage < 3 else Color("bec4c4"), true))
+			var connector := _label("━━━━", 12, Color("79d4bc") if stage < 3 else Color("bec4c4"), true)
+			connector.autowrap_mode = TextServer.AUTOWRAP_OFF
+			progression.add_child(connector)
 	layout.add_child(_label("STAGE 01–03  AVAILABLE      •      STAGE 04–06  COMING SOON", 12, Color("62736f"), true))
 	board.modulate.a = 0.0
 	var appear := create_tween()
@@ -798,7 +804,9 @@ func _stage_card(stage: int) -> Button:
 	var name := _label(names[stage-1], 16, Color("ffffff") if unlocked else Color("e7e5e7"), true)
 	name.custom_minimum_size.y = 40
 	body.add_child(name)
-	body.add_child(_label("✦  START MISSION" if unlocked else "COMPLETE PRIOR STAGES", 12, Color("9dffe0") if unlocked else Color("d7d7db"), true))
+	var action_line := _label("✦  START MISSION" if unlocked else "COMING SOON", 12, Color("9dffe0") if unlocked else Color("d7d7db"), true)
+	action_line.autowrap_mode = TextServer.AUTOWRAP_OFF
+	body.add_child(action_line)
 	return card
 
 func _mission_card(stage: int) -> PanelContainer:
