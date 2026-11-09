@@ -50,11 +50,13 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p web
-          .godot-tools/Godot_v4.6.3-stable_linux.x86_64 --headless --path . --export-release Web web/index.html 2>&1 | tee "$RUNNER_TEMP/export.log"
+          build_name="game-${GITHUB_SHA:0:12}"
+          .godot-tools/Godot_v4.6.3-stable_linux.x86_64 --headless --path . --export-release Web "web/${build_name}.html" 2>&1 | tee "$RUNNER_TEMP/export.log"
           ! grep -E 'SCRIPT ERROR:|Failed to load script|Export failed' "$RUNNER_TEMP/export.log"
-          test -s web/index.html
-          test -s web/index.wasm
-          test -s web/index.pck
+          test -s "web/${build_name}.html"
+          test -s "web/${build_name}.wasm"
+          test -s "web/${build_name}.pck"
+          mv "web/${build_name}.html" web/index.html
           touch web/.nojekyll
           python3 -c 'import json,os;json.dump({"commit":os.environ["GITHUB_SHA"]},open("web/build.json","w"))'
       - uses: actions/upload-pages-artifact@v3
