@@ -183,12 +183,12 @@ func _build_frame() -> void:
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(spacer)
-	for info in [["⌂  HOME", "_show_home"], ["▤  SELECT LEVEL", "_show_levels"], ["▦  GUIDE", "_show_help"], ["▥  PROGRESS", "_show_progress"]]:
+	for info in [["HOME", "_show_home"], ["SELECT LEVEL", "_show_levels"], ["GUIDE", "_show_help"], ["PROGRESS", "_show_progress"]]:
 		var nav := _button(str(info[0]), false, 122, 39)
 		nav.add_theme_font_size_override("font_size", 13)
 		nav.pressed.connect(Callable(self, str(info[1])))
 		head.add_child(nav)
-	var settings_nav := _button("⚙", false, 42, 39)
+	var settings_nav := _button("Settings", false, 88, 39)
 	settings_nav.tooltip_text = "Settings"
 	settings_nav.pressed.connect(_show_settings)
 	head.add_child(settings_nav)
@@ -449,7 +449,7 @@ func _stage_card(page: Control, n: int, x: float, y: float, w: float, h: float) 
 		play.pressed.connect(_start_level.bind(n))
 		_place(btn, play, Rect2(18, h-54, w-36, 40))
 	else:
-		var hint := ("✓ COMPLETED" if n == 1 and Extras.stage1_completed() else "AVAILABLE") if available else "🔒  Locked"
+		var hint := ("✓ COMPLETED" if n == 1 and Extras.stage1_completed() else "AVAILABLE") if available else "Locked"
 		_text(btn, hint, 12, Rect2(7, h-41, w-14, 30), Color("0b7eac") if available else Color("ecf2f7"), true)
 	if selected:
 		btn.move_to_front()
