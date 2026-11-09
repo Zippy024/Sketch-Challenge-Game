@@ -1,5 +1,5 @@
 78098b89c88a74ebe8c20117b8754620
-::res://::1794213692
+::res://::1794215845
 AIConfig.gd::GDScript::8739215552008490574::1793759170::0::1::::<>RefCounted<><>0<>0<><>::
 Arigatou.mp3::AudioStreamMP3::1932554018852927245::1793759168::1794177432::1::::<><><>0<>0<>743dde62176a1e6e7bd5851dc8c0c0e5<>res://.godot/imported/Arigatou.mp3-05e247f7e525390cd3bdc92644185fb2.mp3str::
 customer_icon.png::CompressedTexture2D::70354162398825528::1793759168::1794177432::1::::<><><>0<>0<>53be5dea9dda2c9d5e65ab2ca28f957f<>res://.godot/imported/customer_icon.png-662d75ff71972f2ccb39bd5bf4dafe8f.ctex::
@@ -68,6 +68,12 @@ WEB_DEPLOY_NOTES.txt::TextFile::-1::1793759168::0::1::::<><><>0<>0<><>::
 WEB_FIX_README.txt::TextFile::-1::1793759170::0::1::::<><><>0<>0<><>::
 Wrong.mp3::AudioStreamMP3::9108842002857998635::1793759170::1794177434::1::::<><><>0<>0<>c376e19797882771ae1b7e2adafe6d03<>res://.godot/imported/Wrong.mp3-7669b6a9e838e9eb7410cdd389c93451.mp3str::
 Wrongmm.mp3::AudioStreamMP3::565755176941915980::1793759168::1794177434::1::::<><><>0<>0<>fde7d13b02865db07a7fcb3324d029c0<>res://.godot/imported/Wrongmm.mp3-bb94dfdf2e7b03fb526152c27523585b.mp3str::
+::res://addons/::1794215302
+::res://addons/godot-git-plugin-v3.3.0/::1794215260
+::res://addons/godot-git-plugin-v3.3.0/addons/::1794215260
+::res://addons/godot-git-plugin-v3.3.0/addons/godot-git-plugin/::1794215294
+git_plugin.gdextension::GDExtension::1455929178940323795::1792504092::0::1::::<><><>0<>0<><>::
+::res://addons/godot-git-plugin-v3.3.0/addons/godot-git-plugin/lib/::1794215841
 ::res://Branding/::1794202668
 BlueprintPencilGameLogo.png::CompressedTexture2D::4156347017362993278::1794177712::1794202668::1::::<><><>0<>0<>d953147dd7f8ae727515d8c0d64c93fc<>res://.godot/imported/BlueprintPencilGameLogo.png-55eb1c003f04b7c38e984c75794583b7.ctex::
 BlueprintPencilIcon.png::CompressedTexture2D::8104936597293348014::1794177712::1794202667::1::::<><><>0<>0<>0eee721010362dec5b37a789c023e31f<>res://.godot/imported/BlueprintPencilIcon.png-62ea1364c23a5f332566de9de22b4bd9.ctex::
