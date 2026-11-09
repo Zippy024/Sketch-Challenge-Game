@@ -183,7 +183,7 @@ func _build_frame() -> void:
 	photo.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 	var light := ColorRect.new()
-	light.color = Color(0.98, 0.88, 0.91, 0.10)
+	light.color = Color(0.93, 1.0, 0.95, 0.06)
 	light.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	base.add_child(light)
 	light.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -195,7 +195,7 @@ func _build_frame() -> void:
 	outer.add_theme_constant_override("separation", 0)
 	base.add_child(outer)
 	outer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_top_bar = _glass(Color(1, 0.975, 0.97, 0.88), Color("fff6e4"), 0, 4)
+	_top_bar = _glass(Color(1, 1, 1, 0.88), Color("f6ffff"), 0, 4)
 	_top_bar.custom_minimum_size.y = 66
 	_top_bar.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	outer.add_child(_top_bar)
@@ -215,13 +215,13 @@ func _build_frame() -> void:
 	emblem.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	header.add_child(emblem)
-	var brand := _label("KITCHEN SKETCH CHALLENGE", 17, Color("302538"))
+	var brand := _label("KITCHEN SKETCH CHALLENGE", 17, Color("203b37"))
 	brand.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	brand.autowrap_mode = TextServer.AUTOWRAP_OFF
 	header.add_child(brand)
 	header.add_child(_nav_button("HOME", _show_home))
 	header.add_child(_nav_button("ALL STAGES", _show_levels))
-	var trainee := _glass(Color(0.18,0.13,0.24,0.82), Color("dbaf89"), 20, 7)
+	var trainee := _glass(Color(0.11,0.22,0.23,0.87), Color("aefce9"), 20, 7)
 	header.add_child(trainee)
 	var trainee_text := _label("TRAINEE", 12, C_INK, true)
 	trainee_text.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -254,7 +254,7 @@ func _build_frame() -> void:
 	_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_body.add_theme_constant_override("separation", 13)
 	margin.add_child(_body)
-	_bottom_bar = _glass(Color(0.19,0.14,0.24,0.85), Color("d3ad90"), 0, 1)
+	_bottom_bar = _glass(Color(0.11,0.23,0.22,0.77), Color("d4ffed"), 0, 1)
 	_bottom_bar.custom_minimum_size.y = 25
 	_bottom_bar.size_flags_vertical = Control.SIZE_SHRINK_END
 	outer.add_child(_bottom_bar)
@@ -280,8 +280,8 @@ func _update_lang_buttons() -> void:
 		if not is_instance_valid(b):
 			continue
 		var selected: bool = (b == _jp_button and Progress.get_language() == "jp") or (b == _mm_button and Progress.get_language() == "mm")
-		b.add_theme_stylebox_override("normal", _console_style(Color("6e3e59") if selected else Color("2a2239"), Color("ffc98a") if selected else Color("886477"), 12, 6))
-		b.add_theme_stylebox_override("hover", _console_style(Color("86516c"), Color("ffe2ad"), 12, 6))
+		b.add_theme_stylebox_override("normal", _console_style(Color("117d6a") if selected else Color("314749"), Color("b7ffe9") if selected else Color("aac8be"), 12, 6))
+		b.add_theme_stylebox_override("hover", _console_style(Color("1da58c"), Color("d4fff3"), 12, 6))
 		b.add_theme_color_override("font_color", WHITE)
 
 func _clear() -> void:
@@ -302,7 +302,7 @@ func _show_splash() -> void:
 	var alignment := CenterContainer.new()
 	alignment.custom_minimum_size.y = 560.0
 	_body.add_child(alignment)
-	var panel := _c_panel(Color(0.08, 0.055, 0.16, 0.85), Color("ffc889"), 30, 30)
+	var panel := _glass(Color(1,1,1,0.89), Color("d2fff0"), 30, 30)
 	panel.custom_minimum_size = Vector2(560, 360)
 	alignment.add_child(panel)
 	var content := VBoxContainer.new()
@@ -317,9 +317,9 @@ func _show_splash() -> void:
 	mark.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	content.add_child(mark)
-	content.add_child(_label("KITCHEN SKETCH CHALLENGE", 30, C_COPPER, true))
-	content.add_child(_label("D E C O R A T I O N   G A M E", 15, C_INK, true))
-	var caption := _label("LOADING YOUR DESIGN ADVENTURE...", 13, C_MUTED, true)
+	content.add_child(_label("KITCHEN SKETCH CHALLENGE", 30, Color("158c76"), true))
+	content.add_child(_label("D E C O R A T I O N   G A M E", 15, Color("264944"), true))
+	var caption := _label("LOADING YOUR DESIGN ADVENTURE...", 13, Color("5b7872"), true)
 	content.add_child(caption)
 	var bar := ProgressBar.new()
 	bar.custom_minimum_size = Vector2(440, 20)
@@ -327,10 +327,10 @@ func _show_splash() -> void:
 	bar.max_value = 100
 	bar.value = 0
 	bar.show_percentage = false
-	bar.add_theme_stylebox_override("background", _console_style(Color("302741"), Color("7b5063"), 12, 2))
-	bar.add_theme_stylebox_override("fill", _console_style(Color("ffa44d"), Color("ffd88c"), 12, 2))
+	bar.add_theme_stylebox_override("background", _console_style(Color("dcece7"), Color("a5d6c9"), 12, 2))
+	bar.add_theme_stylebox_override("fill", _console_style(Color("21c39c"), Color("ccffee"), 12, 2))
 	content.add_child(bar)
-	var progress := _label("0%", 13, C_COPPER, true)
+	var progress := _label("0%", 13, Color("148e76"), true)
 	content.add_child(progress)
 	panel.modulate.a = 0.0
 	var fade := create_tween()
@@ -476,16 +476,16 @@ func _show_language_select() -> void:
 	var alignment := CenterContainer.new()
 	alignment.custom_minimum_size.y = 610
 	_body.add_child(alignment)
-	var panel := _c_panel(Color(0.065, 0.15, 0.14, 0.96), C_COPPER, 24, 30)
+	var panel := _glass(Color(1,1,1,0.90), Color("baffeb"), 24, 30)
 	panel.custom_minimum_size = Vector2(680, 430)
 	alignment.add_child(panel)
 	var content := VBoxContainer.new()
 	content.alignment = BoxContainer.ALIGNMENT_CENTER
 	content.add_theme_constant_override("separation", 17)
 	panel.add_child(content)
-	content.add_child(_label("01  /  SELECT LANGUAGE", 16, C_COPPER, true))
-	content.add_child(_label("Choose your language", 34, C_INK, true))
-	content.add_child(_label("Customer dialogue and questions are available in Japanese and Myanmar.", 16, C_MUTED, true))
+	content.add_child(_label("01  /  SELECT LANGUAGE", 16, Color("0b9d7e"), true))
+	content.add_child(_label("Choose your language", 34, Color("1f3d39"), true))
+	content.add_child(_label("Customer dialogue and questions are available in Japanese and Myanmar.", 16, Color("54736e"), true))
 	var spacer := Control.new()
 	spacer.custom_minimum_size.y = 18
 	content.add_child(spacer)
