@@ -646,50 +646,65 @@ func _show_information(title_text: String, details: String) -> void:
 
 func _show_language_select() -> void:
 	var canvas := _entry_canvas("EntryLanguageScreen")
-	_showroom_title(canvas,215,9,670,59)
-	# The glass panel occupies nearly half the desktop width, exactly one
-	# live Godot interface above the full-screen photo-like kitchen.
-	var panel := _glass(Color(0.96,0.99,1.0,0.95),Color("84d9f8"),27,6)
+	# Match the approved reference: large game logo, broad glass panel,
+	# full-width dropdown and a visible Continue below the opened menu.
+	var logo := TextureRect.new()
+	logo.name = "ReferenceGlossyLanguageLogo"
+	logo.texture = preload("res://MenuAssets/KitchenLogoGlossy.webp")
+	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	logo.set_meta("reference_game_logo",true)
+	_ui_put(canvas,logo,Rect2(302,0,496,206))
+
+	var panel := _glass(Color(0.94,0.98,1.0,0.95),Color("8ae9ff"),32,9)
 	panel.name = "LanguageDropdownPanel"
 	panel.set_meta("entry_language_panel",true)
-	_ui_put(canvas,panel,Rect2(317,215,466,357))
-	_ui_text(canvas,"Select Language",22,Rect2(340,241,417,36),Color("102e56"),true)
+	_ui_put(canvas,panel,Rect2(314,210,472,349))
+	_ui_text(canvas,"Select Language",27,Rect2(335,226,430,43),Color("0a1c58"),true)
 
 	var menu := OptionButton.new()
 	menu.name = "EntryLanguageDropdown"
 	menu.set_meta("entry_language_dropdown",true)
-	menu.custom_minimum_size = Vector2(397,58)
+	menu.custom_minimum_size = Vector2(399,65)
 	menu.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	menu.add_theme_font_size_override("font_size",21)
+	menu.add_theme_font_size_override("font_size",27)
 	for theme_color in ["font_color","font_hover_color","font_pressed_color","font_focus_color"]:
-		menu.add_theme_color_override(theme_color, Color("143d69"))
-	menu.add_theme_color_override("font_disabled_color", Color("88a0bb"))
-	menu.add_theme_stylebox_override("normal",_console_style(Color("ffffff"),Color("7dcdf4"),20,11,5))
-	menu.add_theme_stylebox_override("hover",_console_style(Color("e6f7ff"),Color("38c9f3"),20,11,8))
-	menu.add_theme_stylebox_override("pressed",_console_style(Color("d9f3ff"),Color("48c7f0"),20,11,3))
-	menu.add_theme_stylebox_override("focus",_console_style(Color.TRANSPARENT,Color("4fcff5"),20,0,0))
+		menu.add_theme_color_override(theme_color,Color("071d56"))
+	menu.add_theme_color_override("font_disabled_color",Color("9199a6"))
+	menu.add_theme_stylebox_override("normal",_console_style(Color("ffffff"),Color("67d9ff"),31,17,7))
+	menu.add_theme_stylebox_override("hover",_console_style(Color("ffffff"),Color("28caff"),31,17,8))
+	menu.add_theme_stylebox_override("pressed",_console_style(Color("eaf8ff"),Color("28caff"),31,17,4))
+	menu.add_theme_stylebox_override("focus",_console_style(Color.TRANSPARENT,Color("4fcff5"),31,0,0))
 	var popup := menu.get_popup()
-	popup.add_theme_stylebox_override("panel",_console_style(Color("f8fcff"),Color("a6dff5"),16,13,8))
-	popup.add_theme_stylebox_override("hover",_console_style(Color("41a1f3"),Color("b4eaff"),13,9,3))
-	popup.add_theme_color_override("font_color",Color("10385b"))
+	popup.add_theme_stylebox_override("panel",_console_style(Color("ffffff"),Color("9cdbff"),22,9,8))
+	popup.add_theme_stylebox_override("hover",_console_style(Color("2e9cf3"),Color("b4eaff"),5,12,0))
+	popup.add_theme_color_override("font_color",Color("081e55"))
 	popup.add_theme_color_override("font_hover_color",Color("ffffff"))
-	popup.add_theme_color_override("font_disabled_color",Color("8da1b4"))
-	popup.add_theme_font_size_override("font_size",20)
-	menu.add_item("🌐   日本語",0)
+	popup.add_theme_color_override("font_disabled_color",Color("a0a4ad"))
+	popup.add_theme_color_override("font_separator_color",Color("081e55"))
+	popup.add_theme_font_size_override("font_size",25)
+	popup.add_theme_constant_override("v_separation",12)
+	popup.add_theme_constant_override("h_separation",15)
+	menu.add_item("🌐  日本語",0)
 	menu.add_item("မြန်မာ",1)
 	menu.add_item("English (Coming Soon)",2)
 	menu.set_item_disabled(2,true)
 	menu.select(1 if Progress.get_language()=="mm" else 0)
-	_ui_put(canvas,menu,Rect2(352,316,398,59))
+	_ui_put(canvas,menu,Rect2(350,274,400,65))
 
-	var continue_button := _button("Continue    »",true,362,62)
+	var continue_button := _button("Continue    »",true,322,69)
 	continue_button.name = "LanguageContinue"
 	continue_button.set_meta("entry_language_continue",true)
-	continue_button.add_theme_font_size_override("font_size",23)
+	continue_button.add_theme_font_size_override("font_size",29)
+	continue_button.add_theme_stylebox_override("normal",_console_style(Color("0086ad"),Color("0de7f2"),37,12,9))
+	continue_button.add_theme_stylebox_override("hover",_console_style(Color("00b5c9"),Color("9afaff"),37,12,12))
+	continue_button.add_theme_stylebox_override("pressed",_console_style(Color("006b98"),Color("73edff"),37,12,3))
 	continue_button.pressed.connect(func() -> void:
 		_choose_language("mm" if menu.selected==1 else "jp")
 	)
-	_ui_put(canvas,continue_button,Rect2(369,467,362,64))
+	# Below the panel, not covered by its expanded three-item dropdown.
+	_ui_put(canvas,continue_button,Rect2(389,538,322,70))
 	canvas.modulate.a = 0
 	create_tween().tween_property(canvas,"modulate:a",1.0,0.30)
 
