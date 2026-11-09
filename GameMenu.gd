@@ -373,9 +373,11 @@ func _showroom_title(parent: Control, left: float, top: float, width_value: floa
 	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var logo_width: float = minf(width_value, 590.0)
-	var logo_height: float = logo_width * 0.46
-	_ui_put(parent, logo, Rect2(left + (width_value - logo_width)*0.5, top - 22.0, logo_width, logo_height))
+	var on_home: bool = top >= 50.0
+	var logo_width: float = minf(width_value, 515.0 if on_home else 560.0)
+	var logo_height: float = logo_width * 0.41
+	var logo_y: float = top - 24.0 if on_home else maxf(1.0, top - 12.0)
+	_ui_put(parent, logo, Rect2(left + (width_value - logo_width)*0.5, logo_y, logo_width, logo_height))
 
 func _show_splash() -> void:
 	var canvas := _entry_canvas("EntryLoadingScreen")
