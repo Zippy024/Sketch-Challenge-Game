@@ -734,6 +734,7 @@ func _show_levels() -> void:
 func _stage_card(stage: int) -> Button:
 	var available: bool = stage <= 3 and Progress.is_level_unlocked(stage)
 	var card := Button.new()
+	card.set_meta("mission_stage", stage)
 	card.text = ""
 	card.custom_minimum_size = Vector2(203, 296)
 	card.disabled = not available
