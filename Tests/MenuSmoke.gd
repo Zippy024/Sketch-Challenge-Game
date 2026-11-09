@@ -26,12 +26,19 @@ func _run() -> void:
 		return
 	menu.call("_show_home")
 	await _wait_frames()
-	var photo_present := false
-	for node in menu.find_children("*", "Control", true, false):
-		if node.has_meta("showroom_background"):
-			photo_present = true
-	if not photo_present:
-		_failure("Reference-style consistent blue kitchen background is missing")
+	var fresh_backgrounds := 0
+	var old_backgrounds := 0
+	for node in menu.find_children("*", "TextureRect", true, false):
+		var image := node as TextureRect
+		if image.texture == null:
+			continue
+		var path := image.texture.resource_path
+		if "BlueKitchenFreshV1.svg" in path:
+			fresh_backgrounds += 1
+		if "KitchenIntroV8.jpg" in path or "KitchenHero.jpg" in path or "ConceptC_Home_Background.jpg" in path:
+			old_backgrounds += 1
+	if fresh_backgrounds != 1 or old_backgrounds != 0:
+		_failure("Expected exactly ONE fresh blue kitchen background, not reused/stacked photos: fresh=%d old=%d" % [fresh_backgrounds, old_backgrounds])
 		return
 	var home_canvas: Control
 	var hero: Control
@@ -133,6 +140,11 @@ func _run() -> void:
 	if current_scene != menu:
 		_failure("Selecting a stage accidentally launched gameplay")
 		return
+	# All entry screens use the outermost background: no inset second photo.
+	for node in menu.find_children("*", "TextureRect", true, false):
+		if node.texture != null and "KitchenIntroV8.jpg" in node.texture.resource_path:
+			_failure("Old photo reappeared inside stage selection")
+			return
 	menu.call("_show_splash")
 	await _wait_frames()
 	var intro_art: Control
@@ -166,6 +178,14 @@ func _run() -> void:
 	if dropdown.item_count != 3 or not dropdown.is_item_disabled(2):
 		_failure("expected Japanese, Myanmar and honest English-coming-soon option")
 		return
+	var entry_photo_count := 0
+	for node in menu.find_children("*", "TextureRect", true, false):
+		var img := node as TextureRect
+		if img.texture != null and "BlueKitchenFreshV1.svg" in img.texture.resource_path:
+			entry_photo_count += 1
+	if entry_photo_count != 1:
+		_failure("Language page reintroduced duplicate/inset background")
+		return
 	if dropdown_panel.size.x < 290 or continue_btn.size.x < 245:
 		_failure("language layout collapsed")
 		return
@@ -184,5 +204,5 @@ func _run() -> void:
 	if not found_home:
 		_failure("language confirmation skipped the required Main Menu")
 		return
-	print("MENU_SMOKE_OK: cinematic loading/language/home, six single-row stage photo cards, cyan showroom and proper locks")
+	print("MENU_SMOKE_OK: single new blue kitchen background across screens; no old photos, six stage cards, language, locked stages")
 	quit(0)
