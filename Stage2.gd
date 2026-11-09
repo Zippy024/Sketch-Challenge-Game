@@ -1,5 +1,4 @@
 extends Control
-const ReferenceSkin = preload("res://ReferenceUISkin.gd")
 
 const Progress = preload("res://GameProgress.gd")
 const AIConfig = preload("res://AIConfig.gd")
@@ -242,16 +241,16 @@ func _label(t: String, sz: int = 16, c: String = "17233b") -> Label:
 	return l
 
 func _modern_button_style(button: Button, kind: String = "secondary") -> void:
-	var backgrounds := {"primary": "008aa8", "secondary": "ffffff", "back": "dbeafe", "warning": "fff0d9"}
-	var borders := {"primary": "006c8e", "secondary": "93c5fd", "back": "93c5fd", "warning": "fdba74"}
-	var hovers := {"primary": "006c8e", "secondary": "eff6ff", "back": "bfdbfe", "warning": "ffedd5"}
+	var backgrounds := {"primary": "2563eb", "secondary": "ffffff", "back": "dbeafe", "warning": "fff0d9"}
+	var borders := {"primary": "1d4ed8", "secondary": "93c5fd", "back": "93c5fd", "warning": "fdba74"}
+	var hovers := {"primary": "1d4ed8", "secondary": "eff6ff", "back": "bfdbfe", "warning": "ffedd5"}
 	var ink := "ffffff" if kind == "primary" else ("9a3412" if kind == "warning" else "1e40af")
 	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
 		var style := StyleBoxFlat.new()
 		style.bg_color = Color(hovers.get(kind, "eff6ff")) if state in ["hover", "pressed"] else Color(backgrounds.get(kind, "ffffff"))
 		style.border_color = Color(borders.get(kind, "93c5fd"))
 		style.set_border_width_all(1)
-		style.set_corner_radius_all(22)
+		style.set_corner_radius_all(10)
 		style.content_margin_left = 14
 		style.content_margin_right = 14
 		style.content_margin_top = 8
@@ -260,8 +259,6 @@ func _modern_button_style(button: Button, kind: String = "secondary") -> void:
 	for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_disabled_color"]:
 		button.add_theme_color_override(state, Color(ink))
 	button.add_theme_font_size_override("font_size", 14)
-	if kind == "primary":
-		button.add_theme_stylebox_override("normal", ReferenceSkin.primary_style())
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 
 func _btn(t: String, min_width: float = 85.0) -> Button:
@@ -276,7 +273,7 @@ func _btn(t: String, min_width: float = 85.0) -> Button:
 func _build_ui() -> void:
 	var background := PanelContainer.new()
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	background.add_theme_stylebox_override("panel", _style("e4f5fb"))
+	background.add_theme_stylebox_override("panel", _style("e9eef5"))
 	add_child(background)
 
 	var outside := MarginContainer.new()
@@ -292,7 +289,7 @@ func _build_ui() -> void:
 
 	var left_card := PanelContainer.new()
 	left_card.custom_minimum_size.x = 450
-	left_card.add_theme_stylebox_override("panel", _style("effaff"))
+	left_card.add_theme_stylebox_override("panel", _style("f1f5f9"))
 	split.add_child(left_card)
 	var left := VBoxContainer.new()
 	left.add_theme_constant_override("separation", 12)
@@ -467,7 +464,7 @@ void fragment() {
 	var right_card := PanelContainer.new()
 	right_card.custom_minimum_size.x = 570
 	right_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	right_card.add_theme_stylebox_override("panel", _style("effaff"))
+	right_card.add_theme_stylebox_override("panel", _style("f1f5f9"))
 	split.add_child(right_card)
 	var right := VBoxContainer.new()
 	right.add_theme_constant_override("separation", 14)
