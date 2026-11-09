@@ -14,12 +14,12 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 [application]
 
-config/name="Kitchen Decoration Game | Sketch Challenge"
+config/name="Sketch Challenge | Kitchen Layout Game"
 run/main_scene="res://GameMenu.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
-boot_splash/bg_color=Color(0.69, 0.86, 0.97, 1)
-boot_splash/image="res://Branding/BlueprintPencilGameLogo.png"
-config/icon="res://Branding/BlueprintPencilIcon.png"
+boot_splash/bg_color=Color(0.973, 0.957, 0.914, 1)
+boot_splash/image="res://Branding/SketchChallengeSplash.png"
+config/icon="res://Branding/SketchChallengeLogo.png"
 
 [display]
 
