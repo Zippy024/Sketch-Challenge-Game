@@ -33,7 +33,7 @@ func _run() -> void:
 		if image.texture == null:
 			continue
 		var path := image.texture.resource_path
-		if "BlueKitchenFreshV1.svg" in path:
+		if "BlueKitchenPhotoClean.jpeg" in path:
 			fresh_backgrounds += 1
 		if "KitchenIntroV8.jpg" in path or "KitchenHero.jpg" in path or "ConceptC_Home_Background.jpg" in path:
 			old_backgrounds += 1
@@ -181,12 +181,23 @@ func _run() -> void:
 	var entry_photo_count := 0
 	for node in menu.find_children("*", "TextureRect", true, false):
 		var img := node as TextureRect
-		if img.texture != null and "BlueKitchenFreshV1.svg" in img.texture.resource_path:
+		if img.texture != null and "BlueKitchenPhotoClean.jpeg" in img.texture.resource_path:
 			entry_photo_count += 1
 	if entry_photo_count != 1:
 		_failure("Language page reintroduced duplicate/inset background")
 		return
-	if dropdown_panel.size.x < 290 or continue_btn.size.x < 245:
+	var glossy_logo_count := 0
+	for node in menu.find_children("*", "TextureRect", true, false):
+		var t := node as TextureRect
+		if t.has_meta("reference_game_logo"):
+			glossy_logo_count += 1
+			if t.texture == null or not "KitchenLogoGlossy.webp" in t.texture.resource_path:
+				_failure("Glossy rolled-blueprint & pencil logo is not assigned")
+				return
+	if glossy_logo_count != 1:
+		_failure("Language page expected exactly one glossy logo")
+		return
+	if dropdown_panel.size.x < 430 or continue_btn.size.x < 350:
 		_failure("language layout collapsed")
 		return
 	if body.get_child_count() == 0:
@@ -204,5 +215,5 @@ func _run() -> void:
 	if not found_home:
 		_failure("language confirmation skipped the required Main Menu")
 		return
-	print("MENU_SMOKE_OK: single new blue kitchen background across screens; no old photos, six stage cards, language, locked stages")
+	print("MENU_SMOKE_OK: single photo-like blue kitchen background and glossy logo across screens; no old photos, six stage cards, language, locked stages")
 	quit(0)
