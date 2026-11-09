@@ -227,7 +227,7 @@ void fragment() {
 	_bottom_bar.custom_minimum_size.y = 26
 	_bottom_bar.add_theme_stylebox_override("panel", _style(Color(0.12, 0.09, 0.18, 0.85), Color("b37763"), 0))
 	outer.add_child(_bottom_bar)
-	_bottom_bar.add_child(_label("KITCHEN SKETCH CHALLENGE  •  PLAN  /  SELECT  /  LEARN", 11, C_COPPER, true)
+	_bottom_bar.add_child(_label("KITCHEN SKETCH CHALLENGE  •  PLAN  /  SELECT  /  LEARN", 11, C_COPPER, true))
 
 func _set_concept_background(choose_levels: bool) -> void:
 	if not is_instance_valid(_menu_photo):
