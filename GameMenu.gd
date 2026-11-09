@@ -186,9 +186,10 @@ func _build_frame() -> void:
 	# NEW illustration (not reused old photo): one full-viewport background
 	# for Loading, Language, Home and Level Select, no nested background.
 	var backdrop := TextureRect.new()
-	backdrop.name = "BlueKitchenShowroomBackdrop"
+	backdrop.name = "PhotoLikeBlueKitchenBackdrop"
 	backdrop.set_meta("showroom_background", true)
-	backdrop.texture = preload("res://MenuAssets/BlueKitchenFreshV1.svg")
+	backdrop.set_meta("reference_style_background", true)
+	backdrop.texture = preload("res://MenuAssets/BlueKitchenPhotoClean.jpeg")
 	backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -196,7 +197,7 @@ func _build_frame() -> void:
 	base.add_child(backdrop)
 	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var light := ColorRect.new()
-	light.color = Color(0.86, 0.96, 1.0, 0.12)
+	light.color = Color(0.86, 0.96, 1.0, 0.015)
 	light.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	base.add_child(light)
 	light.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -362,21 +363,19 @@ func _showroom_photo(_parent: Control, _rect: Rect2, _vivid: bool = false) -> vo
 	# layer in _build_frame. Do NOT add another image inside entry content.
 	pass
 
-func _showroom_title(parent: Control, left: float, top: float, width_value: float, size_large: int = 50) -> void:
-	# Keep the same Logo G + dark-blue outlined typography on each screen.
-	var emblem := TextureRect.new()
-	emblem.texture = preload("res://Branding/SketchPlanPencil.svg")
-	emblem.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	emblem.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ui_put(parent,emblem,Rect2(left+width_value*0.13,top+3,width_value*0.18,89))
-	var a := _ui_text(parent, "Kitchen", size_large, Rect2(left+width_value*0.29,top,width_value*0.65,66),Color("f6feff"),true)
-	a.add_theme_constant_override("outline_size",7)
-	a.add_theme_color_override("font_outline_color",Color("083967"))
-	var b := _ui_text(parent,"Decoration Game",roundi(float(size_large)*0.65),Rect2(left+width_value*0.22,top+64,width_value*0.72,50),Color("fbffff"),true)
-	b.add_theme_constant_override("outline_size",6)
-	b.add_theme_color_override("font_outline_color",Color("103f6c"))
-
+func _showroom_title(parent: Control, left: float, top: float, width_value: float, _size_large: int = 50) -> void:
+	# A single glossy rolled-blueprint & pencil logo from the selected
+	# reference artwork. Text is baked into this logo, never shown twice.
+	var logo := TextureRect.new()
+	logo.name = "GlossyBlueprintPencilLogo"
+	logo.set_meta("reference_game_logo", true)
+	logo.texture = preload("res://MenuAssets/KitchenLogoGlossy.webp")
+	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var logo_width: float = minf(width_value, 590.0)
+	var logo_height: float = logo_width * 0.46
+	_ui_put(parent, logo, Rect2(left + (width_value - logo_width)*0.5, top - 22.0, logo_width, logo_height))
 
 func _show_splash() -> void:
 	var canvas := _entry_canvas("EntryLoadingScreen")
@@ -645,47 +644,52 @@ func _show_information(title_text: String, details: String) -> void:
 
 func _show_language_select() -> void:
 	var canvas := _entry_canvas("EntryLanguageScreen")
-	_showroom_photo(canvas,Rect2(0,0,1100,650))
-	_showroom_title(canvas,236,35,630,59)
-	var panel := _glass(Color(0.94,0.98,1.0,0.94),Color("96dafa"),25,0)
+	_showroom_title(canvas,215,9,670,59)
+	# The glass panel occupies nearly half the desktop width, exactly one
+	# live Godot interface above the full-screen photo-like kitchen.
+	var panel := _glass(Color(0.96,0.99,1.0,0.95),Color("84d9f8"),27,6)
 	panel.name = "LanguageDropdownPanel"
 	panel.set_meta("entry_language_panel",true)
-	_ui_put(canvas,panel,Rect2(365,199,370,319))
-	_ui_text(canvas,"SELECT LANGUAGE",20,Rect2(387,216,323,38),Color("123d6f"),true)
+	_ui_put(canvas,panel,Rect2(317,215,466,357))
+	_ui_text(canvas,"Select Language",22,Rect2(340,241,417,36),Color("102e56"),true)
+
 	var menu := OptionButton.new()
 	menu.name = "EntryLanguageDropdown"
 	menu.set_meta("entry_language_dropdown",true)
-	menu.custom_minimum_size = Vector2(302,53)
-	menu.add_theme_font_size_override("font_size",19)
+	menu.custom_minimum_size = Vector2(397,58)
+	menu.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	menu.add_theme_font_size_override("font_size",21)
 	for theme_color in ["font_color","font_hover_color","font_pressed_color","font_focus_color"]:
-		menu.add_theme_color_override(theme_color, Color("18486b"))
-	menu.add_theme_stylebox_override("normal",_console_style(Color("ffffff"),Color("8cd4f2"),15,8,2))
-	menu.add_theme_stylebox_override("hover",_console_style(Color("e8f7ff"),Color("47b9ea"),15,8,5))
-	menu.add_theme_stylebox_override("pressed",_console_style(Color("cdefff"),Color("3ec3ec"),15,8,1))
+		menu.add_theme_color_override(theme_color, Color("143d69"))
+	menu.add_theme_color_override("font_disabled_color", Color("88a0bb"))
+	menu.add_theme_stylebox_override("normal",_console_style(Color("ffffff"),Color("7dcdf4"),20,11,5))
+	menu.add_theme_stylebox_override("hover",_console_style(Color("e6f7ff"),Color("38c9f3"),20,11,8))
+	menu.add_theme_stylebox_override("pressed",_console_style(Color("d9f3ff"),Color("48c7f0"),20,11,3))
+	menu.add_theme_stylebox_override("focus",_console_style(Color.TRANSPARENT,Color("4fcff5"),20,0,0))
 	var popup := menu.get_popup()
-	popup.add_theme_stylebox_override("panel",_console_style(Color("f4faff"),Color("8bcef0"),14,10,5))
-	popup.add_theme_stylebox_override("hover",_console_style(Color("b8e8ff"),Color("6dc6e9"),12,8,2))
-	popup.add_theme_color_override("font_color",Color("184869"))
-	popup.add_theme_color_override("font_hover_color",Color("0b4f79"))
-	popup.add_theme_color_override("font_disabled_color",Color("829caf"))
-	popup.add_theme_font_size_override("font_size",18)
-	menu.add_item("日本語",0)
+	popup.add_theme_stylebox_override("panel",_console_style(Color("f8fcff"),Color("a6dff5"),16,13,8))
+	popup.add_theme_stylebox_override("hover",_console_style(Color("41a1f3"),Color("b4eaff"),13,9,3))
+	popup.add_theme_color_override("font_color",Color("10385b"))
+	popup.add_theme_color_override("font_hover_color",Color("ffffff"))
+	popup.add_theme_color_override("font_disabled_color",Color("8da1b4"))
+	popup.add_theme_font_size_override("font_size",20)
+	menu.add_item("🌐   日本語",0)
 	menu.add_item("မြန်မာ",1)
 	menu.add_item("English (Coming Soon)",2)
 	menu.set_item_disabled(2,true)
 	menu.select(1 if Progress.get_language()=="mm" else 0)
-	_ui_put(canvas,menu,Rect2(398,288,304,53))
-	var continue_button := _button("Continue    »",true,300,55)
+	_ui_put(canvas,menu,Rect2(352,316,398,59))
+
+	var continue_button := _button("Continue    »",true,362,62)
 	continue_button.name = "LanguageContinue"
 	continue_button.set_meta("entry_language_continue",true)
-	continue_button.add_theme_font_size_override("font_size",20)
+	continue_button.add_theme_font_size_override("font_size",23)
 	continue_button.pressed.connect(func() -> void:
 		_choose_language("mm" if menu.selected==1 else "jp")
 	)
-	_ui_put(canvas,continue_button,Rect2(400,400,300,55))
-	_ui_text(canvas,"JAPANESE   •   MYANMAR",13,Rect2(397,467,303,23),Color("487da0"),true)
+	_ui_put(canvas,continue_button,Rect2(369,467,362,64))
 	canvas.modulate.a = 0
-	create_tween().tween_property(canvas,"modulate:a",1.0,0.36)
+	create_tween().tween_property(canvas,"modulate:a",1.0,0.30)
 
 func _choose_language(lang: String) -> void:
 	Progress.set_language(lang)
