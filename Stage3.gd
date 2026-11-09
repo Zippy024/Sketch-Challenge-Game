@@ -1,4 +1,5 @@
 extends Control
+const ReferenceSkin = preload("res://ReferenceUISkin.gd")
 
 # Stage 3 only: two image-choice questions followed by five kitchen-part selections.
 # The previous stages, AI code, audio assets, and the existing menu visuals are unchanged.
@@ -7,11 +8,11 @@ const UI_THEME: Theme = preload("res://WebBilingualTheme.tres")
 const PORTRAIT: Texture2D = preload("res://customer_portrait_ui.png")
 const IMAGES_Q1: Array[Texture2D] = [preload("res://Stage3Assets/q1_1.png"), preload("res://Stage3Assets/q1_2.png"), preload("res://Stage3Assets/q1_3.png"), preload("res://Stage3Assets/q1_4.png"), preload("res://Stage3Assets/q1_5.png")]
 const IMAGES_Q2: Array[Texture2D] = [preload("res://Stage3Assets/q2_1.png"), preload("res://Stage3Assets/q2_2.png"), preload("res://Stage3Assets/q2_3.png"), preload("res://Stage3Assets/q2_4.png")]
-const BG := Color("e9eef5")
-const PANEL := Color("f1f5f9")
+const BG := Color("e4f5fb")
+const PANEL := Color("effaff")
 const TEXT := Color("1f3c56")
 const SUBTEXT := Color("6b7f98")
-const BLUE := Color("2563eb")
+const BLUE := Color("008aa8")
 const GREEN := Color("15803d")
 const OUTLINE := Color("d6e2ef")
 const NAMES: Array[String] = ["カウンター", "キッチンボード", "フード", "腰壁", "その他"]
@@ -63,8 +64,10 @@ func _btn(t: String, main: bool = false, w: float = 92.0) -> Button:
 	b.add_theme_color_override("font_color", Color.WHITE if main else BLUE)
 	b.add_theme_color_override("font_hover_color", Color.WHITE if main else BLUE)
 	b.add_theme_stylebox_override("normal", _style(BLUE if main else Color.WHITE, BLUE if main else OUTLINE))
-	b.add_theme_stylebox_override("hover", _style(Color("1d4ed8") if main else Color("e7f0ff"), BLUE))
-	b.add_theme_stylebox_override("pressed", _style(Color("1d4ed8") if main else Color("e7f0ff"), BLUE))
+	b.add_theme_stylebox_override("hover", _style(Color("006c8e") if main else Color("e7f0ff"), BLUE))
+	b.add_theme_stylebox_override("pressed", _style(Color("006c8e") if main else Color("e7f0ff"), BLUE))
+	if main:
+		b.add_theme_stylebox_override("normal", ReferenceSkin.primary_style())
 	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	return b
 
