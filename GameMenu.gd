@@ -252,7 +252,7 @@ func _build_frame() -> void:
 	_bottom_bar = _glass(Color(0.19,0.14,0.24,0.85), Color("d3ad90"), 0, 1)
 	_bottom_bar.custom_minimum_size.y = 25
 	outer.add_child(_bottom_bar)
-	_bottom_bar.add_child(_label("DESIGN  •  SKETCH  •  SELECT MATERIALS  •  LEARN", 11, C_INK, true)
+	_bottom_bar.add_child(_label("DESIGN  •  SKETCH  •  SELECT MATERIALS  •  LEARN", 11, C_INK, true))
 
 func _set_concept_background(choose_levels: bool) -> void:
 	if not is_instance_valid(_menu_photo):
