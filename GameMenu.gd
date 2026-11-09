@@ -12,6 +12,7 @@ const KitchenHologram = preload("res://MenuAssets/OptionCHologram.gd")
 const EntryKitchenSketch = preload("res://MenuAssets/EntryKitchenSketch.gd")
 const BlueprintMissionMap = preload("res://MenuAssets/BlueprintMissionMap.gd")
 const KitchenDiorama3D = preload("res://MenuAssets/KitchenDiorama3D.gd")
+const FlatBlueBackdrop = preload("res://MenuAssets/FlatBlueBackdrop.gd")
 
 const BG := Color("0b2e55")
 const WHITE := Color("ffffff")
@@ -181,15 +182,13 @@ func _build_frame() -> void:
 	base.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(base)
 	base.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var photo := TextureRect.new()
-	photo.texture = preload("res://MenuAssets/KitchenIntroV8.jpg")
-	photo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	photo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	photo.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	photo.modulate = Color("d8efff")
-	base.add_child(photo)
-	photo.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_menu_photo = photo
+	# Replace every menu background photograph with one consistent
+	# procedural ice-blue gradient. Keep Stage 1/2/3 scene assets intact.
+	var backdrop := FlatBlueBackdrop.new()
+	backdrop.name = "PlainBlueGameBackdrop"
+	backdrop.set_meta("photo_free_background", true)
+	base.add_child(backdrop)
+	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var light := ColorRect.new()
 	light.color = Color(0.50, 0.79, 1.0, 0.10)
 	light.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -277,11 +276,10 @@ func _build_frame() -> void:
 	footer.autowrap_mode = TextServer.AUTOWRAP_OFF
 	_bottom_bar.add_child(footer)
 
-func _set_concept_background(choose_levels: bool) -> void:
-	if not is_instance_valid(_menu_photo):
-		return
-	_menu_photo.texture = preload("res://MenuAssets/KitchenIntroV8.jpg") if not choose_levels else preload("res://MenuAssets/KitchenHero.jpg")
-	_menu_photo.modulate = Color("d3edff") if not choose_levels else Color("a6d2fa")
+func _set_concept_background(_choose_levels: bool) -> void:
+	# Background is deliberately the same photo-free blue theme on every
+	# menu screen. Stage 1–3 have their own unchanged scenes.
+	pass
 
 func _fit_content() -> void:
 	if _body != null:
@@ -312,12 +310,8 @@ func _clear() -> void:
 	_scroll.scroll_vertical = 0
 
 func _entry_background() -> void:
-	# Blue daylight kitchen background used only during Intro + Language.
-	if is_instance_valid(_menu_photo):
-		_menu_photo.texture = preload("res://MenuAssets/KitchenIntroV8.jpg")
-		_menu_photo.modulate = Color("c7e8ff")
 	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-
+	# Shared FlatBlueBackdrop stays visible behind all entry screens.
 
 func _entry_canvas(name_value: String) -> Control:
 	_clear()
