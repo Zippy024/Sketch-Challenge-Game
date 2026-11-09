@@ -358,7 +358,7 @@ func _show_home() -> void:
 
 	# Option C hero: soft white translucent pane over the real kitchen.
 	var panel := _glass(Color(1.0,1.0,0.99,0.83), Color("ffffff"), 34, 24)
-	panel.custom_minimum_size.x = 565
+	panel.custom_minimum_size.x = 585
 	panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	scene_row.add_child(panel)
 	var stack := VBoxContainer.new()
@@ -366,24 +366,39 @@ func _show_home() -> void:
 	stack.add_theme_constant_override("separation", 10)
 	panel.add_child(stack)
 	var brand_line := HBoxContainer.new()
-	brand_line.add_theme_constant_override("separation", 16)
+	brand_line.add_theme_constant_override("separation", 12)
+	brand_line.custom_minimum_size.x = 505
 	stack.add_child(brand_line)
 	var logo := TextureRect.new()
 	logo.texture = preload("res://Branding/SketchPlanPencil.svg")
-	logo.custom_minimum_size = Vector2(105,105)
+	logo.custom_minimum_size = Vector2(90,90)
 	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	brand_line.add_child(logo)
 	var headings := VBoxContainer.new()
 	headings.alignment = BoxContainer.ALIGNMENT_CENTER
+	headings.custom_minimum_size.x = 388
+	headings.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	brand_line.add_child(headings)
-	headings.add_child(_label("K I T C H E N   D E S I G N   T R A I N I N G", 11, Color("4d5b5c")))
-	headings.add_child(_label("Kitchen", 44, Color("1f3533")))
-	headings.add_child(_label("Sketch Challenge", 33, Color("078b73")))
-	stack.add_child(_label("DECORATION GAME", 17, Color("364c4b"), true))
-	stack.add_child(_label("DESIGN  •  SKETCH  •  SELECT  •  LEARN", 14, Color("394f4f"), true))
-	stack.add_child(_label("Plan kitchen layouts, choose materials and solve real design challenges through practical missions.", 16, Color("354d4b")))
+	var subtitle := _label("KITCHEN DESIGN TRAINING", 12, Color("4d5b5c"))
+	subtitle.autowrap_mode = TextServer.AUTOWRAP_OFF
+	headings.add_child(subtitle)
+	var kitchen := _label("Kitchen", 44, Color("1f3533"))
+	kitchen.autowrap_mode = TextServer.AUTOWRAP_OFF
+	headings.add_child(kitchen)
+	var game_name := _label("Sketch Challenge", 31, Color("078b73"))
+	game_name.autowrap_mode = TextServer.AUTOWRAP_OFF
+	headings.add_child(game_name)
+	var game_kind := _label("DECORATION GAME", 17, Color("364c4b"), true)
+	game_kind.autowrap_mode = TextServer.AUTOWRAP_OFF
+	stack.add_child(game_kind)
+	var action_tag := _label("DESIGN  •  SKETCH  •  SELECT  •  LEARN", 14, Color("394f4f"), true)
+	action_tag.autowrap_mode = TextServer.AUTOWRAP_OFF
+	stack.add_child(action_tag)
+	var pitch := _label("Plan kitchen layouts, choose materials and solve real design challenges through practical missions.", 16, Color("354d4b"))
+	pitch.custom_minimum_size.x = 475
+	stack.add_child(pitch)
 	var breathing := Control.new()
 	breathing.custom_minimum_size.y = 8
 	stack.add_child(breathing)
@@ -690,7 +705,7 @@ func _show_levels() -> void:
 	strip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	strip.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	strip.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	strip.custom_minimum_size.y = 330
+	strip.custom_minimum_size.y = 325
 	strip.clip_contents = true
 	mission_area.add_child(strip)
 	var cards := HBoxContainer.new()
@@ -732,7 +747,7 @@ func _stage_card(stage: int) -> Button:
 	var card := Button.new()
 	card.set_meta("mission_stage", stage)
 	card.text = ""
-	card.custom_minimum_size = Vector2(218, 310)
+	card.custom_minimum_size = Vector2(218, 313)
 	card.disabled = not unlocked
 	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if unlocked else Control.CURSOR_ARROW
 	var active_background := Color(0.08,0.20,0.21,0.93)
@@ -771,7 +786,7 @@ func _stage_card(stage: int) -> Button:
 	preview.texture = thumbnails[stage - 1]
 	preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	preview.custom_minimum_size = Vector2(193, 165)
+	preview.custom_minimum_size = Vector2(193, 138)
 	preview.modulate = Color.WHITE if unlocked else Color("b4b6bb")
 	preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	body.add_child(preview)
@@ -781,7 +796,7 @@ func _stage_card(stage: int) -> Button:
 		"Island Layout Planning", "Lighting & Atmosphere", "Final Kitchen Design"
 	]
 	var name := _label(names[stage-1], 16, Color("ffffff") if unlocked else Color("e7e5e7"), true)
-	name.custom_minimum_size.y = 44
+	name.custom_minimum_size.y = 40
 	body.add_child(name)
 	body.add_child(_label("✦  START MISSION" if unlocked else "COMPLETE PRIOR STAGES", 12, Color("9dffe0") if unlocked else Color("d7d7db"), true))
 	return card
