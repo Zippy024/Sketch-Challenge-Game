@@ -313,12 +313,12 @@ func _show_loading() -> void:
 
 
 func _show_language() -> void:
-	_menu_backdrop.texture = preload("res://Sunny Cozy Kitchen Interior.png")
+	_menu_backdrop.texture = preload("res://MenuAssets/Modern Teal Kitchen with Warm Accents.png")
 	var page := _entry_page("ChooseLanguageScreen")
 	# Compact reference-style language card; keep the existing background and logo.
-	_image(page, preload("res://MenuAssets/KitchenLogoGlossy.webp"), Rect2(425, 20, 470, 174))
-	_panel(page, Rect2(465, 205, 390, 222), Color("eaf5ff"), Color("8ebce5"), 30)
-	_text(page, "Select language", 24, Rect2(495, 219, 330, 38), Color("194a78"), false)
+	_image(page, preload("res://MenuAssets/KitchenLogoGlossy.webp"), Rect2(470, 22, 380, 145))
+	_panel(page, Rect2(465, 210, 390, 215), Color("eaf5ff"), Color("8ebce5"), 30)
+	_text(page, "Select language", 24, Rect2(495, 221, 330, 35), Color("194a78"), false)
 	var options := OptionButton.new()
 	options.name = "LanguageDropdown"
 	options.custom_minimum_size = Vector2(330, 52)
@@ -341,7 +341,7 @@ func _show_language() -> void:
 	options.add_item("English", 2)
 	options.set_item_disabled(2, true)
 	options.select(1 if Progress.get_language() == "mm" else 0)
-	_place(page, options, Rect2(495, 270, 330, 52))
+	_place(page, options, Rect2(495, 269, 330, 52))
 	var continue_button := _button("Continue", true, 330, 60)
 	continue_button.name = "LanguageContinueButton"
 	continue_button.add_theme_font_size_override("font_size", 23)
@@ -354,7 +354,7 @@ func _show_language() -> void:
 		_set_language("mm" if options.selected == 1 else "jp")
 		_show_home()
 	)
-	_place(page, continue_button, Rect2(495, 339, 330, 60))
+	_place(page, continue_button, Rect2(495, 342, 330, 60))
 
 
 func _show_home() -> void:
