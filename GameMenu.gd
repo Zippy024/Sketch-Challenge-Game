@@ -618,10 +618,41 @@ func _show_levels() -> void:
 	board.add_child(holder)
 	holder.add_child(_label("✦   KITCHEN DESIGN MISSIONS   ✦", 16, Color("ffe2b1"), true))
 
+	var mission_row := HBoxContainer.new()
+	mission_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	mission_row.add_theme_constant_override("separation", 18)
+	holder.add_child(mission_row)
+	var guide_column := VBoxContainer.new()
+	guide_column.custom_minimum_size.x = 150
+	guide_column.alignment = BoxContainer.ALIGNMENT_CENTER
+	guide_column.add_theme_constant_override("separation", 10)
+	mission_row.add_child(guide_column)
+	var face := TextureRect.new()
+	face.texture = preload("res://customer_portrait_ui.png")
+	face.custom_minimum_size = Vector2(148, 148)
+	face.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	face.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	face.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var face_shader := Shader.new()
+	face_shader.code = """
+shader_type canvas_item;
+void fragment() {
+	vec4 tex = texture(TEXTURE, UV);
+	float blue = clamp(tex.b - tex.r * 1.16, 0.0, 1.0);
+	tex.rgb = mix(tex.rgb, vec3(0.95, 0.57, 0.34), blue * 0.92);
+	COLOR = tex;
+}
+"""
+	var face_material := ShaderMaterial.new()
+	face_material.shader = face_shader
+	face.material = face_material
+	guide_column.add_child(face)
+	guide_column.add_child(_label("DESIGN GUIDE", 13, C_COPPER, true))
+	guide_column.add_child(_label("Choose your next\nchallenge!", 12, C_MUTED, true))
 	var cards := HBoxContainer.new()
 	cards.alignment = BoxContainer.ALIGNMENT_CENTER
-	cards.add_theme_constant_override("separation", 15)
-	holder.add_child(cards)
+	cards.add_theme_constant_override("separation", 12)
+	mission_row.add_child(cards)
 	for stage in range(1, 7):
 		var card := _stage_card(stage)
 		cards.add_child(card)
@@ -634,14 +665,17 @@ func _show_levels() -> void:
 	path.alignment = BoxContainer.ALIGNMENT_CENTER
 	path.add_theme_constant_override("separation", 0)
 	holder.add_child(path)
+	var portrait_gap := Control.new()
+	portrait_gap.custom_minimum_size.x = 168
+	path.add_child(portrait_gap)
 	for stage in range(1, 7):
 		var node := _label("◆" if stage <= 3 else "◇", 18, Color("ffd285") if stage <= 3 else Color("867890"), true)
-		node.custom_minimum_size.x = 185
+		node.custom_minimum_size.x = 166
 		path.add_child(node)
 		if stage < 6:
 			var connector := ColorRect.new()
 			connector.color = Color("b77b72") if stage <= 3 else Color("5d536b")
-			connector.custom_minimum_size = Vector2(15,2)
+			connector.custom_minimum_size = Vector2(12,2)
 			connector.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			path.add_child(connector)
 
@@ -655,7 +689,7 @@ func _stage_card(stage: int) -> Button:
 	var unlocked: bool = stage <= 3 and Progress.is_level_unlocked(stage)
 	var card := Button.new()
 	card.text = ""
-	card.custom_minimum_size = Vector2(185, 285)
+	card.custom_minimum_size = Vector2(166, 275)
 	card.disabled = not unlocked
 	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if unlocked else Control.CURSOR_ARROW
 	var fill := Color(0.19,0.12,0.25,0.96) if unlocked else Color(0.22,0.20,0.28,0.92)
@@ -693,7 +727,7 @@ func _stage_card(stage: int) -> Button:
 	preview.texture = images[stage-1]
 	preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	preview.custom_minimum_size = Vector2(164, 94)
+	preview.custom_minimum_size = Vector2(140, 89)
 	preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	preview.modulate = Color.WHITE if unlocked else Color("756d7b")
 	content.add_child(preview)
