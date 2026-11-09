@@ -540,12 +540,12 @@ func _show_home() -> void:
 	var side := _glass(Color(0.94,0.98,1.0,0.89), Color("c4eaff"), 27, 0)
 	side.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_ui_put(canvas, side, Rect2(69, 222, 410, 332))
-	var start := _button("▶    START GAME", true, 336, 66)
+	var start := _button("▶    START GAME", true, 360, 66)
 	start.name = "HomeStartTraining"
 	start.set_meta("home_start_button", true)
 	start.add_theme_font_size_override("font_size", 23)
 	start.pressed.connect(_show_levels)
-	_ui_put(canvas, start, Rect2(106, 255, 336, 64))
+	_ui_put(canvas, start, Rect2(94, 255, 360, 64))
 	var level := _nav_button("▦    SELECT LEVEL", _show_levels)
 	level.add_theme_font_size_override("font_size", 17)
 	_ui_put(canvas, level, Rect2(118, 334, 313, 53))
