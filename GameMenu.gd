@@ -49,7 +49,7 @@ func _ready() -> void:
 		Progress.show_levels_on_open = false
 		_show_levels()
 	else:
-		_show_home()
+		_show_splash()
 
 
 func _style(bg: Color, edge: Color = BORDER, radius: int = 15, padding: int = 0) -> StyleBoxFlat:
@@ -262,6 +262,59 @@ func _clear() -> void:
 		_body.remove_child(child)
 		child.queue_free()
 	_scroll.scroll_vertical = 0
+
+func _show_splash() -> void:
+	_clear()
+	_top_bar.hide()
+	_bottom_bar.hide()
+	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var alignment := CenterContainer.new()
+	alignment.custom_minimum_size.y = maxf(560.0, size.y - 105.0)
+	_body.add_child(alignment)
+	var panel := _c_panel(Color(0.08, 0.055, 0.16, 0.85), Color("ffc889"), 30, 30)
+	panel.custom_minimum_size = Vector2(560, 360)
+	alignment.add_child(panel)
+	var content := VBoxContainer.new()
+	content.alignment = BoxContainer.ALIGNMENT_CENTER
+	content.add_theme_constant_override("separation", 15)
+	panel.add_child(content)
+	var mark := TextureRect.new()
+	mark.texture = preload("res://Branding/SketchPlanPencil.svg")
+	mark.custom_minimum_size = Vector2(110, 110)
+	mark.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	mark.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	mark.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	content.add_child(mark)
+	content.add_child(_label("KITCHEN SKETCH CHALLENGE", 30, C_COPPER, true))
+	content.add_child(_label("D E C O R A T I O N   G A M E", 15, C_INK, true))
+	var caption := _label("LOADING YOUR DESIGN ADVENTURE...", 13, C_MUTED, true)
+	content.add_child(caption)
+	var bar := ProgressBar.new()
+	bar.custom_minimum_size = Vector2(440, 20)
+	bar.min_value = 0
+	bar.max_value = 100
+	bar.value = 0
+	bar.show_percentage = false
+	bar.add_theme_stylebox_override("background", _console_style(Color("302741"), Color("7b5063"), 12, 2))
+	bar.add_theme_stylebox_override("fill", _console_style(Color("ffa44d"), Color("ffd88c"), 12, 2))
+	content.add_child(bar)
+	var progress := _label("0%", 13, C_COPPER, true)
+	content.add_child(progress)
+	panel.modulate.a = 0.0
+	var fade := create_tween()
+	fade.tween_property(panel, "modulate:a", 1.0, 0.36)
+	var load_anim := create_tween()
+	load_anim.tween_property(bar, "value", 100.0, 1.65).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	load_anim.tween_callback(func() -> void:
+		if is_inside_tree():
+			_show_home()
+	)
+	bar.value_changed.connect(func(v: float) -> void:
+		if is_instance_valid(progress):
+			progress.text = "%d%%" % roundi(v)
+	)
+
 
 func _show_home() -> void:
 	_clear()
