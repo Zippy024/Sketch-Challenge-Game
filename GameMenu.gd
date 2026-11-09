@@ -43,7 +43,7 @@ var _mm_button: Button
 var _scroll: ScrollContainer
 var _volume_value: float = 0.85
 var _reset_armed: bool = false
-var _selected_level: int = 1
+var _selected_level: int = 3
 
 
 func _ready() -> void:
@@ -807,75 +807,105 @@ func _level_row(n: int) -> Button:
 	return button
 
 func _show_levels() -> void:
-	_set_concept_background(true)
-	var canvas := _blueprint_canvas("BlueprintLevelsCanvas")
-	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	var left := _glass(Color("eff9ff"), Color("b5ebff"), 26, 0)
-	_ui_put(canvas, left, Rect2(4, 8, 266, 625))
-	_ui_text(canvas, "TRAINING MISSIONS", 14, Rect2(25, 29, 227, 29), Color("178bb9"))
-	_ui_text(canvas, "Select a Stage", 30, Rect2(25, 62, 235, 55), Color("0a2c59"))
-	var explanation := _label("Progress through kitchen sketching, customer Q&A and material selection missions.", 16, Color("24547b"))
-	explanation.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_ui_put(canvas, explanation, Rect2(28, 131, 219, 105))
-	var summary := _glass(Color("dff3ff"), Color("9cdef6"), 20, 0)
-	_ui_put(canvas, summary, Rect2(24, 260, 222, 127))
-	_ui_text(canvas, "MISSIONS AVAILABLE", 15, Rect2(38, 276, 195, 26), Color("1b5a88"))
-	_ui_text(canvas, "3 / 6", 35, Rect2(38, 306, 196, 44), Color("038fc3"), true)
-	_ui_text(canvas, "STAGES", 12, Rect2(35, 351, 201, 23), Color("1f557b"), true)
-	_ui_text(canvas, "01   LDK Boundary Drawing", 13, Rect2(30, 410, 230, 24), Color("225c85"))
-	_ui_text(canvas, "02   Pipe Shaft Q&A", 13, Rect2(30, 441, 230, 24), Color("225c85"))
-	_ui_text(canvas, "03   S-Class Kitchen Selection", 13, Rect2(30, 472, 230, 24), Color("225c85"))
-	_ui_text(canvas, "04–06   COMING SOON", 13, Rect2(30, 540, 230, 25), Color("718a9f"))
+	var canvas := _blueprint_canvas("ShowroomLevelsCanvas")
+	_top_bar.hide()
+	_bottom_bar.hide()
+	_showroom_photo(canvas,Rect2(0,0,1320,638))
+	# One luminous showroom, not a dense dashboard or 3D room carousel.
+	var overlay := ColorRect.new()
+	overlay.color = Color(0.76,0.90,1.0,0.18)
+	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(canvas,overlay,Rect2(0,0,1320,637))
+	var brand_image := TextureRect.new()
+	brand_image.texture = preload("res://Branding/SketchPlanPencil.svg")
+	brand_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	brand_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	brand_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(canvas,brand_image,Rect2(25,13,74,74))
+	var brand := _ui_text(canvas,"Kitchen Decoration Game",22,Rect2(105,29,328,40),Color("0a3f73"))
+	brand.add_theme_constant_override("outline_size",1)
+	brand.add_theme_color_override("font_outline_color",Color("eefbff"))
+
 	var home := _nav_button("⌂  HOME", _resume_paused if is_pause_overlay else _show_home)
-	_ui_put(canvas, home, Rect2(38, 573, 185, 42))
+	_ui_put(canvas,home,Rect2(448,17,141,43))
+	var stages_btn := _button("▦  SELECT LEVEL",true,164,43)
+	stages_btn.add_theme_font_size_override("font_size",14)
+	stages_btn.pressed.connect(_show_levels)
+	_ui_put(canvas,stages_btn,Rect2(596,17,165,43))
+	var guide := _nav_button("▤  GUIDE",_show_help)
+	_ui_put(canvas,guide,Rect2(768,17,136,43))
+	var progress := _nav_button("▥  PROGRESS",_show_progress)
+	_ui_put(canvas,progress,Rect2(911,17,144,43))
+	var trainee := _glass(Color("0c3d69"),Color("8ee8fc"),23,0)
+	trainee.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(canvas,trainee,Rect2(1098,17,181,43))
+	_ui_text(canvas,"◉  TRAINEE",15,Rect2(1111,25,151,25),Color("e6faff"),true)
 
-	var map_back := _glass(Color("0b3664"), Color("82dfff"), 25, 0)
-	_ui_put(canvas, map_back, Rect2(287, 8, 1025, 625))
-	var drawing := BlueprintMissionMap.new()
-	drawing.name = "BlueprintMissionRoute"
-	drawing.set_meta("blueprint_route", true)
-	_ui_put(canvas, drawing, Rect2(298, 19, 1003, 603))
-	_ui_text(canvas, "SELECT A STAGE   /   BLUEPRINT MISSION MAP", 22, Rect2(334, 27, 880, 38), Color("d2f9ff"))
-	_ui_text(canvas, "Stage 1–3 playable  •  Stage 4–6 coming soon", 13, Rect2(334, 61, 880, 24), Color("8eddf8"))
+	var heading := _ui_text(canvas,"Select a Stage",34,Rect2(411,86,500,48),Color("0a315c"),true)
+	heading.add_theme_constant_override("outline_size",2)
+	heading.add_theme_color_override("font_outline_color",Color("e6f8ff"))
+	_ui_text(canvas,"Progress through kitchen design missions step by step.",15,Rect2(393,135,535,29),Color("204c76"),true)
+	var holo := KitchenHologram.new()
+	holo.modulate.a = 0.20
+	_ui_put(canvas,holo,Rect2(960,92,319,128))
+	# Under the six stage cards: blue luminous oval stage and shadows.
+	var pedestal := ShowroomGlow.new()
+	pedestal.name = "StageShowroomPedestal"
+	pedestal.set_meta("showroom_pedestal",true)
+	_ui_put(canvas,pedestal,Rect2(26,379,1268,207))
 
-	# Six floating 3D kitchen dioramas connected along a cyan blueprint route.
-	for stage in range(1, 7):
-		var column: int = (stage - 1) % 3
-		var row: int = floori(float(stage - 1) / 3.0)
-		var x: float = 329.0 + float(column)*315.0
-		var y: float = 84.0 + float(row)*208.0
+	var x_positions: Array[float] = [72.0,269.0,466.0,677.0,874.0,1071.0]
+	for stage in range(1,7):
+		var chosen: bool = stage == _selected_level
+		var top: float = 170.0 if chosen else 214.0
+		var w: float = 194.0 if chosen else 174.0
+		var h: float = 335.0 if chosen else 284.0
 		var card := _map_stage_card(stage)
-		_ui_put(canvas, card, Rect2(x, y, 286, 213))
+		_ui_put(canvas,card,Rect2(x_positions[stage-1],top,w,h))
 		card.modulate.a = 0.0
-		var entrance := create_tween()
-		entrance.tween_interval(float(stage - 1)*0.075)
-		entrance.tween_property(card, "modulate:a", 1.0, 0.35).set_trans(Tween.TRANS_SINE)
+		var appear := create_tween()
+		appear.tween_interval(float(stage-1)*0.045)
+		appear.tween_property(card,"modulate:a",1.0,0.34).set_trans(Tween.TRANS_SINE)
+	var left_arrow := _nav_button("❮",func() -> void:
+		_select_map_stage(maxi(1,_selected_level-1))
+	)
+	left_arrow.custom_minimum_size = Vector2(42,55)
+	left_arrow.disabled = _selected_level <= 1
+	_ui_put(canvas,left_arrow,Rect2(10,353,48,55))
+	var right_arrow := _nav_button("❯",func() -> void:
+		_select_map_stage(mini(3,_selected_level+1))
+	)
+	right_arrow.disabled = _selected_level >= 3
+	_ui_put(canvas,right_arrow,Rect2(1265,353,45,55))
 
-	var detail := _glass(Color("e9f7ff"), Color("93e5ff"), 19, 0)
-	detail.name = "SelectedMissionPanel"
-	detail.set_meta("mission_detail", true)
-	_ui_put(canvas, detail, Rect2(317, 524, 967, 96))
-	var thumbnails: Array[Texture2D] = [
-		preload("res://reference_sketch.png"), preload("res://MenuAssets/Level2.png"),
-		preload("res://MenuAssets/Level3.png")
-	]
-	var preview := TextureRect.new()
-	preview.texture = thumbnails[clampi(_selected_level-1, 0, 2)]
-	preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ui_put(canvas, preview, Rect2(329, 531, 136, 76))
-	_ui_text(canvas, "STAGE %02d  /  SELECTED MISSION" % _selected_level, 15, Rect2(485, 529, 480, 23), Color("0f78b2"))
-	var titles: Array[String] = ["LDK Boundary Drawing", "Pipe Shaft Q&A", "S-Class Kitchen Selection"]
-	_ui_text(canvas, titles[clampi(_selected_level-1, 0, 2)], 22, Rect2(485, 556, 500, 27), Color("0e325e"))
-	var descriptions: Array[String] = ["Sketch the living, dining and kitchen boundaries.", "Answer the customer's Pipe Shaft question.", "Choose the suitable S-Class kitchen design."]
-	_ui_text(canvas, descriptions[clampi(_selected_level-1, 0, 2)], 14, Rect2(485, 588, 500, 23), Color("346a91"))
-	var play := _button("▶  PLAY STAGE %02d" % _selected_level, true, 233, 57)
-	play.name = "SelectedMissionPlay"
-	play.set_meta("mission_play", true)
-	play.add_theme_font_size_override("font_size", 19)
-	play.pressed.connect(_start_level.bind(_selected_level))
-	_ui_put(canvas, play, Rect2(1033, 545, 232, 58))
+	# Bottom horizontal progress track. 3/6 means AVAILABLE, not fake results.
+	var progress_box := _glass(Color("f1faff"),Color("b8e4f8"),34,0)
+	progress_box.name = "SelectedMissionPanel"
+	progress_box.set_meta("mission_detail",true)
+	progress_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(canvas,progress_box,Rect2(126,540,1070,78))
+	_ui_text(canvas,"▤  TRAINING MISSIONS",14,Rect2(146,550,215,24),Color("10496e"))
+	_ui_text(canvas,"3 / 6  AVAILABLE",19,Rect2(145,577,216,29),Color("028bb4"))
+	var line := ColorRect.new()
+	line.color = Color("97d6e7")
+	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(canvas,line,Rect2(373,553,2,49))
+	for stage in range(1,7):
+		var x: float = 411.0 + float(stage-1)*143.0
+		if stage < 6:
+			var link_line := ColorRect.new()
+			link_line.color = Color("48d0e8") if stage < 3 else Color("b8c6d2")
+			link_line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			_ui_put(canvas,link_line,Rect2(x+38,575,104,3))
+		var select: bool = stage == _selected_level
+		var unlocked: bool = stage <= 3
+		var node := _glass(Color("04a4c6") if select else (Color("effaff") if unlocked else Color("dce4ec")),
+			Color("54e2f5") if unlocked else Color("bdc7d2"),27,0)
+		node.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_ui_put(canvas,node,Rect2(x,554,48,48))
+		_ui_text(canvas,"%02d" % stage,17,Rect2(x+2,566,44,24),
+			Color("ffffff") if select else (Color("164868") if unlocked else Color("8192a2")),true)
+	# Main Play action is owned by the selected mission card, not a fake static label.
 
 func _stage_card(stage: int) -> Button:
 	var unlocked: bool = stage <= 3 and Progress.is_level_unlocked(stage)
