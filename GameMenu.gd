@@ -11,6 +11,7 @@ const SunsetSparkles = preload("res://MenuAssets/SunsetSparkles.gd")
 const KitchenHologram = preload("res://MenuAssets/OptionCHologram.gd")
 const EntryKitchenSketch = preload("res://MenuAssets/EntryKitchenSketch.gd")
 const BlueprintMissionMap = preload("res://MenuAssets/BlueprintMissionMap.gd")
+const KitchenDiorama3D = preload("res://MenuAssets/KitchenDiorama3D.gd")
 
 const BG := Color("0b2e55")
 const WHITE := Color("ffffff")
@@ -462,44 +463,56 @@ func _map_stage_card(stage: int) -> Button:
 	var available: bool = stage <= 3 and Progress.is_level_unlocked(stage)
 	var selected: bool = available and stage == _selected_level
 	var item := Button.new()
-	item.name = "BlueprintMission%02d" % stage
+	item.name = "DioramaMission%02d" % stage
 	item.set_meta("mission_stage", stage)
-	item.custom_minimum_size = Vector2(274, 183)
+	item.custom_minimum_size = Vector2(286, 213)
 	item.disabled = not available
-	item.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if available else Control.CURSOR_ARROW
-	item.add_theme_stylebox_override("normal", _console_style(Color("ecfaff"), Color("48e5ff") if selected else Color("b9e9fb"), 19, 0, 9 if selected else 3))
-	item.add_theme_stylebox_override("hover", _console_style(Color("d2f4ff"), Color("70eafa"), 19, 0, 12))
-	item.add_theme_stylebox_override("pressed", _console_style(Color("bdeafa"), Color("5cd5f0"), 19, 0, 2))
-	item.add_theme_stylebox_override("disabled", _console_style(Color("8ea3b6"), Color("879eaf"), 19, 0, 1))
 	item.text = ""
+	item.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if available else Control.CURSOR_ARROW
+	# Translucent background lets the miniature 3D room float on the blueprint.
+	var clear_style := _console_style(Color(0.05,0.16,0.31,0.01), Color.TRANSPARENT, 20, 0, 0)
+	item.add_theme_stylebox_override("normal", clear_style)
+	item.add_theme_stylebox_override("hover", _console_style(Color(0.04,0.29,0.55,0.14), Color("36dfff"), 19, 0, 12))
+	item.add_theme_stylebox_override("pressed", _console_style(Color(0.02,0.35,0.66,0.21), Color("a6f8ff"), 19, 0, 4))
+	item.add_theme_stylebox_override("disabled", clear_style)
 	if available:
 		item.pressed.connect(_select_map_stage.bind(stage))
 		ConsoleAnimations.animate_button(item)
-	var thumbnails: Array[Texture2D] = [
-		preload("res://reference_sketch.png"), preload("res://MenuAssets/Level2.png"),
-		preload("res://MenuAssets/Level3.png"), preload("res://MenuAssets/Level4.png"),
-		preload("res://MenuAssets/Level5.png"), preload("res://MenuAssets/Level6.png")
-	]
-	var picture := TextureRect.new()
-	picture.texture = thumbnails[stage - 1]
-	picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	picture.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	picture.modulate = Color.WHITE if available else Color("c4cbd4")
-	_ui_put(item, picture, Rect2(9, 8, 256, 100))
-	var separator := ColorRect.new()
-	separator.color = Color("72cef1") if available else Color("829bad")
-	separator.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ui_put(item, separator, Rect2(9, 110, 256, 2))
-	_ui_text(item, "STAGE %02d" % stage, 14, Rect2(14, 116, 248, 23), Color("135a8d") if available else Color("3c4a5d"), true)
-	var titles: Array[String] = [
+
+	var room_frame := _glass(Color(0.08,0.37,0.66,0.12), Color("74eafa") if selected else Color(0.30,0.68,0.94,0.38), 17, 0)
+	room_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(item, room_frame, Rect2(5, 19, 276, 151))
+	var view_box := SubViewportContainer.new()
+	view_box.name = "Kitchen3D_%02d" % stage
+	view_box.set_meta("diorama_container", true)
+	view_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	view_box.stretch = true
+	_ui_put(item, view_box, Rect2(6, 21, 274, 148))
+	var viewport := KitchenDiorama3D.new()
+	viewport.mission = stage
+	viewport.size = Vector2i(300, 163)
+	view_box.add_child(viewport)
+
+	var plaque := _glass(Color("06396d") if available else Color("4a5d71"), Color("60efff") if selected else Color("9ec6e2"), 17, 0)
+	plaque.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(item, plaque, Rect2(14, 145, 258, 65))
+	var small := _ui_text(item, "STAGE %02d" % stage, 13, Rect2(21, 151, 244, 20), Color("e8fdff"), true)
+	small.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var names: Array[String] = [
 		"LDK Boundary Drawing", "Pipe Shaft Q&A", "S-Class Kitchen Selection",
 		"Island Layout Planning", "Lighting & Atmosphere", "Final Kitchen Design"
 	]
-	_ui_text(item, titles[stage - 1], 15, Rect2(8, 140, 258, 24), Color("153952") if available else Color("4c5460"), true)
-	_ui_text(item, "SELECTED  ✓" if selected else ("SELECT TO PLAY" if available else "LOCKED  •  COMING SOON"), 11, Rect2(8, 165, 258, 16), Color("067eac") if available else Color("45586a"), true)
+	var title := _ui_text(item, names[stage - 1], 16, Rect2(19, 174, 250, 25), Color("ffffff"), true)
+	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var progress_text := _ui_text(item, "◆ SELECTED" if selected else ("● AVAILABLE" if available else "🔒 LOCKED"), 10,
+		Rect2(20, 196, 246, 14), Color("adf7ff") if available else Color("d6e1e8"), true)
+	progress_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var pin := _glass(Color("0096d2") if available else Color("657c93"), Color("b7faff") if available else Color("c6d2da"), 35, 0)
+	pin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(item, pin, Rect2(113, 0, 58, 48))
+	var number := _ui_text(item, "%02d" % stage, 23, Rect2(114, 4, 56, 40), Color("ffffff"), true)
+	number.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return item
-
 
 func _show_home() -> void:
 	_set_concept_background(false)
