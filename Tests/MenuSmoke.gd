@@ -83,6 +83,31 @@ func _run() -> void:
 	if body.size.x < 500.0 or top.size.y > 110.0:
 		_failure("level selection layout collapsed")
 		return
+	var route: Control
+	var mission_detail: Control
+	var selected_play: Button
+	for node in menu.find_children("*", "Control", true, false):
+		if node.has_meta("blueprint_route"):
+			route = node
+		if node.has_meta("mission_detail"):
+			mission_detail = node
+		if node.has_meta("mission_play"):
+			selected_play = node
+	if route == null or mission_detail == null or selected_play == null:
+		_failure("blueprint map, selected stage detail or Play button is missing")
+		return
+	if route.size.x < 950.0 or route.size.y < 550.0 or selected_play.size.x < 200:
+		_failure("desktop mission map or Play button collapsed")
+		return
+	menu.call("_select_map_stage", 3)
+	await _wait_frames()
+	if menu.get("_selected_level") != 3:
+		_failure("Stage 03 click did not select Stage 03")
+		return
+	# Selecting a stage must not enter gameplay until Play is pressed.
+	if current_scene != menu:
+		_failure("stage card selection unexpectedly launched gameplay")
+		return
 	menu.call("_show_splash")
 	await _wait_frames()
 	var intro_art: Control
@@ -122,5 +147,17 @@ func _run() -> void:
 	if body.get_child_count() == 0:
 		_failure("language page failed to render")
 		return
-	print("MENU_SMOKE_OK: intro kitchen, blue loading, simple language dropdown, home, levels, stage access; viewport " + str(menu.size))
+	menu.call("_choose_language", "jp")
+	await _wait_frames()
+	if not top.visible:
+		_failure("language confirmation did not reveal main menu")
+		return
+	var found_home := false
+	for node in menu.find_children("*", "Control", true, false):
+		if node.name == "OptionCHomeCanvas":
+			found_home = true
+	if not found_home:
+		_failure("language confirmation skipped the required Main Menu")
+		return
+	print("MENU_SMOKE_OK: blue loader -> language -> home -> mission map; selected Stage3; locked Stage4-6")
 	quit(0)
