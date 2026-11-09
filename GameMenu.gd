@@ -833,14 +833,14 @@ func _show_levels() -> void:
 	_ui_text(canvas, "SELECT A STAGE   /   BLUEPRINT MISSION MAP", 22, Rect2(334, 27, 880, 38), Color("d2f9ff"))
 	_ui_text(canvas, "Stage 1–3 playable  •  Stage 4–6 coming soon", 13, Rect2(334, 61, 880, 24), Color("8eddf8"))
 
-	# A 3×2 mission map—not a cramped spreadsheet of cards.
+	# Six floating 3D kitchen dioramas connected along a cyan blueprint route.
 	for stage in range(1, 7):
 		var column: int = (stage - 1) % 3
 		var row: int = floori(float(stage - 1) / 3.0)
-		var x: float = 332.0 + float(column)*319.0
-		var y: float = 101.0 + float(row)*198.0
+		var x: float = 329.0 + float(column)*315.0
+		var y: float = 84.0 + float(row)*208.0
 		var card := _map_stage_card(stage)
-		_ui_put(canvas, card, Rect2(x, y, 274, 183))
+		_ui_put(canvas, card, Rect2(x, y, 286, 213))
 		card.modulate.a = 0.0
 		var entrance := create_tween()
 		entrance.tween_interval(float(stage - 1)*0.075)
@@ -849,7 +849,7 @@ func _show_levels() -> void:
 	var detail := _glass(Color("e9f7ff"), Color("93e5ff"), 19, 0)
 	detail.name = "SelectedMissionPanel"
 	detail.set_meta("mission_detail", true)
-	_ui_put(canvas, detail, Rect2(317, 496, 967, 119))
+	_ui_put(canvas, detail, Rect2(317, 524, 967, 96))
 	var thumbnails: Array[Texture2D] = [
 		preload("res://reference_sketch.png"), preload("res://MenuAssets/Level2.png"),
 		preload("res://MenuAssets/Level3.png")
@@ -859,18 +859,18 @@ func _show_levels() -> void:
 	preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ui_put(canvas, preview, Rect2(330, 509, 164, 92))
-	_ui_text(canvas, "STAGE %02d  /  SELECTED MISSION" % _selected_level, 15, Rect2(514, 509, 510, 27), Color("0f78b2"))
+	_ui_put(canvas, preview, Rect2(329, 531, 136, 76))
+	_ui_text(canvas, "STAGE %02d  /  SELECTED MISSION" % _selected_level, 15, Rect2(485, 529, 480, 23), Color("0f78b2"))
 	var titles: Array[String] = ["LDK Boundary Drawing", "Pipe Shaft Q&A", "S-Class Kitchen Selection"]
-	_ui_text(canvas, titles[clampi(_selected_level-1, 0, 2)], 22, Rect2(514, 540, 515, 31), Color("0e325e"))
+	_ui_text(canvas, titles[clampi(_selected_level-1, 0, 2)], 22, Rect2(485, 556, 500, 27), Color("0e325e"))
 	var descriptions: Array[String] = ["Sketch the living, dining and kitchen boundaries.", "Answer the customer's Pipe Shaft question.", "Choose the suitable S-Class kitchen design."]
-	_ui_text(canvas, descriptions[clampi(_selected_level-1, 0, 2)], 14, Rect2(514, 577, 500, 23), Color("346a91"))
+	_ui_text(canvas, descriptions[clampi(_selected_level-1, 0, 2)], 14, Rect2(485, 588, 500, 23), Color("346a91"))
 	var play := _button("▶  PLAY STAGE %02d" % _selected_level, true, 233, 57)
 	play.name = "SelectedMissionPlay"
 	play.set_meta("mission_play", true)
 	play.add_theme_font_size_override("font_size", 19)
 	play.pressed.connect(_start_level.bind(_selected_level))
-	_ui_put(canvas, play, Rect2(1033, 532, 232, 59))
+	_ui_put(canvas, play, Rect2(1033, 545, 232, 58))
 
 func _stage_card(stage: int) -> Button:
 	var unlocked: bool = stage <= 3 and Progress.is_level_unlocked(stage)
