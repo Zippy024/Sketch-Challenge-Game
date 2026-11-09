@@ -183,20 +183,20 @@ func _build_frame() -> void:
 	base.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(base)
 	base.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	# Shared kitchen photography with a consistent blue wash across
-	# Loading, Language, Home and Level Select. Stage1-3 scenes unaffected.
+	# NEW illustration (not reused old photo): one full-viewport background
+	# for Loading, Language, Home and Level Select, no nested background.
 	var backdrop := TextureRect.new()
 	backdrop.name = "BlueKitchenShowroomBackdrop"
 	backdrop.set_meta("showroom_background", true)
-	backdrop.texture = preload("res://MenuAssets/KitchenIntroV8.jpg")
+	backdrop.texture = preload("res://MenuAssets/BlueKitchenFreshV1.svg")
 	backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	backdrop.modulate = Color("cae6ff")
+	backdrop.modulate = Color.WHITE
 	base.add_child(backdrop)
 	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var light := ColorRect.new()
-	light.color = Color(0.80, 0.92, 1.0, 0.58)
+	light.color = Color(0.86, 0.96, 1.0, 0.12)
 	light.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	base.add_child(light)
 	light.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -357,19 +357,10 @@ func _entry_centered_label(value: String, font_size: int, rect: Rect2, color: Co
 	return lbl
 
 
-func _showroom_photo(parent: Control, rect: Rect2, vivid: bool = false) -> void:
-	var image := TextureRect.new()
-	image.texture = preload("res://MenuAssets/KitchenIntroV8.jpg") if not vivid else preload("res://MenuAssets/KitchenHero.jpg")
-	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	image.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	image.modulate = Color("daefff") if not vivid else Color("f6faff")
-	_ui_put(parent, image, rect)
-	var wash := ColorRect.new()
-	wash.color = Color(0.83,0.94,1.0,0.46) if not vivid else Color(0.72,0.86,1.0,0.09)
-	wash.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ui_put(parent,wash,rect)
-
+func _showroom_photo(_parent: Control, _rect: Rect2, _vivid: bool = false) -> void:
+	# All four screens already share the one fullscreen BlueKitchenFreshV1
+	# layer in _build_frame. Do NOT add another image inside entry content.
+	pass
 
 func _showroom_title(parent: Control, left: float, top: float, width_value: float, size_large: int = 50) -> void:
 	# Keep the same Logo G + dark-blue outlined typography on each screen.
@@ -565,18 +556,18 @@ func _show_home() -> void:
 	_bottom_bar.hide()
 	_showroom_photo(canvas,Rect2(0,0,1320,638))
 	# Reference image: bright left content zone and visible warm kitchen on right.
-	var right := TextureRect.new()
-	right.texture = preload("res://MenuAssets/KitchenHero.jpg")
-	right.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	right.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	right.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ui_put(canvas,right,Rect2(713,0,607,638))
+	# Keep the same brand-new fullscreen illustration visible on the right.
+	# No inset/split duplicate background and no legacy kitchen images.
+	var right_glow := ColorRect.new()
+	right_glow.color = Color(0.89,0.97,1.0,0.035)
+	right_glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(canvas,right_glow,Rect2(713,0,607,638))
 	var left_wash := ColorRect.new()
-	left_wash.color = Color(0.80,0.92,1.0,0.73)
+	left_wash.color = Color(0.88,0.97,1.0,0.35)
 	left_wash.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_ui_put(canvas,left_wash,Rect2(0,0,723,638))
 	var edge := ColorRect.new()
-	edge.color = Color(0.31,0.73,0.95,0.42)
+	edge.color = Color(0.31,0.73,0.95,0.22)
 	edge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_ui_put(canvas,edge,Rect2(710,0,3,638))
 	var hero := _glass(Color(0.94,0.98,1,0.07),Color.TRANSPARENT,24,0)

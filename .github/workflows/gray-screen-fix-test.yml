@@ -15,6 +15,7 @@ on:
       - feature/diorama-kitchen-mission-map-20261109
       - fix/remove-all-menu-background-photos-20261109
       - design/final-blue-showroom-flow-20261109
+      - fix/fresh-blue-kitchen-background-single-layer-20261109
   workflow_dispatch:
 permissions:
   contents: read
