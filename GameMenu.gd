@@ -13,6 +13,7 @@ const EntryKitchenSketch = preload("res://MenuAssets/EntryKitchenSketch.gd")
 const BlueprintMissionMap = preload("res://MenuAssets/BlueprintMissionMap.gd")
 const KitchenDiorama3D = preload("res://MenuAssets/KitchenDiorama3D.gd")
 const FlatBlueBackdrop = preload("res://MenuAssets/FlatBlueBackdrop.gd")
+const ShowroomGlow = preload("res://MenuAssets/ShowroomGlow.gd")
 
 const BG := Color("0b2e55")
 const WHITE := Color("ffffff")
@@ -42,7 +43,7 @@ var _mm_button: Button
 var _scroll: ScrollContainer
 var _volume_value: float = 0.85
 var _reset_armed: bool = false
-var _selected_level: int = 1
+var _selected_level: int = 3
 
 
 func _ready() -> void:
@@ -182,15 +183,20 @@ func _build_frame() -> void:
 	base.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(base)
 	base.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	# Replace every menu background photograph with one consistent
-	# procedural ice-blue gradient. Keep Stage 1/2/3 scene assets intact.
-	var backdrop := FlatBlueBackdrop.new()
-	backdrop.name = "PlainBlueGameBackdrop"
-	backdrop.set_meta("photo_free_background", true)
+	# Shared kitchen photography with a consistent blue wash across
+	# Loading, Language, Home and Level Select. Stage1-3 scenes unaffected.
+	var backdrop := TextureRect.new()
+	backdrop.name = "BlueKitchenShowroomBackdrop"
+	backdrop.set_meta("showroom_background", true)
+	backdrop.texture = preload("res://MenuAssets/KitchenIntroV8.jpg")
+	backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	backdrop.modulate = Color("cae6ff")
 	base.add_child(backdrop)
 	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var light := ColorRect.new()
-	light.color = Color(0.50, 0.79, 1.0, 0.10)
+	light.color = Color(0.80, 0.92, 1.0, 0.58)
 	light.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	base.add_child(light)
 	light.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -351,44 +357,70 @@ func _entry_centered_label(value: String, font_size: int, rect: Rect2, color: Co
 	return lbl
 
 
-func _show_splash() -> void:
-	var scene := _entry_canvas("EntryLoadingScreen")
+func _showroom_photo(parent: Control, rect: Rect2, vivid: bool = false) -> void:
+	var image := TextureRect.new()
+	image.texture = preload("res://MenuAssets/KitchenIntroV8.jpg") if not vivid else preload("res://MenuAssets/KitchenHero.jpg")
+	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	image.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	image.modulate = Color("daefff") if not vivid else Color("f6faff")
+	_ui_put(parent, image, rect)
+	var wash := ColorRect.new()
+	wash.color = Color(0.83,0.94,1.0,0.46) if not vivid else Color(0.72,0.86,1.0,0.09)
+	wash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(parent,wash,rect)
 
-	# Third reference layout: big branded title, one floating kitchen
-	# blueprint, centered loading bar; no photographic background.
-	var logo := TextureRect.new()
-	logo.texture = preload("res://Branding/SketchPlanPencil.svg")
-	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_entry_add(scene, logo, Rect2(497, 4, 102, 102))
-	var title := _entry_centered_label("Kitchen", 60, Rect2(210, 98, 680, 74), Color("13699e"), scene)
-	title.add_theme_constant_override("outline_size", 4)
-	title.add_theme_color_override("font_outline_color", Color("f1fbff"))
-	var subtitle := _entry_centered_label("Decoration Game", 39, Rect2(225, 160, 650, 51), Color("0a487e"), scene)
-	subtitle.add_theme_constant_override("outline_size", 3)
-	subtitle.add_theme_color_override("font_outline_color", Color("f6fcff"))
-	var scene_art := EntryKitchenSketch.new()
-	scene_art.name = "EntryIsometricKitchen"
-	scene_art.set_meta("entry_kitchen_art", true)
-	_entry_add(scene, scene_art, Rect2(137, 193, 827, 337))
+
+func _showroom_title(parent: Control, left: float, top: float, width_value: float, size_large: int = 50) -> void:
+	# Keep the same Logo G + dark-blue outlined typography on each screen.
+	var emblem := TextureRect.new()
+	emblem.texture = preload("res://Branding/SketchPlanPencil.svg")
+	emblem.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	emblem.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(parent,emblem,Rect2(left+width_value*0.13,top+3,width_value*0.18,89))
+	var a := _ui_text(parent, "Kitchen", size_large, Rect2(left+width_value*0.29,top,width_value*0.65,66),Color("f6feff"),true)
+	a.add_theme_constant_override("outline_size",7)
+	a.add_theme_color_override("font_outline_color",Color("083967"))
+	var b := _ui_text(parent,"Decoration Game",roundi(float(size_large)*0.65),Rect2(left+width_value*0.22,top+64,width_value*0.72,50),Color("fbffff"),true)
+	b.add_theme_constant_override("outline_size",6)
+	b.add_theme_color_override("font_outline_color",Color("103f6c"))
+
+
+func _show_splash() -> void:
+	var canvas := _entry_canvas("EntryLoadingScreen")
+	_showroom_photo(canvas,Rect2(0,0,1100,650))
+	_showroom_title(canvas,220,27,665,60)
+	var subtitle := _ui_text(canvas,"KITCHEN DESIGN ADVENTURE",15,Rect2(350,146,400,28),Color("154d7b"),true)
+	subtitle.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var podium := ShowroomGlow.new()
+	podium.name = "LoadingGlowingPlatform"
+	_ui_put(canvas,podium,Rect2(131,325,838,236))
+	var viewport_box := SubViewportContainer.new()
+	viewport_box.name = "EntryIsometricKitchen"
+	viewport_box.set_meta("entry_kitchen_art",true)
+	viewport_box.stretch = true
+	viewport_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(canvas,viewport_box,Rect2(180,163,740,369))
+	var kitchen_view := KitchenDiorama3D.new()
+	kitchen_view.mission = 1
+	viewport_box.add_child(kitchen_view)
 	var bar := ProgressBar.new()
 	bar.name = "EntryLoadingProgress"
-	bar.custom_minimum_size = Vector2(450, 18)
+	bar.custom_minimum_size = Vector2(444,18)
 	bar.show_percentage = false
 	bar.max_value = 100
-	bar.value = 0.0
-	bar.add_theme_stylebox_override("background", _console_style(Color("d0e6f5"), Color("65bde9"), 12, 2))
-	bar.add_theme_stylebox_override("fill", _console_style(Color("06bade"), Color("c5f9ff"), 12, 2))
-	_entry_add(scene, bar, Rect2(323, 548, 455, 18))
-	_entry_centered_label("Loading...", 17, Rect2(330, 579, 440, 29), Color("155880"), scene)
-	scene.modulate.a = 0.0
-	var intro := create_tween()
-	intro.tween_property(scene, "modulate:a", 1.0, 0.32)
+	bar.value = 0
+	bar.add_theme_stylebox_override("background", _console_style(Color("c6e2f4"),Color("6caed7"),13,1))
+	bar.add_theme_stylebox_override("fill", _console_style(Color("1bcbeb"),Color("d6fbff"),13,1))
+	_ui_put(canvas,bar,Rect2(328,561,444,17))
+	_ui_text(canvas,"Loading...",16,Rect2(400,587,300,30),Color("174b77"),true)
+	canvas.modulate.a = 0.0
+	create_tween().tween_property(canvas,"modulate:a",1.0,0.4)
 	var loading := create_tween()
-	loading.tween_property(bar, "value", 100.0, 1.75).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	loading.tween_property(bar,"value",100.0,1.9).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	loading.tween_callback(func() -> void:
-		if is_inside_tree() and is_instance_valid(scene):
+		if is_inside_tree() and is_instance_valid(canvas):
 			_show_language_select()
 	)
 
@@ -455,127 +487,135 @@ func _select_map_stage(stage: int) -> void:
 func _map_stage_card(stage: int) -> Button:
 	var available: bool = stage <= 3 and Progress.is_level_unlocked(stage)
 	var selected: bool = available and stage == _selected_level
-	var item := Button.new()
-	item.name = "DioramaMission%02d" % stage
-	item.set_meta("mission_stage", stage)
-	item.custom_minimum_size = Vector2(286, 213)
-	item.disabled = not available
-	item.text = ""
-	item.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if available else Control.CURSOR_ARROW
-	# Translucent background lets the miniature 3D room float on the blueprint.
-	var clear_style := _console_style(Color(0.05,0.16,0.31,0.01), Color.TRANSPARENT, 20, 0, 0)
-	item.add_theme_stylebox_override("normal", clear_style)
-	item.add_theme_stylebox_override("hover", _console_style(Color(0.04,0.29,0.55,0.14), Color("36dfff"), 19, 0, 12))
-	item.add_theme_stylebox_override("pressed", _console_style(Color(0.02,0.35,0.66,0.21), Color("a6f8ff"), 19, 0, 4))
-	item.add_theme_stylebox_override("disabled", clear_style)
+	var width_value := 194.0 if selected else 174.0
+	var height_value := 335.0 if selected else 284.0
+	var card := Button.new()
+	card.name = "ShowroomStage%02d" % stage
+	card.set_meta("mission_stage",stage)
+	card.set_meta("showroom_stage_card",true)
+	card.custom_minimum_size = Vector2(width_value,height_value)
+	card.text = ""
+	card.disabled = not available
+	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if available else Control.CURSOR_ARROW
+	card.add_theme_stylebox_override("normal",_console_style(Color("f0faff") if available else Color("cad3df"),Color("34deff") if selected else Color("9ecbdf"),20,0,15 if selected else 4))
+	card.add_theme_stylebox_override("hover",_console_style(Color("f7fdff"),Color("66eaff"),20,0,14))
+	card.add_theme_stylebox_override("pressed",_console_style(Color("ceeefa"),Color("5cd9f9"),20,0,3))
+	card.add_theme_stylebox_override("disabled",_console_style(Color("b5c7d7"),Color("a4b3c3"),20,0,3))
 	if available:
-		item.pressed.connect(_select_map_stage.bind(stage))
-		ConsoleAnimations.animate_button(item)
+		card.pressed.connect(_select_map_stage.bind(stage))
+		ConsoleAnimations.animate_button(card)
 
-	var room_frame := _glass(Color(0.08,0.37,0.66,0.12), Color("74eafa") if selected else Color(0.30,0.68,0.94,0.38), 17, 0)
-	room_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ui_put(item, room_frame, Rect2(5, 19, 276, 151))
-	var view_box := SubViewportContainer.new()
-	view_box.name = "Kitchen3D_%02d" % stage
-	view_box.set_meta("diorama_container", true)
-	view_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	view_box.stretch = true
-	_ui_put(item, view_box, Rect2(6, 21, 274, 148))
-	var viewport := KitchenDiorama3D.new()
-	viewport.mission = stage
-	viewport.size = Vector2i(300, 163)
-	view_box.add_child(viewport)
-
-	var plaque := _glass(Color("06396d") if available else Color("4a5d71"), Color("60efff") if selected else Color("9ec6e2"), 17, 0)
-	plaque.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ui_put(item, plaque, Rect2(14, 145, 258, 65))
-	var small := _ui_text(item, "STAGE %02d" % stage, 13, Rect2(21, 151, 244, 20), Color("e8fdff"), true)
-	small.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var names: Array[String] = [
-		"LDK Boundary Drawing", "Pipe Shaft Q&A", "S-Class Kitchen Selection",
-		"Island Layout Planning", "Lighting & Atmosphere", "Final Kitchen Design"
+	var head := _glass(Color("08618c") if selected else (Color("135d81") if available else Color("41596f")),Color("70eaff") if selected else Color("92b9d2"),16,0)
+	head.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(card,head,Rect2(1,1,width_value-2,44 if selected else 40))
+	var t := _ui_text(card,("▶  STAGE %02d" if selected else "STAGE %02d") % stage,16 if selected else 14,Rect2(9,7,width_value-18,32),Color("ffffff"),true)
+	t.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var photo := TextureRect.new()
+	var textures: Array[Texture2D] = [
+		preload("res://reference_sketch.png"),
+		preload("res://MenuAssets/Level2.png"),
+		preload("res://MenuAssets/Level3.png"),
+		preload("res://MenuAssets/Level4.png"),
+		preload("res://MenuAssets/Level5.png"),
+		preload("res://MenuAssets/Level6.png")
 	]
-	var title := _ui_text(item, names[stage - 1], 16, Rect2(19, 174, 250, 25), Color("ffffff"), true)
-	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var progress_text := _ui_text(item, "◆ SELECTED" if selected else ("● AVAILABLE" if available else "🔒 LOCKED"), 10,
-		Rect2(20, 196, 246, 14), Color("adf7ff") if available else Color("d6e1e8"), true)
-	progress_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var pin := _glass(Color("0096d2") if available else Color("657c93"), Color("b7faff") if available else Color("c6d2da"), 35, 0)
-	pin.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ui_put(item, pin, Rect2(113, 0, 58, 48))
-	var number := _ui_text(item, "%02d" % stage, 23, Rect2(114, 4, 56, 40), Color("ffffff"), true)
-	number.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return item
+	photo.texture = textures[stage-1]
+	photo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	photo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	photo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	photo.modulate = Color.WHITE if available else Color("9ba6b2")
+	_ui_put(card,photo,Rect2(7,47,width_value-14,160 if selected else 132))
+	var photo_border := _glass(Color.TRANSPARENT,Color("b4d8eb"),7,0)
+	photo_border.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(card,photo_border,Rect2(7,47,width_value-14,160 if selected else 132))
+	var names: Array[String] = [
+		"LDK Boundary", "Pipe Shaft", "S-Class Kitchen",
+		"Island Layout", "Lighting &", "Final Kitchen"
+	]
+	var sub: Array[String] = [
+		"Drawing", "Q&A", "Selection", "Planning", "Atmosphere", "Design"
+	]
+	var title_y := 216.0 if selected else 190.0
+	var cap := _ui_text(card,names[stage-1],16 if selected else 14,Rect2(6,title_y,width_value-12,24),Color("0b3559") if available else Color("41556b"),true)
+	cap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sec := _ui_text(card,sub[stage-1],15 if selected else 14,Rect2(6,title_y+24,width_value-12,23),Color("0b3559") if available else Color("41556b"),true)
+	sec.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	if selected:
+		var play := _button("▶  PLAY   »",true,width_value-31,50)
+		play.name = "SelectedMissionPlay"
+		play.set_meta("mission_play",true)
+		play.add_theme_font_size_override("font_size",18)
+		play.pressed.connect(_start_level.bind(stage))
+		_ui_put(card,play,Rect2(15,height_value-61,width_value-30,51))
+	elif available:
+		var ready := _ui_text(card,"●  AVAILABLE",12,Rect2(4,height_value-31,width_value-8,20),Color("0476a4"),true)
+		ready.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	else:
+		var lock_status := _glass(Color("37617c"),Color("8bafc1"),15,0)
+		lock_status.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_ui_put(card,lock_status,Rect2(18,height_value-38,width_value-36,29))
+		var locked := _ui_text(card,"▣  LOCKED",12,Rect2(18,height_value-34,width_value-36,20),Color("f6fbff"),true)
+		locked.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return card
 
 func _show_home() -> void:
 	var canvas := _blueprint_canvas("OptionCHomeCanvas")
 	_top_bar.hide()
 	_bottom_bar.hide()
-	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-
-	# Third reference: one bright, full-width hero (no kitchen photo at all).
-	var glass := _glass(Color(0.96, 0.99, 1.0, 0.89), Color("f5fdff"), 32, 0)
-	glass.name = "HomeHeroGlass"
-	glass.set_meta("home_hero_panel", true)
-	glass.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ui_put(canvas, glass, Rect2(24, 15, 1272, 588))
-
-	var logo := TextureRect.new()
-	logo.texture = preload("res://Branding/SketchPlanPencil.svg")
-	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ui_put(canvas, logo, Rect2(336, 27, 104, 104))
-	var heading := _ui_text(canvas, "Kitchen", 58, Rect2(440, 37, 545, 69), Color("0d6199"), true)
-	heading.set_meta("home_headline", true)
-	_ui_text(canvas, "Decoration Game", 40, Rect2(402, 105, 605, 62), Color("083d71"), true)
-	_ui_text(canvas, "DESIGN  •  SKETCH  •  SELECT  •  LEARN", 14, Rect2(410, 164, 490, 30), Color("3b78a0"), true)
-
-	var trainee := _glass(Color("124c7d"), Color("a0ecff"), 22, 0)
-	trainee.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ui_put(canvas, trainee, Rect2(1127, 33, 135, 43))
-	_ui_text(canvas, "TRAINEE", 15, Rect2(1143, 41, 104, 28), Color("effaff"), true)
-
-	# Primary menu is vertically stacked, matching the supplied screenshot.
-	var side := _glass(Color(0.94,0.98,1.0,0.89), Color("c4eaff"), 27, 0)
-	side.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ui_put(canvas, side, Rect2(69, 222, 410, 332))
-	var start := _button("▶    START GAME", true, 360, 66)
+	_showroom_photo(canvas,Rect2(0,0,1320,638))
+	# Reference image: bright left content zone and visible warm kitchen on right.
+	var right := TextureRect.new()
+	right.texture = preload("res://MenuAssets/KitchenHero.jpg")
+	right.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	right.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	right.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(canvas,right,Rect2(713,0,607,638))
+	var left_wash := ColorRect.new()
+	left_wash.color = Color(0.80,0.92,1.0,0.73)
+	left_wash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(canvas,left_wash,Rect2(0,0,723,638))
+	var edge := ColorRect.new()
+	edge.color = Color(0.31,0.73,0.95,0.42)
+	edge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(canvas,edge,Rect2(710,0,3,638))
+	var hero := _glass(Color(0.94,0.98,1,0.07),Color.TRANSPARENT,24,0)
+	hero.name = "HomeHeroGlass"
+	hero.set_meta("home_hero_panel",true)
+	hero.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(canvas,hero,Rect2(22,24,675,573))
+	_showroom_title(canvas,58,58,630,62)
+	var headline := _ui_text(canvas,"DESIGN  •  SKETCH  •  SELECT",15,Rect2(145,214,442,26),Color("1a5c87"),true)
+	headline.name = "HomeHeadline"
+	headline.set_meta("home_headline",true)
+	var start := _button("▶   START GAME",true,363,65)
 	start.name = "HomeStartTraining"
-	start.set_meta("home_start_button", true)
-	start.add_theme_font_size_override("font_size", 23)
+	start.set_meta("home_start_button",true)
+	start.add_theme_font_size_override("font_size",22)
 	start.pressed.connect(_show_levels)
-	_ui_put(canvas, start, Rect2(94, 255, 360, 64))
-	var level := _nav_button("▦    SELECT LEVEL", _show_levels)
-	level.add_theme_font_size_override("font_size", 17)
-	_ui_put(canvas, level, Rect2(118, 334, 313, 53))
-	var guide := _nav_button("▤    GAME GUIDE", _show_help)
-	guide.add_theme_font_size_override("font_size", 17)
-	_ui_put(canvas, guide, Rect2(118, 401, 313, 53))
-	var settings := _nav_button("⚙    SETTINGS", _show_settings)
-	settings.add_theme_font_size_override("font_size", 17)
-	_ui_put(canvas, settings, Rect2(118, 467, 313, 53))
-
-	# The foreground kitchen is original vector-style architectural
-	# illustration, not a photographic background.
-	var kitchen := EntryKitchenSketch.new()
-	kitchen.name = "HomeKitchenBlueprintIllustration"
-	kitchen.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ui_put(canvas, kitchen, Rect2(485, 202, 766, 345))
-	var feature := _glass(Color(0.06, 0.33, 0.60, 0.87), Color("78eaff"), 21, 0)
-	feature.name = "HomeFeaturesGlass"
-	feature.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ui_put(canvas, feature, Rect2(801, 435, 370, 151))
-	_ui_text(canvas, "YOUR KITCHEN ADVENTURE", 18, Rect2(818, 445, 335, 37), Color("ffffff"), true)
-	_ui_text(canvas, "01  SKETCH    •    02  Q&A    •    03  MATERIALS", 14, Rect2(820, 490, 334, 29), Color("d6f7ff"), true)
-	_ui_text(canvas, "3 PLAYABLE STAGES", 15, Rect2(824, 538, 328, 31), Color("9df4ff"), true)
-
+	_ui_put(canvas,start,Rect2(173,259,365,65))
+	var select_level := _nav_button("▦   SELECT LEVEL",_show_levels)
+	select_level.add_theme_font_size_override("font_size",19)
+	_ui_put(canvas,select_level,Rect2(173,342,365,59))
+	var guide := _nav_button("▤   GAME GUIDE",_show_help)
+	guide.add_theme_font_size_override("font_size",19)
+	_ui_put(canvas,guide,Rect2(173,418,365,59))
+	var settings := _nav_button("⚙   SETTINGS",_show_settings)
+	settings.add_theme_font_size_override("font_size",19)
+	_ui_put(canvas,settings,Rect2(173,494,365,59))
+	var trainee := _glass(Color("123b61"),Color("7ddaf3"),24,0)
+	trainee.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(canvas,trainee,Rect2(1110,26,160,46))
+	_ui_text(canvas,"◉  TRAINEE",15,Rect2(1119,34,142,30),Color("e1faff"),true)
+	var features := _glass(Color(0.05,0.25,0.48,0.13),Color("a8f1ff"),24,0)
+	features.name = "HomeFeaturesGlass"
+	features.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(canvas,features,Rect2(760,138,510,386))
 	if is_pause_overlay:
-		var resume := _nav_button("←  BACK TO GAME", _resume_paused)
-		_ui_put(canvas, resume, Rect2(87, 566, 210, 42))
-	glass.modulate.a = 0.0
-	var entrance := create_tween()
-	entrance.tween_property(glass, "modulate:a", 1.0, 0.42).set_trans(Tween.TRANS_SINE)
+		var resume := _nav_button("←  BACK TO GAME",_resume_paused)
+		_ui_put(canvas,resume,Rect2(193,572,320,43))
+	canvas.modulate.a = 0
+	create_tween().tween_property(canvas,"modulate:a",1.0,0.43)
 
 func _add_home_button(parent: HBoxContainer, label_text: String, action: Callable) -> void:
 	var b := _button(label_text, false, 195, 60)
@@ -613,66 +653,48 @@ func _show_information(title_text: String, details: String) -> void:
 	stack.add_child(back)
 
 func _show_language_select() -> void:
-	var scene := _entry_canvas("EntryLanguageScreen")
-
-	# A single white/ice-blue selector over the same image-free background.
-	var logo := TextureRect.new()
-	logo.texture = preload("res://Branding/SketchPlanPencil.svg")
-	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_entry_add(scene, logo, Rect2(511, 41, 78, 78))
-	_entry_centered_label("Kitchen", 52, Rect2(260, 116, 590, 72), Color("0d689f"), scene)
-	_entry_centered_label("Decoration Game", 35, Rect2(244, 177, 620, 53), Color("164978"), scene)
-	var decoration := EntryKitchenSketch.new()
-	decoration.name = "LanguageKitchenDiagram"
-	decoration.set_meta("entry_kitchen_art", true)
-	decoration.modulate.a = 0.27
-	_entry_add(scene, decoration, Rect2(245, 201, 610, 320))
-
-	var panel := _glass(Color(0.96, 0.99, 1.0, 0.97), Color("84cbef"), 25, 0)
+	var canvas := _entry_canvas("EntryLanguageScreen")
+	_showroom_photo(canvas,Rect2(0,0,1100,650))
+	_showroom_title(canvas,236,35,630,59)
+	var panel := _glass(Color(0.94,0.98,1.0,0.94),Color("96dafa"),25,0)
 	panel.name = "LanguageDropdownPanel"
-	panel.set_meta("entry_language_panel", true)
-	_entry_add(scene, panel, Rect2(374, 273, 354, 278))
-	_entry_centered_label("SELECT LANGUAGE", 19, Rect2(389, 302, 324, 38), Color("153d66"), scene)
-
+	panel.set_meta("entry_language_panel",true)
+	_ui_put(canvas,panel,Rect2(365,199,370,319))
+	_ui_text(canvas,"SELECT LANGUAGE",20,Rect2(387,216,323,38),Color("123d6f"),true)
 	var menu := OptionButton.new()
 	menu.name = "EntryLanguageDropdown"
-	menu.set_meta("entry_language_dropdown", true)
-	menu.custom_minimum_size = Vector2(296, 55)
-	menu.add_theme_font_size_override("font_size", 20)
-	for color_name in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
-		menu.add_theme_color_override(color_name, Color("164e7e"))
-	menu.add_theme_stylebox_override("normal", _console_style(Color("ffffff"), Color("82cdef"), 15, 9, 2))
-	menu.add_theme_stylebox_override("hover", _console_style(Color("dff4ff"), Color("4bbce9"), 15, 9, 5))
-	menu.add_theme_stylebox_override("pressed", _console_style(Color("cdefff"), Color("1bb1df"), 15, 9, 1))
-	menu.add_theme_stylebox_override("focus", _console_style(Color.TRANSPARENT, Color("50c8ed"), 15, 0, 0))
+	menu.set_meta("entry_language_dropdown",true)
+	menu.custom_minimum_size = Vector2(302,53)
+	menu.add_theme_font_size_override("font_size",19)
+	for theme_color in ["font_color","font_hover_color","font_pressed_color","font_focus_color"]:
+		menu.add_theme_color_override(theme_color, Color("18486b"))
+	menu.add_theme_stylebox_override("normal",_console_style(Color("ffffff"),Color("8cd4f2"),15,8,2))
+	menu.add_theme_stylebox_override("hover",_console_style(Color("e8f7ff"),Color("47b9ea"),15,8,5))
+	menu.add_theme_stylebox_override("pressed",_console_style(Color("cdefff"),Color("3ec3ec"),15,8,1))
 	var popup := menu.get_popup()
-	popup.add_theme_stylebox_override("panel", _console_style(Color("f3faff"), Color("8ed4f3"), 14, 12, 6))
-	popup.add_theme_stylebox_override("hover", _console_style(Color("c6edff"), Color("59bfec"), 10, 10))
-	popup.add_theme_color_override("font_color", Color("164d7b"))
-	popup.add_theme_color_override("font_hover_color", Color("114d82"))
-	popup.add_theme_color_override("font_disabled_color", Color("8aafc5"))
-	popup.add_theme_font_size_override("font_size", 18)
-	menu.add_item("日本語", 0)
-	menu.add_item("မြန်မာ", 1)
-	menu.add_item("English (Coming Soon)", 2)
-	menu.set_item_disabled(2, true)
-	menu.select(1 if Progress.get_language() == "mm" else 0)
-	_entry_add(scene, menu, Rect2(403, 356, 296, 55))
-
-	var go := _button("Continue   »", true, 296, 53)
-	go.name = "LanguageContinue"
-	go.set_meta("entry_language_continue", true)
-	go.add_theme_font_size_override("font_size", 20)
-	go.pressed.connect(func() -> void:
-		_choose_language("mm" if menu.selected == 1 else "jp")
+	popup.add_theme_stylebox_override("panel",_console_style(Color("f4faff"),Color("8bcef0"),14,10,5))
+	popup.add_theme_stylebox_override("hover",_console_style(Color("b8e8ff"),Color("6dc6e9"),12,8,2))
+	popup.add_theme_color_override("font_color",Color("184869"))
+	popup.add_theme_color_override("font_hover_color",Color("0b4f79"))
+	popup.add_theme_color_override("font_disabled_color",Color("829caf"))
+	popup.add_theme_font_size_override("font_size",18)
+	menu.add_item("日本語",0)
+	menu.add_item("မြန်မာ",1)
+	menu.add_item("English (Coming Soon)",2)
+	menu.set_item_disabled(2,true)
+	menu.select(1 if Progress.get_language()=="mm" else 0)
+	_ui_put(canvas,menu,Rect2(398,288,304,53))
+	var continue_button := _button("Continue    »",true,300,55)
+	continue_button.name = "LanguageContinue"
+	continue_button.set_meta("entry_language_continue",true)
+	continue_button.add_theme_font_size_override("font_size",20)
+	continue_button.pressed.connect(func() -> void:
+		_choose_language("mm" if menu.selected==1 else "jp")
 	)
-	_entry_add(scene, go, Rect2(403, 444, 296, 54))
-	_entry_centered_label("Japanese  •  Myanmar", 13, Rect2(405, 508, 294, 23), Color("597d99"), scene)
-	scene.modulate.a = 0.0
-	var intro := create_tween()
-	intro.tween_property(scene, "modulate:a", 1.0, 0.35)
+	_ui_put(canvas,continue_button,Rect2(400,400,300,55))
+	_ui_text(canvas,"JAPANESE   •   MYANMAR",13,Rect2(397,467,303,23),Color("487da0"),true)
+	canvas.modulate.a = 0
+	create_tween().tween_property(canvas,"modulate:a",1.0,0.36)
 
 func _choose_language(lang: String) -> void:
 	Progress.set_language(lang)
@@ -785,75 +807,105 @@ func _level_row(n: int) -> Button:
 	return button
 
 func _show_levels() -> void:
-	_set_concept_background(true)
-	var canvas := _blueprint_canvas("BlueprintLevelsCanvas")
-	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	var left := _glass(Color("eff9ff"), Color("b5ebff"), 26, 0)
-	_ui_put(canvas, left, Rect2(4, 8, 266, 625))
-	_ui_text(canvas, "TRAINING MISSIONS", 14, Rect2(25, 29, 227, 29), Color("178bb9"))
-	_ui_text(canvas, "Select a Stage", 30, Rect2(25, 62, 235, 55), Color("0a2c59"))
-	var explanation := _label("Progress through kitchen sketching, customer Q&A and material selection missions.", 16, Color("24547b"))
-	explanation.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_ui_put(canvas, explanation, Rect2(28, 131, 219, 105))
-	var summary := _glass(Color("dff3ff"), Color("9cdef6"), 20, 0)
-	_ui_put(canvas, summary, Rect2(24, 260, 222, 127))
-	_ui_text(canvas, "MISSIONS AVAILABLE", 15, Rect2(38, 276, 195, 26), Color("1b5a88"))
-	_ui_text(canvas, "3 / 6", 35, Rect2(38, 306, 196, 44), Color("038fc3"), true)
-	_ui_text(canvas, "STAGES", 12, Rect2(35, 351, 201, 23), Color("1f557b"), true)
-	_ui_text(canvas, "01   LDK Boundary Drawing", 13, Rect2(30, 410, 230, 24), Color("225c85"))
-	_ui_text(canvas, "02   Pipe Shaft Q&A", 13, Rect2(30, 441, 230, 24), Color("225c85"))
-	_ui_text(canvas, "03   S-Class Kitchen Selection", 13, Rect2(30, 472, 230, 24), Color("225c85"))
-	_ui_text(canvas, "04–06   COMING SOON", 13, Rect2(30, 540, 230, 25), Color("718a9f"))
+	var canvas := _blueprint_canvas("ShowroomLevelsCanvas")
+	_top_bar.hide()
+	_bottom_bar.hide()
+	_showroom_photo(canvas,Rect2(0,0,1320,638))
+	# One luminous showroom, not a dense dashboard or 3D room carousel.
+	var overlay := ColorRect.new()
+	overlay.color = Color(0.76,0.90,1.0,0.18)
+	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(canvas,overlay,Rect2(0,0,1320,637))
+	var brand_image := TextureRect.new()
+	brand_image.texture = preload("res://Branding/SketchPlanPencil.svg")
+	brand_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	brand_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	brand_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(canvas,brand_image,Rect2(25,13,74,74))
+	var brand := _ui_text(canvas,"Kitchen Decoration Game",22,Rect2(105,29,328,40),Color("0a3f73"))
+	brand.add_theme_constant_override("outline_size",1)
+	brand.add_theme_color_override("font_outline_color",Color("eefbff"))
+
 	var home := _nav_button("⌂  HOME", _resume_paused if is_pause_overlay else _show_home)
-	_ui_put(canvas, home, Rect2(38, 573, 185, 42))
+	_ui_put(canvas,home,Rect2(448,17,141,43))
+	var stages_btn := _button("▦  SELECT LEVEL",true,164,43)
+	stages_btn.add_theme_font_size_override("font_size",14)
+	stages_btn.pressed.connect(_show_levels)
+	_ui_put(canvas,stages_btn,Rect2(596,17,165,43))
+	var guide := _nav_button("▤  GUIDE",_show_help)
+	_ui_put(canvas,guide,Rect2(768,17,136,43))
+	var progress := _nav_button("▥  PROGRESS",_show_progress)
+	_ui_put(canvas,progress,Rect2(911,17,144,43))
+	var trainee := _glass(Color("0c3d69"),Color("8ee8fc"),23,0)
+	trainee.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(canvas,trainee,Rect2(1098,17,181,43))
+	_ui_text(canvas,"◉  TRAINEE",15,Rect2(1111,25,151,25),Color("e6faff"),true)
 
-	var map_back := _glass(Color("0b3664"), Color("82dfff"), 25, 0)
-	_ui_put(canvas, map_back, Rect2(287, 8, 1025, 625))
-	var drawing := BlueprintMissionMap.new()
-	drawing.name = "BlueprintMissionRoute"
-	drawing.set_meta("blueprint_route", true)
-	_ui_put(canvas, drawing, Rect2(298, 19, 1003, 603))
-	_ui_text(canvas, "SELECT A STAGE   /   BLUEPRINT MISSION MAP", 22, Rect2(334, 27, 880, 38), Color("d2f9ff"))
-	_ui_text(canvas, "Stage 1–3 playable  •  Stage 4–6 coming soon", 13, Rect2(334, 61, 880, 24), Color("8eddf8"))
+	var heading := _ui_text(canvas,"Select a Stage",34,Rect2(411,86,500,48),Color("0a315c"),true)
+	heading.add_theme_constant_override("outline_size",2)
+	heading.add_theme_color_override("font_outline_color",Color("e6f8ff"))
+	_ui_text(canvas,"Progress through kitchen design missions step by step.",15,Rect2(393,135,535,29),Color("204c76"),true)
+	var holo := KitchenHologram.new()
+	holo.modulate.a = 0.20
+	_ui_put(canvas,holo,Rect2(960,92,319,128))
+	# Under the six stage cards: blue luminous oval stage and shadows.
+	var pedestal := ShowroomGlow.new()
+	pedestal.name = "StageShowroomPedestal"
+	pedestal.set_meta("showroom_pedestal",true)
+	_ui_put(canvas,pedestal,Rect2(26,379,1268,207))
 
-	# Six floating 3D kitchen dioramas connected along a cyan blueprint route.
-	for stage in range(1, 7):
-		var column: int = (stage - 1) % 3
-		var row: int = floori(float(stage - 1) / 3.0)
-		var x: float = 329.0 + float(column)*315.0
-		var y: float = 84.0 + float(row)*208.0
+	var x_positions: Array[float] = [72.0,269.0,466.0,677.0,874.0,1071.0]
+	for stage in range(1,7):
+		var chosen: bool = stage == _selected_level
+		var top: float = 170.0 if chosen else 214.0
+		var w: float = 194.0 if chosen else 174.0
+		var h: float = 335.0 if chosen else 284.0
 		var card := _map_stage_card(stage)
-		_ui_put(canvas, card, Rect2(x, y, 286, 213))
+		_ui_put(canvas,card,Rect2(x_positions[stage-1],top,w,h))
 		card.modulate.a = 0.0
-		var entrance := create_tween()
-		entrance.tween_interval(float(stage - 1)*0.075)
-		entrance.tween_property(card, "modulate:a", 1.0, 0.35).set_trans(Tween.TRANS_SINE)
+		var appear := create_tween()
+		appear.tween_interval(float(stage-1)*0.045)
+		appear.tween_property(card,"modulate:a",1.0,0.34).set_trans(Tween.TRANS_SINE)
+	var left_arrow := _nav_button("❮",func() -> void:
+		_select_map_stage(maxi(1,_selected_level-1))
+	)
+	left_arrow.custom_minimum_size = Vector2(42,55)
+	left_arrow.disabled = _selected_level <= 1
+	_ui_put(canvas,left_arrow,Rect2(10,353,48,55))
+	var right_arrow := _nav_button("❯",func() -> void:
+		_select_map_stage(mini(3,_selected_level+1))
+	)
+	right_arrow.disabled = _selected_level >= 3
+	_ui_put(canvas,right_arrow,Rect2(1265,353,45,55))
 
-	var detail := _glass(Color("e9f7ff"), Color("93e5ff"), 19, 0)
-	detail.name = "SelectedMissionPanel"
-	detail.set_meta("mission_detail", true)
-	_ui_put(canvas, detail, Rect2(317, 524, 967, 96))
-	var thumbnails: Array[Texture2D] = [
-		preload("res://reference_sketch.png"), preload("res://MenuAssets/Level2.png"),
-		preload("res://MenuAssets/Level3.png")
-	]
-	var preview := TextureRect.new()
-	preview.texture = thumbnails[clampi(_selected_level-1, 0, 2)]
-	preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ui_put(canvas, preview, Rect2(329, 531, 136, 76))
-	_ui_text(canvas, "STAGE %02d  /  SELECTED MISSION" % _selected_level, 15, Rect2(485, 529, 480, 23), Color("0f78b2"))
-	var titles: Array[String] = ["LDK Boundary Drawing", "Pipe Shaft Q&A", "S-Class Kitchen Selection"]
-	_ui_text(canvas, titles[clampi(_selected_level-1, 0, 2)], 22, Rect2(485, 556, 500, 27), Color("0e325e"))
-	var descriptions: Array[String] = ["Sketch the living, dining and kitchen boundaries.", "Answer the customer's Pipe Shaft question.", "Choose the suitable S-Class kitchen design."]
-	_ui_text(canvas, descriptions[clampi(_selected_level-1, 0, 2)], 14, Rect2(485, 588, 500, 23), Color("346a91"))
-	var play := _button("▶  PLAY STAGE %02d" % _selected_level, true, 233, 57)
-	play.name = "SelectedMissionPlay"
-	play.set_meta("mission_play", true)
-	play.add_theme_font_size_override("font_size", 19)
-	play.pressed.connect(_start_level.bind(_selected_level))
-	_ui_put(canvas, play, Rect2(1033, 545, 232, 58))
+	# Bottom horizontal progress track. 3/6 means AVAILABLE, not fake results.
+	var progress_box := _glass(Color("f1faff"),Color("b8e4f8"),34,0)
+	progress_box.name = "SelectedMissionPanel"
+	progress_box.set_meta("mission_detail",true)
+	progress_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(canvas,progress_box,Rect2(126,540,1070,78))
+	_ui_text(canvas,"▤  TRAINING MISSIONS",14,Rect2(146,550,215,24),Color("10496e"))
+	_ui_text(canvas,"3 / 6  AVAILABLE",19,Rect2(145,577,216,29),Color("028bb4"))
+	var line := ColorRect.new()
+	line.color = Color("97d6e7")
+	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(canvas,line,Rect2(373,553,2,49))
+	for stage in range(1,7):
+		var x: float = 411.0 + float(stage-1)*143.0
+		if stage < 6:
+			var link_line := ColorRect.new()
+			link_line.color = Color("48d0e8") if stage < 3 else Color("b8c6d2")
+			link_line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			_ui_put(canvas,link_line,Rect2(x+38,575,104,3))
+		var select: bool = stage == _selected_level
+		var unlocked: bool = stage <= 3
+		var node := _glass(Color("04a4c6") if select else (Color("effaff") if unlocked else Color("dce4ec")),
+			Color("54e2f5") if unlocked else Color("bdc7d2"),27,0)
+		node.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_ui_put(canvas,node,Rect2(x,554,48,48))
+		_ui_text(canvas,"%02d" % stage,17,Rect2(x+2,566,44,24),
+			Color("ffffff") if select else (Color("164868") if unlocked else Color("8192a2")),true)
+	# Main Play action is owned by the selected mission card, not a fake static label.
 
 func _stage_card(stage: int) -> Button:
 	var unlocked: bool = stage <= 3 and Progress.is_level_unlocked(stage)

@@ -26,17 +26,12 @@ func _run() -> void:
 		return
 	menu.call("_show_home")
 	await _wait_frames()
-	var backdrop_present := false
-	var background_photos := 0
+	var photo_present := false
 	for node in menu.find_children("*", "Control", true, false):
-		if node.has_meta("photo_free_background"):
-			backdrop_present = true
-	for node in menu.find_children("*", "TextureRect", true, false):
-		var image := node as TextureRect
-		if image.texture != null and ("KitchenIntroV8.jpg" in image.texture.resource_path or "KitchenHero.jpg" in image.texture.resource_path):
-			background_photos += 1
-	if not backdrop_present or background_photos > 0:
-		_failure("Menu still contains photographic kitchen backgrounds or no blue gradient")
+		if node.has_meta("showroom_background"):
+			photo_present = true
+	if not photo_present:
+		_failure("Reference-style consistent blue kitchen background is missing")
 		return
 	var home_canvas: Control
 	var hero: Control
@@ -92,44 +87,51 @@ func _run() -> void:
 		if b.disabled != (stage >= 4):
 			_failure("stage access changed: " + str(stage))
 			return
-	var three_d_rooms := 0
-	for n in menu.find_children("*", "SubViewportContainer", true, false):
-		if n.has_meta("diorama_container"):
-			three_d_rooms += 1
-			var v: SubViewport = n.get_child(0) as SubViewport
-			if v == null or v.size.x < 260 or v.size.y < 140:
-				_failure("Stage mini-kitchen 3D viewport is missing or collapsed")
-				return
-	if three_d_rooms != 6:
-		_failure("Expected six genuine 3D kitchen dioramas, got " + str(three_d_rooms))
-		return
-	if body.size.x < 500.0 or top.size.y > 110.0:
-		_failure("level selection layout collapsed")
-		return
-	var route: Control
-	var mission_detail: Control
+	var showroom_cards := 0
 	var selected_play: Button
-	for node in menu.find_children("*", "Control", true, false):
-		if node.has_meta("blueprint_route"):
-			route = node
-		if node.has_meta("mission_detail"):
-			mission_detail = node
+	var selected_card: Button
+	for node in menu.find_children("*", "Button", true, false):
+		if node.has_meta("showroom_stage_card"):
+			showroom_cards += 1
+			if int(node.get_meta("mission_stage")) == 3:
+				selected_card = node
 		if node.has_meta("mission_play"):
 			selected_play = node
-	if route == null or mission_detail == null or selected_play == null:
-		_failure("blueprint map, selected stage detail or Play button is missing")
+	if showroom_cards != 6 or selected_card == null or selected_play == null:
+		_failure("Missing six picture-card stages or selected Stage Play button")
 		return
-	if route.size.x < 950.0 or route.size.y < 550.0 or selected_play.size.x < 200:
-		_failure("desktop mission map or Play button collapsed")
+	if selected_card.size.x < 185 or selected_card.size.y < 320:
+		_failure("Highlighted Stage 03 card must be larger than other cards")
+		return
+	if selected_play.size.x < 150.0 or selected_play.size.y < 40.0:
+		_failure("Play button too narrow / missing")
+		return
+	var pedestal: Control
+	var detail: Control
+	for node in menu.find_children("*","Control",true,false):
+		if node.has_meta("showroom_pedestal"):
+			pedestal = node
+		if node.has_meta("mission_detail"):
+			detail = node
+	if pedestal == null or detail == null or pedestal.size.x < 1000.0 or detail.size.x < 950.0:
+		_failure("Neon showroom floor or bottom mission track missing")
+		return
+	if body.size.x < 500.0:
+		_failure("showroom level selection collapsed")
+		return
+	menu.call("_select_map_stage", 2)
+	await _wait_frames()
+	if menu.get("_selected_level") != 2:
+		_failure("Stage 02 cannot be chosen")
 		return
 	menu.call("_select_map_stage", 3)
 	await _wait_frames()
 	if menu.get("_selected_level") != 3:
-		_failure("Stage 03 click did not select Stage 03")
+		_failure("Stage 03 cannot be chosen")
 		return
-	# Selecting a stage must not enter gameplay until Play is pressed.
+	# Selecting cards must never enter gameplay until pressing PLAY.
 	if current_scene != menu:
-		_failure("stage card selection unexpectedly launched gameplay")
+		_failure("Selecting a stage accidentally launched gameplay")
 		return
 	menu.call("_show_splash")
 	await _wait_frames()
@@ -182,5 +184,5 @@ func _run() -> void:
 	if not found_home:
 		_failure("language confirmation skipped the required Main Menu")
 		return
-	print("MENU_SMOKE_OK: no menu photos, blue loading/language/home, six 3D stages and proper locks")
+	print("MENU_SMOKE_OK: cinematic loading/language/home, six single-row stage photo cards, cyan showroom and proper locks")
 	quit(0)
