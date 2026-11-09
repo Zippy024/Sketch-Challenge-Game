@@ -407,7 +407,7 @@ func _show_home() -> void:
 func _add_home_button(parent: HBoxContainer, label_text: String, action: Callable) -> void:
 	var b := _button(label_text, false, 195, 60)
 	b.add_theme_stylebox_override("normal", _style(Color(0.70, 0.98, 0.93, 0.74), Color(1, 1, 1, 0.97), 20, 12))
-	b.add_theme_stylebox_override("hover", _style(Color("befff0"), Color("19c7a7"), 20, 12))
+	b.add_theme_stylebox_override("hover", _style(Color("ffe7dc"), Color("faad79"), 20, 12))
 	b.add_theme_font_size_override("font_size", 16)
 	b.pressed.connect(action)
 	parent.add_child(b)
@@ -427,7 +427,7 @@ func _show_information(title_text: String, details: String) -> void:
 	_bottom_bar.show()
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size.y = 380
-	panel.add_theme_stylebox_override("panel", _style(Color("192e2b"), C_COPPER, 24, 30))
+	panel.add_theme_stylebox_override("panel", _style(Color("282038"), C_COPPER, 24, 30))
 	_body.add_child(panel)
 	var stack := VBoxContainer.new()
 	stack.add_theme_constant_override("separation", 24)
@@ -485,7 +485,7 @@ func _show_achievements() -> void:
 	_bottom_bar.visible = false
 	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", _style(Color("192e2b"), C_COPPER, 22, 28))
+	panel.add_theme_stylebox_override("panel", _style(Color("282038"), C_COPPER, 22, 28))
 	_body.add_child(panel)
 	var stack := VBoxContainer.new()
 	stack.add_theme_constant_override("separation", 18)
@@ -547,10 +547,10 @@ func _level_row(n: int) -> Button:
 	button.disabled = not active
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if active else Control.CURSOR_ARROW
 	button.add_theme_stylebox_override("normal", _style(Color(0.83, 0.99, 0.95, 0.83) if active else Color(0.76, 0.86, 0.84, 0.61), Color(0.93, 1, 0.98, 0.94), 18))
-	button.add_theme_stylebox_override("hover", _style(Color("b6fff0"), Color("4bffdd"), 18))
-	button.add_theme_stylebox_override("pressed", _style(Color("a8ffe6"), Color("00bc9a"), 18))
+	button.add_theme_stylebox_override("hover", _style(Color("ffe0c2"), Color("ffbc76"), 18))
+	button.add_theme_stylebox_override("pressed", _style(Color("f4c5af"), Color("d98a5d"), 18))
 	button.add_theme_stylebox_override("disabled", _style(Color(0.74, 0.84, 0.83, 0.53), Color(0.88, 0.97, 0.94, 0.50), 18))
-	button.add_theme_stylebox_override("focus", _style(Color.TRANSPARENT, Color("3af2ca"), 18))
+	button.add_theme_stylebox_override("focus", _style(Color.TRANSPARENT, Color("ffc074"), 18))
 	if active:
 		button.pressed.connect(_start_level.bind(n))
 	var pad := MarginContainer.new()
@@ -566,7 +566,7 @@ func _level_row(n: int) -> Button:
 	line.add_theme_constant_override("separation", 18)
 	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	pad.add_child(line)
-	var number := _label("%02d" % n, 26, Color("006c5e") if active else Color("64827f"), true)
+	var number := _label("%02d" % n, 26, Color("9a577d") if active else Color("92819d"), true)
 	number.custom_minimum_size.x = 70
 	line.add_child(number)
 	var info := VBoxContainer.new()
@@ -574,14 +574,14 @@ func _level_row(n: int) -> Button:
 	info.alignment = BoxContainer.ALIGNMENT_CENTER
 	info.add_theme_constant_override("separation", 1)
 	line.add_child(info)
-	info.add_child(_label("STAGE %d" % n if active else "COMING SOON", 20, Color("064e46") if active else Color("607a77")))
+	info.add_child(_label("STAGE %d" % n if active else "COMING SOON", 20, Color("75516d") if active else Color("8a7793")))
 	if active:
-		info.add_child(_label("Draw the LDK boundary" if n == 1 else ("Pipe Shaft Q&A  •  Explain PS to the customer" if n == 2 else "S-Class Kitchen  •  Layout and parts"), 14, Color("436866")))
+		info.add_child(_label("Draw the LDK boundary" if n == 1 else ("Pipe Shaft Q&A  •  Explain PS to the customer" if n == 2 else "S-Class Kitchen  •  Layout and parts"), 14, Color("a78694")))
 	var pill := PanelContainer.new()
 	pill.custom_minimum_size = Vector2(148, 43)
-	pill.add_theme_stylebox_override("panel", _style(Color("008e77") if active else Color(0.7, 0.8, 0.77, 0.42), Color("6ff5d3") if active else Color(0.65, 0.75, 0.72, 0.45), 22))
+	pill.add_theme_stylebox_override("panel", _style(Color("ba6d58") if active else Color(0.7, 0.8, 0.77, 0.42), Color("ffcc91") if active else Color(0.65, 0.75, 0.72, 0.45), 22))
 	line.add_child(pill)
-	pill.add_child(_label("▶  PLAY" if active else "LOCKED", 17, WHITE if active else Color("567570"), true))
+	pill.add_child(_label("▶  PLAY" if active else "LOCKED", 17, WHITE if active else Color("9f8a9a"), true))
 	return button
 
 func _show_levels() -> void:
@@ -703,7 +703,7 @@ func _stage_card(stage: int) -> Button:
 
 func _mission_card(stage: int) -> PanelContainer:
 	var unlocked: bool = Progress.is_level_unlocked(stage)
-	var card := _c_panel(Color("192e2b") if unlocked else Color("202c2b"), C_MINT if unlocked else Color("4b5b56"), 12, 8)
+	var card := _c_panel(Color("282038") if unlocked else Color("30283e"), C_MINT if unlocked else Color("61546b"), 12, 8)
 	card.custom_minimum_size.y = 87
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
@@ -733,14 +733,14 @@ func _mission_card(stage: int) -> PanelContainer:
 	return card
 
 func _locked_card(stage: int) -> PanelContainer:
-	var card := _c_panel(Color(0.14, 0.18, 0.19, 0.91), Color("4d5954"), 12, 8)
+	var card := _c_panel(Color(0.14, 0.18, 0.19, 0.91), Color("62576b"), 12, 8)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.custom_minimum_size.y = 43
 	var line := HBoxContainer.new()
 	line.add_theme_constant_override("separation", 8)
 	card.add_child(line)
-	line.add_child(_label("%02d" % stage, 20, Color("89958f")))
-	var txt := _label("LOCKED  •  COMING SOON", 12, Color("a3afa8"))
+	line.add_child(_label("%02d" % stage, 20, Color("958b9b")))
+	var txt := _label("LOCKED  •  COMING SOON", 12, Color("a8a0ad"))
 	txt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	line.add_child(txt)
 	return card
@@ -759,7 +759,7 @@ func _show_help() -> void:
 	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	_body.add_child(_label("HOW TO PLAY", 31, C_INK))
 	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", _style(Color("192e2b"), C_COPPER, 18, 30))
+	panel.add_theme_stylebox_override("panel", _style(Color("282038"), C_COPPER, 18, 30))
 	_body.add_child(panel)
 	var contents := VBoxContainer.new()
 	contents.add_theme_constant_override("separation", 18)
@@ -782,7 +782,7 @@ func _show_settings() -> void:
 	_clear()
 	_body.add_child(_label("SETTINGS", 31, C_INK))
 	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", _style(Color("192e2b"), C_COPPER, 18, 30))
+	panel.add_theme_stylebox_override("panel", _style(Color("282038"), C_COPPER, 18, 30))
 	_body.add_child(panel)
 	var contents := VBoxContainer.new()
 	contents.add_theme_constant_override("separation", 20)
