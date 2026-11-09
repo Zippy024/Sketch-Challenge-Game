@@ -147,15 +147,15 @@ func _run() -> void:
 			return
 	menu.call("_show_splash")
 	await _wait_frames()
-	var intro_art: Control
+	var loading_photo: TextureRect
 	var intro_bar: ProgressBar
 	for node in menu.find_children("*", "Control", true, false):
-		if node.has_meta("entry_kitchen_art"):
-			intro_art = node
+		if node is TextureRect and node.texture != null and node.texture.resource_path == "res://Modern Blue-White Kitchen Interior.png":
+			loading_photo = node
 		if node.name == "EntryLoadingProgress":
 			intro_bar = node
-	if intro_art == null or intro_bar == null or intro_art.size.x < 700 or intro_bar.size.x < 350:
-		_failure("Intro drawing or loading bar missing/collapsed")
+	if loading_photo == null or intro_bar == null or loading_photo.size.x < 700 or intro_bar.size.x < 350:
+		_failure("Selected loading photograph or loading bar missing/collapsed")
 		return
 	if top.visible:
 		_failure("intro unexpectedly shows game navigation header")
@@ -181,7 +181,7 @@ func _run() -> void:
 	var entry_photo_count := 0
 	for node in menu.find_children("*", "TextureRect", true, false):
 		var img := node as TextureRect
-		if img.texture != null and "BlueKitchenPhotoClean.jpeg" in img.texture.resource_path:
+		if img.texture != null and "Sunny Cozy Kitchen Interior.png" in img.texture.resource_path:
 			entry_photo_count += 1
 	if entry_photo_count != 1:
 		_failure("Language page reintroduced duplicate/inset background")
@@ -221,5 +221,5 @@ func _run() -> void:
 	if not found_home:
 		_failure("language confirmation skipped the required Main Menu")
 		return
-	print("MENU_SMOKE_OK: single photo-like blue kitchen background and glossy logo across screens; no old photos, six stage cards, language, locked stages")
+	print("MENU_SMOKE_OK: selected blue loading and sunny language photographs, home, six stage cards, language controls, locked stages")
 	quit(0)
