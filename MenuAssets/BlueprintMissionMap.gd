@@ -38,29 +38,35 @@ func _draw() -> void:
 	draw_line(Vector2(w*0.37,h*0.49),Vector2(w*0.37,h*0.79),Color(0.72,0.9,1.0,0.13),2.0,true)
 	draw_rect(Rect2(Vector2(w*0.29,h*0.57),Vector2(w*0.19,h*0.095)),Color(0.77,0.91,1.0,0.075),true)
 	# S-shaped training route. Neon for available stages and dim blue for future.
+	# Neon path winds around the miniature kitchen stations instead of making
+	# a flat progress list. Keep it behind the real clickable stage rooms.
 	var route := PackedVector2Array([
-		Vector2(w*0.17,h*0.70), Vector2(w*0.25,h*0.63),
-		Vector2(w*0.33,h*0.63), Vector2(w*0.42,h*0.70),
-		Vector2(w*0.51,h*0.70), Vector2(w*0.58,h*0.64),
-		Vector2(w*0.65,h*0.64),Vector2(w*0.72,h*0.71),
-		Vector2(w*0.80,h*0.71),Vector2(w*0.89,h*0.64)
+		Vector2(w*0.17,h*0.40), Vector2(w*0.33,h*0.37),
+		Vector2(w*0.49,h*0.40), Vector2(w*0.65,h*0.37),
+		Vector2(w*0.82,h*0.41), Vector2(w*0.91,h*0.54),
+		Vector2(w*0.82,h*0.76), Vector2(w*0.65,h*0.73),
+		Vector2(w*0.49,h*0.76), Vector2(w*0.33,h*0.72),
+		Vector2(w*0.17,h*0.76)
 	])
 	var active := PackedVector2Array()
 	var future := PackedVector2Array()
 	for i in range(route.size()):
-		if i <= 5: active.append(route[i])
-		if i >= 5: future.append(route[i])
-	draw_polyline(active,Color(0.02,0.79,1.0,0.13),16.0,true)
-	draw_polyline(active,Color(0.20,0.84,1.0,0.69),4.5,true)
-	draw_polyline(future,Color(0.65,0.81,0.92,0.29),3.0,true)
-	var dot_positions := [route[0],route[2],route[5],route[6],route[8],route[9]]
-	for i in range(dot_positions.size()):
-		var p: Vector2 = dot_positions[i]
+		if i <= 4:
+			active.append(route[i])
+		if i >= 4:
+			future.append(route[i])
+	draw_polyline(active, Color(0.04,0.83,1.00,0.17), 21.0, true)
+	draw_polyline(active, Color(0.48,0.96,1.00,0.84), 5.0, true)
+	draw_polyline(future, Color(0.32,0.70,0.91,0.26), 10.0, true)
+	draw_polyline(future, Color(0.67,0.86,0.99,0.43), 3.0, true)
+	for i in range(6):
+		var p: Vector2 = route[[0,2,4,10,8,6][i]]
 		var is_open: bool = i < 3
 		var glow: float = 0.70 + 0.15 * sin(_motion*2.0 + float(i))
-		draw_circle(p,15.0,Color(0.10,0.80,1.0,0.10) if is_open else Color(0.55,0.67,0.77,0.10))
-		draw_circle(p,7.0,Color(0.60,0.95,1.0,glow) if is_open else Color("678198"))
-		draw_arc(p,11,0.0,TAU,36,CYAN if is_open else Color("829bb0"),2.0,true)
+		draw_circle(p, 18.0, Color(0.10,0.80,1.0,0.19) if is_open else Color(0.55,0.67,0.77,0.09))
+		draw_circle(p, 8.0, Color(0.62,0.95,1.0,glow) if is_open else Color("68839e"))
+		draw_arc(p, 12, 0, TAU, 40, CYAN if is_open else Color("839caf"), 2.0, true)
+
 	# Drafting marks around the map perimeter.
 	for p in [Vector2(23,22),Vector2(w-23,22),Vector2(23,h-22),Vector2(w-23,h-22)]:
 		draw_line(p+Vector2(-12,0),p+Vector2(12,0),Color(0.61,0.88,1,0.52),1.5,true)

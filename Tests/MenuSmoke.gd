@@ -80,6 +80,17 @@ func _run() -> void:
 		if b.disabled != (stage >= 4):
 			_failure("stage access changed: " + str(stage))
 			return
+	var three_d_rooms := 0
+	for n in menu.find_children("*", "SubViewportContainer", true, false):
+		if n.has_meta("diorama_container"):
+			three_d_rooms += 1
+			var v: SubViewport = n.get_child(0) as SubViewport
+			if v == null or v.size.x < 260 or v.size.y < 140:
+				_failure("Stage mini-kitchen 3D viewport is missing or collapsed")
+				return
+	if three_d_rooms != 6:
+		_failure("Expected six genuine 3D kitchen dioramas, got " + str(three_d_rooms))
+		return
 	if body.size.x < 500.0 or top.size.y > 110.0:
 		_failure("level selection layout collapsed")
 		return
@@ -159,5 +170,5 @@ func _run() -> void:
 	if not found_home:
 		_failure("language confirmation skipped the required Main Menu")
 		return
-	print("MENU_SMOKE_OK: blue loader -> language -> home -> mission map; selected Stage3; locked Stage4-6")
+	print("MENU_SMOKE_OK: six real 3D kitchen dioramas, neon mission route, language/home, Stage3 select, locked Stage4-6")
 	quit(0)
