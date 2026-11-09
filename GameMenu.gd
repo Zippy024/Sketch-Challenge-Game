@@ -599,7 +599,7 @@ func _show_information(title_text: String, details: String) -> void:
 	_bottom_bar.show()
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size.y = 380
-	panel.add_theme_stylebox_override("panel", _style(Color("282038"), C_COPPER, 24, 30))
+	panel.add_theme_stylebox_override("panel", _style(Color("0f3964"), C_COPPER, 24, 30))
 	_body.add_child(panel)
 	var stack := VBoxContainer.new()
 	stack.add_theme_constant_override("separation", 24)
@@ -614,7 +614,7 @@ func _show_information(title_text: String, details: String) -> void:
 func _show_language_select() -> void:
 	var scene := _entry_canvas("EntryLanguageScreen")
 	var tint := ColorRect.new()
-	tint.color = Color(0.91, 0.96, 1.0, 0.29)
+	tint.color = Color(0.78, 0.90, 1.0, 0.25)
 	tint.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_entry_add(scene, tint, Rect2(0, 0, 1100, 650))
 	var title := _entry_centered_label("Kitchen", 59, Rect2(255, 65, 590, 76), Color("2679b1"), scene)
@@ -629,11 +629,11 @@ func _show_language_select() -> void:
 	blueprint.set_meta("entry_kitchen_art", true)
 	_entry_add(scene, blueprint, Rect2(361, 196, 390, 191))
 
-	var panel := _glass(Color("eaf5ff"), Color("8bbce2"), 23, 0)
+	var panel := _glass(Color("ecf8ff"), Color("83d4f4"), 23, 0)
 	panel.name = "LanguageDropdownPanel"
 	panel.set_meta("entry_language_panel", true)
 	_entry_add(scene, panel, Rect2(391, 386, 320, 192))
-	var choose_title := _entry_centered_label("Select language", 21, Rect2(418, 397, 266, 30), Color("245f91"), scene)
+	var choose_title := _entry_centered_label("Select language", 21, Rect2(418, 397, 266, 30), Color("0b5488"), scene)
 	choose_title.set_meta("language_heading", true)
 	var menu := OptionButton.new()
 	menu.name = "EntryLanguageDropdown"
@@ -642,9 +642,19 @@ func _show_language_select() -> void:
 	menu.add_theme_font_size_override("font_size", 20)
 	menu.add_theme_color_override("font_color", Color("234a79"))
 	menu.add_theme_color_override("font_hover_color", Color("234a79"))
-	menu.add_theme_stylebox_override("normal", _console_style(Color("f7fcff"), Color("82bce8"), 16, 7))
-	menu.add_theme_stylebox_override("hover", _console_style(Color("ffffff"), Color("438fc8"), 16, 7))
-	menu.add_theme_stylebox_override("pressed", _console_style(Color("dcefff"), Color("438fc8"), 16, 7))
+	menu.add_theme_stylebox_override("normal", _console_style(Color("f9fdff"), Color("85d7f8"), 16, 7))
+	menu.add_theme_stylebox_override("hover", _console_style(Color("ffffff"), Color("4ac9f3"), 16, 7))
+	menu.add_theme_stylebox_override("pressed", _console_style(Color("dcefff"), Color("4ac9f3"), 16, 7))
+	menu.add_theme_color_override("font_pressed_color", Color("123e68"))
+	menu.add_theme_color_override("font_focus_color", Color("123e68"))
+	menu.add_theme_color_override("font_disabled_color", Color("88a2b5"))
+	var popup := menu.get_popup()
+	popup.add_theme_stylebox_override("panel", _console_style(Color("f2faff"), Color("92daf7"), 16, 10, 7))
+	popup.add_theme_stylebox_override("hover", _console_style(Color("caefff"), Color("67c9f4"), 11, 7, 2))
+	popup.add_theme_color_override("font_color", Color("0e4772"))
+	popup.add_theme_color_override("font_hover_color", Color("095a96"))
+	popup.add_theme_color_override("font_disabled_color", Color("8eabbc"))
+	popup.add_theme_font_size_override("font_size", 18)
 	menu.add_item("日本語", 0)
 	menu.add_item("မြန်မာ", 1)
 	menu.add_item("English (Coming Soon)", 2)
@@ -657,8 +667,8 @@ func _show_language_select() -> void:
 	go.text = "Continue  ›"
 	go.add_theme_font_size_override("font_size", 18)
 	go.add_theme_color_override("font_color", Color("ffffff"))
-	go.add_theme_stylebox_override("normal", _console_style(Color("348bd0"), Color("b2e7ff"), 17, 7))
-	go.add_theme_stylebox_override("hover", _console_style(Color("1d6fae"), Color("e5f6ff"), 17, 7))
+	go.add_theme_stylebox_override("normal", _console_style(Color("09b8e3"), Color("97f0ff"), 17, 7))
+	go.add_theme_stylebox_override("hover", _console_style(Color("087bba"), Color("e5f6ff"), 17, 7))
 	go.pressed.connect(func() -> void:
 		_choose_language("mm" if menu.selected == 1 else "jp")
 	)
@@ -678,7 +688,7 @@ func _show_achievements() -> void:
 	_bottom_bar.visible = false
 	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", _style(Color("282038"), C_COPPER, 22, 28))
+	panel.add_theme_stylebox_override("panel", _style(Color("0f3964"), C_COPPER, 22, 28))
 	_body.add_child(panel)
 	var stack := VBoxContainer.new()
 	stack.add_theme_constant_override("separation", 18)
@@ -911,7 +921,7 @@ func _stage_card(stage: int) -> Button:
 
 func _mission_card(stage: int) -> PanelContainer:
 	var unlocked: bool = Progress.is_level_unlocked(stage)
-	var card := _c_panel(Color("282038") if unlocked else Color("30283e"), C_MINT if unlocked else Color("61546b"), 12, 8)
+	var card := _c_panel(Color("0f3964") if unlocked else Color("30283e"), C_MINT if unlocked else Color("61546b"), 12, 8)
 	card.custom_minimum_size.y = 87
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
@@ -967,7 +977,7 @@ func _show_help() -> void:
 	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	_body.add_child(_label("HOW TO PLAY", 31, C_INK))
 	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", _style(Color("282038"), C_COPPER, 18, 30))
+	panel.add_theme_stylebox_override("panel", _style(Color("0f3964"), C_COPPER, 18, 30))
 	_body.add_child(panel)
 	var contents := VBoxContainer.new()
 	contents.add_theme_constant_override("separation", 18)
@@ -990,7 +1000,7 @@ func _show_settings() -> void:
 	_clear()
 	_body.add_child(_label("SETTINGS", 31, C_INK))
 	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", _style(Color("282038"), C_COPPER, 18, 30))
+	panel.add_theme_stylebox_override("panel", _style(Color("0f3964"), C_COPPER, 18, 30))
 	_body.add_child(panel)
 	var contents := VBoxContainer.new()
 	contents.add_theme_constant_override("separation", 20)
