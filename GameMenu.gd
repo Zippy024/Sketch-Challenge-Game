@@ -266,6 +266,7 @@ func _set_concept_background(choose_levels: bool) -> void:
 		return
 	# Warm, daylight kitchen remains legible behind glass panels.
 	_menu_photo.texture = preload("res://MenuAssets/KitchenIntroV8.jpg") if not choose_levels else preload("res://MenuAssets/KitchenHero.jpg")
+	_menu_photo.modulate = Color.WHITE
 
 func _fit_content() -> void:
 	if _body != null:
@@ -313,7 +314,19 @@ func _entry_canvas(name_value: String) -> Control:
 	root.custom_minimum_size = Vector2(1100, 650)
 	root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_body.add_child(root)
-	return root
+	# Center the fixed 1100×650 stage inside the desktop window.
+	var center := Control.new()
+	center.name = name_value + "Content"
+	root.add_child(center)
+	center.anchor_left = 0.5
+	center.anchor_right = 0.5
+	center.anchor_top = 0.0
+	center.anchor_bottom = 0.0
+	center.offset_left = -550.0
+	center.offset_right = 550.0
+	center.offset_top = 0.0
+	center.offset_bottom = 650.0
+	return center
 
 
 func _entry_add(parent: Control, child: Control, rect: Rect2) -> void:
