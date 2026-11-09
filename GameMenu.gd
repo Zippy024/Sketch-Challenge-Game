@@ -190,29 +190,11 @@ func _build_frame() -> void:
 	backdrop.set_meta("showroom_background", true)
 	backdrop.set_meta("reference_style_background", true)
 	backdrop.texture = preload("res://MenuAssets/BlueKitchenPhotoClean.jpeg")
+	_menu_backdrop = backdrop
 	backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	backdrop.modulate = Color.WHITE
-	# Gently restore edge clarity in the existing soft-focus kitchen artwork.
-	# This only affects the menu backdrop; game scenes remain untouched.
-	var sharpen := Shader.new()
-	sharpen.code = """
-shader_type canvas_item;
-render_mode unshaded;
-void fragment() {
-    vec2 px = TEXTURE_PIXEL_SIZE;
-    vec4 center = texture(TEXTURE, UV);
-    vec3 neighbors = texture(TEXTURE, UV + vec2(px.x, 0.0)).rgb
-        + texture(TEXTURE, UV - vec2(px.x, 0.0)).rgb
-        + texture(TEXTURE, UV + vec2(0.0, px.y)).rgb
-        + texture(TEXTURE, UV - vec2(0.0, px.y)).rgb;
-    COLOR = vec4(clamp(center.rgb * 2.0 - neighbors * 0.25, 0.0, 1.0), center.a);
-}
-"""
-	var sharpen_material := ShaderMaterial.new()
-	sharpen_material.shader = sharpen
-	backdrop.material = sharpen_material
 	base.add_child(backdrop)
 	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var light := ColorRect.new()
@@ -339,7 +321,22 @@ func _entry_background() -> void:
 	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	# Shared FlatBlueBackdrop stays visible behind all entry screens.
 
+# User-selected artwork; fallback stays available until the images are uploaded.
+var _menu_backdrop: TextureRect
+
+func _set_entry_background(screen_name: String) -> void:
+	if not is_instance_valid(_menu_backdrop):
+		return
+	var path := "res://MenuAssets/Modern Blue Kitchen Glow.png"
+	if screen_name == "EntryLoadingScreen":
+		path = "res://MenuAssets/Modern Blue-White Kitchen Interior.png"
+	if ResourceLoader.exists(path):
+		_menu_backdrop.texture = load(path)
+	else:
+		_menu_backdrop.texture = preload("res://MenuAssets/BlueKitchenPhotoClean.jpeg")
+
 func _entry_canvas(name_value: String) -> Control:
+	_set_entry_background(name_value)
 	_clear()
 	_top_bar.hide()
 	_bottom_bar.hide()
