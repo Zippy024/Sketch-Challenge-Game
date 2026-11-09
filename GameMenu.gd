@@ -137,10 +137,13 @@ func _thin_rule() -> ColorRect:
 	return line
 
 func _build_frame() -> void:
-	var base := PanelContainer.new()
+	var base := Control.new()
+	base.name = "FullViewportMenuFrame"
 	base.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	base.add_theme_stylebox_override("panel", _style(C_DARK, C_DARK, 0))
+	base.clip_contents = true
+	base.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(base)
+	base.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var photo := TextureRect.new()
 	photo.texture = preload("res://MenuAssets/ConceptC_Home_Background.jpg")
 	_menu_photo = photo
@@ -177,8 +180,10 @@ void fragment() {
 	var sparkles := SunsetSparkles.new()
 	base.add_child(sparkles)
 	var outer := VBoxContainer.new()
+	outer.name = "MenuLayout"
 	outer.add_theme_constant_override("separation", 0)
 	base.add_child(outer)
+	outer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_top_bar = PanelContainer.new()
 	_top_bar.custom_minimum_size.y = 60
 	_top_bar.add_theme_stylebox_override("panel", _style(Color(0.10,0.075,0.16,0.86), Color("aa785c"), 0))
@@ -217,6 +222,7 @@ void fragment() {
 	_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	_scroll.clip_contents = true
 	outer.add_child(_scroll)
 	var margin := MarginContainer.new()
 	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -278,7 +284,7 @@ func _show_splash() -> void:
 	_bottom_bar.hide()
 	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	var alignment := CenterContainer.new()
-	alignment.custom_minimum_size.y = maxf(560.0, size.y - 105.0)
+	alignment.custom_minimum_size.y = 560.0
 	_body.add_child(alignment)
 	var panel := _c_panel(Color(0.08, 0.055, 0.16, 0.85), Color("ffc889"), 30, 30)
 	panel.custom_minimum_size = Vector2(560, 360)
@@ -328,7 +334,7 @@ func _show_splash() -> void:
 func _show_home() -> void:
 	_clear()
 	var stage := HBoxContainer.new()
-	stage.custom_minimum_size.y = maxf(530.0, size.y - 160.0)
+	stage.custom_minimum_size.y = 530.0
 	stage.add_theme_constant_override("separation", 25)
 	_body.add_child(stage)
 
