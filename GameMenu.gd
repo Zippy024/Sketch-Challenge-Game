@@ -616,121 +616,154 @@ func _show_levels() -> void:
 	_set_concept_background(true)
 	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 
-	var top := HBoxContainer.new()
-	top.add_theme_constant_override("separation", 16)
-	_body.add_child(top)
-	var back := _button("←  BACK", false, 130, 43)
-	back.pressed.connect(_resume_paused if is_pause_overlay else _show_home)
-	top.add_child(back)
-	var gap := Control.new()
-	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	top.add_child(gap)
-	top.add_child(_label("✦  SELECT LEVEL  ✦", 33, C_COPPER, true))
-	gap = Control.new()
-	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	top.add_child(gap)
-	var progress := _button("PROGRESS", false, 145, 43)
-	progress.pressed.connect(_show_progress)
-	top.add_child(progress)
-	_body.add_child(_label("Complete the design missions and unlock the next adventures.", 15, C_INK, true))
+	var header := HBoxContainer.new()
+	header.add_theme_constant_override("separation", 15)
+	_body.add_child(header)
+	var back := _nav_button("←  HOME", _resume_paused if is_pause_overlay else _show_home)
+	header.add_child(back)
+	var headline := _label("TRAINING MISSIONS  /  SELECT A STAGE", 26, Color("342a3a"), true)
+	headline.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(headline)
+	var prog_btn := _nav_button("MY PROGRESS", _show_progress)
+	header.add_child(prog_btn)
+
+	var board := _glass(Color(1.0, 0.975, 0.965, 0.85), Color("fff8eb"), 28, 18)
+	board.custom_minimum_size.y = 545
+	_body.add_child(board)
+	var layout := VBoxContainer.new()
+	layout.add_theme_constant_override("separation", 12)
+	board.add_child(layout)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 18)
+	row.custom_minimum_size.y = 390
+	layout.add_child(row)
+
+	var left := VBoxContainer.new()
+	left.custom_minimum_size.x = 234
+	left.add_theme_constant_override("separation", 13)
+	row.add_child(left)
+	left.add_child(_label("KITCHEN DESIGN", 13, Color("aa6a4c")))
+	left.add_child(_label("Select a Stage", 30, Color("2b2738")))
+	left.add_child(_label("Progress through real kitchen design missions and build your skills step by step.", 15, Color("584a57")))
 	var space := Control.new()
 	space.custom_minimum_size.y = 10
-	_body.add_child(space)
+	left.add_child(space)
+	var summary := _glass(Color(0.99,0.93,0.91,0.94), Color("ebc7a3"), 19, 13)
+	left.add_child(summary)
+	var progress_col := VBoxContainer.new()
+	progress_col.add_theme_constant_override("separation", 7)
+	summary.add_child(progress_col)
+	progress_col.add_child(_label("TRAINING PROGRESS", 14, Color("4a3346")))
+	progress_col.add_child(_label("3 / 6  PLAYABLE", 21, Color("bd6b47")))
+	progress_col.add_child(_label("Stages 1–3 available", 13, Color("6c5a66")))
+	var progress := ProgressBar.new()
+	progress.custom_minimum_size.y = 12
+	progress.min_value = 0
+	progress.max_value = 6
+	progress.value = 3
+	progress.show_percentage = false
+	progress.add_theme_stylebox_override("background", _console_style(Color("d4c8cf"), Color.TRANSPARENT, 9, 0))
+	progress.add_theme_stylebox_override("fill", _console_style(Color("d98655"), Color.TRANSPARENT, 9, 0))
+	progress_col.add_child(progress)
+	var level_guide := _glass(Color(0.19,0.14,0.25,0.92), Color("f4cc9a"), 19, 12)
+	left.add_child(level_guide)
+	var guide_text := VBoxContainer.new()
+	guide_text.add_theme_constant_override("separation", 5)
+	level_guide.add_child(guide_text)
+	guide_text.add_child(_label("GAME GUIDE", 12, Color("ffcf91")))
+	guide_text.add_child(_label("01  Sketch Layout", 13, C_INK))
+	guide_text.add_child(_label("02  Pipe Shaft Q&A", 13, C_INK))
+	guide_text.add_child(_label("03  Select Materials", 13, C_INK))
 
-	var board := _c_panel(Color(0.11,0.08,0.19,0.81), Color("ffbb7b"), 29, 17)
-	board.custom_minimum_size.y = 0
-	_body.add_child(board)
-	var holder := VBoxContainer.new()
-	holder.add_theme_constant_override("separation", 20)
-	board.add_child(holder)
-	holder.add_child(_label("✦   KITCHEN DESIGN MISSIONS   ✦", 16, Color("ffe2b1"), true))
-
-	# The original game uses a straightforward stage progression. Keep that
-	# navigation while rendering a compact 3 x 2 mission grid that fits Web.
-	var mission_row := VBoxContainer.new()
-	mission_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	mission_row.add_theme_constant_override("separation", 12)
-	holder.add_child(mission_row)
-	var guide_column := HBoxContainer.new()
-	guide_column.alignment = BoxContainer.ALIGNMENT_CENTER
-	guide_column.add_theme_constant_override("separation", 12)
-	mission_row.add_child(guide_column)
-	var face := TextureRect.new()
-	face.texture = preload("res://customer_portrait_ui.png")
-	face.custom_minimum_size = Vector2(148, 148)
-	face.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	face.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	face.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var face_shader := Shader.new()
-	face_shader.code = """
-shader_type canvas_item;
-void fragment() {
-	vec4 tex = texture(TEXTURE, UV);
-	float blue = clamp(tex.b - tex.r * 1.16, 0.0, 1.0);
-	tex.rgb = mix(tex.rgb, vec3(0.95, 0.57, 0.34), blue * 0.92);
-	COLOR = tex;
-}
-"""
-	var face_material := ShaderMaterial.new()
-	face_material.shader = face_shader
-	face.material = face_material
-	guide_column.add_child(face)
-	guide_column.add_child(_label("DESIGN GUIDE", 13, C_COPPER, true))
-	guide_column.add_child(_label("Choose your next\nchallenge!", 12, C_MUTED, true))
-	var cards := GridContainer.new()
-	cards.columns = 3
-	cards.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	cards.add_theme_constant_override("h_separation", 22)
-	cards.add_theme_constant_override("v_separation", 14)
-	mission_row.add_child(cards)
+	var right := VBoxContainer.new()
+	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right.add_theme_constant_override("separation", 10)
+	row.add_child(right)
+	var row_heading := HBoxContainer.new()
+	right.add_child(row_heading)
+	var all_label := _label("DESIGN CHALLENGES", 17, Color("433341"))
+	all_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row_heading.add_child(all_label)
+	var left_arrow := _nav_button("‹", func() -> void: pass)
+	left_arrow.custom_minimum_size.x = 40
+	row_heading.add_child(left_arrow)
+	var right_arrow := _nav_button("›", func() -> void: pass)
+	right_arrow.custom_minimum_size.x = 40
+	row_heading.add_child(right_arrow)
+	var strip := ScrollContainer.new()
+	strip.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	strip.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	strip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	strip.custom_minimum_size.y = 327
+	strip.clip_contents = true
+	right.add_child(strip)
+	var cards := HBoxContainer.new()
+	cards.add_theme_constant_override("separation", 13)
+	strip.add_child(cards)
 	for stage in range(1, 7):
 		var card := _stage_card(stage)
 		cards.add_child(card)
 		card.modulate.a = 0.0
-		var card_entrance := create_tween()
-		card_entrance.tween_interval(float(stage - 1) * 0.10)
-		card_entrance.tween_property(card, "modulate:a", 1.0, 0.36).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	var path := _label("◆ ━━━━━ ◆ ━━━━━ ◆      ◇ ━━━━━ ◇ ━━━━━ ◇", 18, C_COPPER, true)
-	holder.add_child(path)
+		var intro := create_tween()
+		intro.tween_interval(float(stage - 1) * 0.08)
+		intro.tween_property(card, "modulate:a", 1.0, 0.4).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	left_arrow.pressed.connect(func() -> void: strip.scroll_horizontal = maxi(0, strip.scroll_horizontal - 270))
+	right_arrow.pressed.connect(func() -> void: strip.scroll_horizontal += 270)
+	right.add_child(_label("‹  Scroll to discover more levels  ›", 12, Color("786473"), true))
 
-	var status := _label("03 PLAYABLE STAGES      •      04 — 06 COMING SOON", 14, C_MUTED, true)
-	_body.add_child(status)
+	var separator := ColorRect.new()
+	separator.custom_minimum_size.y = 2
+	separator.color = Color("d7a777")
+	separator.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layout.add_child(separator)
+	var path := HBoxContainer.new()
+	path.alignment = BoxContainer.ALIGNMENT_CENTER
+	path.add_theme_constant_override("separation", 20)
+	layout.add_child(path)
+	for stage in range(1, 7):
+		var token := _glass(Color("ffead1") if stage <= 3 else Color("d8d0d7"), Color("e09a60") if stage <= 3 else Color("aca2aa"), 30, 9)
+		path.add_child(token)
+		token.add_child(_label("%02d" % stage, 14, Color("a85c3e") if stage <= 3 else Color("736c77"), true))
+		if stage < 6:
+			path.add_child(_label("━━━━", 14, Color("cd977d") if stage < 3 else Color("b6a9b2"), true))
+	layout.add_child(_label("STAGE 04—06  •  COMING SOON", 13, Color("7b6574"), true))
 	board.modulate.a = 0.0
-	var slide := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	slide.tween_property(board, "modulate:a", 1.0, 0.62)
+	var fade := create_tween()
+	fade.tween_property(board, "modulate:a", 1.0, 0.52).set_trans(Tween.TRANS_SINE)
 
 func _stage_card(stage: int) -> Button:
-	var unlocked: bool = stage <= 3 and Progress.is_level_unlocked(stage)
+	var available: bool = stage <= 3 and Progress.is_level_unlocked(stage)
 	var card := Button.new()
 	card.text = ""
-	card.custom_minimum_size = Vector2(190, 238)
-	card.disabled = not unlocked
-	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if unlocked else Control.CURSOR_ARROW
-	var fill := Color(0.19,0.12,0.25,0.96) if unlocked else Color(0.22,0.20,0.28,0.92)
-	var edge := Color("ffc077") if unlocked else Color("6f6878")
-	card.add_theme_stylebox_override("normal", _console_style(fill, edge, 20, 5, 6))
-	card.add_theme_stylebox_override("disabled", _console_style(fill, edge, 20, 5))
-	card.add_theme_stylebox_override("hover", _console_style(Color("683850"), Color("ffe7a1"), 20, 5, 12))
-	card.add_theme_stylebox_override("pressed", _console_style(Color("49243d"), Color("fff0c2"), 20, 5, 4))
-	if unlocked:
+	card.custom_minimum_size = Vector2(203, 296)
+	card.disabled = not available
+	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if available else Control.CURSOR_ARROW
+	var background := Color(1,0.985,0.97,0.96) if available else Color(0.69,0.66,0.69,0.91)
+	card.add_theme_stylebox_override("normal", _console_style(background, Color("eeb47e") if available else Color("a49ba4"), 20, 5, 8))
+	card.add_theme_stylebox_override("disabled", _console_style(background, Color("9d96a1"), 20, 5, 2))
+	card.add_theme_stylebox_override("hover", _console_style(Color("fff3e6"), Color("f0a15e"), 20, 5, 13))
+	card.add_theme_stylebox_override("pressed", _console_style(Color("f6dec8"), Color("df8b54"), 20, 5, 4))
+	if available:
 		card.pressed.connect(_start_level.bind(stage))
 		ConsoleAnimations.animate_button(card)
 
 	var pad := MarginContainer.new()
 	pad.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	pad.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	for side in ["margin_left","margin_right"]:
-		pad.add_theme_constant_override(side, 10)
-	for side in ["margin_top","margin_bottom"]:
-		pad.add_theme_constant_override(side, 12)
+	for margin in ["margin_left","margin_right"]:
+		pad.add_theme_constant_override(margin, 10)
+	for margin in ["margin_top","margin_bottom"]:
+		pad.add_theme_constant_override(margin, 8)
 	card.add_child(pad)
-	var content := VBoxContainer.new()
-	content.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	content.add_theme_constant_override("separation", 7)
-	pad.add_child(content)
-	content.add_child(_label("STAGE %02d" % stage, 18, Color("ffd49c") if unlocked else Color("a69da9"), true))
-	var preview := TextureRect.new()
-	var images: Array[Texture2D] = [
+	var body := VBoxContainer.new()
+	body.add_theme_constant_override("separation", 5)
+	body.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pad.add_child(body)
+	var status := "● AVAILABLE" if available else "◆ LOCKED"
+	var pill := _label(status, 12, Color("9a543c") if available else Color("665b65"), true)
+	body.add_child(pill)
+	var thumb := TextureRect.new()
+	var textures: Array[Texture2D] = [
 		preload("res://reference_sketch.png"),
 		preload("res://MenuAssets/Level2.png"),
 		preload("res://MenuAssets/Level3.png"),
@@ -738,20 +771,19 @@ func _stage_card(stage: int) -> Button:
 		preload("res://MenuAssets/Level5.png"),
 		preload("res://MenuAssets/Level6.png")
 	]
-	preview.texture = images[stage-1]
-	preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	preview.custom_minimum_size = Vector2(156, 82)
-	preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	preview.modulate = Color.WHITE if unlocked else Color("756d7b")
-	content.add_child(preview)
-	var descriptions: Array[String] = ["Sketch Layout","Pipe Shaft Q&A","Select Materials","Design Challenge","Kitchen Planning","Final Challenge"]
-	var name_label := _label(descriptions[stage-1], 16, C_INK if unlocked else Color("b6a6b3"), true)
-	name_label.custom_minimum_size.y = 40
-	content.add_child(name_label)
-	var badge := _label("✦  READY TO PLAY" if unlocked else "◆  LOCKED", 12, Color("ffd68d") if unlocked else Color("aaa0ad"), true)
-	content.add_child(badge)
-	content.add_child(_label("★ ★ ★" if unlocked else "☆ ☆ ☆", 16, Color("ffc56b") if unlocked else Color("817885"), true))
+	thumb.texture = textures[stage - 1]
+	thumb.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	thumb.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	thumb.custom_minimum_size = Vector2(174, 153)
+	thumb.modulate = Color.WHITE if available else Color("bcb2b8")
+	thumb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	body.add_child(thumb)
+	body.add_child(_label("STAGE %02d" % stage, 12, Color("8c6349") if available else Color("736872")))
+	var names: Array[String] = ["LDK Boundary Drawing","Pipe Shaft Q&A","S-Class Kitchen Selection","Island Layout Planning","Lighting & Atmosphere","Final Kitchen Design"]
+	var title := _label(names[stage - 1], 16, Color("2f2a36") if available else Color("635c68"), true)
+	title.custom_minimum_size.y = 38
+	body.add_child(title)
+	body.add_child(_label("✦  PLAY MISSION" if available else "🔒  COMING SOON", 13, Color("c7794d") if available else Color("766c76"), true))
 	return card
 
 func _mission_card(stage: int) -> PanelContainer:
