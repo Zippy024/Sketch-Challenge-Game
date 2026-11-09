@@ -6,6 +6,7 @@ on:
       - fix/web-gray-screen-ready-handshake-20261109
       - fix/menu-container-overflow-20261109
       - feature/original-game-flow-sunset-menu-20261109
+      - feature/bright-glass-kitchen-main-levels-20261109
   workflow_dispatch:
 permissions:
   contents: read
@@ -32,6 +33,11 @@ jobs:
         run: |
           godot --headless --path . --quit-after 75 2>&1 | tee startup.log
           if grep -E 'SCRIPT ERROR:|Failed to load script|Invalid call\.|Invalid get index|Invalid set index' startup.log; then exit 1; fi
+      - name: Verify menu pages and level controls
+        run: |
+          godot --headless --path . --script res://Tests/MenuSmoke.gd 2>&1 | tee menu_smoke.log
+          grep -q 'MENU_SMOKE_OK:' menu_smoke.log
+          if grep -E 'MENU_SMOKE_FAIL:|SCRIPT ERROR:|Failed to load script' menu_smoke.log; then exit 1; fi
       - name: Export
         run: |
           mkdir web
