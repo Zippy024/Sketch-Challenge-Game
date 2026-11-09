@@ -32,7 +32,7 @@ func _run() -> void:
 		return
 	var top := menu.get("_top_bar") as Control
 	if top == null or top.size.y > 110.0 or top.size.y < 40.0:
-		_failure("header size collapsed or stretched")
+		_failure("header size collapsed or stretched: " + str(top.size) + " viewport " + str(menu.size))
 		return
 	menu.call("_show_levels")
 	await _wait_frames()
