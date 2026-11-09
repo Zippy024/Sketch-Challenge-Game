@@ -487,57 +487,77 @@ func _select_map_stage(stage: int) -> void:
 func _map_stage_card(stage: int) -> Button:
 	var available: bool = stage <= 3 and Progress.is_level_unlocked(stage)
 	var selected: bool = available and stage == _selected_level
-	var item := Button.new()
-	item.name = "DioramaMission%02d" % stage
-	item.set_meta("mission_stage", stage)
-	item.custom_minimum_size = Vector2(286, 213)
-	item.disabled = not available
-	item.text = ""
-	item.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if available else Control.CURSOR_ARROW
-	# Translucent background lets the miniature 3D room float on the blueprint.
-	var clear_style := _console_style(Color(0.05,0.16,0.31,0.01), Color.TRANSPARENT, 20, 0, 0)
-	item.add_theme_stylebox_override("normal", clear_style)
-	item.add_theme_stylebox_override("hover", _console_style(Color(0.04,0.29,0.55,0.14), Color("36dfff"), 19, 0, 12))
-	item.add_theme_stylebox_override("pressed", _console_style(Color(0.02,0.35,0.66,0.21), Color("a6f8ff"), 19, 0, 4))
-	item.add_theme_stylebox_override("disabled", clear_style)
+	var width_value := 194.0 if selected else 174.0
+	var height_value := 335.0 if selected else 284.0
+	var card := Button.new()
+	card.name = "ShowroomStage%02d" % stage
+	card.set_meta("mission_stage",stage)
+	card.set_meta("showroom_stage_card",true)
+	card.custom_minimum_size = Vector2(width_value,height_value)
+	card.text = ""
+	card.disabled = not available
+	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if available else Control.CURSOR_ARROW
+	card.add_theme_stylebox_override("normal",_console_style(Color("f0faff") if available else Color("cad3df"),Color("34deff") if selected else Color("9ecbdf"),20,0,15 if selected else 4))
+	card.add_theme_stylebox_override("hover",_console_style(Color("f7fdff"),Color("66eaff"),20,0,14))
+	card.add_theme_stylebox_override("pressed",_console_style(Color("ceeefa"),Color("5cd9f9"),20,0,3))
+	card.add_theme_stylebox_override("disabled",_console_style(Color("b5c7d7"),Color("a4b3c3"),20,0,3))
 	if available:
-		item.pressed.connect(_select_map_stage.bind(stage))
-		ConsoleAnimations.animate_button(item)
+		card.pressed.connect(_select_map_stage.bind(stage))
+		ConsoleAnimations.animate_button(card)
 
-	var room_frame := _glass(Color(0.08,0.37,0.66,0.12), Color("74eafa") if selected else Color(0.30,0.68,0.94,0.38), 17, 0)
-	room_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ui_put(item, room_frame, Rect2(5, 19, 276, 151))
-	var view_box := SubViewportContainer.new()
-	view_box.name = "Kitchen3D_%02d" % stage
-	view_box.set_meta("diorama_container", true)
-	view_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	view_box.stretch = true
-	_ui_put(item, view_box, Rect2(6, 21, 274, 148))
-	var viewport := KitchenDiorama3D.new()
-	viewport.mission = stage
-	viewport.size = Vector2i(300, 163)
-	view_box.add_child(viewport)
-
-	var plaque := _glass(Color("06396d") if available else Color("4a5d71"), Color("60efff") if selected else Color("9ec6e2"), 17, 0)
-	plaque.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ui_put(item, plaque, Rect2(14, 145, 258, 65))
-	var small := _ui_text(item, "STAGE %02d" % stage, 13, Rect2(21, 151, 244, 20), Color("e8fdff"), true)
-	small.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var names: Array[String] = [
-		"LDK Boundary Drawing", "Pipe Shaft Q&A", "S-Class Kitchen Selection",
-		"Island Layout Planning", "Lighting & Atmosphere", "Final Kitchen Design"
+	var head := _glass(Color("08618c") if selected else (Color("135d81") if available else Color("41596f")),Color("70eaff") if selected else Color("92b9d2"),16,0)
+	head.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(card,head,Rect2(1,1,width_value-2,44 if selected else 40))
+	var t := _ui_text(card,("▶  STAGE %02d" if selected else "STAGE %02d") % stage,16 if selected else 14,Rect2(9,7,width_value-18,32),Color("ffffff"),true)
+	t.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var photo := TextureRect.new()
+	var textures: Array[Texture2D] = [
+		preload("res://reference_sketch.png"),
+		preload("res://MenuAssets/Level2.png"),
+		preload("res://MenuAssets/Level3.png"),
+		preload("res://MenuAssets/Level4.png"),
+		preload("res://MenuAssets/Level5.png"),
+		preload("res://MenuAssets/Level6.png")
 	]
-	var title := _ui_text(item, names[stage - 1], 16, Rect2(19, 174, 250, 25), Color("ffffff"), true)
-	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var progress_text := _ui_text(item, "◆ SELECTED" if selected else ("● AVAILABLE" if available else "🔒 LOCKED"), 10,
-		Rect2(20, 196, 246, 14), Color("adf7ff") if available else Color("d6e1e8"), true)
-	progress_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var pin := _glass(Color("0096d2") if available else Color("657c93"), Color("b7faff") if available else Color("c6d2da"), 35, 0)
-	pin.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ui_put(item, pin, Rect2(113, 0, 58, 48))
-	var number := _ui_text(item, "%02d" % stage, 23, Rect2(114, 4, 56, 40), Color("ffffff"), true)
-	number.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return item
+	photo.texture = textures[stage-1]
+	photo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	photo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	photo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	photo.modulate = Color.WHITE if available else Color("9ba6b2")
+	_ui_put(card,photo,Rect2(7,47,width_value-14,160 if selected else 132))
+	var photo_border := _glass(Color.TRANSPARENT,Color("b4d8eb"),7,0)
+	photo_border.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(card,photo_border,Rect2(7,47,width_value-14,160 if selected else 132))
+	var names: Array[String] = [
+		"LDK Boundary", "Pipe Shaft", "S-Class Kitchen",
+		"Island Layout", "Lighting &", "Final Kitchen"
+	]
+	var sub: Array[String] = [
+		"Drawing", "Q&A", "Selection", "Planning", "Atmosphere", "Design"
+	]
+	var title_y := 216.0 if selected else 190.0
+	var cap := _ui_text(card,names[stage-1],16 if selected else 14,Rect2(6,title_y,width_value-12,24),Color("0b3559") if available else Color("41556b"),true)
+	cap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sec := _ui_text(card,sub[stage-1],15 if selected else 14,Rect2(6,title_y+24,width_value-12,23),Color("0b3559") if available else Color("41556b"),true)
+	sec.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	if selected:
+		var play := _button("▶  PLAY   »",true,width_value-31,50)
+		play.name = "SelectedMissionPlay"
+		play.set_meta("mission_play",true)
+		play.add_theme_font_size_override("font_size",18)
+		play.pressed.connect(_start_level.bind(stage))
+		_ui_put(card,play,Rect2(15,height_value-61,width_value-30,51))
+	elif available:
+		var ready := _ui_text(card,"●  AVAILABLE",12,Rect2(4,height_value-31,width_value-8,20),Color("0476a4"),true)
+		ready.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	else:
+		var lock_status := _glass(Color("37617c"),Color("8bafc1"),15,0)
+		lock_status.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_ui_put(card,lock_status,Rect2(18,height_value-38,width_value-36,29))
+		var locked := _ui_text(card,"▣  LOCKED",12,Rect2(18,height_value-34,width_value-36,20),Color("f6fbff"),true)
+		locked.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return card
 
 func _show_home() -> void:
 	var canvas := _blueprint_canvas("OptionCHomeCanvas")
