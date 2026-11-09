@@ -67,7 +67,7 @@ func _run() -> void:
 			_fail("Kitchen part " + str(index) + " did not advance")
 			return
 	# Do not invoke last part: completion overlay can delay process in smoke tests.
-	var names: Array = scene.get("NAMES")
+	var names: Array = scene.get_script().get_script_constant_map().get("NAMES", [])
 	var expected: Array = ["カウンター", "キッチンボード", "フード", "腰壁", "その他"]
 	if names != expected:
 		_fail("kitchen component names changed")
