@@ -686,7 +686,7 @@ func _show_language_select() -> void:
 	popup.add_theme_font_size_override("font_size",25)
 	popup.add_theme_constant_override("v_separation",12)
 	popup.add_theme_constant_override("h_separation",15)
-	menu.add_item("🌐  日本語",0)
+	menu.add_item("日本語",0)
 	menu.add_item("မြန်မာ",1)
 	menu.add_item("English (Coming Soon)",2)
 	menu.set_item_disabled(2,true)
