@@ -353,41 +353,40 @@ func _entry_centered_label(value: String, font_size: int, rect: Rect2, color: Co
 
 func _show_splash() -> void:
 	var scene := _entry_canvas("EntryLoadingScreen")
-	var tint := ColorRect.new()
-	tint.color = Color(0.83, 0.93, 1.0, 0.35)
-	tint.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_entry_add(scene, tint, Rect2(0, 0, 1100, 650))
-	var heading := _entry_centered_label("Kitchen", 62, Rect2(215, 10, 670, 83), Color("267dbb"), scene)
-	heading.add_theme_constant_override("outline_size", 6)
-	heading.add_theme_color_override("font_outline_color", Color("113e71"))
-	var subtitle := _entry_centered_label("Decoration Game", 43, Rect2(185, 88, 730, 64), Color("ffffff"), scene)
-	subtitle.add_theme_constant_override("outline_size", 7)
-	subtitle.add_theme_color_override("font_outline_color", Color("123c73"))
-	var mark := TextureRect.new()
-	mark.texture = preload("res://Branding/SketchPlanPencil.svg")
-	mark.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	mark.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_entry_add(scene, mark, Rect2(335, 151, 72, 72))
+
+	# Third reference layout: big branded title, one floating kitchen
+	# blueprint, centered loading bar; no photographic background.
+	var logo := TextureRect.new()
+	logo.texture = preload("res://Branding/SketchPlanPencil.svg")
+	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_entry_add(scene, logo, Rect2(497, 4, 102, 102))
+	var title := _entry_centered_label("Kitchen", 60, Rect2(210, 98, 680, 74), Color("13699e"), scene)
+	title.add_theme_constant_override("outline_size", 4)
+	title.add_theme_color_override("font_outline_color", Color("f1fbff"))
+	var subtitle := _entry_centered_label("Decoration Game", 39, Rect2(225, 160, 650, 51), Color("0a487e"), scene)
+	subtitle.add_theme_constant_override("outline_size", 3)
+	subtitle.add_theme_color_override("font_outline_color", Color("f6fcff"))
 	var scene_art := EntryKitchenSketch.new()
 	scene_art.name = "EntryIsometricKitchen"
 	scene_art.set_meta("entry_kitchen_art", true)
-	_entry_add(scene, scene_art, Rect2(168, 165, 790, 375))
+	_entry_add(scene, scene_art, Rect2(137, 193, 827, 337))
 	var bar := ProgressBar.new()
 	bar.name = "EntryLoadingProgress"
-	bar.custom_minimum_size = Vector2(400, 17)
+	bar.custom_minimum_size = Vector2(450, 18)
 	bar.show_percentage = false
 	bar.max_value = 100
-	bar.value = 0
-	bar.add_theme_stylebox_override("background", _console_style(Color("c8dbea"), Color("fff9ff"), 12, 1))
-	bar.add_theme_stylebox_override("fill", _console_style(Color("358ed1"), Color("b5edff"), 12, 1))
-	_entry_add(scene, bar, Rect2(350, 559, 400, 18))
-	_entry_centered_label("Loading...", 17, Rect2(395, 584, 320, 30), Color("254e77"), scene)
-	scene.modulate.a = 0
-	var appear := create_tween()
-	appear.tween_property(scene, "modulate:a", 1.0, 0.35)
+	bar.value = 0.0
+	bar.add_theme_stylebox_override("background", _console_style(Color("d0e6f5"), Color("65bde9"), 12, 2))
+	bar.add_theme_stylebox_override("fill", _console_style(Color("06bade"), Color("c5f9ff"), 12, 2))
+	_entry_add(scene, bar, Rect2(323, 548, 455, 18))
+	_entry_centered_label("Loading...", 17, Rect2(330, 579, 440, 29), Color("155880"), scene)
+	scene.modulate.a = 0.0
+	var intro := create_tween()
+	intro.tween_property(scene, "modulate:a", 1.0, 0.32)
 	var loading := create_tween()
-	loading.tween_property(bar, "value", 100.0, 1.9).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	loading.tween_property(bar, "value", 100.0, 1.75).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	loading.tween_callback(func() -> void:
 		if is_inside_tree() and is_instance_valid(scene):
 			_show_language_select()
@@ -621,69 +620,65 @@ func _show_information(title_text: String, details: String) -> void:
 
 func _show_language_select() -> void:
 	var scene := _entry_canvas("EntryLanguageScreen")
-	var tint := ColorRect.new()
-	tint.color = Color(0.78, 0.90, 1.0, 0.25)
-	tint.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_entry_add(scene, tint, Rect2(0, 0, 1100, 650))
-	var title := _entry_centered_label("Kitchen", 59, Rect2(255, 65, 590, 76), Color("2679b1"), scene)
-	title.add_theme_constant_override("outline_size", 6)
-	title.add_theme_color_override("font_outline_color", Color("133e73"))
-	var subtitle := _entry_centered_label("Decoration Game", 42, Rect2(222, 134, 652, 60), Color("ffffff"), scene)
-	subtitle.add_theme_constant_override("outline_size", 7)
-	subtitle.add_theme_color_override("font_outline_color", Color("154373"))
-	# Simple architectural sketch placed below the title, not a chef's hat.
-	var blueprint := EntryKitchenSketch.new()
-	blueprint.name = "LanguageKitchenDiagram"
-	blueprint.set_meta("entry_kitchen_art", true)
-	_entry_add(scene, blueprint, Rect2(361, 196, 390, 191))
 
-	var panel := _glass(Color("ecf8ff"), Color("83d4f4"), 23, 0)
+	# A single white/ice-blue selector over the same image-free background.
+	var logo := TextureRect.new()
+	logo.texture = preload("res://Branding/SketchPlanPencil.svg")
+	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_entry_add(scene, logo, Rect2(511, 41, 78, 78))
+	_entry_centered_label("Kitchen", 52, Rect2(260, 116, 590, 72), Color("0d689f"), scene)
+	_entry_centered_label("Decoration Game", 35, Rect2(244, 177, 620, 53), Color("164978"), scene)
+	var decoration := EntryKitchenSketch.new()
+	decoration.name = "LanguageKitchenDiagram"
+	decoration.set_meta("entry_kitchen_art", true)
+	decoration.modulate.a = 0.27
+	_entry_add(scene, decoration, Rect2(245, 201, 610, 320))
+
+	var panel := _glass(Color(0.96, 0.99, 1.0, 0.97), Color("84cbef"), 25, 0)
 	panel.name = "LanguageDropdownPanel"
 	panel.set_meta("entry_language_panel", true)
-	_entry_add(scene, panel, Rect2(391, 386, 320, 192))
-	var choose_title := _entry_centered_label("Select language", 21, Rect2(418, 397, 266, 30), Color("0b5488"), scene)
-	choose_title.set_meta("language_heading", true)
+	_entry_add(scene, panel, Rect2(374, 273, 354, 278))
+	_entry_centered_label("SELECT LANGUAGE", 19, Rect2(389, 302, 324, 38), Color("153d66"), scene)
+
 	var menu := OptionButton.new()
 	menu.name = "EntryLanguageDropdown"
 	menu.set_meta("entry_language_dropdown", true)
-	menu.custom_minimum_size = Vector2(267, 47)
+	menu.custom_minimum_size = Vector2(296, 55)
 	menu.add_theme_font_size_override("font_size", 20)
-	menu.add_theme_color_override("font_color", Color("234a79"))
-	menu.add_theme_color_override("font_hover_color", Color("234a79"))
-	menu.add_theme_stylebox_override("normal", _console_style(Color("f9fdff"), Color("85d7f8"), 16, 7))
-	menu.add_theme_stylebox_override("hover", _console_style(Color("ffffff"), Color("4ac9f3"), 16, 7))
-	menu.add_theme_stylebox_override("pressed", _console_style(Color("dcefff"), Color("4ac9f3"), 16, 7))
-	menu.add_theme_color_override("font_pressed_color", Color("123e68"))
-	menu.add_theme_color_override("font_focus_color", Color("123e68"))
-	menu.add_theme_color_override("font_disabled_color", Color("88a2b5"))
+	for color_name in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
+		menu.add_theme_color_override(color_name, Color("164e7e"))
+	menu.add_theme_stylebox_override("normal", _console_style(Color("ffffff"), Color("82cdef"), 15, 9, 2))
+	menu.add_theme_stylebox_override("hover", _console_style(Color("dff4ff"), Color("4bbce9"), 15, 9, 5))
+	menu.add_theme_stylebox_override("pressed", _console_style(Color("cdefff"), Color("1bb1df"), 15, 9, 1))
+	menu.add_theme_stylebox_override("focus", _console_style(Color.TRANSPARENT, Color("50c8ed"), 15, 0, 0))
 	var popup := menu.get_popup()
-	popup.add_theme_stylebox_override("panel", _console_style(Color("f2faff"), Color("92daf7"), 16, 10, 7))
-	popup.add_theme_stylebox_override("hover", _console_style(Color("caefff"), Color("67c9f4"), 11, 7, 2))
-	popup.add_theme_color_override("font_color", Color("0e4772"))
-	popup.add_theme_color_override("font_hover_color", Color("095a96"))
-	popup.add_theme_color_override("font_disabled_color", Color("8eabbc"))
+	popup.add_theme_stylebox_override("panel", _console_style(Color("f3faff"), Color("8ed4f3"), 14, 12, 6))
+	popup.add_theme_stylebox_override("hover", _console_style(Color("c6edff"), Color("59bfec"), 10, 10))
+	popup.add_theme_color_override("font_color", Color("164d7b"))
+	popup.add_theme_color_override("font_hover_color", Color("114d82"))
+	popup.add_theme_color_override("font_disabled_color", Color("8aafc5"))
 	popup.add_theme_font_size_override("font_size", 18)
 	menu.add_item("日本語", 0)
 	menu.add_item("မြန်မာ", 1)
 	menu.add_item("English (Coming Soon)", 2)
 	menu.set_item_disabled(2, true)
 	menu.select(1 if Progress.get_language() == "mm" else 0)
-	_entry_add(scene, menu, Rect2(418, 433, 266, 47))
-	var go := Button.new()
+	_entry_add(scene, menu, Rect2(403, 356, 296, 55))
+
+	var go := _button("Continue   »", true, 296, 53)
 	go.name = "LanguageContinue"
 	go.set_meta("entry_language_continue", true)
-	go.text = "Continue  ›"
-	go.add_theme_font_size_override("font_size", 18)
-	go.add_theme_color_override("font_color", Color("ffffff"))
-	go.add_theme_stylebox_override("normal", _console_style(Color("09b8e3"), Color("97f0ff"), 17, 7))
-	go.add_theme_stylebox_override("hover", _console_style(Color("087bba"), Color("e5f6ff"), 17, 7))
+	go.add_theme_font_size_override("font_size", 20)
 	go.pressed.connect(func() -> void:
 		_choose_language("mm" if menu.selected == 1 else "jp")
 	)
-	_entry_add(scene, go, Rect2(418, 494, 266, 48))
+	_entry_add(scene, go, Rect2(403, 444, 296, 54))
+	_entry_centered_label("Japanese  •  Myanmar", 13, Rect2(405, 508, 294, 23), Color("597d99"), scene)
 	scene.modulate.a = 0.0
-	var enter := create_tween()
-	enter.tween_property(scene, "modulate:a", 1.0, 0.40)
+	var intro := create_tween()
+	intro.tween_property(scene, "modulate:a", 1.0, 0.35)
 
 func _choose_language(lang: String) -> void:
 	Progress.set_language(lang)
