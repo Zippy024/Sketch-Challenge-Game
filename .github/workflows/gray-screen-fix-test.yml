@@ -4,6 +4,7 @@ on:
     branches:
       - fix/blank-gray-screen-runtime-20261109
       - fix/web-gray-screen-ready-handshake-20261109
+      - fix/menu-container-overflow-20261109
   workflow_dispatch:
 permissions:
   contents: read
