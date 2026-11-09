@@ -39,26 +39,26 @@ func _ready() -> void:
 
 
 func _load_stage3_atlas() -> void:
-    # Contains the nine original V22 Panasonic S-Class choice images, without their card borders.
-    # Image order: q1_1..q1_5 then q2_1..q2_4.
-    var atlas_resource: Texture2D = load("res://Stage3Assets/choices_atlas.webp") as Texture2D
-    if atlas_resource == null:
-        push_error("Stage 3 kitchen asset atlas is missing")
-        return
-    var atlas: Image = atlas_resource.get_image()
-    if atlas == null:
-        push_error("Stage 3 kitchen atlas image could not be decoded")
-        return
-    for n in range(9):
-        var rect := Rect2i((n % 5) * 400, floori(float(n) / 5.0) * 285, 400, 285)
-        var picture: Image = atlas.get_region(rect)
-        if picture == null:
-            continue
-        var texture: Texture2D = ImageTexture.create_from_image(picture)
-        if n < 5:
-            IMAGES_Q1.append(texture)
-        else:
-            IMAGES_Q2.append(texture)
+	# Contains the nine original V22 Panasonic S-Class choice images, without their card borders.
+	# Image order: q1_1..q1_5 then q2_1..q2_4.
+	var atlas_resource: Texture2D = load("res://Stage3Assets/choices_atlas.webp") as Texture2D
+	if atlas_resource == null:
+	    push_error("Stage 3 kitchen asset atlas is missing")
+	    return
+	var atlas: Image = atlas_resource.get_image()
+	if atlas == null:
+	    push_error("Stage 3 kitchen atlas image could not be decoded")
+	    return
+	for n in range(9):
+	    var rect := Rect2i((n % 5) * 400, floori(float(n) / 5.0) * 285, 400, 285)
+	    var picture: Image = atlas.get_region(rect)
+	    if picture == null:
+	        continue
+	    var texture: Texture2D = ImageTexture.create_from_image(picture)
+	    if n < 5:
+	        IMAGES_Q1.append(texture)
+	    else:
+	        IMAGES_Q2.append(texture)
 
 
 func _style(background: Color, border: Color = OUTLINE, radius: int = 12) -> StyleBoxFlat:
