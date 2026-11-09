@@ -327,7 +327,7 @@ var _menu_backdrop: TextureRect
 func _set_entry_background(screen_name: String) -> void:
 	if not is_instance_valid(_menu_backdrop):
 		return
-	var path := "res://MenuAssets/Modern Blue Kitchen Glow.png"
+	var path := "res://MenuAssets/Sunny Cozy Kitchen Interior.png"
 	if screen_name == "EntryLoadingScreen":
 		path = "res://MenuAssets/Modern Blue-White Kitchen Interior.png"
 	if ResourceLoader.exists(path):
