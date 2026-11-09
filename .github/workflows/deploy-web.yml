@@ -1,0 +1,58 @@
+name: Build and deploy Godot Web Game
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '.godot/**'
+      - '**/*.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Checkout Godot source
+        uses: actions/checkout@v4
+
+      - name: Install Godot 4.7.2 and Web export templates
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.7.2
+          use-dotnet: false
+          include-templates: true
+
+      - name: Import project assets
+        run: godot --headless --editor --path . --import --quit
+
+      - name: Export Web game
+        run: |
+          mkdir -p "Web Game"
+          godot --headless --path . --export-release Web "Web Game/index.html"
+          test -s "Web Game/index.html"
+          test -n "$(find 'Web Game' -maxdepth 1 -name '*.wasm' -print -quit)"
+          test -n "$(find 'Web Game' -maxdepth 1 -name '*.pck' -print -quit)"
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload site artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "Web Game"
+
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4
