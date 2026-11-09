@@ -354,11 +354,12 @@ func _show_language() -> void:
 
 
 func _show_home() -> void:
-	_menu_backdrop.texture = preload("res://Sunny Cozy Kitchen Interior.png")
+	_menu_backdrop.texture = preload("res://MenuAssets/Modern Teal Kitchen with Warm Accents.png")
 	var page := _entry_page("MainMenuScreen")
-	_image(page, preload("res://MenuAssets/KitchenHero.jpg"), Rect2(650, -10, 800, 830), true)
-	_panel(page, Rect2(30, 12, 625, 665), Color(0.88, 0.96, 1.0, 0.88), Color("d8f9ff"), 32)
-	_image(page, preload("res://MenuAssets/KitchenLogoGlossy.webp"), Rect2(86, 18, 500, 206))
+	# The new full-bleed teal kitchen artwork is the sole menu background.
+	# Keep its kitchen visible on the right and controls on the left.
+	_panel(page, Rect2(55, 12, 535, 665), Color(0.01, 0.14, 0.22, 0.30), Color(0.10, 0.85, 0.95, 0.45), 30)
+	_image(page, preload("res://MenuAssets/KitchenLogoGlossy.webp"), Rect2(87, 24, 480, 200))
 	var labels := ["Start Game", "Select Level", "Game Guide", "Settings"]
 	var actions: Array[Callable] = [_show_levels, _show_levels, _show_help, _show_settings]
 	for i in range(labels.size()):
@@ -374,10 +375,10 @@ func _show_home() -> void:
 		btn.add_theme_constant_override("icon_max_width", 25)
 		btn.add_theme_font_size_override("font_size", 23)
 		btn.pressed.connect(actions[i])
-		_place(page, btn, Rect2(119, 253 + i * 87, 440, 68))
+		_place(page, btn, Rect2(115, 253 + i * 87, 410, 68))
 	_panel(page, Rect2(1113, 18, 173, 43), Color("15566f"), Color("8deafb"), 24)
 	_text(page, "◉  Trainee", 18, Rect2(1125, 23, 150, 32), WHITE, true)
-	_text(page, "SKETCH  ·  PLAN  ·  CREATE", 15, Rect2(140, 620, 400, 30), Color("376c87"), true)
+	_text(page, "SKETCH  ·  PLAN  ·  CREATE", 15, Rect2(140, 620, 400, 30), Color("d7f8ff"), true)
 	if is_pause_overlay:
 		var resume := _button("← Back to Game", true, 220, 44)
 		resume.pressed.connect(_resume_paused)
@@ -456,51 +457,58 @@ func _stage_card(page: Control, n: int, x: float, y: float, w: float, h: float) 
 
 
 func _show_levels() -> void:
-	_menu_backdrop.texture = preload("res://Sunny Cozy Kitchen Interior.png")
+	_menu_backdrop.texture = preload("res://MenuAssets/Modern Teal Kitchen with Warm Accents (1).png")
 	var page := _page("StageSelectionScreen", 659)
-	# A restrained showroom with floating light blue cards and a cyan stage rail.
-	_panel(page, Rect2(14, 6, 1292, 642), Color(0.90, 0.97, 1.0, 0.82), Color("a9def6"), 25)
-	_text(page, "Select a Stage", 35, Rect2(345, 22, 628, 55), Color("103c67"), true)
-	_text(page, "Progress through kitchen design missions step by step.", 16, Rect2(333, 79, 654, 28), Color("4f7998"), true)
-	# Architectural blueprint ornament, not decorative UI screenshot.
-	_image(page, preload("res://Branding/BlueprintPencilIcon.png"), Rect2(1059, 22, 126, 124))
-	_image(page, preload("res://MenuAssets/BlueShowroomPlatform.png"), Rect2(0, 332, 1320, 243))
-	# Cards intentionally stay in one row. The current card rises and glows.
-	for n in range(1,7):
-		var x: float = 69.0 + float(n-1) * 199.0
-		var selected: bool = n == _chosen_stage and n <= 3
-		_stage_card(page, n, x - (8.0 if selected else 0.0), 160.0 if selected else 191.0, 205.0 if selected else 188.0, 327.0 if selected else 286.0)
-	var back := _button("‹", false, 49, 49)
-	back.add_theme_font_size_override("font_size", 29)
-	back.disabled = _chosen_stage <= 1
-	back.pressed.connect(_step_stage.bind(-1))
-	_place(page, back, Rect2(14, 281, 48, 48))
-	var forward := _button("›", false, 49, 49)
-	forward.add_theme_font_size_override("font_size", 29)
-	forward.disabled = _chosen_stage >= 3
-	forward.pressed.connect(_step_stage.bind(1))
-	_place(page, forward, Rect2(1258, 281, 48, 48))
-	# Progress shown as availability, NOT fabricated completion stars/coins.
-	_panel(page, Rect2(109, 537, 1101, 100), Color(0.98,0.99,1.0,0.92), Color("b4e5f6"), 29)
-	_text(page, "TRAINING MISSIONS", 13, Rect2(130, 548, 193, 25), Color("234f70"))
-	_text(page, "3 / 6", 28, Rect2(140, 576, 115, 47), Color("079fc8"), true)
-	_text(page, "AVAILABLE", 11, Rect2(230, 593, 110, 27), Color("477e9c"), true)
-	# Timeline centered beneath the cards.
-	var dots := [460.0, 596.0, 732.0, 868.0, 1004.0, 1140.0]
-	for n in range(1,7):
-		if n < 6:
-			var line := ColorRect.new()
-			line.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			line.color = Color("0c9bbb") if n < 3 else Color("bbcbd6")
-			_place(page, line, Rect2(float(dots[n-1]) + 48, 588, 88, 3))
-		var active: bool = n <= 3
-		var circle := _panel(page, Rect2(float(dots[n-1]), 567, 49, 49), Color("0aaacb") if n == _chosen_stage else (Color("e5faff") if active else Color("f2f4f7")), Color("27ddec") if active else Color("c4d3dc"), 25)
-		_text(page, "%02d" % n, 16, Rect2(float(dots[n-1]), 574, 49, 34), WHITE if n == _chosen_stage else (INK if active else LOCKED), true)
-	# Back-to-menu path retains pause behavior.
+	_panel(page, Rect2(16, 14, 1288, 629), Color(0.01, 0.12, 0.19, 0.58), Color("32d9e9"), 25)
+	_image(page, preload("res://MenuAssets/KitchenLogoGlossy.webp"), Rect2(36, 12, 260, 113))
+	_text(page, "Select a Level", 36, Rect2(332, 27, 650, 55), WHITE, true)
+	_text(page, "Progress through kitchen design missions step by step.", 16, Rect2(333, 84, 654, 28), Color("d4f5ff"), true)
+	_panel(page, Rect2(1104, 24, 169, 42), Color("0c435b"), Color("52dbe9"), 23)
+	_text(page, "◉  Trainee", 17, Rect2(1113, 27, 150, 34), WHITE, true)
+	# Two rows of five cards. Only stages 1-3 are playable; the others remain locked.
+	for n in range(1, 11):
+		var column := (n - 1) % 5
+		var row := (n - 1) / 5
+		var x := 54.0 + float(column) * 251.0
+		var y := 152.0 + float(row) * 234.0
+		_level_grid_card(page, n, x, y)
 	if is_pause_overlay:
-		var resume := _button("← BACK TO GAME", false, 171, 38)
+		var resume := _button("← BACK TO GAME", false, 175, 39)
 		resume.pressed.connect(_resume_paused)
-		_place(page, resume, Rect2(28, 24, 171, 38))
+		_place(page, resume, Rect2(24, 24, 175, 39))
+
+
+func _level_grid_card(page: Control, n: int, x: float, y: float) -> void:
+	var available := n <= 3 and Progress.is_level_unlocked(n)
+	var selected := n == _chosen_stage and available
+	var card := Button.new()
+	card.name = "StageCard%02d" % n
+	card.set_meta("stage", n)
+	card.set_meta("level_unlocked", available)
+	card.text = ""
+	card.disabled = not available
+	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if available else Control.CURSOR_ARROW
+	card.add_theme_stylebox_override("normal", _raised(Color("e9f8ff"), Color("2ceaff") if selected else Color("8bc4d4"), 18))
+	card.add_theme_stylebox_override("hover", _raised(Color("f5fdff"), Color("49f3ff"), 18))
+	card.add_theme_stylebox_override("pressed", _style(Color("d3f2ff"), Color("2ceaff"), 18))
+	card.add_theme_stylebox_override("disabled", _raised(Color("a1b6c4"), Color("688fa0"), 18))
+	if available:
+		card.pressed.connect(_choose_stage.bind(n))
+	_place(page, card, Rect2(x, y, 224, 219))
+	_panel(card, Rect2(2, 2, 220, 37), Color("063c54"), Color("2bd9e8") if selected else Color("547e92"), 16)
+	_text(card, ("▶  " if selected else "") + "STAGE %02d" % n + ("" if available else "  🔒"), 16, Rect2(5, 5, 214, 31), WHITE, true)
+	var pic := _image(card, _stage_image(n), Rect2(8, 42, 208, 95), true)
+	if not available:
+		pic.modulate = Color(0.72, 0.79, 0.82)
+	_text(card, _selected_name(n) if n <= 6 else ["Storage & Fixtures", "Kitchen Finishes", "Material Choices", "Final Review"][n - 7], 13, Rect2(7, 141, 210, 40), Color("173b55"), true)
+	if available:
+		var play := _button("▶  Play  »" if selected else "SELECT", true, 175, 32)
+		play.add_theme_font_size_override("font_size", 13)
+		play.pressed.connect(_start_level.bind(n) if selected else _choose_stage.bind(n))
+		_place(card, play, Rect2(24, 181, 176, 32))
+	else:
+		_panel(card, Rect2(51, 184, 122, 29), Color("244f61"), Color("779aa8"), 15)
+		_text(card, "🔒 Locked", 12, Rect2(53, 184, 118, 28), WHITE, true)
 
 
 
