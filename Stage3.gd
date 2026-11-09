@@ -8,13 +8,13 @@ const UI_THEME: Theme = preload("res://WebBilingualTheme.tres")
 const PORTRAIT: Texture2D = preload("res://customer_portrait_ui.png")
 var IMAGES_Q1: Array[Texture2D] = []
 var IMAGES_Q2: Array[Texture2D] = []
-const BG := Color("e9eef5")
-const PANEL := Color("f1f5f9")
-const TEXT := Color("1f3c56")
-const SUBTEXT := Color("6b7f98")
-const BLUE := Color("2563eb")
-const GREEN := Color("15803d")
-const OUTLINE := Color("d6e2ef")
+const BG := Color("f7faf8")
+const PANEL := Color(1.0,1.0,1.0,0.86)
+const TEXT := Color("223a36")
+const SUBTEXT := Color("5f7973")
+const BLUE := Color("0b9e83")
+const GREEN := Color("0bab86")
+const OUTLINE := Color("bbede0")
 const NAMES: Array[String] = ["カウンター", "キッチンボード", "フード", "腰壁", "その他"]
 const EN_PARTS: Array[String] = ["Countertop", "Kitchen board", "Range hood", "Half wall", "Other fixtures"]
 
@@ -68,6 +68,8 @@ func _style(background: Color, border: Color = OUTLINE, radius: int = 12) -> Sty
 	s.set_border_width_all(1)
 	s.set_corner_radius_all(radius)
 	s.set_content_margin_all(11)
+	s.shadow_size = 5
+	s.shadow_color = Color(0.10, 0.22, 0.19, 0.12)
 	return s
 
 
@@ -86,11 +88,11 @@ func _btn(t: String, main: bool = false, w: float = 92.0) -> Button:
 	b.text = t
 	b.custom_minimum_size = Vector2(w, 36)
 	b.add_theme_font_size_override("font_size", 12)
-	b.add_theme_color_override("font_color", Color.WHITE if main else BLUE)
+	b.add_theme_color_override("font_color", Color.WHITE if main else TEXT)
 	b.add_theme_color_override("font_hover_color", Color.WHITE if main else BLUE)
-	b.add_theme_stylebox_override("normal", _style(BLUE if main else Color.WHITE, BLUE if main else OUTLINE))
-	b.add_theme_stylebox_override("hover", _style(Color("1d4ed8") if main else Color("e7f0ff"), BLUE))
-	b.add_theme_stylebox_override("pressed", _style(Color("1d4ed8") if main else Color("e7f0ff"), BLUE))
+	b.add_theme_stylebox_override("normal", _style(BLUE if main else Color(1,1,1,0.91), BLUE if main else OUTLINE))
+	b.add_theme_stylebox_override("hover", _style(Color("16b99a") if main else Color("e0fff4"), BLUE))
+	b.add_theme_stylebox_override("pressed", _style(Color("138c78") if main else Color("d0f8eb"), BLUE))
 	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	return b
 
@@ -109,22 +111,35 @@ func _clear() -> void:
 
 func _refresh() -> void:
 	_clear()
-	var background := PanelContainer.new()
-	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	background.add_theme_stylebox_override("panel", _style(BG, BG, 0))
+	# Full viewport background is a Control, not a PanelContainer: avoids
+	# vertically stretched controls and the single-letter wrapping bug.
+	var background := Control.new()
+	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(background)
+	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var photo := TextureRect.new()
+	photo.texture = preload("res://MenuAssets/KitchenHero.jpg")
+	photo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	photo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	photo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	background.add_child(photo)
+	photo.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var wash := ColorRect.new()
+	wash.color = Color(0.96, 1, 0.98, 0.28)
+	wash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	background.add_child(wash)
+	wash.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var frame := HBoxContainer.new()
 	frame.add_theme_constant_override("separation", 14)
 	background.add_child(frame)
 	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	frame.offset_left = 15
-	frame.offset_right = -15
-	frame.offset_top = 15
-	frame.offset_bottom = -15
+	frame.offset_left = 18
+	frame.offset_right = -18
+	frame.offset_top = 18
+	frame.offset_bottom = -18
 	var left := _panel()
-	left.custom_minimum_size.x = 450
-	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	left.size_flags_stretch_ratio = 0.38
+	left.custom_minimum_size.x = 405
+	left.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	frame.add_child(left)
 	var left_pad := MarginContainer.new()
 	left_pad.add_theme_constant_override("margin_left", 13)
@@ -138,16 +153,16 @@ func _refresh() -> void:
 	var header := HBoxContainer.new()
 	header.add_theme_constant_override("separation", 6)
 	contents.add_child(header)
-	var heading := _label("STAGE 3", 19, TEXT, false)
+	var heading := _label("STAGE 03  /  S-CLASS KITCHEN", 17, TEXT, false)
 	heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(heading)
 	var jp := _btn("日本語", false, 62)
 	var mm := _btn("မြန်မာ", false, 64)
 	var levels := _btn("LEVELS", false, 72)
-	levels.add_theme_stylebox_override("normal", _style(Color("f8fcfa"), Color("a5d6bc"), 10))
-	levels.add_theme_stylebox_override("hover", _style(Color("e6f5ee"), Color("82c6a5"), 10))
-	levels.add_theme_color_override("font_color", Color("297b62"))
-	levels.add_theme_color_override("font_hover_color", Color("297b62"))
+	levels.add_theme_stylebox_override("normal", _style(Color("e8fff6"), Color("88ddc4"), 10))
+	levels.add_theme_stylebox_override("hover", _style(Color("cdffe9"), Color("42bfa1"), 10))
+	levels.add_theme_color_override("font_color", Color("167b64"))
+	levels.add_theme_color_override("font_hover_color", Color("167b64"))
 	for button in [jp, mm, levels]:
 		button.custom_minimum_size.y = 36
 		header.add_child(button)
@@ -160,15 +175,15 @@ func _refresh() -> void:
 			button.add_theme_stylebox_override("normal", _style(BLUE, BLUE))
 			button.add_theme_color_override("font_color", Color.WHITE)
 	var customer := _panel()
-	customer.custom_minimum_size.y = 230
-	customer.add_theme_stylebox_override("panel", _style(Color("e1e9f5")))
+	customer.custom_minimum_size.y = 210
+	customer.add_theme_stylebox_override("panel", _style(Color(0.94,1,0.98,0.92)))
 	contents.add_child(customer)
 	var customer_row := HBoxContainer.new()
 	customer_row.add_theme_constant_override("separation", 12)
 	customer.add_child(customer_row)
 	var face := TextureRect.new()
 	face.texture = PORTRAIT
-	face.custom_minimum_size = Vector2(110, 110)
+	face.custom_minimum_size = Vector2(92, 92)
 	face.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	face.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	var avatar_shader := Shader.new()
@@ -194,7 +209,7 @@ void fragment() {
 	customer_row.add_child(face)
 	var talk_card := _panel()
 	talk_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	talk_card.add_theme_stylebox_override("panel", _style(Color.WHITE))
+	talk_card.add_theme_stylebox_override("panel", _style(Color(1,1,1,0.93)))
 	customer_row.add_child(talk_card)
 	var talk_pad := MarginContainer.new()
 	for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
@@ -207,7 +222,7 @@ void fragment() {
 	_left_dialogue.add_child(_label("CUSTOMER QUESTION", 12, SUBTEXT, false))
 	_left_dialogue.add_child(_label(_question_text(), 16))
 	var info := _panel()
-	info.add_theme_stylebox_override("panel", _style(Color.WHITE))
+	info.add_theme_stylebox_override("panel", _style(Color(1,1,1,0.91)))
 	contents.add_child(info)
 	var info_pad := MarginContainer.new()
 	for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
@@ -221,7 +236,7 @@ void fragment() {
 	info_col.add_child(_label("Select the matching kitchen illustration." if step < 2 else "Identify the kitchen components from the diagram.", 13, SUBTEXT))
 	var right := _panel()
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	right.size_flags_stretch_ratio = 0.62
+	right.size_flags_stretch_ratio = 1.0
 	frame.add_child(right)
 	var right_margin := MarginContainer.new()
 	for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
@@ -230,7 +245,7 @@ void fragment() {
 	var right_col := VBoxContainer.new()
 	right_col.add_theme_constant_override("separation", 11)
 	right_margin.add_child(right_col)
-	right_col.add_child(_label("Kitchen Selection" if step < 2 else "Kitchen Parts", 23, TEXT, false))
+	right_col.add_child(_label("S-Class Kitchen Type" if step < 2 else "Kitchen Parts Selection", 23, TEXT, false))
 	right_col.add_child(_label(("QUESTION %d / 2" % (step + 1)) if step < 2 else ("PARTS  %d / 5" % (step - 1) if step < 7 else "STAGE 3 COMPLETED"), 12, SUBTEXT, false))
 	_answer_area = VBoxContainer.new()
 	_answer_area.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -249,7 +264,7 @@ void fragment() {
 		_feedback.text = "ちょっと違うようです。もう一度選んでください。" if current_lang == "jp" else "မမှန်သေးပါ။ ပြန်ရွေးပါ။"
 		_feedback.add_theme_color_override("font_color", Color("c24144"))
 	var progress_panel := PanelContainer.new()
-	progress_panel.add_theme_stylebox_override("panel", _style(Color.WHITE, OUTLINE, 13))
+	progress_panel.add_theme_stylebox_override("panel", _style(Color(1,1,1,0.94), OUTLINE, 13))
 	right_col.add_child(progress_panel)
 	var progress_box := VBoxContainer.new()
 	progress_box.add_theme_constant_override("separation", 8)
@@ -267,7 +282,7 @@ void fragment() {
 	_progress_bar.max_value = 7
 	_progress_bar.value = step
 	_progress_bar.show_percentage = false
-	_progress_bar.add_theme_stylebox_override("background", _style(Color("dce6f2"), Color("dce6f2"), 5))
+	_progress_bar.add_theme_stylebox_override("background", _style(Color("dbe8e3"), Color("dbe8e3"), 5))
 	_progress_bar.add_theme_stylebox_override("fill", _style(GREEN, GREEN, 5))
 	progress_box.add_child(_progress_bar)
 
