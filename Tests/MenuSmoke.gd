@@ -197,8 +197,14 @@ func _run() -> void:
 	if glossy_logo_count != 1:
 		_failure("Language page expected exactly one glossy logo")
 		return
-	if dropdown_panel.size.x < 430 or continue_btn.size.x < 350:
+	if dropdown_panel.size.x < 460 or continue_btn.size.x < 315:
 		_failure("language layout collapsed")
+		return
+	if continue_btn.position.y < dropdown.position.y + dropdown.size.y + 180.0:
+		_failure("Continue button must sit below the three-row expanded dropdown")
+		return
+	if dropdown_panel.position.y + dropdown_panel.size.y > continue_btn.position.y + 25.0:
+		_failure("Reference Continue button should extend below the glass panel")
 		return
 	if body.get_child_count() == 0:
 		_failure("language page failed to render")
