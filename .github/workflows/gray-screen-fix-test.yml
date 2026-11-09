@@ -1,0 +1,37 @@
+name: Check blank-screen fix before publishing
+on:
+  push:
+    branches:
+      - fix/blank-gray-screen-runtime-20261109
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Godot 4.7.2
+        run: |
+          wget -q https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          unzip -q Godot_v4.7.2-stable_linux.x86_64.zip
+          chmod +x Godot_v4.7.2-stable_linux.x86_64
+          sudo mv Godot_v4.7.2-stable_linux.x86_64 /usr/local/bin/godot
+          wget -q https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz
+          mkdir -p ~/.local/share/godot/export_templates/4.7.2.stable
+          unzip -q Godot_v4.7.2-stable_export_templates.tpz -d templates
+          cp templates/templates/* ~/.local/share/godot/export_templates/4.7.2.stable/
+      - name: Import and check scripts
+        run: |
+          godot --headless --editor --path . --import 2>&1 | tee import.log
+          if grep -E 'SCRIPT ERROR:|Parse Error:|Failed to load script' import.log; then exit 1; fi
+      - name: Start game headlessly and check runtime
+        run: |
+          godot --headless --path . --quit-after 75 2>&1 | tee startup.log
+          if grep -E 'SCRIPT ERROR:|Parse Error:|Failed to load script|Invalid call\.|Invalid get index|Invalid set index' startup.log; then exit 1; fi
+      - name: Export
+        run: |
+          mkdir web
+          godot --headless --path . --export-release "Web" web/index.html 2>&1 | tee export.log
+          if grep -E 'SCRIPT ERROR:|Parse Error:|Failed to load script' export.log; then exit 1; fi
+          test -s web/index.wasm
