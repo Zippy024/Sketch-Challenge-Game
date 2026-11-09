@@ -13,6 +13,7 @@ const EntryKitchenSketch = preload("res://MenuAssets/EntryKitchenSketch.gd")
 const BlueprintMissionMap = preload("res://MenuAssets/BlueprintMissionMap.gd")
 const KitchenDiorama3D = preload("res://MenuAssets/KitchenDiorama3D.gd")
 const FlatBlueBackdrop = preload("res://MenuAssets/FlatBlueBackdrop.gd")
+const ShowroomGlow = preload("res://MenuAssets/ShowroomGlow.gd")
 
 const BG := Color("0b2e55")
 const WHITE := Color("ffffff")
@@ -182,15 +183,20 @@ func _build_frame() -> void:
 	base.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(base)
 	base.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	# Replace every menu background photograph with one consistent
-	# procedural ice-blue gradient. Keep Stage 1/2/3 scene assets intact.
-	var backdrop := FlatBlueBackdrop.new()
-	backdrop.name = "PlainBlueGameBackdrop"
-	backdrop.set_meta("photo_free_background", true)
+	# Shared kitchen photography with a consistent blue wash across
+	# Loading, Language, Home and Level Select. Stage1-3 scenes unaffected.
+	var backdrop := TextureRect.new()
+	backdrop.name = "BlueKitchenShowroomBackdrop"
+	backdrop.set_meta("showroom_background", true)
+	backdrop.texture = preload("res://MenuAssets/KitchenIntroV8.jpg")
+	backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	backdrop.modulate = Color("cae6ff")
 	base.add_child(backdrop)
 	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var light := ColorRect.new()
-	light.color = Color(0.50, 0.79, 1.0, 0.10)
+	light.color = Color(0.80, 0.92, 1.0, 0.58)
 	light.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	base.add_child(light)
 	light.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -349,6 +355,36 @@ func _entry_centered_label(value: String, font_size: int, rect: Rect2, color: Co
 	lbl.autowrap_mode = TextServer.AUTOWRAP_OFF
 	_entry_add(parent, lbl, rect)
 	return lbl
+
+
+func _showroom_photo(parent: Control, rect: Rect2, vivid: bool = false) -> void:
+	var image := TextureRect.new()
+	image.texture = preload("res://MenuAssets/KitchenIntroV8.jpg") if not vivid else preload("res://MenuAssets/KitchenHero.jpg")
+	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	image.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	image.modulate = Color("daefff") if not vivid else Color("f6faff")
+	_ui_put(parent, image, rect)
+	var wash := ColorRect.new()
+	wash.color = Color(0.83,0.94,1.0,0.46) if not vivid else Color(0.72,0.86,1.0,0.09)
+	wash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(parent,wash,rect)
+
+
+func _showroom_title(parent: Control, left: float, top: float, width_value: float, size_large: int = 50) -> void:
+	# Keep the same Logo G + dark-blue outlined typography on each screen.
+	var emblem := TextureRect.new()
+	emblem.texture = preload("res://Branding/SketchPlanPencil.svg")
+	emblem.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	emblem.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(parent,emblem,Rect2(left+width_value*0.13,top+3,width_value*0.18,89))
+	var a := _ui_text(parent, "Kitchen", size_large, Rect2(left+width_value*0.29,top,width_value*0.65,66),Color("f6feff"),true)
+	a.add_theme_constant_override("outline_size",7)
+	a.add_theme_color_override("font_outline_color",Color("083967"))
+	var b := _ui_text(parent,"Decoration Game",roundi(float(size_large)*0.65),Rect2(left+width_value*0.22,top+64,width_value*0.72,50),Color("fbffff"),true)
+	b.add_theme_constant_override("outline_size",6)
+	b.add_theme_color_override("font_outline_color",Color("103f6c"))
 
 
 func _show_splash() -> void:
