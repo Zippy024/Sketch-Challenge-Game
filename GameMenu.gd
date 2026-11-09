@@ -176,69 +176,73 @@ func _nav_button(title: String, callback: Callable) -> Button:
 	return button
 
 func _build_frame() -> void:
-	# Full-viewport controls: no PanelContainer sizing feedback into the header.
 	var base := Control.new()
-	base.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	base.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(base)
 	base.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-
 	var photo := TextureRect.new()
 	photo.texture = preload("res://MenuAssets/KitchenIntroV8.jpg")
 	photo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	photo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	photo.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_menu_photo = photo
+	photo.modulate = Color("d8efff")
 	base.add_child(photo)
 	photo.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-
+	_menu_photo = photo
 	var light := ColorRect.new()
-	light.color = Color(0.93, 1.0, 0.95, 0.06)
+	light.color = Color(0.50, 0.79, 1.0, 0.10)
 	light.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	base.add_child(light)
 	light.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var sparkles := SunsetSparkles.new()
-	base.add_child(sparkles)
-	sparkles.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-
 	var outer := VBoxContainer.new()
 	outer.add_theme_constant_override("separation", 0)
 	base.add_child(outer)
 	outer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_top_bar = _glass(Color(1, 1, 1, 0.88), Color("f6ffff"), 0, 4)
-	_top_bar.custom_minimum_size.y = 66
+
+	_top_bar = _glass(Color("f0faff"), Color("b4e9ff"), 0, 3)
+	_top_bar.custom_minimum_size.y = 67
 	_top_bar.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	outer.add_child(_top_bar)
 	var head_pad := MarginContainer.new()
-	head_pad.add_theme_constant_override("margin_left", 21)
-	head_pad.add_theme_constant_override("margin_right", 21)
-	head_pad.add_theme_constant_override("margin_top", 3)
-	head_pad.add_theme_constant_override("margin_bottom", 3)
+	head_pad.add_theme_constant_override("margin_left", 17)
+	head_pad.add_theme_constant_override("margin_right", 17)
+	head_pad.add_theme_constant_override("margin_top", 2)
+	head_pad.add_theme_constant_override("margin_bottom", 2)
 	_top_bar.add_child(head_pad)
 	var header := HBoxContainer.new()
-	header.add_theme_constant_override("separation", 9)
+	header.add_theme_constant_override("separation", 8)
 	head_pad.add_child(header)
 	var emblem := TextureRect.new()
 	emblem.texture = preload("res://Branding/SketchPlanPencil.svg")
-	emblem.custom_minimum_size = Vector2(46, 46)
+	emblem.custom_minimum_size = Vector2(53,53)
 	emblem.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	emblem.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	header.add_child(emblem)
-	var brand := _label("KITCHEN SKETCH CHALLENGE", 17, Color("203b37"))
-	brand.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var brand := _label("KITCHEN DECORATION GAME", 18, Color("0e4677"))
 	brand.autowrap_mode = TextServer.AUTOWRAP_OFF
+	brand.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(brand)
-	header.add_child(_nav_button("HOME", _show_home))
-	header.add_child(_nav_button("ALL STAGES", _show_levels))
-	var trainee := _glass(Color(0.11,0.22,0.23,0.87), Color("aefce9"), 20, 7)
+	var home_btn := _nav_button("⌂  HOME", _show_home)
+	home_btn.custom_minimum_size.x = 113
+	header.add_child(home_btn)
+	var level_btn := _nav_button("▦  ALL STAGES", _show_levels)
+	level_btn.custom_minimum_size.x = 131
+	header.add_child(level_btn)
+	var guide_btn := _nav_button("▤  GUIDE", _show_help)
+	guide_btn.custom_minimum_size.x = 119
+	header.add_child(guide_btn)
+	var prog_btn := _nav_button("▥  PROGRESS", _show_progress)
+	prog_btn.custom_minimum_size.x = 130
+	header.add_child(prog_btn)
+	var trainee := _glass(Color("184d78"), Color("77d7fa"), 22, 8)
+	trainee.custom_minimum_size.x = 104
 	header.add_child(trainee)
 	var trainee_text := _label("TRAINEE", 12, C_INK, true)
 	trainee_text.autowrap_mode = TextServer.AUTOWRAP_OFF
-	trainee.custom_minimum_size.x = 105
 	trainee.add_child(trainee_text)
-	_jp_button = _button("日本語", false, 74, 36)
-	_mm_button = _button("မြန်မာ", false, 74, 36)
+	_jp_button = _button("日本語", false, 73, 37)
+	_mm_button = _button("မြန်မာ", false, 73, 37)
 	for lang_btn in [_jp_button, _mm_button]:
 		lang_btn.add_theme_font_size_override("font_size", 12)
 		header.add_child(lang_btn)
@@ -255,27 +259,28 @@ func _build_frame() -> void:
 	outer.add_child(_scroll)
 	var margin := MarginContainer.new()
 	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	margin.add_theme_constant_override("margin_left", 22)
-	margin.add_theme_constant_override("margin_right", 22)
-	margin.add_theme_constant_override("margin_top", 16)
-	margin.add_theme_constant_override("margin_bottom", 16)
+	margin.add_theme_constant_override("margin_left", 17)
+	margin.add_theme_constant_override("margin_right", 17)
+	margin.add_theme_constant_override("margin_top", 9)
+	margin.add_theme_constant_override("margin_bottom", 8)
 	_scroll.add_child(margin)
 	_body = VBoxContainer.new()
 	_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_body.add_theme_constant_override("separation", 13)
 	margin.add_child(_body)
-	_bottom_bar = _glass(Color(0.11,0.23,0.22,0.77), Color("d4ffed"), 0, 1)
-	_bottom_bar.custom_minimum_size.y = 25
+	_bottom_bar = _glass(Color("0a3158"), Color("81ddfa"), 0, 1)
+	_bottom_bar.custom_minimum_size.y = 23
 	_bottom_bar.size_flags_vertical = Control.SIZE_SHRINK_END
 	outer.add_child(_bottom_bar)
-	_bottom_bar.add_child(_label("DESIGN  •  SKETCH  •  SELECT MATERIALS  •  LEARN", 11, C_INK, true))
+	var footer := _label("DESIGN  •  SKETCH  •  SELECT MATERIALS  •  LEARN", 11, C_INK, true)
+	footer.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_bottom_bar.add_child(footer)
 
 func _set_concept_background(choose_levels: bool) -> void:
 	if not is_instance_valid(_menu_photo):
 		return
-	# Warm, daylight kitchen remains legible behind glass panels.
 	_menu_photo.texture = preload("res://MenuAssets/KitchenIntroV8.jpg") if not choose_levels else preload("res://MenuAssets/KitchenHero.jpg")
-	_menu_photo.modulate = Color.WHITE
+	_menu_photo.modulate = Color("d3edff") if not choose_levels else Color("a6d2fa")
 
 func _fit_content() -> void:
 	if _body != null:
@@ -807,7 +812,7 @@ func _show_levels() -> void:
 	# A 3×2 mission map—not a cramped spreadsheet of cards.
 	for stage in range(1, 7):
 		var column: int = (stage - 1) % 3
-		var row: int = (stage - 1) / 3
+		var row: int = floori(float(stage - 1) / 3.0)
 		var x: float = 332.0 + float(column)*319.0
 		var y: float = 101.0 + float(row)*198.0
 		var card := _map_stage_card(stage)
