@@ -508,80 +508,74 @@ func _map_stage_card(stage: int) -> Button:
 	return item
 
 func _show_home() -> void:
-	_set_concept_background(false)
 	var canvas := _blueprint_canvas("OptionCHomeCanvas")
-	var photo := TextureRect.new()
-	photo.texture = preload("res://MenuAssets/KitchenIntroV8.jpg")
-	photo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	photo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	photo.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	photo.modulate = Color("cbe9ff")
-	_ui_put(canvas, photo, Rect2(0, 0, 1320, 636))
-	var tint := ColorRect.new()
-	tint.color = Color(0.72, 0.90, 1.0, 0.21)
-	tint.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ui_put(canvas, tint, Rect2(0, 0, 1320, 636))
-	var shadow := _glass(Color(0.91, 0.97, 1.0, 0.94), Color("ffffff"), 32, 0)
-	shadow.name = "HomeHeroGlass"
-	shadow.set_meta("home_hero_panel", true)
-	shadow.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ui_put(canvas, shadow, Rect2(19, 19, 542, 578))
-	var emblem := TextureRect.new()
-	emblem.texture = preload("res://Branding/SketchPlanPencil.svg")
-	emblem.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	emblem.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ui_put(canvas, emblem, Rect2(52, 55, 108, 108))
-	_ui_text(canvas, "KITCHEN DESIGN TRAINING", 14, Rect2(171, 66, 356, 32), Color("286797"))
-	var title := _ui_text(canvas, "Kitchen", 53, Rect2(171, 106, 350, 73), Color("063f78"))
-	title.set_meta("home_headline", true)
-	_ui_text(canvas, "Decoration Game", 33, Rect2(171, 169, 358, 49), Color("0783b5"))
-	_ui_text(canvas, "DESIGN  •  SKETCH  •  SELECT  •  LEARN", 14, Rect2(64, 257, 470, 32), Color("265d84"), true)
-	var rule := ColorRect.new()
-	rule.color = Color("63d7fb")
-	rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ui_put(canvas, rule, Rect2(83, 302, 412, 2))
-	var copy := _label("Draw kitchen layouts, answer customer questions and choose the right materials. Make every design count.", 17, Color("174c74"), true)
-	copy.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_ui_put(canvas, copy, Rect2(71, 315, 438, 82))
-	var start := _button("▶   START GAME    »", true, 414, 61)
+	_top_bar.hide()
+	_bottom_bar.hide()
+	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+
+	# Third reference: one bright, full-width hero (no kitchen photo at all).
+	var glass := _glass(Color(0.96, 0.99, 1.0, 0.89), Color("f5fdff"), 32, 0)
+	glass.name = "HomeHeroGlass"
+	glass.set_meta("home_hero_panel", true)
+	glass.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(canvas, glass, Rect2(24, 15, 1272, 588))
+
+	var logo := TextureRect.new()
+	logo.texture = preload("res://Branding/SketchPlanPencil.svg")
+	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(canvas, logo, Rect2(336, 27, 104, 104))
+	var heading := _ui_text(canvas, "Kitchen", 58, Rect2(440, 37, 545, 69), Color("0d6199"), true)
+	heading.set_meta("home_headline", true)
+	_ui_text(canvas, "Decoration Game", 40, Rect2(402, 105, 605, 62), Color("083d71"), true)
+	_ui_text(canvas, "DESIGN  •  SKETCH  •  SELECT  •  LEARN", 14, Rect2(410, 164, 490, 30), Color("3b78a0"), true)
+
+	var trainee := _glass(Color("124c7d"), Color("a0ecff"), 22, 0)
+	trainee.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(canvas, trainee, Rect2(1127, 33, 135, 43))
+	_ui_text(canvas, "TRAINEE", 15, Rect2(1143, 41, 104, 28), Color("effaff"), true)
+
+	# Primary menu is vertically stacked, matching the supplied screenshot.
+	var side := _glass(Color(0.94,0.98,1.0,0.89), Color("c4eaff"), 27, 0)
+	side.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(canvas, side, Rect2(69, 222, 410, 332))
+	var start := _button("▶    START GAME", true, 336, 66)
 	start.name = "HomeStartTraining"
 	start.set_meta("home_start_button", true)
-	start.add_theme_font_size_override("font_size", 22)
+	start.add_theme_font_size_override("font_size", 23)
 	start.pressed.connect(_show_levels)
-	_ui_put(canvas, start, Rect2(82, 418, 414, 62))
-	var level := _nav_button("▦  SELECT LEVEL", _show_levels)
-	_ui_put(canvas, level, Rect2(56, 504, 144, 48))
-	var guide := _nav_button("▤  GAME GUIDE", _show_help)
-	_ui_put(canvas, guide, Rect2(213, 504, 147, 48))
-	var settings := _nav_button("⚙  SETTINGS", _show_settings)
-	_ui_put(canvas, settings, Rect2(373, 504, 144, 48))
+	_ui_put(canvas, start, Rect2(106, 255, 336, 64))
+	var level := _nav_button("▦    SELECT LEVEL", _show_levels)
+	level.add_theme_font_size_override("font_size", 17)
+	_ui_put(canvas, level, Rect2(118, 334, 313, 53))
+	var guide := _nav_button("▤    GAME GUIDE", _show_help)
+	guide.add_theme_font_size_override("font_size", 17)
+	_ui_put(canvas, guide, Rect2(118, 401, 313, 53))
+	var settings := _nav_button("⚙    SETTINGS", _show_settings)
+	settings.add_theme_font_size_override("font_size", 17)
+	_ui_put(canvas, settings, Rect2(118, 467, 313, 53))
+
+	# The foreground kitchen is original vector-style architectural
+	# illustration, not a photographic background.
+	var kitchen := EntryKitchenSketch.new()
+	kitchen.name = "HomeKitchenBlueprintIllustration"
+	kitchen.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(canvas, kitchen, Rect2(485, 202, 766, 345))
+	var feature := _glass(Color(0.06, 0.33, 0.60, 0.87), Color("78eaff"), 21, 0)
+	feature.name = "HomeFeaturesGlass"
+	feature.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_put(canvas, feature, Rect2(801, 435, 370, 151))
+	_ui_text(canvas, "YOUR KITCHEN ADVENTURE", 18, Rect2(818, 445, 335, 37), Color("ffffff"), true)
+	_ui_text(canvas, "01  SKETCH    •    02  Q&A    •    03  MATERIALS", 14, Rect2(820, 490, 334, 29), Color("d6f7ff"), true)
+	_ui_text(canvas, "3 PLAYABLE STAGES", 15, Rect2(824, 538, 328, 31), Color("9df4ff"), true)
+
 	if is_pause_overlay:
 		var resume := _nav_button("←  BACK TO GAME", _resume_paused)
-		_ui_put(canvas, resume, Rect2(190, 560, 186, 41))
-
-	# Keep a photoreal kitchen on the right; no mint background or fake controls.
-	var image := TextureRect.new()
-	image.texture = preload("res://MenuAssets/KitchenHero.jpg")
-	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	image.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	image.modulate = Color("d4ebff")
-	_ui_put(canvas, image, Rect2(606, 32, 681, 560))
-	var border := _glass(Color(0.08, 0.24, 0.48, 0.09), Color("b4eefe"), 26, 0)
-	border.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ui_put(canvas, border, Rect2(607, 32, 680, 560))
-	var badge := _glass(Color(0.05, 0.22, 0.45, 0.85), Color("8eeeff"), 16, 0)
-	_ui_put(canvas, badge, Rect2(738, 55, 404, 55))
-	_ui_text(canvas, "THE KITCHEN DESIGN ADVENTURE", 17, Rect2(750, 67, 379, 30), Color("e4faff"), true)
-	var tags := _glass(Color(0.07, 0.27, 0.53, 0.88), Color("8fe9fe"), 21, 0)
-	tags.name = "HomeFeaturesGlass"
-	_ui_put(canvas, tags, Rect2(700, 408, 500, 146))
-	_ui_text(canvas, "01  SKETCH LAYOUTS     •     02  Q&A     •     03  MATERIALS", 15, Rect2(715, 435, 470, 36), Color("e8faff"), true)
-	_ui_text(canvas, "3 PLAYABLE MISSIONS  •  MORE COMING SOON", 14, Rect2(715, 493, 470, 29), Color("a3f1ff"), true)
-	shadow.modulate.a = 0.0
-	var appear := create_tween()
-	appear.tween_property(shadow, "modulate:a", 1.0, 0.50).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		_ui_put(canvas, resume, Rect2(87, 566, 210, 42))
+	glass.modulate.a = 0.0
+	var entrance := create_tween()
+	entrance.tween_property(glass, "modulate:a", 1.0, 0.42).set_trans(Tween.TRANS_SINE)
 
 func _add_home_button(parent: HBoxContainer, label_text: String, action: Callable) -> void:
 	var b := _button(label_text, false, 195, 60)
