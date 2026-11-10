@@ -43,13 +43,22 @@ func _ready() -> void:
 		_show_levels()
 	else:
 		if OS.has_feature("web"):
-			_show_home()
+			_show_language_select()
 		else:
 			var loading := preload("res://LoadingScreen.gd").new()
-			loading.finished.connect(_show_home)
+			loading.finished.connect(_show_language_select)
 			add_child(loading)
 	if OS.has_feature("web"):
 		call_deferred("_notify_loading_ready")
+
+
+func _show_language_select() -> void:
+	var screen := preload("res://LanguageScreen.gd").new()
+	screen.language_chosen.connect(func(language: String) -> void:
+		_set_language(language)
+		_show_home()
+	)
+	add_child(screen)
 
 
 func _notify_loading_ready() -> void:
