@@ -183,6 +183,8 @@ var intro_overlay: ColorRect
 var game_has_started: bool = false
 var status_label: Label
 var status_panel: PanelContainer
+var _stage1_status_icon: PanelContainer
+var _stage1_status_mark: Label
 var ok_button: Button
 var jp_lang_btn: Button
 var mm_lang_btn: Button
@@ -562,7 +564,7 @@ func _build_ui() -> void:
 	base.add_child(screen_layout)
 
 	var hud := PanelContainer.new()
-	hud.custom_minimum_size.y = 66
+	hud.custom_minimum_size.y = 78
 	hud.add_theme_stylebox_override("panel", _stage1_surface(Color(0.06, 0.27, 0.35, 0.92), Color(0.43, 0.74, 0.80, 0.8), 12, 5))
 	screen_layout.add_child(hud)
 	var hud_row := HBoxContainer.new()
@@ -875,10 +877,22 @@ func _build_ui() -> void:
 	status_panel.add_theme_stylebox_override("panel", _stage1_surface(Color("f6fbfd"), Color("b3d3dd"), 13, 6))
 	footer.add_child(status_panel)
 
-	status_label = _label("Draw the requested layout, then click OK.", 14)
+	var status_row := HBoxContainer.new()
+	status_row.add_theme_constant_override("separation", 8)
+	status_panel.add_child(status_row)
+	_stage1_status_icon = PanelContainer.new()
+	_stage1_status_icon.custom_minimum_size = Vector2(32, 32)
+	_stage1_status_icon.add_theme_stylebox_override("panel", _stage1_surface(Color("cd5551"), Color("d77f79"), 18, 3))
+	_stage1_status_icon.visible = false
+	status_row.add_child(_stage1_status_icon)
+	_stage1_status_mark = _label("!", 18, "ffffff")
+	_stage1_status_mark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_stage1_status_mark.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_stage1_status_icon.add_child(_stage1_status_mark)
+	status_label = _label("Draw the requested layout, then click Check Answer.", 13)
 	status_label.custom_minimum_size.y = 45
 	status_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	status_panel.add_child(status_label)
+	status_row.add_child(status_label)
 
 	var clear_button := _button("Reset", _clear)
 	clear_button.custom_minimum_size = Vector2(88, 46)
@@ -1060,6 +1074,10 @@ func _run_conversation() -> void:
 
 func _set_status(value: String, error: bool, success: bool = false) -> void:
 	status_label.text = LocaleManager.text(value)
+	if is_instance_valid(_stage1_status_icon):
+		_stage1_status_icon.visible = error or success
+		_stage1_status_icon.add_theme_stylebox_override("panel", _stage1_surface(Color("c95654") if error else Color("4a9a78"), Color("e5a59e") if error else Color("92c8aa"), 18, 3))
+		_stage1_status_mark.text = "!" if error else "✓"
 	if error:
 		status_panel.add_theme_stylebox_override("panel", _stage1_surface(Color("fff4f1"), Color("d8aaa2"), 13, 6))
 		status_label.add_theme_color_override("font_color", Color("991b1b"))
