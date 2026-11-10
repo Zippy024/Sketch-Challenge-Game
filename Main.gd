@@ -187,6 +187,7 @@ var ok_button: Button
 var jp_lang_btn: Button
 var mm_lang_btn: Button
 var en_lang_btn: Button
+var _stage1_language_picker: OptionButton
 
 # Recorded voice files. Place the three MP3 files in res:// (the project root).
 var voice_player: AudioStreamPlayer
@@ -460,6 +461,31 @@ func _stage1_surface(fill: Color, edge: Color, radius: int = 18, pad: int = 9) -
 	return box
 
 
+func _stage1_header_button(glyph: String) -> Button:
+	var b := Button.new()
+	b.text = glyph
+	b.custom_minimum_size = Vector2(56, 50)
+	b.add_theme_font_size_override("font_size", 26)
+	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	var normal := _stage1_surface(Color(0.03, 0.31, 0.4, 0.84), Color(0.56, 0.88, 0.92), 17, 4)
+	var hover := _stage1_surface(Color(0.08, 0.44, 0.53), Color(0.76, 0.96, 0.98), 17, 4)
+	b.add_theme_stylebox_override("normal", normal)
+	b.add_theme_stylebox_override("hover", hover)
+	b.add_theme_stylebox_override("pressed", hover)
+	b.add_theme_stylebox_override("focus", hover)
+	for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
+		b.add_theme_color_override(state, Color.WHITE)
+	return b
+
+
+func _stage1_language_label(lang: String) -> String:
+	match lang:
+		"jp": return "Language  日本語"
+		"mm": return "Language  မြန်မာ"
+		"en": return "Language  English"
+	return "Language  日本語"
+
+
 func _build_ui() -> void:
 	# Muted teal kitchen reference background from the existing language page.
 	var background := TextureRect.new()
@@ -500,10 +526,53 @@ func _build_ui() -> void:
 	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hud_row.add_child(logo)
 	hud_row.add_child(VSeparator.new())
-	var title := _label("STAGE 1   |   LDK Boundary Drawing", 22, "eef9fb")
-	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	title.autowrap_mode = TextServer.AUTOWRAP_OFF
-	hud_row.add_child(title)
+
+	var stage_badge := PanelContainer.new()
+	stage_badge.add_theme_stylebox_override("panel", _stage1_surface(Color(0.03, 0.35, 0.43, 0.95), Color(0.46, 0.78, 0.84, 0.89), 24, 5))
+	hud_row.add_child(stage_badge)
+	var stage_text := _label("STAGE 1", 21, "ffffff")
+	stage_text.custom_minimum_size.x = 130
+	stage_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	stage_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	stage_badge.add_child(stage_text)
+	var stage_subtitle := _label("LDK Boundary Drawing", 19, "eef9fb")
+	stage_subtitle.autowrap_mode = TextServer.AUTOWRAP_OFF
+	stage_subtitle.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	hud_row.add_child(stage_subtitle)
+	var spacer := Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hud_row.add_child(spacer)
+
+	_stage1_language_picker = OptionButton.new()
+	_stage1_language_picker.name = "Stage1LanguagePicker"
+	_stage1_language_picker.custom_minimum_size = Vector2(160, 52)
+	_stage1_language_picker.fit_to_longest_item = false
+	_stage1_language_picker.add_item("日本語", 0)
+	_stage1_language_picker.add_item("မြန်မာ", 1)
+	_stage1_language_picker.add_item("English", 2)
+	_stage1_language_picker.select({"jp":0, "mm":1, "en":2}.get(current_lang, 0))
+	_stage1_language_picker.add_theme_font_size_override("font_size", 15)
+	for state in ["font_color","font_hover_color","font_pressed_color","font_focus_color"]:
+		_stage1_language_picker.add_theme_color_override(state, Color("17495a"))
+	var picker_style := _stage1_surface(Color("e9f7fc"), Color("82c8d6"), 15, 7)
+	for state in ["normal","hover","pressed","focus"]:
+		_stage1_language_picker.add_theme_stylebox_override(state, picker_style)
+	_stage1_language_picker.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_stage1_language_picker.item_selected.connect(func(index: int) -> void:
+		_switch_language(["jp","mm","en"][index])
+	)
+	hud_row.add_child(_stage1_language_picker)
+
+	var pause_button := _stage1_header_button("Ⅱ")
+	pause_button.name = "Stage1PauseButton"
+	pause_button.pressed.connect(_open_game_menu)
+	pause_button.tooltip_text = "Pause / Level Menu"
+	hud_row.add_child(pause_button)
+	var menu_button := _stage1_header_button("☰")
+	menu_button.name = "Stage1MenuButton"
+	menu_button.pressed.connect(_open_game_menu)
+	menu_button.tooltip_text = "Menu"
+	hud_row.add_child(menu_button)
 
 	var margin := MarginContainer.new()
 	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -532,41 +601,7 @@ func _build_ui() -> void:
 	left.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	left_panel.add_child(left)
 
-	var left_top_bar: HBoxContainer = HBoxContainer.new()
-	left_top_bar.add_theme_constant_override("separation", 6)
-	left.add_child(left_top_bar)
-
-	var stage_title: Label = _label("Customer", 16, "24576d")
-	stage_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	left_top_bar.add_child(stage_title)
-
-	jp_lang_btn = Button.new()
-	jp_lang_btn.text = "日本語"
-	jp_lang_btn.custom_minimum_size = Vector2(53, 29)
-	jp_lang_btn.add_theme_font_size_override("font_size", 12)
-	jp_lang_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	jp_lang_btn.pressed.connect(func(): _switch_language("jp"))
-	left_top_bar.add_child(jp_lang_btn)
-
-	mm_lang_btn = Button.new()
-	mm_lang_btn.text = "မြန်မာ"
-	mm_lang_btn.custom_minimum_size = Vector2(53, 29)
-	mm_lang_btn.add_theme_font_size_override("font_size", 12)
-	mm_lang_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	mm_lang_btn.pressed.connect(func(): _switch_language("mm"))
-	left_top_bar.add_child(mm_lang_btn)
-
-	en_lang_btn = Button.new()
-	en_lang_btn.text = "English"
-	en_lang_btn.custom_minimum_size = Vector2(53, 29)
-	en_lang_btn.add_theme_font_size_override("font_size", 12)
-	en_lang_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	en_lang_btn.pressed.connect(func(): _switch_language("en"))
-	left_top_bar.add_child(en_lang_btn)
-
-	var menu_button := _make_levels_menu_button()
-	menu_button.pressed.connect(_open_game_menu)
-	left_top_bar.add_child(menu_button)
+	# Language and navigation buttons moved to the HUD above.
 
 	# Conversation Box
 	var chat_panel: PanelContainer = PanelContainer.new()
@@ -820,6 +855,8 @@ func _build_ui() -> void:
 	_build_reference_popup(loaded_tex)
 
 func _update_lang_buttons_style() -> void:
+	if is_instance_valid(_stage1_language_picker):
+		_stage1_language_picker.select({"jp":0, "mm":1, "en":2}.get(current_lang, 0))
 	var active_s := _stage1_surface(Color("187f95"), Color("77bdc9"), 11, 5)
 	var inactive_s := _stage1_surface(Color("f1f8fa"), Color("adced9"), 11, 5)
 	for pair in [[jp_lang_btn,"jp"],[mm_lang_btn,"mm"],[en_lang_btn,"en"]]:
