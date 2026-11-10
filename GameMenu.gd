@@ -25,6 +25,7 @@ var _body: VBoxContainer
 var _jp_button: Button
 var _mm_button: Button
 var _scroll: ScrollContainer
+var _home_overlay: Control
 var _volume_value: float = 0.85
 var _reset_armed: bool = false
 var _stats_reset_armed: bool = false
@@ -206,105 +207,132 @@ func _update_lang_buttons() -> void:
 
 
 func _clear() -> void:
+	# Remove only the full-screen home presentation when changing to another page.
+	# The existing menu/level/game logic and shared frame remain unchanged.
+	if is_instance_valid(_home_overlay):
+		_home_overlay.queue_free()
+		_home_overlay = null
 	for c in _body.get_children():
 		_body.remove_child(c)
 		c.queue_free()
 	_scroll.scroll_vertical = 0
 
 
-# V8: The background is only a photograph. All headings, card graphics,
-# language buttons and actions are genuine Godot Controls (not screenshot text).
+# Home screen only: visual refresh inspired by the supplied compact menu reference.
+# All other pages continue to use the existing menu frame and functions.
 func _show_home() -> void:
 	_clear()
-	var hero := PanelContainer.new()
-	hero.custom_minimum_size.y = 624
-	hero.clip_contents = true
-	hero.add_theme_stylebox_override("panel", _style(Color("f9f6ef"), Color("e8e4dc"), 17))
-	_body.add_child(hero)
-	var stage := Control.new()
-	stage.custom_minimum_size.y = 624
-	hero.add_child(stage)
+	_home_overlay = Control.new()
+	_home_overlay.name = "KitchenHomeScreen"
+	_home_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(_home_overlay)
+	_home_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
+	# Reuse exactly the kitchen image from the language-selection screen.
 	var photo := TextureRect.new()
-	photo.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	photo.name = "HomeBackground"
+	photo.texture = preload("res://MenuAssets/Modern Teal Kitchen with Warm Accents.png")
 	photo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	photo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	photo.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	photo.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	photo.texture = preload("res://MenuAssets/KitchenIntroV8.jpg")
-	stage.add_child(photo)
+	_home_overlay.add_child(photo)
 	photo.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
-	# The upper-left area is sunlit cream; match the reference typography and spacing.
-	var margin := MarginContainer.new()
-	stage.add_child(margin)
-	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_left", 62)
-	margin.add_theme_constant_override("margin_right", 55)
-	margin.add_theme_constant_override("margin_top", 57)
-	margin.add_theme_constant_override("margin_bottom", 42)
-	var content := VBoxContainer.new()
-	content.add_theme_constant_override("separation", 10)
-	margin.add_child(content)
+	# A subtle translucent panel on the left keeps the kitchen visible on the right.
+	var glass := Panel.new()
+	glass.name = "HomeGlassPanel"
+	glass.mouse_filter = Control.MOUSE_FILTER_PASS
+	_home_overlay.add_child(glass)
+	glass.anchor_left = 0.065
+	glass.anchor_right = 0.415
+	glass.anchor_top = 0.08
+	glass.anchor_bottom = 0.92
+	var glass_style := StyleBoxFlat.new()
+	glass_style.bg_color = Color(0.78, 0.92, 0.98, 0.74)
+	glass_style.border_color = Color(0.85, 0.96, 1.0, 0.88)
+	glass_style.set_border_width_all(2)
+	glass_style.set_corner_radius_all(28)
+	glass_style.shadow_color = Color(0.0, 0.13, 0.25, 0.28)
+	glass_style.shadow_size = 24
+	glass_style.shadow_offset = Vector2(0, 10)
+	glass.add_theme_stylebox_override("panel", glass_style)
 
-	var heading_row := HBoxContainer.new()
-	heading_row.add_theme_constant_override("separation", 22)
-	content.add_child(heading_row)
-	var symbol := TextureRect.new()
-	symbol.texture = preload("res://MenuAssets/v8_house_dark.png")
-	symbol.custom_minimum_size = Vector2(88, 88)
-	symbol.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	symbol.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	symbol.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	symbol.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	heading_row.add_child(symbol)
-	var title_stack := VBoxContainer.new()
-	title_stack.add_theme_constant_override("separation", 0)
-	heading_row.add_child(title_stack)
-	var title := _label("Kitchen\nLayout Game", 49, INK)
-	title.autowrap_mode = TextServer.AUTOWRAP_OFF
-	title_stack.add_child(title)
-	var sub := _label("Draw  •  Design  •  Learn", 19, INK)
-	sub.autowrap_mode = TextServer.AUTOWRAP_OFF
-	title_stack.add_child(sub)
+	# Use the existing game-name artwork; do not replace or redesign the logo.
+	var logo := TextureRect.new()
+	logo.name = "KitchenDecorationLogo"
+	logo.texture = preload("res://LoadingAssets/KitchenLogo.webp")
+	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	logo.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	glass.add_child(logo)
+	logo.anchor_left = 0.045
+	logo.anchor_right = 0.955
+	logo.anchor_top = 0.075
+	logo.anchor_bottom = 0.385
 
-	var description := _label("Learn kitchen planning through real customer requests.\nDraw floor plans, design layouts, and build your skills\nstep by step.", 14, Color("53676d"))
-	description.autowrap_mode = TextServer.AUTOWRAP_OFF
-	content.add_child(description)
-	var flexible_space := Control.new()
-	flexible_space.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	content.add_child(flexible_space)
+	var menu_buttons := VBoxContainer.new()
+	menu_buttons.name = "HomeMenuButtons"
+	menu_buttons.add_theme_constant_override("separation", 15)
+	glass.add_child(menu_buttons)
+	menu_buttons.anchor_left = 0.115
+	menu_buttons.anchor_right = 0.885
+	menu_buttons.anchor_top = 0.44 if not is_pause_overlay else 0.39
+	menu_buttons.anchor_bottom = 0.88 if not is_pause_overlay else 0.92
 
-	# Three compact interactive tiles (icons are actual PNG textures, not glyphs).
-	var tiles := HBoxContainer.new()
-	tiles.add_theme_constant_override("separation", 10)
-	tiles.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	content.add_child(tiles)
-	tiles.add_child(_home_tile("Start Game", preload("res://MenuAssets/v9_play_white.png"), true, Callable(self, "_show_levels")))
-	tiles.add_child(_home_tile("How to Play", preload("res://MenuAssets/v9_book_dark.png"), false, Callable(self, "_show_help")))
-	tiles.add_child(_home_tile("Settings", preload("res://MenuAssets/v9_gear_dark.png"), false, Callable(self, "_show_settings")))
+	var start_button := _home_menu_button("Start Game", true)
+	start_button.pressed.connect(_show_levels)
+	menu_buttons.add_child(start_button)
 
-	# Menu-only features. Stages and their gameplay UI are not changed.
-	var quick_actions := HBoxContainer.new()
-	quick_actions.add_theme_constant_override("separation", 8)
-	quick_actions.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	content.add_child(quick_actions)
-	for item in [
-		["PLAYER PROFILE", "_show_profile"],
-		["MY PROGRESS", "_show_progress"],
-		["ACHIEVEMENTS", "_show_achievements"]
-	]:
-		var action_btn := _button(str(item[0]), false, 144, 33)
-		action_btn.add_theme_font_size_override("font_size", 11)
-		action_btn.pressed.connect(Callable(self, str(item[1])))
-		quick_actions.add_child(action_btn)
+	var select_button := _home_menu_button("Select Level", false)
+	select_button.pressed.connect(_show_levels)
+	menu_buttons.add_child(select_button)
+
+	var guide_button := _home_menu_button("Game Guide", false)
+	guide_button.pressed.connect(_show_help)
+	menu_buttons.add_child(guide_button)
+
+	var settings_button := _home_menu_button("Settings", false)
+	settings_button.pressed.connect(_show_settings)
+	menu_buttons.add_child(settings_button)
+
 	if is_pause_overlay:
-		# Optional direct way back when the Home icon was used from a paused level.
-		var resume := _button("BACK TO GAME", false, 135, 32)
-		resume.add_theme_font_size_override("font_size", 12)
-		resume.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		# Preserve the existing Back to Game behavior when the menu is paused.
+		var resume := _home_menu_button("Back to Game", false)
 		resume.pressed.connect(_resume_paused)
-		content.add_child(resume)
+		menu_buttons.add_child(resume)
+
+
+func _home_menu_button(caption_text: String, primary: bool) -> Button:
+	var button := Button.new()
+	button.name = caption_text.replace(" ", "")
+	button.text = caption_text
+	button.custom_minimum_size = Vector2(0, 49)
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	button.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	button.add_theme_font_size_override("font_size", 19)
+	var text_color := Color("ffffff") if primary else Color("113b54")
+	var hover_text := Color("ffffff") if primary else Color("04527a")
+	for state in ["font_color", "font_pressed_color", "font_focus_color"]:
+		button.add_theme_color_override(state, text_color)
+	button.add_theme_color_override("font_hover_color", hover_text)
+	button.add_theme_color_override("font_hover_pressed_color", hover_text)
+
+	var normal := _style(Color("008c9f") if primary else Color(0.94, 0.98, 1.0, 0.96), Color("6de5ef") if primary else Color("aed5eb"), 27, 8)
+	var hover := _style(Color("007d94") if primary else Color("ffffff"), Color("bdffff") if primary else Color("72bfe9"), 27, 8)
+	var pressed := _style(Color("006b80") if primary else Color("d9f2ff"), Color("8be0ed") if primary else Color("72bfe9"), 27, 8)
+	for style in [normal, hover, pressed]:
+		style.set_border_width_all(2)
+		style.shadow_color = Color(0.0, 0.15, 0.27, 0.18)
+		style.shadow_size = 6
+		style.shadow_offset = Vector2(0, 3)
+	button.add_theme_stylebox_override("normal", normal)
+	button.add_theme_stylebox_override("hover", hover)
+	button.add_theme_stylebox_override("pressed", pressed)
+	button.add_theme_stylebox_override("focus", _style(Color.TRANSPARENT, Color("d2fbff"), 27))
+	return button
 
 
 func _home_tile(caption_text: String, graphic: Texture2D, primary: bool, action: Callable) -> Button:
