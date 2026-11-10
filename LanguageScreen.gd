@@ -41,7 +41,10 @@ func _ready() -> void:
 	_start_logo_motion()
 	var panel := Panel.new()
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	panel.add_theme_stylebox_override("panel", _style(Color("e8f4ff"),Color("8db9e2"),24,2))
+	var panel_style := _style(Color("e8f4ff"),Color("8db9e2"),24,2)
+	panel_style.shadow_size = 6
+	panel_style.shadow_offset = Vector2(0,3)
+	panel.add_theme_stylebox_override("panel", panel_style)
 	_put(panel, Rect2(185, 330, 270, 142))
 	var title := Label.new()
 	title.text = "Select Language"
@@ -51,10 +54,10 @@ func _ready() -> void:
 	title_font.base_font = get_theme_default_font()
 	title_font.variation_embolden = 0.3
 	title.add_theme_font_override("font",title_font)
-	title.add_theme_font_size_override("font_size",18)
+	title.add_theme_font_size_override("font_size",17)
 	title.add_theme_color_override("font_color",Color("09234c"))
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_put(title,Rect2(205,339,230,25))
+	_put(title,Rect2(205,338,230,24))
 	_dropdown = OptionButton.new()
 	_dropdown.name = "LanguageDropdown"
 	_dropdown.add_item("日本語",0)
@@ -66,12 +69,17 @@ func _ready() -> void:
 	_dropdown.fit_to_longest_item = false
 	_dropdown.select(1 if Progress.get_language()=="mm" else 0)
 	_dropdown.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	_dropdown.add_theme_font_size_override("font_size",19)
+	_dropdown.add_theme_font_size_override("font_size",17)
 	for state in ["font_color","font_hover_color","font_pressed_color","font_hover_pressed_color","font_focus_color"]:
 		_dropdown.add_theme_color_override(state,Color("0b2853"))
 	for state in ["normal","hover","pressed"]:
 		var box := _style(Color("f4faff") if state=="normal" else Color("e4f4ff"),Color("81b8e7"),13,1)
-		box.set_content_margin_all(5)
+		box.set_content_margin(SIDE_LEFT, 12)
+		box.set_content_margin(SIDE_RIGHT, 10)
+		box.set_content_margin(SIDE_TOP, 2)
+		box.set_content_margin(SIDE_BOTTOM, 2)
+		box.shadow_size = 4
+		box.shadow_offset = Vector2(0,2)
 		_dropdown.add_theme_stylebox_override(state,box)
 	_dropdown.add_theme_stylebox_override("focus",_style(Color.TRANSPARENT,Color("579fe2"),13,2))
 	var popup := _dropdown.get_popup()
@@ -85,30 +93,33 @@ func _ready() -> void:
 	popup.add_theme_color_override("font_disabled_color",Color("9ba6b1"))
 	popup.add_theme_constant_override("v_separation",18)
 	popup.add_theme_constant_override("h_separation",16)
-	_put(_dropdown,Rect2(205,373,230,46))
+	_put(_dropdown,Rect2(205,368,230,40))
 	_continue = Button.new()
 	_continue.name = "LanguageContinue"
 	_continue.text = "Continue"
 	_continue.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	_continue.add_theme_font_size_override("font_size",19)
+	_continue.add_theme_font_size_override("font_size",18)
 	for state in ["font_color","font_hover_color","font_pressed_color","font_hover_pressed_color","font_focus_color"]:
 		_continue.add_theme_color_override(state,Color.WHITE)
 	# Match the compact blue pill-style button in the supplied reference.
-	_continue.add_theme_stylebox_override("normal",_style(Color("1976be"),Color("83b9e8"),24,2))
+	var normal_button := _style(Color("1976be"),Color("83b9e8"),22,2)
+	normal_button.shadow_size = 5
+	normal_button.shadow_offset = Vector2(0,3)
+	_continue.add_theme_stylebox_override("normal",normal_button)
 	_continue.add_theme_stylebox_override("hover",_style(Color("278bd2"),Color("9fd0f7"),24,2))
 	_continue.add_theme_stylebox_override("pressed",_style(Color("105b9f"),Color("83b9e8"),24,2))
 	_continue.add_theme_stylebox_override("focus",_style(Color.TRANSPARENT,Color("b3dfff"),24,2))
 	_continue.pressed.connect(_confirm)
-	_put(_continue,Rect2(205,444,230,44))
+	_put(_continue,Rect2(205,426,230,40))
 	# Godot's Myanmar font can make OptionButton taller than its requested
 	# rectangle. Measure the real minimum height, then place Continue below it.
 	# Keep a visible gap even after the button shadows are drawn.
-	var dropdown_height := maxf(46.0, _dropdown.get_combined_minimum_size().y)
+	var dropdown_height := maxf(40.0, _dropdown.get_combined_minimum_size().y)
 	_dropdown.size.y = dropdown_height
-	var continue_height := maxf(44.0, _continue.get_combined_minimum_size().y)
-	_continue.position.y = _dropdown.position.y + dropdown_height + 20.0
+	var continue_height := maxf(40.0, _continue.get_combined_minimum_size().y)
+	_continue.position.y = _dropdown.position.y + dropdown_height + 13.0
 	_continue.size.y = continue_height
-	panel.size.y = _continue.position.y + continue_height + 15.0 - panel.position.y
+	panel.size.y = _continue.position.y + continue_height + 12.0 - panel.position.y
 	_dropdown.item_selected.connect(func(_index: int) -> void: _continue.grab_focus())
 	resized.connect(_fit)
 	_fit()
