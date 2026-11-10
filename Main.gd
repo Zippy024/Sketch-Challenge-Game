@@ -536,7 +536,7 @@ func _build_ui() -> void:
 	left_top_bar.add_theme_constant_override("separation", 6)
 	left.add_child(left_top_bar)
 
-	var stage_title: Label = _label("Customer Request", 16, "24576d")
+	var stage_title: Label = _label("Customer", 16, "24576d")
 	stage_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	left_top_bar.add_child(stage_title)
 
@@ -984,13 +984,13 @@ func _run_conversation() -> void:
 func _set_status(value: String, error: bool, success: bool = false) -> void:
 	status_label.text = LocaleManager.text(value)
 	if error:
-		status_panel.add_theme_stylebox_override("panel", _style("fee2e2", "dc2626"))
+		status_panel.add_theme_stylebox_override("panel", _stage1_surface(Color("fff4f1"), Color("d8aaa2"), 13, 6))
 		status_label.add_theme_color_override("font_color", Color("991b1b"))
 	elif success:
-		status_panel.add_theme_stylebox_override("panel", _style("dcfce7", "16a34a"))
+		status_panel.add_theme_stylebox_override("panel", _stage1_surface(Color("edf7f1"), Color("95bfa7"), 13, 6))
 		status_label.add_theme_color_override("font_color", Color("14532d"))
 	else:
-		status_panel.add_theme_stylebox_override("panel", _style("ffffff"))
+		status_panel.add_theme_stylebox_override("panel", _stage1_surface(Color("f6fbfd"), Color("b3d3dd"), 13, 6))
 		status_label.add_theme_color_override("font_color", Color("17233b"))
 
 func _on_drawing_status(message: String) -> void:
@@ -1029,7 +1029,7 @@ func _reset_feedback_ui() -> void:
 	feedback_label.visible = false
 	feedback_label.text = ""
 	again_button_row.visible = false
-	dialog_bubble.add_theme_stylebox_override("panel", _style("ffffff", "d6e2ef"))
+	dialog_bubble.add_theme_stylebox_override("panel", _stage1_surface(Color("f7fcfd"), Color("b5d8e2"), 16, 10))
 
 func _on_again_pressed() -> void:
 	typing_token += 1
@@ -1053,7 +1053,7 @@ func _confirm() -> void:
 		request_label.visible = false
 		feedback_divider.visible = false
 		feedback_label.visible = true
-		dialog_bubble.add_theme_stylebox_override("panel", _style("dcfce7", "4ade80"))
+		dialog_bubble.add_theme_stylebox_override("panel", _stage1_surface(Color("edf7f1"), Color("95bfa7"), 16, 10))
 		feedback_label.add_theme_color_override("font_color", Color("14532d"))
 		_set_status("Please wait for the customer to finish speaking.", false, true)
 		feedback_label.text = DIALOGUE_TEXTS[current_lang]["correct"]
@@ -1064,8 +1064,8 @@ func _confirm() -> void:
 		request_label.visible = true
 		feedback_divider.visible = true
 		feedback_label.visible = true
-		dialog_bubble.add_theme_stylebox_override("panel", _style("dbeafe", "f87171"))
-		feedback_divider.color = Color("f87171")
+		dialog_bubble.add_theme_stylebox_override("panel", _stage1_surface(Color("fff4f1"), Color("d8aaa2"), 16, 10))
+		feedback_divider.color = Color("d6a49a")
 		feedback_label.add_theme_color_override("font_color", Color("b91c1c"))
 		_set_status("Red highlighted parts on the drawing are incorrect. Click 'Try Again'.", true)
 		feedback_label.text = DIALOGUE_TEXTS[current_lang]["wrong"]
