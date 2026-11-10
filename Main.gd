@@ -246,7 +246,7 @@ func _ready() -> void:
 	voice_player.finished.connect(_on_voice_finished)
 	current_lang = Progress.get_language()
 	_build_ui()
-	speaker_name_label.text = DIALOGUE_TEXTS[current_lang]["speaker"]
+	speaker_name_label.text = "Tanaka san"
 	_apply_web_readability(self)
 	_update_lang_buttons_style()
 	if Progress.launch_from_level_menu:
@@ -607,8 +607,8 @@ func _build_ui() -> void:
 	var chat_panel: PanelContainer = PanelContainer.new()
 	chat_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	chat_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	chat_panel.size_flags_stretch_ratio = 1.20
-	chat_panel.custom_minimum_size.y = 314
+	chat_panel.size_flags_stretch_ratio = 1.26
+	chat_panel.custom_minimum_size.y = 320
 	chat_panel.add_theme_stylebox_override("panel", _stage1_surface(Color(0.73, 0.88, 0.93, 0.85), Color(0.58, 0.78, 0.85, 0.95), 17, 9))
 	left.add_child(chat_panel)
 
@@ -619,66 +619,49 @@ func _build_ui() -> void:
 	chat_panel.add_child(row)
 
 	var avatar_holder := CenterContainer.new()
-	avatar_holder.custom_minimum_size = Vector2(110, 110)
-	avatar_holder.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	avatar_holder.custom_minimum_size = Vector2(125, 125)
+	avatar_holder.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(avatar_holder)
 
+
 	var avatar: StaticCustomerAvatar = StaticCustomerAvatar.new()
+	avatar.custom_minimum_size = Vector2(125, 125)
 	avatar_holder.add_child(avatar)
+
+	var speech_stack := VBoxContainer.new()
+	speech_stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	speech_stack.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	speech_stack.add_theme_constant_override("separation", 9)
+	row.add_child(speech_stack)
+
+	var name_tag := PanelContainer.new()
+	name_tag.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	name_tag.add_theme_stylebox_override("panel", _stage1_surface(Color(0.035, 0.36, 0.45, 0.98), Color(0.25, 0.63, 0.70), 23, 7))
+	speech_stack.add_child(name_tag)
+	speaker_name_label = _label("Tanaka san", 16, "ffffff")
+	speaker_name_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	speaker_name_label.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	name_tag.add_child(speaker_name_label)
 
 	dialog_bubble = PanelContainer.new()
 	dialog_bubble.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	dialog_bubble.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	dialog_bubble.add_theme_stylebox_override("panel", _stage1_surface(Color(0.98, 0.995, 1.0, 0.97), Color(0.72, 0.87, 0.91, 1.0), 16, 10))
-	row.add_child(dialog_bubble)
+	dialog_bubble.add_theme_stylebox_override("panel", _stage1_surface(Color(0.98, 0.995, 1.0, 0.98), Color(0.72, 0.87, 0.91), 22, 12))
+	speech_stack.add_child(dialog_bubble)
 
-	var bubble_vbox: VBoxContainer = VBoxContainer.new()
+	var bubble_vbox := VBoxContainer.new()
 	bubble_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bubble_vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	bubble_vbox.add_theme_constant_override("separation", 6)
+	bubble_vbox.add_theme_constant_override("separation", 4)
 	dialog_bubble.add_child(bubble_vbox)
 
-	# Name and voice controls share one line; they do not take text space below.
-	var name_voice_row: HBoxContainer = HBoxContainer.new()
-	name_voice_row.add_theme_constant_override("separation", 4)
-	bubble_vbox.add_child(name_voice_row)
-
-	speaker_name_label = _label(DIALOGUE_TEXTS["jp"]["speaker"], 16, "195c78")
-	speaker_name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	name_voice_row.add_child(speaker_name_label)
-
-	var voice_controls: HBoxContainer = HBoxContainer.new()
-	voice_controls.add_theme_constant_override("separation", 3)
-	voice_controls.size_flags_horizontal = Control.SIZE_SHRINK_END
-	name_voice_row.add_child(voice_controls)
-
-	var customer_request_subtitle := _label("CUSTOMER REQUEST", 11, "638297")
-	bubble_vbox.add_child(customer_request_subtitle)
-
+	# Preserve recorded voice and UI feedback behavior.
 	voice_replay_button = _button("", _replay_voice, 26)
 	voice_stop_button = _button("", _toggle_voice_pause, 26)
-	for btn in [voice_replay_button, voice_stop_button]:
-		btn.custom_minimum_size = Vector2(32, 32)
-		btn.size_flags_horizontal = Control.SIZE_SHRINK_END
-		btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		btn.add_theme_font_size_override("font_size", 17)
-		btn.add_theme_color_override("font_color", Color("1d4ed8"))
-		btn.add_theme_color_override("font_hover_color", Color("1e40af"))
-		btn.add_theme_color_override("font_pressed_color", Color("1e40af"))
-		btn.add_theme_color_override("font_focus_color", Color("1d4ed8"))
-		for state in ["normal", "hover", "pressed", "focus"]:
-			var style: StyleBoxFlat = StyleBoxFlat.new()
-			style.bg_color = Color("eaf2ff") if state == "normal" else Color("cfe2ff")
-			style.border_color = Color("93c5fd")
-			style.set_border_width_all(1)
-			style.set_corner_radius_all(5)
-			style.set_content_margin_all(4)
-			btn.add_theme_stylebox_override(state, style)
 	_set_voice_icon(voice_replay_button, "replay")
 	_set_voice_icon(voice_stop_button, "pause")
 	voice_replay_button.tooltip_text = "Replay from beginning"
 	voice_stop_button.tooltip_text = "Pause / Resume"
-	# Audio buttons intentionally not added to UI; voice plays automatically.
 
 	dialog_scroll = ScrollContainer.new()
 	dialog_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -710,7 +693,7 @@ func _build_ui() -> void:
 	again_button_row = HBoxContainer.new()
 	again_button_row.alignment = BoxContainer.ALIGNMENT_END
 	again_button_row.visible = false
-	text_container.add_child(again_button_row)
+	# Retry will be placed in the answer footer after Reset.
 
 	again_button = Button.new()
 	again_button.text = "Try Again"
@@ -750,7 +733,6 @@ func _build_ui() -> void:
 	ref_title_btn.add_theme_color_override("font_hover_color", Color("117489"))
 	ref_title_btn.pressed.connect(_open_reference_popup)
 	ref_title_btn.custom_minimum_size.y = 33
-	left.add_child(ref_title_btn)
 
 	# Reference Plan ဧရိယာကို ကြီးမားကျယ်ဝန်းစွာ ချဲ့ထွင်ထားခြင်း (stretch_ratio = 1.45)
 	var image_frame: PanelContainer = PanelContainer.new()
@@ -758,8 +740,18 @@ func _build_ui() -> void:
 	image_frame.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	image_frame.size_flags_stretch_ratio = 1.12
 	image_frame.custom_minimum_size.y = 230
+
 	image_frame.add_theme_stylebox_override("panel", _stage1_surface(Color("ffffff"), Color("afcfdc"), 16, 7))
-	left.add_child(image_frame)
+	var reference_card := PanelContainer.new()
+	reference_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	reference_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	reference_card.add_theme_stylebox_override("panel", _stage1_surface(Color(0.80, 0.92, 0.97, 0.95), Color(0.58, 0.82, 0.89), 18, 8))
+	left.add_child(reference_card)
+	var ref_contents := VBoxContainer.new()
+	ref_contents.add_theme_constant_override("separation", 5)
+	reference_card.add_child(ref_contents)
+	ref_contents.add_child(ref_title_btn)
+	ref_contents.add_child(image_frame)
 
 	var loaded_tex: Texture2D = _load_reference_texture()
 	ref_viewer = ReferencePlanViewer.new(loaded_tex, false)
@@ -874,7 +866,7 @@ func _switch_language(lang: String) -> void:
 	_stop_voice()
 	current_lang = lang
 	_update_lang_buttons_style()
-	speaker_name_label.text = DIALOGUE_TEXTS[current_lang]["speaker"]
+	speaker_name_label.text = "Tanaka san"
 	again_button.text = DIALOGUE_TEXTS[current_lang]["try_again"]
 	if last_eval_state == "correct":
 		request_label.visible = false
@@ -1008,7 +1000,7 @@ func _reveal_reference_after_talk() -> void:
 func _run_conversation() -> void:
 	if ref_viewer != null:
 		ref_viewer.modulate.a = 0.0
-	speaker_name_label.text = DIALOGUE_TEXTS[current_lang]["speaker"]
+	speaker_name_label.text = "Tanaka san"
 	is_drawing_started = true
 	conversation_finished = true
 	canvas.set_drawing_enabled(true)
