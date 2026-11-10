@@ -61,6 +61,9 @@ func _ready() -> void:
 	_dropdown.add_item("မြန်မာ",1)
 	_dropdown.add_item("English (Coming Soon)",2)
 	_dropdown.set_item_disabled(2,true)
+	# The disabled long English label must not force the closed dropdown wider
+	# than the intended 230px width; keep equal left/right panel margins.
+	_dropdown.fit_to_longest_item = false
 	_dropdown.select(1 if Progress.get_language()=="mm" else 0)
 	_dropdown.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	_dropdown.add_theme_font_size_override("font_size",19)
