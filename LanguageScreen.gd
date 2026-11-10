@@ -60,7 +60,7 @@ func _ready() -> void:
 	_dropdown.select(1 if Progress.get_language()=="mm" else 0)
 	_dropdown.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	_dropdown.add_theme_font_size_override("font_size",32)
-	for state in ["font_color","font_hover_color","font_pressed_color","font_focus_color"]:
+	for state in ["font_color","font_hover_color","font_pressed_color","font_hover_pressed_color","font_focus_color"]:
 		_dropdown.add_theme_color_override(state,Color("0b2853"))
 	for state in ["normal","hover","pressed"]:
 		var box := _style(Color("ffffff") if state=="normal" else Color("e2f7ff"),Color("89dcf3"),36,2)
@@ -84,7 +84,7 @@ func _ready() -> void:
 	_continue.text = "Continue"
 	_continue.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	_continue.add_theme_font_size_override("font_size",32)
-	for state in ["font_color","font_hover_color","font_pressed_color","font_focus_color"]:
+	for state in ["font_color","font_hover_color","font_pressed_color","font_hover_pressed_color","font_focus_color"]:
 		_continue.add_theme_color_override(state,Color.WHITE)
 	var capsule := StyleBoxTexture.new()
 	capsule.texture = preload("res://LanguageAssets/Continue.svg")
