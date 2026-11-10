@@ -480,10 +480,10 @@ func _stage1_header_button(glyph: String) -> Button:
 
 func _stage1_language_label(lang: String) -> String:
 	match lang:
-		"jp": return "Language  日本語"
-		"mm": return "Language  မြန်မာ"
-		"en": return "Language  English"
-	return "Language  日本語"
+		"jp": return "Language\n日本語"
+		"mm": return "Language\nမြန်မာ"
+		"en": return "Language\nEnglish"
+	return "Language\n日本語"
 
 
 func _stage1_icon_texture(index: int) -> AtlasTexture:
@@ -601,6 +601,9 @@ func _build_ui() -> void:
 	_stage1_language_picker.add_item("မြန်မာ", 1)
 	_stage1_language_picker.add_item("English", 2)
 	_stage1_language_picker.select({"jp":0, "mm":1, "en":2}.get(current_lang, 0))
+	_stage1_language_picker.text = _stage1_language_label(current_lang)
+	_stage1_language_picker.icon = _stage1_icon_texture(0)
+	_stage1_language_picker.add_theme_color_override("icon_normal_color", Color("16a4b5"))
 	_stage1_language_picker.add_theme_font_size_override("font_size", 15)
 	for state in ["font_color","font_hover_color","font_pressed_color","font_focus_color"]:
 		_stage1_language_picker.add_theme_color_override(state, Color("17495a"))
@@ -893,6 +896,7 @@ func _build_ui() -> void:
 func _update_lang_buttons_style() -> void:
 	if is_instance_valid(_stage1_language_picker):
 		_stage1_language_picker.select({"jp":0, "mm":1, "en":2}.get(current_lang, 0))
+		_stage1_language_picker.text = _stage1_language_label(current_lang)
 	var active_s := _stage1_surface(Color("187f95"), Color("77bdc9"), 11, 5)
 	var inactive_s := _stage1_surface(Color("f1f8fa"), Color("adced9"), 11, 5)
 	for pair in [[jp_lang_btn,"jp"],[mm_lang_btn,"mm"],[en_lang_btn,"en"]]:
