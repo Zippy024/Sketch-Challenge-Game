@@ -42,7 +42,18 @@ func _ready() -> void:
 		Progress.show_levels_on_open = false
 		_show_levels()
 	else:
-		_show_home()
+		if OS.has_feature("web"):
+			_show_home()
+		else:
+			var loading := preload("res://LoadingScreen.gd").new()
+			loading.finished.connect(_show_home)
+			add_child(loading)
+	if OS.has_feature("web"):
+		call_deferred("_notify_loading_ready")
+
+
+func _notify_loading_ready() -> void:
+	JavaScriptBridge.eval("window.__kitchenMenuReady = true;", true)
 
 
 func _style(bg: Color, edge: Color = BORDER, radius: int = 15, padding: int = 0) -> StyleBoxFlat:
