@@ -68,7 +68,7 @@ func _ready() -> void:
 		_dropdown.add_theme_color_override(state,Color("0b2853"))
 	for state in ["normal","hover","pressed"]:
 		var box := _style(Color("f4faff") if state=="normal" else Color("e4f4ff"),Color("81b8e7"),13,1)
-		box.set_content_margin_all(8)
+		box.set_content_margin_all(5)
 		_dropdown.add_theme_stylebox_override(state,box)
 	_dropdown.add_theme_stylebox_override("focus",_style(Color.TRANSPARENT,Color("579fe2"),13,2))
 	var popup := _dropdown.get_popup()
@@ -82,7 +82,7 @@ func _ready() -> void:
 	popup.add_theme_color_override("font_disabled_color",Color("9ba6b1"))
 	popup.add_theme_constant_override("v_separation",18)
 	popup.add_theme_constant_override("h_separation",16)
-	_put(_dropdown,Rect2(205,370,230,39))
+	_put(_dropdown,Rect2(205,373,230,46))
 	_continue = Button.new()
 	_continue.name = "LanguageContinue"
 	_continue.text = "Continue"
@@ -96,7 +96,16 @@ func _ready() -> void:
 	_continue.add_theme_stylebox_override("pressed",_style(Color("105b9f"),Color("83b9e8"),24,2))
 	_continue.add_theme_stylebox_override("focus",_style(Color.TRANSPARENT,Color("b3dfff"),24,2))
 	_continue.pressed.connect(_confirm)
-	_put(_continue,Rect2(205,419,230,44))
+	_put(_continue,Rect2(205,444,230,44))
+	# Godot's Myanmar font can make OptionButton taller than its requested
+	# rectangle. Measure the real minimum height, then place Continue below it.
+	# Keep a visible gap even after the button shadows are drawn.
+	var dropdown_height := maxf(46.0, _dropdown.get_combined_minimum_size().y)
+	_dropdown.size.y = dropdown_height
+	var continue_height := maxf(44.0, _continue.get_combined_minimum_size().y)
+	_continue.position.y = _dropdown.position.y + dropdown_height + 20.0
+	_continue.size.y = continue_height
+	panel.size.y = _continue.position.y + continue_height + 15.0 - panel.position.y
 	_dropdown.item_selected.connect(func(_index: int) -> void: _continue.grab_focus())
 	resized.connect(_fit)
 	_fit()
