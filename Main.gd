@@ -522,8 +522,8 @@ func _build_ui() -> void:
 
 	# --- ဘယ်ဘက်ခြမ်း ---
 	var left_panel: PanelContainer = PanelContainer.new()
-	left_panel.custom_minimum_size.x = 450
-	left_panel.add_theme_stylebox_override("panel", _style("f1f5f9"))
+	left_panel.custom_minimum_size.x = 408
+	left_panel.add_theme_stylebox_override("panel", _stage1_surface(Color(0.84, 0.94, 0.97, 0.92), Color(0.63, 0.84, 0.90, 0.95), 19, 11))
 	split.add_child(left_panel)
 
 	var left: VBoxContainer = VBoxContainer.new()
@@ -536,7 +536,7 @@ func _build_ui() -> void:
 	left_top_bar.add_theme_constant_override("separation", 6)
 	left.add_child(left_top_bar)
 
-	var stage_title: Label = _label("STAGE 1", 19, "1f3c56")
+	var stage_title: Label = _label("Customer Request", 16, "24576d")
 	stage_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	left_top_bar.add_child(stage_title)
 
@@ -572,13 +572,13 @@ func _build_ui() -> void:
 	var chat_panel: PanelContainer = PanelContainer.new()
 	chat_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	chat_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	chat_panel.size_flags_stretch_ratio = 1.0
-	chat_panel.custom_minimum_size.y = 285
-	chat_panel.add_theme_stylebox_override("panel", _style("e2e8f0"))
+	chat_panel.size_flags_stretch_ratio = 1.20
+	chat_panel.custom_minimum_size.y = 314
+	chat_panel.add_theme_stylebox_override("panel", _stage1_surface(Color(0.73, 0.88, 0.93, 0.85), Color(0.58, 0.78, 0.85, 0.95), 17, 9))
 	left.add_child(chat_panel)
 
 	var row: HBoxContainer = HBoxContainer.new()
-	row.add_theme_constant_override("separation", 12)
+	row.add_theme_constant_override("separation", 9)
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	chat_panel.add_child(row)
@@ -594,7 +594,7 @@ func _build_ui() -> void:
 	dialog_bubble = PanelContainer.new()
 	dialog_bubble.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	dialog_bubble.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	dialog_bubble.add_theme_stylebox_override("panel", _style("ffffff", "d6e2ef"))
+	dialog_bubble.add_theme_stylebox_override("panel", _stage1_surface(Color(0.98, 0.995, 1.0, 0.97), Color(0.72, 0.87, 0.91, 1.0), 16, 10))
 	row.add_child(dialog_bubble)
 
 	var bubble_vbox: VBoxContainer = VBoxContainer.new()
@@ -608,7 +608,7 @@ func _build_ui() -> void:
 	name_voice_row.add_theme_constant_override("separation", 4)
 	bubble_vbox.add_child(name_voice_row)
 
-	speaker_name_label = _label(DIALOGUE_TEXTS["jp"]["speaker"], 15, "1d4ed8")
+	speaker_name_label = _label(DIALOGUE_TEXTS["jp"]["speaker"], 16, "195c78")
 	speaker_name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_voice_row.add_child(speaker_name_label)
 
@@ -617,7 +617,7 @@ func _build_ui() -> void:
 	voice_controls.size_flags_horizontal = Control.SIZE_SHRINK_END
 	name_voice_row.add_child(voice_controls)
 
-	var customer_request_subtitle := _label("CUSTOMER REQUEST", 11, "64748b")
+	var customer_request_subtitle := _label("CUSTOMER REQUEST", 11, "638297")
 	bubble_vbox.add_child(customer_request_subtitle)
 
 	voice_replay_button = _button("", _replay_voice, 26)
@@ -658,17 +658,17 @@ func _build_ui() -> void:
 	text_container.add_theme_constant_override("separation", 8)
 	dialog_scroll.add_child(text_container)
 
-	request_label = _rich_label(14, "17233b")
+	request_label = _rich_label(15, "243c4d")
 	text_container.add_child(request_label)
 
 	feedback_divider = ColorRect.new()
 	feedback_divider.custom_minimum_size.y = 1
 	feedback_divider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	feedback_divider.color = Color("93c5fd")
+	feedback_divider.color = Color("8cbfca")
 	feedback_divider.visible = false
 	text_container.add_child(feedback_divider)
 
-	feedback_label = _label("", 13, "991b1b")
+	feedback_label = _label("", 14, "99534c")
 	feedback_label.visible = false
 	text_container.add_child(feedback_label)
 
@@ -711,18 +711,19 @@ func _build_ui() -> void:
 	ref_title_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	ref_title_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	ref_title_btn.add_theme_font_size_override("font_size", 17)
-	ref_title_btn.add_theme_color_override("font_color", Color("17233b"))
-	ref_title_btn.add_theme_color_override("font_hover_color", Color("2563eb"))
+	ref_title_btn.add_theme_color_override("font_color", Color("164c61"))
+	ref_title_btn.add_theme_color_override("font_hover_color", Color("117489"))
 	ref_title_btn.pressed.connect(_open_reference_popup)
+	ref_title_btn.custom_minimum_size.y = 33
 	left.add_child(ref_title_btn)
 
 	# Reference Plan ဧရိယာကို ကြီးမားကျယ်ဝန်းစွာ ချဲ့ထွင်ထားခြင်း (stretch_ratio = 1.45)
 	var image_frame: PanelContainer = PanelContainer.new()
 	image_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	image_frame.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	image_frame.size_flags_stretch_ratio = 1.45
-	image_frame.custom_minimum_size.y = 240
-	image_frame.add_theme_stylebox_override("panel", _style("ffffff"))
+	image_frame.size_flags_stretch_ratio = 1.12
+	image_frame.custom_minimum_size.y = 230
+	image_frame.add_theme_stylebox_override("panel", _stage1_surface(Color("ffffff"), Color("afcfdc"), 16, 7))
 	left.add_child(image_frame)
 
 	var loaded_tex: Texture2D = _load_reference_texture()
@@ -738,7 +739,7 @@ func _build_ui() -> void:
 	right_panel.custom_minimum_size.x = 580
 	right_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	right_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	right_panel.add_theme_stylebox_override("panel", _style("f1f5f9"))
+	right_panel.add_theme_stylebox_override("panel", _stage1_surface(Color(0.91, 0.97, 0.99, 0.91), Color(0.62, 0.83, 0.89, 0.94), 19, 10))
 	split.add_child(right_panel)
 
 	var right: VBoxContainer = VBoxContainer.new()
@@ -747,8 +748,8 @@ func _build_ui() -> void:
 	right.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	right_panel.add_child(right)
 
-	right.add_child(_label("Layout Drawing Area", 22))
-	right.add_child(_label("1 Small Grid = 100 mm (e.g., 1,000 mm = 10 grids) | Click points to draw (straight or angled) | Drag = Move", 13, "475569"))
+	right.add_child(_label("LAYOUT DRAWING AREA", 19, "214d61"))
+	right.add_child(_label("1 Small Grid = 100 mm (e.g., 1,000 mm = 10 grids) | Click points to draw (straight or angled) | Drag = Move", 12, "5a7789"))
 
 	var toolbar: HBoxContainer = HBoxContainer.new()
 	toolbar.add_theme_constant_override("separation", 6)
@@ -756,36 +757,43 @@ func _build_ui() -> void:
 
 	var _create_styled_btn = func(txt: String, cb: Callable, bg_hex: String, fg_hex: String, hover_hex: String, w: float = 85.0) -> Button:
 		var b: Button = _button(txt, cb, w)
-		var s: StyleBoxFlat = _style(bg_hex, hover_hex)
-		var h: StyleBoxFlat = _style(hover_hex, bg_hex)
-		b.add_theme_stylebox_override("normal", s)
-		b.add_theme_stylebox_override("hover", h)
-		b.add_theme_stylebox_override("pressed", h)
+		var normal: StyleBoxFlat = _stage1_surface(Color(bg_hex), Color(hover_hex), 12, 7)
+		var over: StyleBoxFlat = _stage1_surface(Color(hover_hex), Color(bg_hex), 12, 7)
+		normal.shadow_size = 2
+		over.shadow_size = 1
+		b.add_theme_stylebox_override("normal", normal)
+		b.add_theme_stylebox_override("hover", over)
+		b.add_theme_stylebox_override("pressed", over)
 		b.add_theme_color_override("font_color", Color(fg_hex))
-		b.add_theme_color_override("font_hover_color", Color("ffffff"))
+		b.add_theme_color_override("font_hover_color", Color("244e61"))
 		b.add_theme_font_size_override("font_size", 12)
 		return b
 
-	toolbar.add_child(_create_styled_btn.call("Undo", _undo, "f1f5f9", "334155", "e2e8f0", 75))
-	toolbar.add_child(_create_styled_btn.call("Redo", _redo, "f1f5f9", "334155", "e2e8f0", 75))
-	toolbar.add_child(_create_styled_btn.call("Delete Last", _delete, "fee2e2", "991b1b", "fecaca", 95))
+	toolbar.add_child(_create_styled_btn.call("Undo", _undo, "edf7f9", "294e63", "d7edf1", 75))
+	toolbar.add_child(_create_styled_btn.call("Redo", _redo, "edf7f9", "294e63", "d7edf1", 75))
+	toolbar.add_child(_create_styled_btn.call("Delete Last", _delete, "fff2ef", "9d5149", "f4d7d2", 95))
 
 	# Delete ခလုတ် (Select လုပ်ထားသောမျဉ်းကို ဖျက်ရန်)
 	toolbar.add_child(_create_styled_btn.call("Delete", func():
 		if canvas.has_method("delete_selected_line"):
 			canvas.delete_selected_line()
-	, "fee2e2", "991b1b", "fecaca", 80))
+	, "fff2ef", "9d5149", "f4d7d2", 80))
 
-	toolbar.add_child(_create_styled_btn.call("Zoom +", _zoom_in, "f1f5f9", "334155", "e2e8f0", 75))
-	toolbar.add_child(_create_styled_btn.call("Zoom -", _zoom_out, "f1f5f9", "334155", "e2e8f0", 75))
-	toolbar.add_child(_create_styled_btn.call("Reset", _reset_view, "f1f5f9", "334155", "e2e8f0", 75))
+	toolbar.add_child(_create_styled_btn.call("Zoom +", _zoom_in, "edf7f9", "294e63", "d7edf1", 75))
+	toolbar.add_child(_create_styled_btn.call("Zoom -", _zoom_out, "edf7f9", "294e63", "d7edf1", 75))
+	toolbar.add_child(_create_styled_btn.call("Reset", _reset_view, "edf7f9", "294e63", "d7edf1", 75))
 
+	var drawing_frame := PanelContainer.new()
+	drawing_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	drawing_frame.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	drawing_frame.add_theme_stylebox_override("panel", _stage1_surface(Color(0.98, 0.995, 1.0, 0.96), Color(0.65, 0.82, 0.89, 1.0), 17, 5))
+	right.add_child(drawing_frame)
 	canvas = CanvasScript.new()
 	canvas.custom_minimum_size = Vector2(450, 350)
 	canvas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	canvas.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	canvas.drawing_status_changed.connect(_on_drawing_status)
-	right.add_child(canvas)
+	drawing_frame.add_child(canvas)
 	canvas.set_drawing_enabled(true)
 
 	var footer: HBoxContainer = HBoxContainer.new()
@@ -794,7 +802,7 @@ func _build_ui() -> void:
 
 	status_panel = PanelContainer.new()
 	status_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	status_panel.add_theme_stylebox_override("panel", _style("ffffff"))
+	status_panel.add_theme_stylebox_override("panel", _stage1_surface(Color("f6fbfd"), Color("b3d3dd"), 13, 6))
 	footer.add_child(status_panel)
 
 	status_label = _label("Draw the requested layout, then click OK.", 14)
@@ -802,22 +810,25 @@ func _build_ui() -> void:
 	status_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	status_panel.add_child(status_label)
 
-	footer.add_child(_button("Clear", _clear))
+	var clear_button := _button("Clear", _clear)
+	clear_button.custom_minimum_size = Vector2(88, 46)
+	footer.add_child(clear_button)
 	ok_button = _button("OK", _confirm)
+	ok_button.custom_minimum_size = Vector2(96, 46)
 	footer.add_child(ok_button)
 
 	_build_reference_popup(loaded_tex)
 
 func _update_lang_buttons_style() -> void:
-	var active_s := _style("2563eb", "1d4ed8")
-	var inactive_s := _style("ffffff", "cbd5e1")
+	var active_s := _stage1_surface(Color("187f95"), Color("77bdc9"), 11, 5)
+	var inactive_s := _stage1_surface(Color("f1f8fa"), Color("adced9"), 11, 5)
 	for pair in [[jp_lang_btn,"jp"],[mm_lang_btn,"mm"],[en_lang_btn,"en"]]:
 		var button: Button = pair[0]
 		if not is_instance_valid(button):continue
 		var active: bool = current_lang == pair[1]
 		button.add_theme_stylebox_override("normal",active_s if active else inactive_s)
 		button.add_theme_stylebox_override("hover",active_s if active else inactive_s)
-		button.add_theme_color_override("font_color",Color.WHITE if active else Color("1e293b"))
+		button.add_theme_color_override("font_color",Color.WHITE if active else Color("245366"))
 
 func _switch_language(lang: String) -> void:
 	Progress.set_language(lang)
