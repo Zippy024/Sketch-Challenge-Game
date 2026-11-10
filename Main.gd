@@ -486,30 +486,53 @@ func _stage1_language_label(lang: String) -> String:
 	return "Language  日本語"
 
 
-func _stage1_toolbar_button(glyph: String, caption: String, action: Callable, active: bool = false, available: bool = true) -> Button:
+func _stage1_icon_texture(index: int) -> AtlasTexture:
+	var texture_part := AtlasTexture.new()
+	texture_part.atlas = preload("res://Stage1Assets/stage1_icons.svg")
+	texture_part.region = Rect2(48 * index, 0, 48, 48)
+	return texture_part
+
+
+func _stage1_toolbar_button(index: int, caption: String, action: Callable, active: bool = false, available: bool = true) -> Button:
 	var b := Button.new()
 	b.name = "Stage1Tool" + caption.replace(" ", "")
-	b.text = glyph + "\n" + caption
-	b.custom_minimum_size = Vector2(66, 66)
+	b.text = ""
+	b.custom_minimum_size = Vector2(68, 70)
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	b.add_theme_font_size_override("font_size", 15)
 	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if available else Control.CURSOR_ARROW
-	var normal := _stage1_surface(Color("138b9f") if active else Color("ecf6fb"), Color("50b5c3") if active else Color("c4dfe9"), 13, 4)
-	var hover := _stage1_surface(Color("0b7288") if active else Color("dcf0f8"), Color("61c7d3"), 13, 4)
-	var disabled := _stage1_surface(Color("f1f8fb"), Color("cbdee7"), 13, 4)
-	b.add_theme_stylebox_override("normal", normal)
-	b.add_theme_stylebox_override("hover", hover)
-	b.add_theme_stylebox_override("pressed", hover)
-	b.add_theme_stylebox_override("focus", hover)
-	b.add_theme_stylebox_override("disabled", disabled)
-	for state in ["font_color","font_hover_color","font_pressed_color","font_focus_color"]:
-		b.add_theme_color_override(state, Color.WHITE if active else Color("193e61"))
-	b.add_theme_color_override("font_disabled_color", Color("75909f"))
+	var normal := _stage1_surface(Color("128b9e") if active else Color("edf7fb"), Color("55b7c6") if active else Color("c5dfe9"), 13, 3)
+	var hover := _stage1_surface(Color("0b788b") if active else Color("d9eef7"), Color("64c7d2"), 13, 3)
+	for state in ["normal","hover","pressed","focus","disabled"]:
+		b.add_theme_stylebox_override(state, hover if state in ["hover","pressed"] else normal)
 	if available:
 		b.pressed.connect(action)
 	else:
 		b.disabled = true
-		b.tooltip_text = "Not supported in the current drawing engine"
+		b.tooltip_text = "Not available in the current Stage 1 drawing engine"
+	var stack := VBoxContainer.new()
+	stack.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	stack.alignment = BoxContainer.ALIGNMENT_CENTER
+	stack.add_theme_constant_override("separation", 1)
+	b.add_child(stack)
+	stack.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	stack.offset_top = 4
+	stack.offset_bottom = -4
+	var picture := TextureRect.new()
+	picture.texture = _stage1_icon_texture(index)
+	picture.custom_minimum_size = Vector2(29, 29)
+	picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	picture.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	picture.modulate = Color.WHITE if active else (Color("7391a2") if not available else Color("1b426c"))
+	picture.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	picture.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	stack.add_child(picture)
+	var caption_view := _label(caption, 12, "ffffff" if active else ("648396" if not available else "1c3d62"))
+	caption_view.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	caption_view.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	caption_view.autowrap_mode = TextServer.AUTOWRAP_OFF
+	caption_view.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	stack.add_child(caption_view)
 	return b
 
 
@@ -813,19 +836,19 @@ func _build_ui() -> void:
 		canvas.grab_focus()
 	var remove_selected := func() -> void:
 		canvas.delete_selected_line()
-	toolbar.add_child(_stage1_toolbar_button("➤", "Select", choose_focus, true))
-	toolbar.add_child(_stage1_toolbar_button("╱", "Line", choose_focus))
-	toolbar.add_child(_stage1_toolbar_button("□", "Rectangle", Callable(), false, false))
-	toolbar.add_child(_stage1_toolbar_button("⬠", "Polygon", Callable(), false, false))
-	toolbar.add_child(_stage1_toolbar_button("◯", "Circle", Callable(), false, false))
+	toolbar.add_child(_stage1_toolbar_button(1, "Select", choose_focus, true))
+	toolbar.add_child(_stage1_toolbar_button(2, "Line", choose_focus))
+	toolbar.add_child(_stage1_toolbar_button(3, "Rectangle", Callable(), false, false))
+	toolbar.add_child(_stage1_toolbar_button(4, "Polygon", Callable(), false, false))
+	toolbar.add_child(_stage1_toolbar_button(5, "Circle", Callable(), false, false))
 	toolbar.add_child(VSeparator.new())
-	toolbar.add_child(_stage1_toolbar_button("⌫", "Erase", remove_selected))
-	toolbar.add_child(_stage1_toolbar_button("✥", "Move", choose_focus))
-	toolbar.add_child(_stage1_toolbar_button("▧", "Multi", Callable(), false, false))
-	toolbar.add_child(_stage1_toolbar_button("▣", "All", Callable(), false, false))
+	toolbar.add_child(_stage1_toolbar_button(6, "Erase", remove_selected))
+	toolbar.add_child(_stage1_toolbar_button(7, "Move", choose_focus))
+	toolbar.add_child(_stage1_toolbar_button(8, "Multi", Callable(), false, false))
+	toolbar.add_child(_stage1_toolbar_button(9, "All", Callable(), false, false))
 	toolbar.add_child(VSeparator.new())
-	toolbar.add_child(_stage1_toolbar_button("↶", "Undo", _undo))
-	toolbar.add_child(_stage1_toolbar_button("↷", "Redo", _redo))
+	toolbar.add_child(_stage1_toolbar_button(10, "Undo", _undo))
+	toolbar.add_child(_stage1_toolbar_button(11, "Redo", _redo))
 
 	var drawing_frame := PanelContainer.new()
 	drawing_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
