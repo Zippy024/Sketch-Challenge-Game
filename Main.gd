@@ -21,7 +21,7 @@ class ReferencePlanViewer extends Control:
 		is_popup_view = popup_mode
 		clip_contents = true
 		mouse_filter = Control.MOUSE_FILTER_STOP
-		custom_minimum_size = Vector2(360, 260) if not popup_mode else Vector2(800, 520)
+		custom_minimum_size = Vector2(330, 230) if not popup_mode else Vector2(800, 520)
 		texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 		mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		resized.connect(_on_resized)
@@ -486,6 +486,33 @@ func _stage1_language_label(lang: String) -> String:
 	return "Language  日本語"
 
 
+func _stage1_toolbar_button(glyph: String, caption: String, action: Callable, active: bool = false, available: bool = true) -> Button:
+	var b := Button.new()
+	b.name = "Stage1Tool" + caption.replace(" ", "")
+	b.text = glyph + "\n" + caption
+	b.custom_minimum_size = Vector2(66, 66)
+	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	b.add_theme_font_size_override("font_size", 15)
+	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if available else Control.CURSOR_ARROW
+	var normal := _stage1_surface(Color("138b9f") if active else Color("ecf6fb"), Color("50b5c3") if active else Color("c4dfe9"), 13, 4)
+	var hover := _stage1_surface(Color("0b7288") if active else Color("dcf0f8"), Color("61c7d3"), 13, 4)
+	var disabled := _stage1_surface(Color("f1f8fb"), Color("cbdee7"), 13, 4)
+	b.add_theme_stylebox_override("normal", normal)
+	b.add_theme_stylebox_override("hover", hover)
+	b.add_theme_stylebox_override("pressed", hover)
+	b.add_theme_stylebox_override("focus", hover)
+	b.add_theme_stylebox_override("disabled", disabled)
+	for state in ["font_color","font_hover_color","font_pressed_color","font_focus_color"]:
+		b.add_theme_color_override(state, Color.WHITE if active else Color("193e61"))
+	b.add_theme_color_override("font_disabled_color", Color("75909f"))
+	if available:
+		b.pressed.connect(action)
+	else:
+		b.disabled = true
+		b.tooltip_text = "Not supported in the current drawing engine"
+	return b
+
+
 func _build_ui() -> void:
 	# Muted teal kitchen reference background from the existing language page.
 	var background := TextureRect.new()
@@ -779,36 +806,26 @@ func _build_ui() -> void:
 	right.add_child(_label("1 Small Grid = 100 mm (e.g., 1,000 mm = 10 grids) | Click points to draw (straight or angled) | Drag = Move", 12, "5a7789"))
 
 	var toolbar: HBoxContainer = HBoxContainer.new()
-	toolbar.add_theme_constant_override("separation", 6)
+	toolbar.name = "Stage1DrawingToolbar"
+	toolbar.add_theme_constant_override("separation", 2)
 	right.add_child(toolbar)
-
-	var _create_styled_btn = func(txt: String, cb: Callable, bg_hex: String, fg_hex: String, hover_hex: String, w: float = 85.0) -> Button:
-		var b: Button = _button(txt, cb, w)
-		var normal: StyleBoxFlat = _stage1_surface(Color(bg_hex), Color(hover_hex), 12, 7)
-		var over: StyleBoxFlat = _stage1_surface(Color(hover_hex), Color(bg_hex), 12, 7)
-		normal.shadow_size = 2
-		over.shadow_size = 1
-		b.add_theme_stylebox_override("normal", normal)
-		b.add_theme_stylebox_override("hover", over)
-		b.add_theme_stylebox_override("pressed", over)
-		b.add_theme_color_override("font_color", Color(fg_hex))
-		b.add_theme_color_override("font_hover_color", Color("244e61"))
-		b.add_theme_font_size_override("font_size", 12)
-		return b
-
-	toolbar.add_child(_create_styled_btn.call("Undo", _undo, "edf7f9", "294e63", "d7edf1", 75))
-	toolbar.add_child(_create_styled_btn.call("Redo", _redo, "edf7f9", "294e63", "d7edf1", 75))
-	toolbar.add_child(_create_styled_btn.call("Delete Last", _delete, "fff2ef", "9d5149", "f4d7d2", 95))
-
-	# Delete ခလုတ် (Select လုပ်ထားသောမျဉ်းကို ဖျက်ရန်)
-	toolbar.add_child(_create_styled_btn.call("Delete", func():
-		if canvas.has_method("delete_selected_line"):
-			canvas.delete_selected_line()
-	, "fff2ef", "9d5149", "f4d7d2", 80))
-
-	toolbar.add_child(_create_styled_btn.call("Zoom +", _zoom_in, "edf7f9", "294e63", "d7edf1", 75))
-	toolbar.add_child(_create_styled_btn.call("Zoom -", _zoom_out, "edf7f9", "294e63", "d7edf1", 75))
-	toolbar.add_child(_create_styled_btn.call("Reset", _reset_view, "edf7f9", "294e63", "d7edf1", 75))
+	var choose_focus := func() -> void:
+		canvas.grab_focus()
+	var remove_selected := func() -> void:
+		canvas.delete_selected_line()
+	toolbar.add_child(_stage1_toolbar_button("➤", "Select", choose_focus, true))
+	toolbar.add_child(_stage1_toolbar_button("╱", "Line", choose_focus))
+	toolbar.add_child(_stage1_toolbar_button("□", "Rectangle", Callable(), false, false))
+	toolbar.add_child(_stage1_toolbar_button("⬠", "Polygon", Callable(), false, false))
+	toolbar.add_child(_stage1_toolbar_button("◯", "Circle", Callable(), false, false))
+	toolbar.add_child(VSeparator.new())
+	toolbar.add_child(_stage1_toolbar_button("⌫", "Erase", remove_selected))
+	toolbar.add_child(_stage1_toolbar_button("✥", "Move", choose_focus))
+	toolbar.add_child(_stage1_toolbar_button("▧", "Multi", Callable(), false, false))
+	toolbar.add_child(_stage1_toolbar_button("▣", "All", Callable(), false, false))
+	toolbar.add_child(VSeparator.new())
+	toolbar.add_child(_stage1_toolbar_button("↶", "Undo", _undo))
+	toolbar.add_child(_stage1_toolbar_button("↷", "Redo", _redo))
 
 	var drawing_frame := PanelContainer.new()
 	drawing_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -837,11 +854,15 @@ func _build_ui() -> void:
 	status_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	status_panel.add_child(status_label)
 
-	var clear_button := _button("Clear", _clear)
+	var clear_button := _button("Reset", _clear)
 	clear_button.custom_minimum_size = Vector2(88, 46)
 	footer.add_child(clear_button)
-	ok_button = _button("OK", _confirm)
-	ok_button.custom_minimum_size = Vector2(96, 46)
+	again_button_row.size_flags_horizontal = Control.SIZE_SHRINK_END
+	footer.add_child(again_button_row)
+	again_button.custom_minimum_size = Vector2(115, 46)
+	ok_button = _button("Check Answer", _confirm)
+	ok_button.custom_minimum_size = Vector2(158, 46)
+	_modern_button_style(ok_button, "primary")
 	footer.add_child(ok_button)
 
 	_build_reference_popup(loaded_tex)
