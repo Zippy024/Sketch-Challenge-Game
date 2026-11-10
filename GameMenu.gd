@@ -55,6 +55,7 @@ func _ready() -> void:
 
 
 func _show_language_select() -> void:
+	_clear()
 	var screen := preload("res://LanguageScreen.gd").new()
 	screen.language_chosen.connect(func(language: String) -> void:
 		_set_language(language)
@@ -92,6 +93,10 @@ func _label(value: String, font_size: int = 16, color: Color = INK, centered: bo
 func _button(title: String, primary: bool = false, min_w: float = 165.0, min_h: float = 46.0) -> Button:
 	var b := Button.new()
 	b.text = LocaleManager.text(title)
+	if title.to_lower().begins_with("back"):
+		b.icon=preload("res://MenuAssets/BackArrow.svg")
+		b.add_theme_color_override("icon_normal_color",WHITE if primary else INK)
+		b.add_theme_color_override("icon_hover_color",WHITE if primary else GREEN)
 	b.custom_minimum_size = Vector2(min_w, min_h)
 	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	b.add_theme_font_size_override("font_size", 15)
@@ -139,6 +144,10 @@ func _build_frame() -> void:
 	mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	header.add_child(mark)
 
+	var back := _button("Back",false,90,36)
+	back.name="MenuPageBack"
+	back.pressed.connect(_show_levels if is_pause_overlay else _show_home)
+	header.add_child(back)
 	var brand := _label("Kitchen Layout Game", 19, INK)
 	brand.autowrap_mode = TextServer.AUTOWRAP_OFF
 	brand.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -235,6 +244,7 @@ func _show_presentation(levels: bool) -> void:
 	screen.action_requested.connect(func(action: String) -> void:
 		match action:
 			"levels":_show_levels()
+			"language":_show_language_select()
 			"guide":_show_help()
 			"settings":_show_settings()
 			"profile":_show_profile()

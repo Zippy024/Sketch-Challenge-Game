@@ -10,6 +10,7 @@ var _logo: TextureRect
 
 func _ready() -> void:
 	name = "LanguageSelectionScreen"
+	set_meta("locale_ignore",true)
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	var base := ColorRect.new()
@@ -123,15 +124,12 @@ func _ready() -> void:
 	_fit()
 
 func _start_logo_motion() -> void:
-	# Subtle, slow floating motion: independent of language-selection controls.
-	if not is_instance_valid(_logo): return
-	_logo.rotation_degrees = -1.5
-	var tilt := create_tween().set_loops()
-	tilt.tween_property(_logo, "rotation_degrees", 1.2, 3.4).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	tilt.tween_property(_logo, "rotation_degrees", -1.5, 3.4).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	var float_up := create_tween().set_loops()
-	float_up.tween_property(_logo, "position:y", 4.0, 3.8).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	float_up.tween_property(_logo, "position:y", 10.0, 3.8).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	if OS.has_feature("web") and bool(JavaScriptBridge.eval("window.matchMedia('(prefers-reduced-motion: reduce)').matches",true)):
+		return
+	var motion := ShaderMaterial.new()
+	motion.shader = preload("res://MenuAssets/LogoFloat.gdshader")
+	_logo.material = motion
+	_logo.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 
 func _style(fill: Color, edge: Color, radius: int, border: int) -> StyleBoxFlat:
 	var box := StyleBoxFlat.new()

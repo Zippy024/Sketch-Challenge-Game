@@ -1,6 +1,8 @@
 # Game languages
 
-The shared `LocaleManager` autoload translates menu and stage controls from the English/Myanmar/Japanese catalog in `Messages.gd`. `GameProgress.set_language()` persists the choice and refreshes visible controls. Keep player-entered answers and display names unchanged. Language choices remain written in their own language.
+The shared `LocaleManager` autoload translates menu and stage controls from the English/Myanmar/Japanese catalog in `Messages.gd`. `GameProgress.set_language()` persists the choice and refreshes visible controls. Keep player-entered answers and display names unchanged. Language choices remain written in their own language. Loading and the language picker keep English interface text using the `locale_ignore` scope; localization applies from the home screen onward. Game branding and the browser title always stay English.
+
+Menu logo motion uses `MenuAssets/LogoFloat.gdshader` for fractional pixel animation and respects reduced-motion preferences. Home has an arrow button back to language selection, and the level screen has an arrow back to Home (or the paused stage).
 
 Recorded audio keeps the existing MP3 paths for Japanese and Myanmar. No speech service or API key is used. Optional English recordings can be added at these paths:
 

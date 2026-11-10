@@ -9,6 +9,9 @@ var _nodes: Array[WeakRef] = []
 var _space := RegEx.new()
 var _slots := RegEx.new()
 var _elapsed: float = 0.0
+var _revision: int = 0
+var _text_cache: Dictionary = {}
+const BRAND_NAMES = ["Kitchen Decoration Game", "Kitchen Layout Game", "Kitchen Layout Design Game"]
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -47,9 +50,17 @@ func _escape(value: String) -> String:
 	return result
 
 func text(source: String) -> String:
+	if _text_cache.has(source): return str(_text_cache[source])
+	var translated := _translate(source)
+	_text_cache[source] = translated
+	return translated
+
+func _translate(source: String) -> String:
 	if source.is_empty() or source in ["日本語","မြန်မာ","English"]:return source
 	var key := _normalize(source)
-	if _index.has(key):return str(_index[key][language])
+	if _index.has(key):
+		var row: Dictionary = _index[key]
+		return str(row.en) if row.en in BRAND_NAMES else str(row[language])
 	for entry in _patterns:
 		var match_value: RegExMatch = entry.regex.search(key)
 		if match_value==null:continue
@@ -74,10 +85,12 @@ func text(source: String) -> String:
 func set_language(value: String) -> void:
 	if value not in ["jp","mm","en"]:return
 	language = value
+	_revision += 1
+	_text_cache.clear()
 	if OS.has_feature("web"):
 		JavaScriptBridge.eval("try { localStorage.setItem('kitchenLanguage',"+JSON.stringify(value)+"); } catch(e) {}",true)
 	TranslationServer.set_locale({"jp":"ja","mm":"my","en":"en"}[value])
-	get_tree().root.title = text("Kitchen Decoration Game")
+	get_tree().root.title = str(ProjectSettings.get_setting("application/config/name"))
 	_refresh_nodes()
 	language_changed.emit(value)
 
@@ -108,16 +121,24 @@ func _refresh_nodes() -> void:
 
 func _property(node: Node, property_name: String) -> void:
 	var current: String = str(node.get(property_name))
+	var revision_key := "locale_revision_"+property_name
 	var source_key := "locale_source_"+property_name
 	var rendered_key := "locale_rendered_"+property_name
+	if node.get_meta(revision_key,-1)==_revision and current==str(node.get_meta(rendered_key,"")):
+		return
 	if not node.has_meta(source_key) or current!=str(node.get_meta(rendered_key,"")):
 		node.set_meta(source_key,current)
 	var translated := text(str(node.get_meta(source_key)))
 	if translated!=current:node.set(property_name,translated)
 	node.set_meta(rendered_key,translated)
+	node.set_meta(revision_key,_revision)
 
 func _localize(node: Node) -> void:
 	if not is_instance_valid(node) or node.is_queued_for_deletion():return
+	var ancestor: Node = node
+	while ancestor != null:
+		if bool(ancestor.get_meta("locale_ignore",false)): return
+		ancestor = ancestor.get_parent()
 	if node is OptionButton:
 		# Endonyms in the language picker stay identifiable in every language.
 		pass

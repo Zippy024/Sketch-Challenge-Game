@@ -7,19 +7,13 @@ var paused_game: bool = false
 var selected_stage: int = 3
 var _design: Control
 var _logo: TextureRect
-var _logo_origin: Vector2
-var _time: float = 0.0
-var _motion: bool = true
 
 func _ready() -> void:
 	name = "LevelSelectionScreen" if levels else "KitchenHomeScreen"
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	if OS.has_feature("web"):
-		_motion = not bool(JavaScriptBridge.eval("window.matchMedia('(prefers-reduced-motion: reduce)').matches",true))
 	_build()
 	resized.connect(_fit)
-	set_process(_motion)
 
 func _box(fill: Color, edge: Color, radius: int = 24, glow: int = 0) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -73,6 +67,13 @@ func _button(message: String, primary: bool = false, font_size: int = 20) -> But
 	button.add_theme_stylebox_override("focus",_box(Color.TRANSPARENT,Color("d6ffff"),28))
 	return button
 
+func _back_button(message: String, action: String) -> Button:
+	var button := _button(message,false,15)
+	button.icon=preload("res://MenuAssets/BackArrow.svg")
+	button.add_theme_constant_override("h_separation",8)
+	button.pressed.connect(func() -> void:action_requested.emit(action))
+	return button
+
 func _build() -> void:
 	for child in get_children():
 		remove_child(child)
@@ -103,39 +104,45 @@ func _add_logo(rect: Rect2) -> void:
 	_logo.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_logo.mouse_filter=Control.MOUSE_FILTER_IGNORE
 	_put(_design,_logo,rect)
-	_logo_origin=rect.position
+	_logo.name="MenuLogo"
+	if OS.has_feature("web") and bool(JavaScriptBridge.eval("window.matchMedia('(prefers-reduced-motion: reduce)').matches",true)):
+		return
+	var motion := ShaderMaterial.new()
+	motion.shader = preload("res://MenuAssets/LogoFloat.gdshader")
+	_logo.material = motion
+	_logo.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 
 func _build_home() -> void:
 	_add_logo(Rect2(350,20,500,245))
-	var captions: Array[String]=["Start Game","Select Level","Game Guide","Settings"]
-	var actions: Array[String]=["levels","levels","guide","settings"]
+	var captions: Array[String]=["Start Game","Select Level","Settings"]
+	var actions: Array[String]=["levels","levels","settings"]
 	for i in range(captions.size()):
 		var button := _button(captions[i],i==0,20)
-		button.name=["StartGame","SelectLevel","GameGuide","Settings"][i]
+		button.name=["StartGame","SelectLevel","Settings"][i]
 		button.pressed.connect(func() -> void:action_requested.emit(actions[i]))
 		_put(_design,button,Rect2(420,300+i*73,360,56))
+	var back := _back_button("Back", "language")
+	back.name="BackToLanguage"
+	_put(_design,back,Rect2(42,728,150,42))
 	if paused_game:
 		var resume := _button("Back to Game",false,16)
 		resume.pressed.connect(func() -> void:action_requested.emit("back"))
-		_put(_design,resume,Rect2(480,614,240,45))
+		_put(_design,resume,Rect2(480,546,240,45))
 
 func _build_levels() -> void:
 	_add_logo(Rect2(35,10,235,120))
 	_label(_design,"Select a Level",Rect2(295,22,620,49),34,Color.WHITE,false)
 	_label(_design,"Progress through kitchen design missions step by step.",Rect2(295,76,665,46),15,Color("d4f2fa"),false)
-	var trainee := _button("Trainee",false,15)
-	trainee.pressed.connect(func() -> void:action_requested.emit("profile"))
-	_put(_design,trainee,Rect2(1010,29,150,43))
 	var panel := Panel.new()
 	panel.mouse_filter=Control.MOUSE_FILTER_IGNORE
 	panel.add_theme_stylebox_override("panel",_box(Color(0.035,0.17,0.22,0.84),Color("75edff"),30,14))
 	_put(_design,panel,Rect2(25,145,1150,565))
 	for n in range(1,11):
 		var column := (n-1)%5
-		var row := (n-1)/5
+		var row := floori(float(n-1)/5.0)
 		_card(n,Rect2(53+column*220,170+row*270,208,252))
-	var back := _button("Back to Game" if paused_game else "Back to Home",false,15)
-	back.pressed.connect(func() -> void:action_requested.emit("back"))
+	var back := _back_button("Back to Game" if paused_game else "Back to Home", "back")
+	back.name="BackFromLevels"
 	_put(_design,back,Rect2(42,728,210,42))
 
 func _thumbnail(stage: int) -> Texture2D:
@@ -168,20 +175,21 @@ func _card(stage: int, rect: Rect2) -> void:
 	var ribbon := Panel.new()
 	ribbon.mouse_filter=Control.MOUSE_FILTER_IGNORE
 	ribbon.add_theme_stylebox_override("panel",_box(Color("06445b"),Color("a7deed"),17))
-	_put(card,ribbon,Rect2(4,4,200,33))
-	_label(card,LocaleManager.text("Stage %02d")%stage,Rect2(8,6,192,29),16)
+	_put(card,ribbon,Rect2(4,4,200,40))
+	var title := _label(ribbon,LocaleManager.text("Stage %02d")%stage,Rect2(4,0,192,40),15)
+	title.name="StageTitle"
 	var image := TextureRect.new()
 	image.texture=_thumbnail(stage)
 	image.expand_mode=TextureRect.EXPAND_IGNORE_SIZE
 	image.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	image.mouse_filter=Control.MOUSE_FILTER_IGNORE
 	image.modulate=Color.WHITE if available else Color(0.72,0.81,0.85,1)
-	_put(card,image,Rect2(8,43,192,100))
+	_put(card,image,Rect2(8,50,192,91))
 	var caption: String="Coming soon"
 	if stage==1:caption="LDK Boundary Drawing"
 	elif stage==2:caption="Pipe Shaft Q&A"
 	elif stage==3:caption="S-Class Kitchen Selection"
-	_label(card,caption,Rect2(10,147,188,58),14,Color("11374a"))
+	_label(card,caption,Rect2(12,147,184,52),14,Color("11374a"))
 	if selected:
 		var play := _button("Play",false,13)
 		play.name="SelectedPlayButton"
@@ -191,16 +199,12 @@ func _card(stage: int, rect: Rect2) -> void:
 			play_style.content_margin_bottom=2
 			play.add_theme_stylebox_override(state,play_style)
 		play.pressed.connect(func() -> void:stage_requested.emit(stage))
-		_put(card,play,Rect2(48,214,112,34))
+		_put(card,play,Rect2(48,204,112,34))
 	else:
-		_label(card,"Ready" if available else "Locked",Rect2(16,214,176,29),13,Color("22657c"))
+		_label(card,"Ready" if available else "Locked",Rect2(16,204,176,34),13,Color("22657c"))
 
 func _fit() -> void:
 	if not is_instance_valid(_design):return
 	var factor := minf(minf(size.x/1260.0,size.y/820.0),1.2)
 	_design.scale=Vector2.ONE*factor
 	_design.position=(size-Vector2(1200,780)*factor)*0.5
-
-func _process(delta: float) -> void:
-	_time+=delta
-	if is_instance_valid(_logo):_logo.position.y=_logo_origin.y+sin(_time*TAU/6.0)*3.0

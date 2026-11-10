@@ -7,6 +7,7 @@ var _elapsed: float = 0.0
 
 func _ready() -> void:
 	name = "KitchenLoadingScreen"
+	set_meta("locale_ignore",true)
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	var photo := TextureRect.new()
@@ -43,6 +44,7 @@ func _ready() -> void:
 	_bar.add_theme_stylebox_override("fill", fill)
 	add_child(_bar)
 	_caption = Label.new()
+	_caption.name="LoadingCaption"
 	_caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_caption.add_theme_color_override("font_color", Color.WHITE)
 	_caption.add_theme_color_override("font_shadow_color", Color("12476b"))
@@ -67,7 +69,7 @@ func _process(delta: float) -> void:
 	_elapsed += delta
 	var fraction := minf(_elapsed / 2.1, 1.0)
 	_bar.value = fraction * 100.0
-	_caption.text = LocaleManager.text("Loading... %d%%") % roundi(fraction * 100.0)
+	_caption.text = "Loading... %d%%" % roundi(fraction * 100.0)
 	if fraction >= 1.0:
 		set_process(false)
 		finished.emit()

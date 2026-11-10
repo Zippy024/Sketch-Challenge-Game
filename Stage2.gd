@@ -1114,6 +1114,9 @@ func _play_entrance_fade() -> void:
 func _make_levels_menu_button() -> Button:
 	var btn := Button.new()
 	btn.text = "LEVELS"
+	btn.icon=preload("res://MenuAssets/BackArrow.svg")
+	btn.add_theme_color_override("icon_normal_color",Color("216a58"))
+	btn.add_theme_color_override("icon_hover_color",Color("124b3d"))
 	btn.custom_minimum_size = Vector2(65, 30)
 	btn.add_theme_font_size_override("font_size", 12)
 	btn.add_theme_color_override("font_color", Color("216a58"))
