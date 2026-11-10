@@ -44,7 +44,7 @@ static func _save_data() -> void:
 	if err != OK:
 		push_warning("Menu-only profile/statistics could not be saved: " + str(err))
 
-static func get_name() -> String:
+static func get_display_name() -> String:
 	_load_data()
 	return _display_name
 

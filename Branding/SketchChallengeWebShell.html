@@ -33,18 +33,23 @@ $GODOT_HEAD_INCLUDE
       const percent = document.getElementById('status-pct');
       const status = document.getElementById('status-text');
       let lastProgress = 0;
+      let loadingLanguage = 'jp';
+      try { loadingLanguage = localStorage.getItem('kitchenLanguage') || 'jp'; } catch(e) {}
+      const loadingWords = {jp:'読み込み中… ',mm:'ဖွင့်နေသည်… ',en:'Loading... '};
+      const loadingPrefix = loadingWords[loadingLanguage] || loadingWords.jp;
+      percent.textContent = loadingPrefix + '0%';
       const engine = new Engine($GODOT_CONFIG);
       function setProgress(current, total) {
         if (total > 0) {
           const value = Math.min(100, Math.max(lastProgress, Math.round(current * 100 / total)));
           lastProgress = value;
           bar.style.width = value + '%';
-          percent.textContent = 'Loading... ' + value + '%';
+          percent.textContent = loadingPrefix + value + '%';
           status.textContent = value < 98 ? 'Loading game files...' : 'Starting the game...';
         } else {
           // Godot may report unknown length during WebAssembly initialization.
           status.textContent = 'Preparing your kitchen...';
-          percent.textContent = 'Loading';
+          percent.textContent = loadingPrefix;
         }
       }
       function showError(error) {
@@ -65,7 +70,7 @@ $GODOT_HEAD_INCLUDE
         }
         requestAnimationFrame(() => requestAnimationFrame(() => {
           bar.style.width = '100%';
-          percent.textContent = 'Loading... 100%';
+          percent.textContent = loadingPrefix + '100%';
           splash.classList.add('hide');
           setTimeout(() => splash.remove(), 450);
         }));

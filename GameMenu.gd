@@ -24,6 +24,7 @@ var pause_level: int = 0
 var _body: VBoxContainer
 var _jp_button: Button
 var _mm_button: Button
+var _en_button: Button
 var _scroll: ScrollContainer
 var _home_overlay: Control
 var _volume_value: float = 0.85
@@ -78,7 +79,7 @@ func _style(bg: Color, edge: Color = BORDER, radius: int = 15, padding: int = 0)
 
 func _label(value: String, font_size: int = 16, color: Color = INK, centered: bool = false) -> Label:
 	var l := Label.new()
-	l.text = value
+	l.text = LocaleManager.text(value)
 	l.add_theme_color_override("font_color", color)
 	l.add_theme_font_size_override("font_size", font_size)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER if centered else HORIZONTAL_ALIGNMENT_LEFT
@@ -90,7 +91,7 @@ func _label(value: String, font_size: int = 16, color: Color = INK, centered: bo
 
 func _button(title: String, primary: bool = false, min_w: float = 165.0, min_h: float = 46.0) -> Button:
 	var b := Button.new()
-	b.text = title
+	b.text = LocaleManager.text(title)
 	b.custom_minimum_size = Vector2(min_w, min_h)
 	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	b.add_theme_font_size_override("font_size", 15)
@@ -145,11 +146,13 @@ func _build_frame() -> void:
 
 	_jp_button = _button("日本語", false, 69, 36)
 	_mm_button = _button("မြန်မာ", false, 69, 36)
-	for b in [_jp_button, _mm_button]:
+	_en_button = _button("English",false,69,36)
+	for b in [_jp_button, _mm_button, _en_button]:
 		b.add_theme_font_size_override("font_size", 12)
 		header.add_child(b)
 	_jp_button.pressed.connect(func() -> void: _set_language("jp"))
 	_mm_button.pressed.connect(func() -> void: _set_language("mm"))
+	_en_button.pressed.connect(func() -> void: _set_language("en"))
 	_update_lang_buttons()
 
 	_scroll = ScrollContainer.new()
@@ -199,8 +202,8 @@ func _set_language(lang: String) -> void:
 
 
 func _update_lang_buttons() -> void:
-	for b in [_jp_button, _mm_button]:
-		var selected: bool = (b == _jp_button and Progress.get_language() == "jp") or (b == _mm_button and Progress.get_language() == "mm")
+	for b in [_jp_button, _mm_button, _en_button]:
+		var selected: bool = (b == _jp_button and Progress.get_language() == "jp") or (b == _mm_button and Progress.get_language() == "mm") or (b == _en_button and Progress.get_language()=="en")
 		b.add_theme_stylebox_override("normal", _style(GREEN if selected else WHITE, GREEN if selected else BORDER, 10, 7))
 		b.add_theme_color_override("font_color", WHITE if selected else INK)
 		b.add_theme_color_override("font_hover_color", WHITE if selected else GREEN)
@@ -221,93 +224,31 @@ func _clear() -> void:
 # Home screen only: visual refresh inspired by the supplied compact menu reference.
 # All other pages continue to use the existing menu frame and functions.
 func _show_home() -> void:
+	_show_presentation(false)
+
+func _show_presentation(levels: bool) -> void:
 	_clear()
-	_home_overlay = Control.new()
-	_home_overlay.name = "KitchenHomeScreen"
-	_home_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(_home_overlay)
-	_home_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-
-	# Reuse exactly the kitchen image from the language-selection screen.
-	var photo := TextureRect.new()
-	photo.name = "HomeBackground"
-	photo.texture = preload("res://MenuAssets/Modern Teal Kitchen with Warm Accents.png")
-	photo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	photo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	photo.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	photo.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_home_overlay.add_child(photo)
-	photo.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-
-	# A subtle translucent panel on the left keeps the kitchen visible on the right.
-	var glass := Panel.new()
-	glass.name = "HomeGlassPanel"
-	glass.mouse_filter = Control.MOUSE_FILTER_PASS
-	_home_overlay.add_child(glass)
-	glass.anchor_left = 0.065
-	glass.anchor_right = 0.415
-	glass.anchor_top = 0.08
-	glass.anchor_bottom = 0.92
-	var glass_style := StyleBoxFlat.new()
-	glass_style.bg_color = Color(0.78, 0.92, 0.98, 0.74)
-	glass_style.border_color = Color(0.85, 0.96, 1.0, 0.88)
-	glass_style.set_border_width_all(2)
-	glass_style.set_corner_radius_all(28)
-	glass_style.shadow_color = Color(0.0, 0.13, 0.25, 0.28)
-	glass_style.shadow_size = 24
-	glass_style.shadow_offset = Vector2(0, 10)
-	glass.add_theme_stylebox_override("panel", glass_style)
-
-	# Use the existing game-name artwork; do not replace or redesign the logo.
-	var logo := TextureRect.new()
-	logo.name = "KitchenDecorationLogo"
-	logo.texture = preload("res://LoadingAssets/KitchenLogo.webp")
-	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	logo.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	glass.add_child(logo)
-	logo.anchor_left = 0.045
-	logo.anchor_right = 0.955
-	logo.anchor_top = 0.075
-	logo.anchor_bottom = 0.385
-
-	var menu_buttons := VBoxContainer.new()
-	menu_buttons.name = "HomeMenuButtons"
-	menu_buttons.add_theme_constant_override("separation", 15)
-	glass.add_child(menu_buttons)
-	menu_buttons.anchor_left = 0.115
-	menu_buttons.anchor_right = 0.885
-	menu_buttons.anchor_top = 0.44 if not is_pause_overlay else 0.39
-	menu_buttons.anchor_bottom = 0.88 if not is_pause_overlay else 0.92
-
-	var start_button := _home_menu_button("Start Game", true)
-	start_button.pressed.connect(_show_levels)
-	menu_buttons.add_child(start_button)
-
-	var select_button := _home_menu_button("Select Level", false)
-	select_button.pressed.connect(_show_levels)
-	menu_buttons.add_child(select_button)
-
-	var guide_button := _home_menu_button("Game Guide", false)
-	guide_button.pressed.connect(_show_help)
-	menu_buttons.add_child(guide_button)
-
-	var settings_button := _home_menu_button("Settings", false)
-	settings_button.pressed.connect(_show_settings)
-	menu_buttons.add_child(settings_button)
-
-	if is_pause_overlay:
-		# Preserve the existing Back to Game behavior when the menu is paused.
-		var resume := _home_menu_button("Back to Game", false)
-		resume.pressed.connect(_resume_paused)
-		menu_buttons.add_child(resume)
-
+	var screen := preload("res://MenuScreen.gd").new()
+	screen.levels=levels
+	screen.paused_game=is_pause_overlay
+	screen.stage_requested.connect(_start_level)
+	screen.action_requested.connect(func(action: String) -> void:
+		match action:
+			"levels":_show_levels()
+			"guide":_show_help()
+			"settings":_show_settings()
+			"profile":_show_profile()
+			"back":
+				if is_pause_overlay:_resume_paused()
+				else:_show_home()
+	)
+	_home_overlay=screen
+	add_child(screen)
 
 func _home_menu_button(caption_text: String, primary: bool) -> Button:
 	var button := Button.new()
 	button.name = caption_text.replace(" ", "")
-	button.text = caption_text
+	button.text = LocaleManager.text(caption_text)
 	button.custom_minimum_size = Vector2(0, 49)
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -429,65 +370,7 @@ func _level_row(n: int) -> Button:
 
 
 func _show_levels() -> void:
-	_clear()
-	var top_row := HBoxContainer.new()
-	top_row.add_theme_constant_override("separation", 12)
-	_body.add_child(top_row)
-	var back := _button("BACK TO GAME" if is_pause_overlay else "BACK TO HOME", false, 134, 35)
-	if is_pause_overlay:
-		back.pressed.connect(_resume_paused)
-	else:
-		back.pressed.connect(_show_home)
-	top_row.add_child(back)
-	if is_pause_overlay:
-		# HOME only changes this pause overlay's visible page. The stage scene
-		# remains paused underneath, so BACK TO GAME still resumes the same work.
-		var home_button := _button("", false, 43, 35)
-		home_button.tooltip_text = "Home menu (game progress stays paused)"
-		home_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-		var icon_holder := CenterContainer.new()
-		icon_holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		home_button.add_child(icon_holder)
-		icon_holder.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		var home_img := TextureRect.new()
-		home_img.texture = preload("res://MenuAssets/v9_house_dark.png")
-		home_img.custom_minimum_size = Vector2(19, 19)
-		home_img.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		home_img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		home_img.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-		home_img.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		icon_holder.add_child(home_img)
-		home_button.pressed.connect(_show_home)
-		top_row.add_child(home_button)
-	var heading := _label("SELECT A LEVEL", 25, INK, true)
-	heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	top_row.add_child(heading)
-	var unlocked_count: int = Progress.get_highest_unlocked()
-	var progress := _label("%d / 3 AVAILABLE" % unlocked_count, 12, GREEN, true)
-	progress.custom_minimum_size.x = 125
-	top_row.add_child(progress)
-	_body.add_child(_label("Choose any available stage to play.", 14, MUTED, true))
-	var guide_actions := HBoxContainer.new()
-	guide_actions.alignment = BoxContainer.ALIGNMENT_CENTER
-	_body.add_child(guide_actions)
-	var missions_btn := _button("MISSION GUIDE", false, 146, 32)
-	missions_btn.add_theme_font_size_override("font_size", 12)
-	missions_btn.pressed.connect(_show_missions)
-	guide_actions.add_child(missions_btn)
-	var track := ProgressBar.new()
-	track.custom_minimum_size.y = 7
-	track.min_value = 0
-	track.max_value = 3
-	track.value = unlocked_count
-	track.show_percentage = false
-	track.add_theme_stylebox_override("background", _style(Color("dfe9e6"), Color("dfe9e6"), 8))
-	track.add_theme_stylebox_override("fill", _style(GREEN, GREEN, 8))
-	_body.add_child(track)
-	var list := VBoxContainer.new()
-	list.add_theme_constant_override("separation", 9)
-	_body.add_child(list)
-	for n in range(1, 7):
-		list.add_child(_level_row(n))
+	_show_presentation(true)
 
 
 func _resume_paused() -> void:
@@ -542,6 +425,9 @@ func _show_settings() -> void:
 	var myanmar := _button("မြန်မာ", false, 140, 48)
 	myanmar.pressed.connect(func() -> void: _set_language("mm"))
 	languages.add_child(myanmar)
+	var english := _button("English",false,140,48)
+	english.pressed.connect(func() -> void: _set_language("en"))
+	languages.add_child(english)
 	contents.add_child(_label("GAME VOLUME", 18, GREEN))
 	var volume := HSlider.new()
 	volume.min_value = 0.0
@@ -659,7 +545,7 @@ func _info_panel(title_text: String, description: String, marker: String = "") -
 
 func _show_profile() -> void:
 	_menu_page("PLAYER PROFILE", "Optional local display name. No account or password required.")
-	var card := _info_panel("Welcome, " + Extras.get_name(), "Your display name and game menu statistics are saved locally on this device.", "PLAYER CARD")
+	var card := _info_panel("Welcome, " + Extras.get_display_name(), "Your display name and game menu statistics are saved locally on this device.", "PLAYER CARD")
 	_body.add_child(card)
 	var content := card.get_child(0) as VBoxContainer
 	content.add_child(_label("DISPLAY NAME", 13, GREEN))
@@ -667,7 +553,7 @@ func _show_profile() -> void:
 	row.add_theme_constant_override("separation", 10)
 	content.add_child(row)
 	var field := LineEdit.new()
-	field.text = Extras.get_name()
+	field.text = Extras.get_display_name()
 	field.placeholder_text = "Guest"
 	field.max_length = 24
 	field.custom_minimum_size = Vector2(290, 42)
@@ -698,7 +584,7 @@ func _show_profile() -> void:
 func _show_progress() -> void:
 	_stats_reset_armed = false
 	_menu_page("MY PROGRESS", "Verified progress and launch history; available stages remain unlocked.")
-	var summary := _info_panel("" + Extras.get_name() + "'s Learning Journey", "Stages launched from Level Select: %d" % Extras.total_count(), "PLAYER OVERVIEW")
+	var summary := _info_panel("" + Extras.get_display_name() + "'s Learning Journey", "Stages launched from Level Select: %d" % Extras.total_count(), "PLAYER OVERVIEW")
 	_body.add_child(summary)
 	var v := summary.get_child(0) as VBoxContainer
 	var last_label := "Not yet played"
@@ -706,13 +592,13 @@ func _show_progress() -> void:
 		last_label = "Stage %d" % Extras.last_stage()
 		if not Extras.last_date().is_empty():
 			last_label += "  •  " + Extras.last_date()
-	v.add_child(_label("Last selected: " + last_label, 13, MUTED))
+	v.add_child(_label(LocaleManager.text("Last selected: %s") % LocaleManager.text(last_label), 13, MUTED))
 	var grid := HBoxContainer.new()
 	grid.add_theme_constant_override("separation", 11)
 	_body.add_child(grid)
 	for n in range(1, 4):
 		var text_status := "COMPLETED (VERIFIED)" if n == 1 and Extras.stage1_completed() else ("NOT YET VERIFIED" if n == 1 else "COMPLETION NOT TRACKED")
-		var panel := _info_panel("STAGE %d" % n, "Level Menu launches: %d\n%s" % [Extras.count(n), text_status], "AVAILABLE TO PLAY")
+		var panel := _info_panel("STAGE %d" % n, "Level Menu launches: %d\n%s" % [Extras.count(n), LocaleManager.text(text_status)], "AVAILABLE TO PLAY")
 		panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		grid.add_child(panel)
 	_body.add_child(_info_panel("About progress", "Stage 1 completion is read from the existing verified save file. Stage 2/3 completion is not stored there, so this screen does not claim they were completed. Launch counts only include starts from Level Select."))
@@ -787,7 +673,7 @@ func _show_missions() -> void:
 		"Choose the kitchen layout and configuration, then identify the kitchen parts. Follow the existing in-stage progress flow."
 	]
 	for n in range(1, 4):
-		var card := _info_panel("STAGE %d  •  %s" % [n, titles[n - 1]], details[n - 1], "MISSION %02d  •  AVAILABLE" % n)
+		var card := _info_panel(LocaleManager.text("STAGE %d  •  %s") % [n, LocaleManager.text(titles[n - 1])], details[n - 1], "MISSION %02d  •  AVAILABLE" % n)
 		_body.add_child(card)
 		var v := card.get_child(0) as VBoxContainer
 		var start := _button("PLAY STAGE %d" % n, false, 154, 37)

@@ -48,7 +48,7 @@ func _style(bg: Color, edge: Color = OUTLINE, radius: int = 18, padding: int = 0
 
 func _label(text_value: String, size_value: int, color_value: Color = TEXT, centered: bool = true) -> Label:
 	var l := Label.new()
-	l.text = text_value
+	l.text = LocaleManager.text(text_value)
 	l.add_theme_font_size_override("font_size", size_value)
 	l.add_theme_color_override("font_color", color_value)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER if centered else HORIZONTAL_ALIGNMENT_LEFT
@@ -58,7 +58,7 @@ func _label(text_value: String, size_value: int, color_value: Color = TEXT, cent
 
 func _button(text_value: String, primary: bool = false) -> Button:
 	var b := Button.new()
-	b.text = text_value
+	b.text = LocaleManager.text(text_value)
 	b.custom_minimum_size = Vector2(150, 44)
 	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	b.add_theme_font_size_override("font_size", 14)

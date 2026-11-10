@@ -47,7 +47,7 @@ func _style(background: Color, border: Color = OUTLINE, radius: int = 12) -> Sty
 
 func _label(t: String, font_size: int = 17, color: Color = TEXT, wrap_text: bool = true) -> Label:
 	var l := Label.new()
-	l.text = t
+	l.text = LocaleManager.text(t)
 	l.add_theme_font_size_override("font_size", font_size)
 	l.add_theme_color_override("font_color", color)
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -57,7 +57,7 @@ func _label(t: String, font_size: int = 17, color: Color = TEXT, wrap_text: bool
 
 func _btn(t: String, main: bool = false, w: float = 92.0) -> Button:
 	var b := Button.new()
-	b.text = t
+	b.text = LocaleManager.text(t)
 	b.custom_minimum_size = Vector2(w, 36)
 	b.add_theme_font_size_override("font_size", 12)
 	b.add_theme_color_override("font_color", Color.WHITE if main else BLUE)
@@ -117,18 +117,20 @@ func _refresh() -> void:
 	header.add_child(heading)
 	var jp := _btn("日本語", false, 62)
 	var mm := _btn("မြန်မာ", false, 64)
+	var en := _btn("English",false,64)
 	var levels := _btn("LEVELS", false, 72)
 	levels.add_theme_stylebox_override("normal", _style(Color("f8fcfa"), Color("a5d6bc"), 10))
 	levels.add_theme_stylebox_override("hover", _style(Color("e6f5ee"), Color("82c6a5"), 10))
 	levels.add_theme_color_override("font_color", Color("297b62"))
 	levels.add_theme_color_override("font_hover_color", Color("297b62"))
-	for button in [jp, mm, levels]:
+	for button in [jp, mm, en, levels]:
 		button.custom_minimum_size.y = 36
 		header.add_child(button)
 	jp.pressed.connect(_change_lang.bind("jp"))
 	mm.pressed.connect(_change_lang.bind("mm"))
+	en.pressed.connect(_change_lang.bind("en"))
 	levels.pressed.connect(_open_game_menu)
-	for pair in [[jp, "jp"], [mm, "mm"]]:
+	for pair in [[jp, "jp"], [mm, "mm"], [en,"en"]]:
 		var button: Button = pair[0]
 		if current_lang == pair[1]:
 			button.add_theme_stylebox_override("normal", _style(BLUE, BLUE))
@@ -248,11 +250,10 @@ void fragment() {
 
 func _question_text() -> String:
 	if step == 0:
-		return "現在のキッチンと同じ場所に設置するとすれば、S-classではどのタイプになりますか？" if current_lang == "jp" else "လက်ရှိမီးဖိုချောင်နေရာမှာ S-Class တပ်မယ်ဆို ဘယ်ပုံစံဖြစ်မလဲ။"
+		return LocaleManager.text("現在のキッチンと同じ場所に設置するとすれば、S-classではどのタイプになりますか？" if current_lang == "jp" else "လက်ရှိမီးဖိုချောင်နေရာမှာ S-Class တပ်မယ်ဆို ဘယ်ပုံစံဖြစ်မလဲ။")
 	if step == 1:
-		return "現行のキッチンの後ろの壁も残すとすれば、どうなりますか？" if current_lang == "jp" else "မူလ Kitchen နောက်ဘက်နံရံကို ဆက်ထားမယ်ဆို ဘယ်ပုံစံဖြစ်မလဲ။"
-	return "それぞれのパーツの名前を教えてもらえますか？" if current_lang == "jp" else "မီးဖိုချောင်အစိတ်အပိုင်းတွေကို ရွေးပြနိုင်မလား။"
-
+		return LocaleManager.text("現行のキッチンの後ろの壁も残すとすれば、どうなりますか？" if current_lang == "jp" else "မူလ Kitchen နောက်ဘက်နံရံကို ဆက်ထားမယ်ဆို ဘယ်ပုံစံဖြစ်မလဲ။")
+	return LocaleManager.text("それぞれのパーツの名前を教えてもらえますか？" if current_lang == "jp" else "မီးဖိုချောင်အစိတ်အပိုင်းတွေကို ရွေးပြနိုင်မလား။")
 
 # Card artwork is deliberately prepared at modest native resolution rather than
 # shrinking 1448px line art to ~210px with only one bilinear sample. Generate
@@ -361,7 +362,7 @@ func _choose(index: int) -> void:
 
 func _draw_parts() -> void:
 	var needed: int = step - 2
-	_answer_area.add_child(_label("Select: %s  (%s)" % [NAMES[needed], EN_PARTS[needed]], 18, BLUE))
+	_answer_area.add_child(_label(LocaleManager.text("Select: %s") % LocaleManager.text(NAMES[needed]), 18, BLUE))
 	_answer_area.add_child(_label("Click the corresponding area in the kitchen illustration.", 13, SUBTEXT))
 	var diagram := KitchenDiagram.new()
 	diagram.custom_minimum_size = Vector2(560, 355)

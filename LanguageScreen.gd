@@ -62,12 +62,10 @@ func _ready() -> void:
 	_dropdown.name = "LanguageDropdown"
 	_dropdown.add_item("日本語",0)
 	_dropdown.add_item("မြန်မာ",1)
-	_dropdown.add_item("English (Coming Soon)",2)
-	_dropdown.set_item_disabled(2,true)
-	# The disabled long English label must not force the closed dropdown wider
-	# than the intended 230px width; keep equal left/right panel margins.
+	_dropdown.add_item("English",2)
+	# Keep all three endonyms within the compact 230px dropdown.
 	_dropdown.fit_to_longest_item = false
-	_dropdown.select(1 if Progress.get_language()=="mm" else 0)
+	_dropdown.select({"jp":0,"mm":1,"en":2}[Progress.get_language()])
 	_dropdown.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	_dropdown.add_theme_font_size_override("font_size",17)
 	for state in ["font_color","font_hover_color","font_pressed_color","font_hover_pressed_color","font_focus_color"]:
@@ -158,8 +156,8 @@ func _fit() -> void:
 	_layout.position = (size - Vector2(640,690)*factor)*0.5
 
 func _confirm() -> void:
-	if _confirmed or _dropdown.selected not in [0,1]: return
+	if _confirmed or _dropdown.selected not in [0,1,2]: return
 	_confirmed = true
 	_continue.disabled = true
-	language_chosen.emit("mm" if _dropdown.selected==1 else "jp")
+	language_chosen.emit(["jp","mm","en"][_dropdown.selected])
 	queue_free()

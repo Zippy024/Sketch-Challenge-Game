@@ -4,6 +4,21 @@ const Progress = preload("res://GameProgress.gd")
 const AIConfig = preload("res://AIConfig.gd")
 
 const QUESTIONS := {
+	"en": {
+		"name": "Ms. Hosokawa",
+		"question": "By the way, what does PS on the floor plan mean?",
+		"answer_hint": "Type your answer here...",
+		"answer_title": "Your answer",
+		"check": "Check Answer",
+		"empty": "Please enter an answer first.",
+		"demo": "Demo (AI not connected): ",
+		"good": "I understand very well!",
+		"needs": "I am not quite sure I understand.",
+		"back": "Back to Stage 1",
+		"reset": "Clear",
+		"lang_note": "Stage 2 | Customer question",
+		"offline": "DEMO CHECK — AI will be connected later"
+	},
 	"jp": {
 		"name": "細川さん（女性）",
 		"question": "ところで、図面にあるPSって何でしょうか？",
@@ -172,6 +187,7 @@ var submit_button: Button
 var reset_button: Button
 var jp_button: Button
 var mm_button: Button
+var en_button: Button
 var status_label: Label
 var popup_window: Window
 var popup_viewer: PlanViewer
@@ -233,7 +249,7 @@ func _style(bg: String, edge: String = "cad7e8", radius: int = 10) -> StyleBoxFl
 
 func _label(t: String, sz: int = 16, c: String = "17233b") -> Label:
 	var l := Label.new()
-	l.text = t
+	l.text = LocaleManager.text(t)
 	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	l.add_theme_color_override("font_color", Color(c))
@@ -263,7 +279,7 @@ func _modern_button_style(button: Button, kind: String = "secondary") -> void:
 
 func _btn(t: String, min_width: float = 85.0) -> Button:
 	var b := Button.new()
-	b.text = t
+	b.text = LocaleManager.text(t)
 	b.custom_minimum_size = Vector2(min_width, 37)
 	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	b.add_theme_font_size_override("font_size", 15)
@@ -316,7 +332,14 @@ func _build_ui() -> void:
 	mm_button.add_theme_font_size_override("font_size", 12)
 	mm_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	mm_button.pressed.connect(func(): _change_language("mm"))
+	en_button = Button.new()
+	en_button.text = "English"
+	en_button.custom_minimum_size = Vector2(53, 29)
+	en_button.add_theme_font_size_override("font_size", 12)
+	en_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	en_button.pressed.connect(func(): _change_language("en"))
 	header.add_child(mm_button)
+	header.add_child(en_button)
 
 	var menu_button := _make_levels_menu_button()
 	menu_button.pressed.connect(_open_game_menu)
@@ -682,22 +705,15 @@ func _set_progress_state(state: String, message: String = "") -> void:
 		progress_replay_button.text = "もう一度" if jp else "Replay Stage 2"
 
 func _update_lang_buttons_style() -> void:
-	var active_s: StyleBoxFlat = _style("2563eb", "1d4ed8")
-	var inactive_s: StyleBoxFlat = _style("ffffff", "cbd5e1")
-	if current_lang == "jp":
-		jp_button.add_theme_stylebox_override("normal", active_s)
-		jp_button.add_theme_stylebox_override("hover", active_s)
-		jp_button.add_theme_color_override("font_color", Color("ffffff"))
-		mm_button.add_theme_stylebox_override("normal", inactive_s)
-		mm_button.add_theme_stylebox_override("hover", inactive_s)
-		mm_button.add_theme_color_override("font_color", Color("1e293b"))
-	else:
-		mm_button.add_theme_stylebox_override("normal", active_s)
-		mm_button.add_theme_stylebox_override("hover", active_s)
-		mm_button.add_theme_color_override("font_color", Color("ffffff"))
-		jp_button.add_theme_stylebox_override("normal", inactive_s)
-		jp_button.add_theme_stylebox_override("hover", inactive_s)
-		jp_button.add_theme_color_override("font_color", Color("1e293b"))
+	var active_s := _style("2563eb", "1d4ed8")
+	var inactive_s := _style("ffffff", "cbd5e1")
+	for pair in [[jp_button,"jp"],[mm_button,"mm"],[en_button,"en"]]:
+		var button: Button = pair[0]
+		if not is_instance_valid(button):continue
+		var active: bool = current_lang == pair[1]
+		button.add_theme_stylebox_override("normal",active_s if active else inactive_s)
+		button.add_theme_stylebox_override("hover",active_s if active else inactive_s)
+		button.add_theme_color_override("font_color",Color.WHITE if active else Color("1e293b"))
 
 func _change_language(lang: String) -> void:
 	_cancel_ai_request()
@@ -783,7 +799,9 @@ func _check_ai_or_demo_answer() -> void:
 	submit_button.disabled = true
 	_set_progress_state("checking")
 	status_label.text = "AI CHECK · TRYING MODELS"
-	var payload: String = JSON.stringify({"language": current_lang, "answer": answer})
+	# The deployed grading endpoint accepts jp/mm; its verdict supports answers in any language.
+	# Keep that wire contract while the English interface uses the same unchanged grading rules.
+	var payload: String = JSON.stringify({"language": "jp" if current_lang == "en" else current_lang, "answer": answer})
 	var headers := PackedStringArray(["Content-Type: application/json"])
 	var err: Error = _ai_http.request(AIConfig.API_URL, headers, HTTPClient.METHOD_POST, payload)
 	if err != OK:
@@ -902,6 +920,9 @@ func _check_demo_answer() -> void:
 
 # ---------------- Stage 2 Voice & Subtitle Animation ----------------
 func _voice_path(kind: String) -> String:
+	if current_lang == "en":
+		var english_path := "res://Voice/en/stage2_%s.mp3" % kind
+		return english_path if ResourceLoader.exists(english_path) else ""
 	var candidates: Array[String] = []
 	if current_lang == "jp":
 		match kind:

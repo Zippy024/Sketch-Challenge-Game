@@ -67,7 +67,7 @@ func _process(delta: float) -> void:
 	_elapsed += delta
 	var fraction := minf(_elapsed / 2.1, 1.0)
 	_bar.value = fraction * 100.0
-	_caption.text = "Loading... %d%%" % roundi(fraction * 100.0)
+	_caption.text = LocaleManager.text("Loading... %d%%") % roundi(fraction * 100.0)
 	if fraction >= 1.0:
 		set_process(false)
 		finished.emit()

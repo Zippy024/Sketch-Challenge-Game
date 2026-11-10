@@ -141,7 +141,7 @@ void fragment() {
     vec2 p = UV - vec2(0.5);
     float dist = length(p);
 
-    
+
 vec4 tex = texture(TEXTURE, UV);
 
 
@@ -186,6 +186,7 @@ var status_panel: PanelContainer
 var ok_button: Button
 var jp_lang_btn: Button
 var mm_lang_btn: Button
+var en_lang_btn: Button
 
 # Recorded voice files. Place the three MP3 files in res:// (the project root).
 var voice_player: AudioStreamPlayer
@@ -207,6 +208,14 @@ var is_typing_message: bool = false
 var typing_token: int = 0
 
 const DIALOGUE_TEXTS: Dictionary = {
+	"en": {
+		"speaker": "Ms. Hosokawa",
+		"request": "I am thinking about renovating my kitchen.\nI have a floor plan, but I do not understand it clearly.\nCould you neatly draw the area that I need?\nI would like to know the exact living, dining and kitchen layout.",
+		"correct": "I understand now.\nThank you very much.",
+		"wrong": "Something seems a little different.",
+		"try_again": "Try Again",
+		"start": "Start drawing"
+	},
 	"jp": {
 		"speaker": "細川さん（女性）",
 		"request": "キッチンのリフォームを考えています。\n図面はあったけど、よくわかりません。\n必要なエリアをきれいに描いてもらえますか？\nリビングダイニングとキッチンの間取りを正確に知りたいです。",
@@ -291,7 +300,7 @@ func _show_intro_screen() -> void:
 	stack.add_child(subtitle)
 
 	var languages := Label.new()
-	languages.text = "日本語  /  မြန်မာ"
+	languages.text = "日本語  /  မြန်မာ  /  English"
 	languages.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	languages.add_theme_font_size_override("font_size", 17)
 	languages.add_theme_color_override("font_color", Color("bfdbfe"))
@@ -359,7 +368,7 @@ func _style(bg: String, border: String = "cbd5e1") -> StyleBoxFlat:
 
 func _label(value: String, font_size: int, color: String = "17233b") -> Label:
 	var l: Label = Label.new()
-	l.text = value
+	l.text = LocaleManager.text(value)
 	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	l.add_theme_font_size_override("font_size", font_size)
@@ -400,7 +409,7 @@ func _modern_button_style(button: Button, kind: String = "secondary") -> void:
 
 func _button(value: String, action: Callable, min_w: float = 80.0) -> Button:
 	var b: Button = Button.new()
-	b.text = value
+	b.text = LocaleManager.text(value)
 	b.custom_minimum_size = Vector2(min_w, 36)
 	b.pressed.connect(action)
 	_modern_button_style(b, "primary" if value in ["OK", "Start (描き始める)", "Start (စတင်ဆွဲမည်)"] else ("warning" if value == "Try Again" else "secondary"))
@@ -490,6 +499,14 @@ func _build_ui() -> void:
 	mm_lang_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	mm_lang_btn.pressed.connect(func(): _switch_language("mm"))
 	left_top_bar.add_child(mm_lang_btn)
+
+	en_lang_btn = Button.new()
+	en_lang_btn.text = "English"
+	en_lang_btn.custom_minimum_size = Vector2(53, 29)
+	en_lang_btn.add_theme_font_size_override("font_size", 12)
+	en_lang_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	en_lang_btn.pressed.connect(func(): _switch_language("en"))
+	left_top_bar.add_child(en_lang_btn)
 
 	var menu_button := _make_levels_menu_button()
 	menu_button.pressed.connect(_open_game_menu)
@@ -696,7 +713,7 @@ func _build_ui() -> void:
 	toolbar.add_child(_create_styled_btn.call("Undo", _undo, "f1f5f9", "334155", "e2e8f0", 75))
 	toolbar.add_child(_create_styled_btn.call("Redo", _redo, "f1f5f9", "334155", "e2e8f0", 75))
 	toolbar.add_child(_create_styled_btn.call("Delete Last", _delete, "fee2e2", "991b1b", "fecaca", 95))
-	
+
 	# Delete ခလုတ် (Select လုပ်ထားသောမျဉ်းကို ဖျက်ရန်)
 	toolbar.add_child(_create_styled_btn.call("Delete", func():
 		if canvas.has_method("delete_selected_line"):
@@ -736,23 +753,15 @@ func _build_ui() -> void:
 	_build_reference_popup(loaded_tex)
 
 func _update_lang_buttons_style() -> void:
-	var active_s: StyleBoxFlat = _style("2563eb", "1d4ed8")
-	var inactive_s: StyleBoxFlat = _style("ffffff", "cbd5e1")
-
-	if current_lang == "jp":
-		jp_lang_btn.add_theme_stylebox_override("normal", active_s)
-		jp_lang_btn.add_theme_stylebox_override("hover", active_s)
-		jp_lang_btn.add_theme_color_override("font_color", Color("ffffff"))
-		mm_lang_btn.add_theme_stylebox_override("normal", inactive_s)
-		mm_lang_btn.add_theme_stylebox_override("hover", inactive_s)
-		mm_lang_btn.add_theme_color_override("font_color", Color("1e293b"))
-	else:
-		mm_lang_btn.add_theme_stylebox_override("normal", active_s)
-		mm_lang_btn.add_theme_stylebox_override("hover", active_s)
-		mm_lang_btn.add_theme_color_override("font_color", Color("ffffff"))
-		jp_lang_btn.add_theme_stylebox_override("normal", inactive_s)
-		jp_lang_btn.add_theme_stylebox_override("hover", inactive_s)
-		jp_lang_btn.add_theme_color_override("font_color", Color("1e293b"))
+	var active_s := _style("2563eb", "1d4ed8")
+	var inactive_s := _style("ffffff", "cbd5e1")
+	for pair in [[jp_lang_btn,"jp"],[mm_lang_btn,"mm"],[en_lang_btn,"en"]]:
+		var button: Button = pair[0]
+		if not is_instance_valid(button):continue
+		var active: bool = current_lang == pair[1]
+		button.add_theme_stylebox_override("normal",active_s if active else inactive_s)
+		button.add_theme_stylebox_override("hover",active_s if active else inactive_s)
+		button.add_theme_color_override("font_color",Color.WHITE if active else Color("1e293b"))
 
 func _switch_language(lang: String) -> void:
 	Progress.set_language(lang)
@@ -906,7 +915,7 @@ func _run_conversation() -> void:
 	_play_voice("talk")
 
 func _set_status(value: String, error: bool, success: bool = false) -> void:
-	status_label.text = value
+	status_label.text = LocaleManager.text(value)
 	if error:
 		status_panel.add_theme_stylebox_override("panel", _style("fee2e2", "dc2626"))
 		status_label.add_theme_color_override("font_color", Color("991b1b"))
@@ -1000,6 +1009,8 @@ func _confirm() -> void:
 
 # ---------------- Recorded Japanese voice and synchronized subtitles ----------------
 func _voice_path(kind: String) -> String:
+	if current_lang == "en":
+		return "res://Voice/en/stage1_%s.mp3" % kind
 	if current_lang == "jp":
 		match kind:
 			"talk": return "res://Talk.mp3"

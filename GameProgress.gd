@@ -16,7 +16,7 @@ static func _ensure_loaded() -> void:
 	if config.load(SAVE_PATH) == OK:
 		_stage1_cleared = bool(config.get_value("progress", "stage1_cleared", false))
 		var saved_lang: String = str(config.get_value("settings", "language", "jp"))
-		_language = saved_lang if saved_lang in ["jp", "mm"] else "jp"
+		_language = saved_lang if saved_lang in ["jp", "mm", "en"] else "jp"
 
 static func _save() -> void:
 	var config := ConfigFile.new()
@@ -32,10 +32,16 @@ static func get_language() -> String:
 
 static func set_language(lang: String) -> void:
 	_ensure_loaded()
-	if lang not in ["jp", "mm"]:
+	if lang not in ["jp", "mm", "en"]:
 		return
 	_language = lang
 	_save()
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("try { localStorage.setItem('kitchenLanguage',"+JSON.stringify(lang)+"); } catch(e) {}",true)
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree != null:
+		var manager := tree.root.get_node_or_null("LocaleManager")
+		if manager != null: manager.call("set_language",lang)
 
 static func is_level_unlocked(level: int) -> bool:
 	_ensure_loaded()
