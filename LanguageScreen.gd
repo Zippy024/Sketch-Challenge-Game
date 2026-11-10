@@ -41,20 +41,20 @@ func _ready() -> void:
 	_start_logo_motion()
 	var panel := Panel.new()
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	panel.add_theme_stylebox_override("panel", _style(Color(0.93,0.98,1.0,0.95),Color("d6fbff"),42,2))
-	_put(panel, Rect2(130, 313, 380, 234))
+	panel.add_theme_stylebox_override("panel", _style(Color("e8f4ff"),Color("8db9e2"),24,2))
+	_put(panel, Rect2(185, 330, 270, 142))
 	var title := Label.new()
 	title.text = "Select Language"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	var title_font := FontVariation.new()
 	title_font.base_font = get_theme_default_font()
 	title_font.variation_embolden = 0.3
 	title.add_theme_font_override("font",title_font)
-	title.add_theme_font_size_override("font_size",25)
+	title.add_theme_font_size_override("font_size",18)
 	title.add_theme_color_override("font_color",Color("09234c"))
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_put(title,Rect2(155,328,330,39))
+	_put(title,Rect2(205,339,230,25))
 	_dropdown = OptionButton.new()
 	_dropdown.name = "LanguageDropdown"
 	_dropdown.add_item("日本語",0)
@@ -63,46 +63,40 @@ func _ready() -> void:
 	_dropdown.set_item_disabled(2,true)
 	_dropdown.select(1 if Progress.get_language()=="mm" else 0)
 	_dropdown.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	_dropdown.add_theme_font_size_override("font_size",24)
+	_dropdown.add_theme_font_size_override("font_size",19)
 	for state in ["font_color","font_hover_color","font_pressed_color","font_hover_pressed_color","font_focus_color"]:
 		_dropdown.add_theme_color_override(state,Color("0b2853"))
 	for state in ["normal","hover","pressed"]:
-		var box := _style(Color("ffffff") if state=="normal" else Color("e2f7ff"),Color("89dcf3"),36,2)
-		box.set_content_margin_all(11)
+		var box := _style(Color("f4faff") if state=="normal" else Color("e4f4ff"),Color("81b8e7"),13,1)
+		box.set_content_margin_all(8)
 		_dropdown.add_theme_stylebox_override(state,box)
-	_dropdown.add_theme_stylebox_override("focus",_style(Color.TRANSPARENT,Color("00a9d2"),36,3))
+	_dropdown.add_theme_stylebox_override("focus",_style(Color.TRANSPARENT,Color("579fe2"),13,2))
 	var popup := _dropdown.get_popup()
 	popup.add_theme_stylebox_override("panel",_style(Color("ffffff"),Color("c2e8f5"),25,1))
 	var hover_row := _style(Color("269deb"),Color("269deb"),12,0)
 	hover_row.shadow_size = 0
 	popup.add_theme_stylebox_override("hover",hover_row)
-	popup.add_theme_font_size_override("font_size",24)
+	popup.add_theme_font_size_override("font_size",19)
 	popup.add_theme_color_override("font_color",Color("09234c"))
 	popup.add_theme_color_override("font_hover_color",Color.WHITE)
 	popup.add_theme_color_override("font_disabled_color",Color("9ba6b1"))
 	popup.add_theme_constant_override("v_separation",18)
 	popup.add_theme_constant_override("h_separation",16)
-	_put(_dropdown,Rect2(155,385,330,55))
+	_put(_dropdown,Rect2(205,370,230,39))
 	_continue = Button.new()
 	_continue.name = "LanguageContinue"
 	_continue.text = "Continue"
 	_continue.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	_continue.add_theme_font_size_override("font_size",25)
+	_continue.add_theme_font_size_override("font_size",19)
 	for state in ["font_color","font_hover_color","font_pressed_color","font_hover_pressed_color","font_focus_color"]:
 		_continue.add_theme_color_override(state,Color.WHITE)
-	var capsule := StyleBoxTexture.new()
-	capsule.texture = preload("res://LanguageAssets/Continue.svg")
-	capsule.texture_margin_left = 32
-	capsule.texture_margin_right = 32
-	capsule.texture_margin_top = 24
-	capsule.texture_margin_bottom = 24
-	capsule.set_content_margin_all(14)
-	_continue.add_theme_stylebox_override("normal",capsule)
-	_continue.add_theme_stylebox_override("hover",_style(Color("00a9be"),Color("b8ffff"),38,2))
-	_continue.add_theme_stylebox_override("pressed",_style(Color("005b79"),Color("73e6f7"),38,2))
-	_continue.add_theme_stylebox_override("focus",_style(Color.TRANSPARENT,Color("c5fcff"),38,3))
+	# Match the compact blue pill-style button in the supplied reference.
+	_continue.add_theme_stylebox_override("normal",_style(Color("1976be"),Color("83b9e8"),24,2))
+	_continue.add_theme_stylebox_override("hover",_style(Color("278bd2"),Color("9fd0f7"),24,2))
+	_continue.add_theme_stylebox_override("pressed",_style(Color("105b9f"),Color("83b9e8"),24,2))
+	_continue.add_theme_stylebox_override("focus",_style(Color.TRANSPARENT,Color("b3dfff"),24,2))
 	_continue.pressed.connect(_confirm)
-	_put(_continue,Rect2(155,457,330,65))
+	_put(_continue,Rect2(205,419,230,44))
 	_dropdown.item_selected.connect(func(_index: int) -> void: _continue.grab_focus())
 	resized.connect(_fit)
 	_fit()
