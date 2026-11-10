@@ -387,25 +387,26 @@ func _rich_label(font_size: int, color: String = "17233b") -> RichTextLabel:
 	return r
 
 func _modern_button_style(button: Button, kind: String = "secondary") -> void:
-	var backgrounds := {"primary": "2563eb", "secondary": "ffffff", "back": "dbeafe", "warning": "fff0d9"}
-	var borders := {"primary": "1d4ed8", "secondary": "93c5fd", "back": "93c5fd", "warning": "fdba74"}
-	var hovers := {"primary": "1d4ed8", "secondary": "eff6ff", "back": "bfdbfe", "warning": "ffedd5"}
-	var ink := "ffffff" if kind == "primary" else ("9a3412" if kind == "warning" else "1e40af")
+	var backgrounds := {"primary": "167e91", "secondary": "f4fbfc", "back": "e4f2f5", "warning": "fff3ee"}
+	var borders := {"primary": "75c4cb", "secondary": "aacfd9", "back": "98c5d0", "warning": "dba89d"}
+	var hovers := {"primary": "116f83", "secondary": "e3f3f7", "back": "d2eaf0", "warning": "ffe8e2"}
+	var ink := "ffffff" if kind == "primary" else ("934b42" if kind == "warning" else "214d62")
 	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
-		var style := StyleBoxFlat.new()
-		style.bg_color = Color(hovers.get(kind, "eff6ff")) if state in ["hover", "pressed"] else Color(backgrounds.get(kind, "ffffff"))
-		style.border_color = Color(borders.get(kind, "93c5fd"))
-		style.set_border_width_all(1)
-		style.set_corner_radius_all(10)
-		style.content_margin_left = 14
-		style.content_margin_right = 14
-		style.content_margin_top = 8
-		style.content_margin_bottom = 8
-		button.add_theme_stylebox_override(state, style)
+		var box := StyleBoxFlat.new()
+		box.bg_color = Color(hovers.get(kind, "e3f3f7")) if state in ["hover", "pressed"] else Color(backgrounds.get(kind, "f4fbfc"))
+		box.border_color = Color(borders.get(kind, "aacfd9"))
+		box.set_border_width_all(1)
+		box.set_corner_radius_all(12)
+		box.set_content_margin_all(8)
+		box.shadow_color = Color(0.04, 0.18, 0.27, 0.13)
+		box.shadow_size = 2
+		box.shadow_offset = Vector2(0, 2)
+		button.add_theme_stylebox_override(state, box)
 	for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_disabled_color"]:
 		button.add_theme_color_override(state, Color(ink))
 	button.add_theme_font_size_override("font_size", 14)
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+
 
 func _button(value: String, action: Callable, min_w: float = 80.0) -> Button:
 	var b: Button = Button.new()
@@ -445,23 +446,78 @@ func _try_load_image_file(path: String) -> Texture2D:
 		return ImageTexture.create_from_image(img)
 	return null
 
+# Stage 1 surfaces only. The drawing engine and answer rules are unchanged.
+func _stage1_surface(fill: Color, edge: Color, radius: int = 18, pad: int = 9) -> StyleBoxFlat:
+	var box := StyleBoxFlat.new()
+	box.bg_color = fill
+	box.border_color = edge
+	box.set_border_width_all(1)
+	box.set_corner_radius_all(radius)
+	box.set_content_margin_all(pad)
+	box.shadow_color = Color(0.02, 0.16, 0.23, 0.14)
+	box.shadow_size = 6
+	box.shadow_offset = Vector2(0, 3)
+	return box
+
+
 func _build_ui() -> void:
-	var base: PanelContainer = PanelContainer.new()
+	# Muted teal kitchen reference background from the existing language page.
+	var background := TextureRect.new()
+	background.name = "Stage1KitchenBackground"
+	background.texture = preload("res://MenuAssets/Modern Teal Kitchen with Warm Accents.png")
+	background.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	background.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(background)
+	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+	var muted_overlay := ColorRect.new()
+	muted_overlay.color = Color(0.06, 0.20, 0.26, 0.22)
+	muted_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(muted_overlay)
+	muted_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+	var base := PanelContainer.new()
 	add_child(base)
 	base.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	base.add_theme_stylebox_override("panel", _style("e9eef5"))
+	base.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	var screen_layout := VBoxContainer.new()
+	screen_layout.add_theme_constant_override("separation", 6)
+	base.add_child(screen_layout)
 
-	var margin: MarginContainer = MarginContainer.new()
+	var hud := PanelContainer.new()
+	hud.custom_minimum_size.y = 66
+	hud.add_theme_stylebox_override("panel", _stage1_surface(Color(0.06, 0.27, 0.35, 0.92), Color(0.43, 0.74, 0.80, 0.8), 12, 5))
+	screen_layout.add_child(hud)
+	var hud_row := HBoxContainer.new()
+	hud_row.add_theme_constant_override("separation", 15)
+	hud.add_child(hud_row)
+	var logo := TextureRect.new()
+	logo.texture = preload("res://LoadingAssets/KitchenLogo.webp")
+	logo.custom_minimum_size = Vector2(188, 52)
+	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hud_row.add_child(logo)
+	hud_row.add_child(VSeparator.new())
+	var title := _label("STAGE 1   |   LDK Boundary Drawing", 22, "eef9fb")
+	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title.autowrap_mode = TextServer.AUTOWRAP_OFF
+	hud_row.add_child(title)
+
+	var margin := MarginContainer.new()
 	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	for side in ["left", "right", "top", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 14)
-	base.add_child(margin)
+	margin.add_theme_constant_override("margin_left", 11)
+	margin.add_theme_constant_override("margin_right", 11)
+	margin.add_theme_constant_override("margin_top", 4)
+	margin.add_theme_constant_override("margin_bottom", 9)
+	screen_layout.add_child(margin)
 
-	var split: HSplitContainer = HSplitContainer.new()
+	var split := HSplitContainer.new()
 	split.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	split.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	split.split_offset = 490
+	split.split_offset = 445
 	margin.add_child(split)
 
 	# --- ဘယ်ဘက်ခြမ်း ---
