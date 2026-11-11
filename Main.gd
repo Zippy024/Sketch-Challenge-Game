@@ -134,8 +134,8 @@ class StaticCustomerAvatar extends TextureRect:
 shader_type canvas_item;
 render_mode blend_mix;
 
-uniform vec4 ring_color : source_color = vec4(0.47, 0.70, 1.0, 1.0);
-uniform float ring_width = 0.035;
+uniform vec4 ring_color : source_color = vec4(0.76, 0.88, 0.87, 1.0);
+uniform float ring_width = 0.025;
 
 void fragment() {
     vec2 p = UV - vec2(0.5);
@@ -248,7 +248,7 @@ func _ready() -> void:
 	voice_player.finished.connect(_on_voice_finished)
 	current_lang = Progress.get_language()
 	_build_ui()
-	speaker_name_label.text = "Tanaka san"
+	speaker_name_label.text = DIALOGUE_TEXTS[current_lang]["speaker"]
 	_apply_web_readability(self)
 	_update_lang_buttons_style()
 	if Progress.launch_from_level_menu:
@@ -390,20 +390,20 @@ func _rich_label(font_size: int, color: String = "17233b") -> RichTextLabel:
 	return r
 
 func _modern_button_style(button: Button, kind: String = "secondary") -> void:
-	var backgrounds := {"primary": "167e91", "secondary": "f4fbfc", "back": "e4f2f5", "warning": "fff3ee"}
-	var borders := {"primary": "75c4cb", "secondary": "aacfd9", "back": "98c5d0", "warning": "dba89d"}
-	var hovers := {"primary": "116f83", "secondary": "e3f3f7", "back": "d2eaf0", "warning": "ffe8e2"}
+	var backgrounds := {"primary": "187c80", "secondary": "f5f8f9", "back": "eaf2f3", "warning": "fff3ee"}
+	var borders := {"primary": "187c80", "secondary": "d5e2e5", "back": "b9d0d5", "warning": "dba89d"}
+	var hovers := {"primary": "12666b", "secondary": "e6f0f2", "back": "d8e9ec", "warning": "ffe8e2"}
 	var ink := "ffffff" if kind == "primary" else ("934b42" if kind == "warning" else "214d62")
 	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
 		var box := StyleBoxFlat.new()
 		box.bg_color = Color(hovers.get(kind, "e3f3f7")) if state in ["hover", "pressed"] else Color(backgrounds.get(kind, "f4fbfc"))
 		box.border_color = Color(borders.get(kind, "aacfd9"))
 		box.set_border_width_all(1)
-		box.set_corner_radius_all(12)
+		box.set_corner_radius_all(8)
 		box.set_content_margin_all(8)
-		box.shadow_color = Color(0.04, 0.18, 0.27, 0.13)
-		box.shadow_size = 2
-		box.shadow_offset = Vector2(0, 2)
+		if state == "focus":
+			box.border_color = Color("4c979e")
+			box.set_border_width_all(2)
 		button.add_theme_stylebox_override(state, box)
 	for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_disabled_color"]:
 		button.add_theme_color_override(state, Color(ink))
@@ -457,9 +457,9 @@ func _stage1_surface(fill: Color, edge: Color, radius: int = 18, pad: int = 9) -
 	box.set_border_width_all(1)
 	box.set_corner_radius_all(radius)
 	box.set_content_margin_all(pad)
-	box.shadow_color = Color(0.02, 0.16, 0.23, 0.14)
-	box.shadow_size = 6
-	box.shadow_offset = Vector2(0, 3)
+	box.shadow_color = Color(0.04, 0.15, 0.20, 0.035)
+	box.shadow_size = 2
+	box.shadow_offset = Vector2(0, 1)
 	return box
 
 
@@ -469,8 +469,8 @@ func _stage1_header_button(glyph: String) -> Button:
 	b.custom_minimum_size = Vector2(48, 45)
 	b.add_theme_font_size_override("font_size", 24)
 	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	var normal := _stage1_surface(Color(0.03, 0.31, 0.4, 0.84), Color(0.56, 0.88, 0.92), 17, 4)
-	var hover := _stage1_surface(Color(0.08, 0.44, 0.53), Color(0.76, 0.96, 0.98), 17, 4)
+	var normal := _stage1_surface(Color("204c55"), Color("436870"), 10, 4)
+	var hover := _stage1_surface(Color("315e67"), Color("95c3c7"), 10, 4)
 	b.add_theme_stylebox_override("normal", normal)
 	b.add_theme_stylebox_override("hover", hover)
 	b.add_theme_stylebox_override("pressed", hover)
@@ -539,40 +539,35 @@ func _stage1_toolbar_button(index: int, caption: String, action: Callable, activ
 
 
 func _build_ui() -> void:
-	# Muted teal kitchen reference background from the existing language page.
-	var background := TextureRect.new()
+	# A quiet studio surface keeps the plan and drawing grid in focus.
+	var background := ColorRect.new()
 	background.name = "Stage1KitchenBackground"
-	background.texture = preload("res://MenuAssets/Neon Wave Kitchen Bokeh Background.png")
-	background.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	background.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	background.color = Color("edf3f4")
 	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(background)
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-
-	var muted_overlay := ColorRect.new()
-	muted_overlay.color = Color(0.04, 0.15, 0.20, 0.06)
-	muted_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(muted_overlay)
-	muted_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 	var base := PanelContainer.new()
 	add_child(base)
 	base.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	base.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	var screen_layout := VBoxContainer.new()
-	screen_layout.add_theme_constant_override("separation", 5)
+	screen_layout.add_theme_constant_override("separation", 0)
 	base.add_child(screen_layout)
 
 	var hud := PanelContainer.new()
-	hud.custom_minimum_size.y = 76
-	hud.add_theme_stylebox_override("panel", _stage1_surface(Color(0.06, 0.27, 0.35, 0.92), Color(0.43, 0.74, 0.80, 0.8), 12, 5))
+	hud.custom_minimum_size.y = 72
+	var hud_style := _stage1_surface(Color("163f49"), Color("163f49"), 0, 10)
+	hud_style.content_margin_left = 22
+	hud_style.content_margin_right = 22
+	hud.add_theme_stylebox_override("panel", hud_style)
 	screen_layout.add_child(hud)
 	var hud_row := HBoxContainer.new()
-	hud_row.add_theme_constant_override("separation", 11)
+	hud_row.add_theme_constant_override("separation", 16)
 	hud.add_child(hud_row)
 	var logo := TextureRect.new()
 	logo.texture = preload("res://LoadingAssets/KitchenLogo.webp")
-	logo.custom_minimum_size = Vector2(196, 58)
+	logo.custom_minimum_size = Vector2(160, 50)
 	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -580,10 +575,10 @@ func _build_ui() -> void:
 	hud_row.add_child(VSeparator.new())
 
 	var stage_badge := PanelContainer.new()
-	stage_badge.add_theme_stylebox_override("panel", _stage1_surface(Color(0.03, 0.35, 0.43, 0.95), Color(0.46, 0.78, 0.84, 0.89), 24, 5))
+	stage_badge.add_theme_stylebox_override("panel", _stage1_surface(Color("2c5961"), Color("4a737a"), 9, 5))
 	hud_row.add_child(stage_badge)
-	var stage_text := _label("STAGE 1", 18, "ffffff")
-	stage_text.custom_minimum_size.x = 100
+	var stage_text := _label("STAGE 1", 16, "ffffff")
+	stage_text.custom_minimum_size.x = 88
 	stage_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	stage_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	stage_badge.add_child(stage_text)
@@ -593,7 +588,7 @@ func _build_ui() -> void:
 
 	_stage1_language_picker = OptionButton.new()
 	_stage1_language_picker.name = "Stage1LanguagePicker"
-	_stage1_language_picker.custom_minimum_size = Vector2(155, 49)
+	_stage1_language_picker.custom_minimum_size = Vector2(155, 46)
 	_stage1_language_picker.fit_to_longest_item = false
 	_stage1_language_picker.add_item("日本語", 0)
 	_stage1_language_picker.add_item("မြန်မာ", 1)
@@ -605,7 +600,7 @@ func _build_ui() -> void:
 	_stage1_language_picker.add_theme_font_size_override("font_size", 15)
 	for state in ["font_color","font_hover_color","font_pressed_color","font_focus_color"]:
 		_stage1_language_picker.add_theme_color_override(state, Color("17495a"))
-	var picker_style := _stage1_surface(Color("e9f7fc"), Color("82c8d6"), 15, 7)
+	var picker_style := _stage1_surface(Color("f3f9f9"), Color("c2d8da"), 10, 7)
 	for state in ["normal","hover","pressed","focus"]:
 		_stage1_language_picker.add_theme_stylebox_override(state, picker_style)
 	_stage1_language_picker.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
@@ -631,14 +626,14 @@ func _build_ui() -> void:
 	var margin := MarginContainer.new()
 	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	margin.add_theme_constant_override("margin_left", 11)
-	margin.add_theme_constant_override("margin_right", 11)
-	margin.add_theme_constant_override("margin_top", 5)
-	margin.add_theme_constant_override("margin_bottom", 12)
+	margin.add_theme_constant_override("margin_left", 20)
+	margin.add_theme_constant_override("margin_right", 20)
+	margin.add_theme_constant_override("margin_top", 18)
+	margin.add_theme_constant_override("margin_bottom", 18)
 	screen_layout.add_child(margin)
 
 	var split := HBoxContainer.new()
-	split.add_theme_constant_override("separation", 15)
+	split.add_theme_constant_override("separation", 18)
 	split.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	split.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	margin.add_child(split)
@@ -648,58 +643,54 @@ func _build_ui() -> void:
 	left_panel.custom_minimum_size.x = 0
 	left_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	left_panel.size_flags_stretch_ratio = 2.0
-	left_panel.add_theme_stylebox_override("panel", _stage1_surface(Color(0.67, 0.89, 0.95, 0.94), Color(0.51, 0.82, 0.92), 22, 13))
+	left_panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	split.add_child(left_panel)
 
 	var left: VBoxContainer = VBoxContainer.new()
-	left.add_theme_constant_override("separation", 9)
+	left.add_theme_constant_override("separation", 16)
 	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	left.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	left_panel.add_child(left)
 
-	var customer_heading := _label("Customer", 19, "153b5c")
-	customer_heading.custom_minimum_size.y = 33
-	customer_heading.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	left.add_child(customer_heading)
-
 	# Conversation Box
 	var chat_panel: PanelContainer = PanelContainer.new()
 	chat_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	chat_panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	chat_panel.size_flags_stretch_ratio = 1.14
-	chat_panel.custom_minimum_size.y = 248
-	chat_panel.add_theme_stylebox_override("panel", _stage1_surface(Color(0.78, 0.91, 0.97, 0.9), Color(0.64, 0.85, 0.93), 18, 10))
+	chat_panel.name = "Stage1CustomerCard"
+	chat_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	chat_panel.size_flags_stretch_ratio = 0.92
+	chat_panel.custom_minimum_size.y = 276
+	chat_panel.add_theme_stylebox_override("panel", _stage1_surface(Color("ffffff"), Color("d8e4e6"), 14, 18))
 	left.add_child(chat_panel)
 
-	var row: HBoxContainer = HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
+	var row := VBoxContainer.new()
+	row.add_theme_constant_override("separation", 14)
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	chat_panel.add_child(row)
 
 
-	# Portrait and short customer name tag are one neat vertical group.
-	var avatar_column := VBoxContainer.new()
+	# A compact identity row leaves the full card width for the request.
+	var avatar_column := HBoxContainer.new()
 	avatar_column.name = "Stage1CustomerPortrait"
-	avatar_column.custom_minimum_size.x = 116
-	avatar_column.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	avatar_column.add_theme_constant_override("separation", 8)
+	avatar_column.add_theme_constant_override("separation", 14)
 	row.add_child(avatar_column)
 
 	var avatar_holder := CenterContainer.new()
-	avatar_holder.custom_minimum_size = Vector2(114, 114)
+	avatar_holder.custom_minimum_size = Vector2(64, 64)
 	avatar_column.add_child(avatar_holder)
 	var avatar: StaticCustomerAvatar = StaticCustomerAvatar.new()
-	avatar.custom_minimum_size = Vector2(110, 110)
+	avatar.custom_minimum_size = Vector2(64, 64)
 	avatar_holder.add_child(avatar)
 
-	var name_plate := PanelContainer.new()
-	name_plate.name = "TanakaNameTag"
-	name_plate.add_theme_stylebox_override("panel", _stage1_surface(Color("eaf5fb"), Color("8dbdce"), 10, 5))
+	var name_plate := VBoxContainer.new()
+	name_plate.name = "Stage1CustomerIdentity"
+	name_plate.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_plate.alignment = BoxContainer.ALIGNMENT_CENTER
+	name_plate.add_theme_constant_override("separation", 3)
 	avatar_column.add_child(name_plate)
-	speaker_name_label = _label("Tanaka san", 14, "113e5e")
-	speaker_name_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	speaker_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_plate.add_child(_label("Customer", 13, "647d83"))
+	speaker_name_label = _label(DIALOGUE_TEXTS[current_lang]["speaker"], 19, "193f49")
+	speaker_name_label.name = "Stage1CustomerName"
 	speaker_name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	name_plate.add_child(speaker_name_label)
 
@@ -709,25 +700,25 @@ func _build_ui() -> void:
 	speech_stack.add_theme_constant_override("separation", 4)
 	row.add_child(speech_stack)
 
-	# Customer name is included at the top of the white speech bubble.
+	# The request is flat, with no nested panel shadows.
 	dialog_bubble = PanelContainer.new()
 	dialog_bubble.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	dialog_bubble.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	dialog_bubble.add_theme_stylebox_override("panel", _stage1_surface(Color("fcfeff"), Color("b6d9e5"), 17, 11))
+	dialog_bubble.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	speech_stack.add_child(dialog_bubble)
 
 	var bubble_vbox := VBoxContainer.new()
 	bubble_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bubble_vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	bubble_vbox.add_theme_constant_override("separation", 4)
+	bubble_vbox.add_theme_constant_override("separation", 8)
 	dialog_bubble.add_child(bubble_vbox)
 	# Compact readable Customer Request label above the chat text.
 	var request_header := PanelContainer.new()
 	request_header.name = "CustomerRequestHeader"
 	request_header.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	request_header.add_theme_stylebox_override("panel", _stage1_surface(Color("e3f2f9"), Color("9ecbd9"), 9, 5))
+	request_header.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	bubble_vbox.add_child(request_header)
-	var request_heading := _label("Customer Request", 15, "124660")
+	var request_heading := _label("Customer Request", 14, "287b80")
 	request_heading.autowrap_mode = TextServer.AUTOWRAP_OFF
 	request_heading.custom_minimum_size.y = 24
 	request_header.add_child(request_heading)
@@ -744,7 +735,7 @@ func _build_ui() -> void:
 	dialog_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	dialog_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	dialog_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	dialog_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
+	dialog_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	bubble_vbox.add_child(dialog_scroll)
 
 	var text_container: VBoxContainer = VBoxContainer.new()
@@ -753,7 +744,8 @@ func _build_ui() -> void:
 	text_container.add_theme_constant_override("separation", 8)
 	dialog_scroll.add_child(text_container)
 
-	request_label = _rich_label(16, "123550")
+	request_label = _rich_label(16, "344f59")
+	request_label.add_theme_constant_override("line_separation", 3)
 	text_container.add_child(request_label)
 
 	feedback_divider = ColorRect.new()
@@ -805,8 +797,8 @@ func _build_ui() -> void:
 	ref_title_btn.flat = true
 	ref_title_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	ref_title_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	ref_title_btn.add_theme_font_size_override("font_size", 19)
-	ref_title_btn.add_theme_color_override("font_color", Color("164c61"))
+	ref_title_btn.add_theme_font_size_override("font_size", 17)
+	ref_title_btn.add_theme_color_override("font_color", Color("193f49"))
 	ref_title_btn.add_theme_color_override("font_hover_color", Color("117489"))
 	ref_title_btn.pressed.connect(_open_reference_popup)
 	ref_title_btn.custom_minimum_size.y = 33
@@ -816,16 +808,17 @@ func _build_ui() -> void:
 	image_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	image_frame.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	image_frame.size_flags_stretch_ratio = 1.0
-	image_frame.custom_minimum_size.y = 268
+	image_frame.custom_minimum_size.y = 220
 
-	image_frame.add_theme_stylebox_override("panel", _stage1_surface(Color("ffffff"), Color("b5d5e0"), 15, 5))
+	image_frame.add_theme_stylebox_override("panel", _stage1_surface(Color("ffffff"), Color("e1e9eb"), 8, 4))
 	var reference_card := PanelContainer.new()
 	reference_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	reference_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	reference_card.add_theme_stylebox_override("panel", _stage1_surface(Color(0.75, 0.91, 0.97, 0.96), Color(0.61, 0.84, 0.92), 19, 9))
+	reference_card.name = "Stage1ReferenceCard"
+	reference_card.add_theme_stylebox_override("panel", _stage1_surface(Color("ffffff"), Color("d8e4e6"), 14, 14))
 	left.add_child(reference_card)
 	var ref_contents := VBoxContainer.new()
-	ref_contents.add_theme_constant_override("separation", 5)
+	ref_contents.add_theme_constant_override("separation", 10)
 	reference_card.add_child(ref_contents)
 	ref_contents.add_child(ref_title_btn)
 	ref_contents.add_child(image_frame)
@@ -844,11 +837,12 @@ func _build_ui() -> void:
 	right_panel.size_flags_stretch_ratio = 3.0
 	right_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	right_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	right_panel.add_theme_stylebox_override("panel", _stage1_surface(Color(0.78, 0.93, 0.97, 0.95), Color(0.52, 0.82, 0.92), 22, 12))
+	right_panel.name = "Stage1DrawingCard"
+	right_panel.add_theme_stylebox_override("panel", _stage1_surface(Color("ffffff"), Color("d8e4e6"), 14, 14))
 	split.add_child(right_panel)
 
 	var right: VBoxContainer = VBoxContainer.new()
-	right.add_theme_constant_override("separation", 7)
+	right.add_theme_constant_override("separation", 12)
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	right.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	right_panel.add_child(right)
@@ -861,26 +855,27 @@ func _build_ui() -> void:
 	var toolbar := HBoxContainer.new()
 	toolbar.name = "Stage1DrawingToolbar"
 	toolbar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	toolbar.add_theme_constant_override("separation", 13)
+	toolbar.add_theme_constant_override("separation", 10)
 	right.add_child(toolbar)
 
 	var tools_frame := PanelContainer.new()
 	tools_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	tools_frame.add_theme_stylebox_override("panel", _stage1_surface(Color("e3f2f9"), Color("b2d4e2"), 16, 6))
+	tools_frame.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	toolbar.add_child(tools_frame)
 	var tools_row := HBoxContainer.new()
 	tools_row.name = "Stage1SixToolGroup"
-	tools_row.add_theme_constant_override("separation", 7)
+	tools_row.add_theme_constant_override("separation", 6)
 	tools_frame.add_child(tools_row)
 
 	var add_tool := func(label_text: String, action: Callable, min_width: float, warning: bool = false) -> void:
 		var button := _button(label_text, action, min_width)
+		button.name = "Stage1Tool" + label_text.replace(" ", "")
 		button.custom_minimum_size.y = 43
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.clip_text = true
-		button.add_theme_font_size_override("font_size", 15)
-		var surface := _stage1_surface(Color("fff3f3") if warning else Color("fdfefe"), Color("d6a7b1") if warning else Color("b0d2df"), 13, 7)
-		var hover := _stage1_surface(Color("f7dfe3") if warning else Color("dceff8"), Color("cf8394") if warning else Color("7bbbd7"), 13, 7)
+		button.add_theme_font_size_override("font_size", 14)
+		var surface := _stage1_surface(Color("fff7f6") if warning else Color("f4f8f9"), Color("efd9d5") if warning else Color("dce6e8"), 8, 7)
+		var hover := _stage1_surface(Color("fbe8e5") if warning else Color("e4f0f1"), Color("dca79d") if warning else Color("9ec5c8"), 8, 7)
 		button.add_theme_stylebox_override("normal", surface)
 		button.add_theme_stylebox_override("hover", hover)
 		button.add_theme_stylebox_override("pressed", hover)
@@ -900,13 +895,13 @@ func _build_ui() -> void:
 	var reset_view_button := _button("Reset", _reset_view, 98)
 	reset_view_button.name = "Stage1ResetView"
 	reset_view_button.tooltip_text = "Reset drawing view (zoom and pan)"
-	reset_view_button.custom_minimum_size.y = 49
+	reset_view_button.custom_minimum_size = Vector2(82, 43)
 	reset_view_button.add_theme_font_size_override("font_size", 14)
 	reset_view_button.add_theme_color_override("font_color", Color("ffffff"))
 	reset_view_button.add_theme_color_override("font_hover_color", Color("ffffff"))
 	reset_view_button.add_theme_color_override("font_pressed_color", Color("ffffff"))
-	var reset_surface := _stage1_surface(Color("166b85"), Color("8bd3e2"), 16, 8)
-	var reset_hover := _stage1_surface(Color("0f536f"), Color("b0e7f2"), 16, 8)
+	var reset_surface := _stage1_surface(Color("315f69"), Color("315f69"), 8, 8)
+	var reset_hover := _stage1_surface(Color("204c56"), Color("204c56"), 8, 8)
 	reset_view_button.add_theme_stylebox_override("normal", reset_surface)
 	reset_view_button.add_theme_stylebox_override("hover", reset_hover)
 	reset_view_button.add_theme_stylebox_override("pressed", reset_hover)
@@ -915,7 +910,7 @@ func _build_ui() -> void:
 	var drawing_frame := PanelContainer.new()
 	drawing_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	drawing_frame.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	drawing_frame.add_theme_stylebox_override("panel", _stage1_surface(Color("ffffff"), Color("b6d8e4"), 17, 5))
+	drawing_frame.add_theme_stylebox_override("panel", _stage1_surface(Color("ffffff"), Color("dbe6e9"), 9, 5))
 	right.add_child(drawing_frame)
 	canvas = CanvasScript.new()
 	canvas.custom_minimum_size = Vector2(450, 350)
@@ -931,7 +926,7 @@ func _build_ui() -> void:
 
 	status_panel = PanelContainer.new()
 	status_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	status_panel.add_theme_stylebox_override("panel", _stage1_surface(Color("f6fbfd"), Color("b3d3dd"), 13, 6))
+	status_panel.add_theme_stylebox_override("panel", _stage1_surface(Color("f5f8f9"), Color("e2e9eb"), 8, 8))
 	footer.add_child(status_panel)
 
 	var status_row := HBoxContainer.new()
@@ -952,12 +947,14 @@ func _build_ui() -> void:
 	status_row.add_child(status_label)
 
 	var clear_button := _button("Reset", _clear)
+	clear_button.name = "Stage1ResetDrawing"
 	clear_button.custom_minimum_size = Vector2(90, 46)
 	footer.add_child(clear_button)
 	again_button_row.size_flags_horizontal = Control.SIZE_SHRINK_END
 	footer.add_child(again_button_row)
 	again_button.custom_minimum_size = Vector2(115, 46)
 	ok_button = _button("Check Answer", _confirm)
+	ok_button.name = "Stage1CheckAnswer"
 	ok_button.custom_minimum_size = Vector2(166, 46)
 	_modern_button_style(ok_button, "primary")
 	footer.add_child(ok_button)
@@ -985,7 +982,7 @@ func _switch_language(lang: String) -> void:
 	_stop_voice()
 	current_lang = lang
 	_update_lang_buttons_style()
-	speaker_name_label.text = "Tanaka san"
+	speaker_name_label.text = DIALOGUE_TEXTS[current_lang]["speaker"]
 	again_button.text = DIALOGUE_TEXTS[current_lang]["try_again"]
 	if last_eval_state == "correct":
 		request_label.visible = false
@@ -1119,7 +1116,7 @@ func _reveal_reference_after_talk() -> void:
 func _run_conversation() -> void:
 	if ref_viewer != null:
 		ref_viewer.modulate.a = 0.0
-	speaker_name_label.text = "Tanaka san"
+	speaker_name_label.text = DIALOGUE_TEXTS[current_lang]["speaker"]
 	is_drawing_started = true
 	conversation_finished = true
 	canvas.set_drawing_enabled(true)
@@ -1142,8 +1139,8 @@ func _set_status(value: String, error: bool, success: bool = false) -> void:
 		status_panel.add_theme_stylebox_override("panel", _stage1_surface(Color("edf7f1"), Color("95bfa7"), 13, 6))
 		status_label.add_theme_color_override("font_color", Color("14532d"))
 	else:
-		status_panel.add_theme_stylebox_override("panel", _stage1_surface(Color("f6fbfd"), Color("b3d3dd"), 13, 6))
-		status_label.add_theme_color_override("font_color", Color("17233b"))
+		status_panel.add_theme_stylebox_override("panel", _stage1_surface(Color("f5f8f9"), Color("e2e9eb"), 8, 8))
+		status_label.add_theme_color_override("font_color", Color("46616a"))
 
 func _on_drawing_status(message: String) -> void:
 	if is_drawing_started:
