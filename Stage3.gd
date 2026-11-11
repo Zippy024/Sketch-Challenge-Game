@@ -99,6 +99,7 @@ func _refresh() -> void:
 	customer.bubble.custom_minimum_size.y = 110
 	customer.voice.hide()
 	var brief := UI.card_stack(left,true)
+	if step>=2: brief.add_theme_constant_override("separation",5)
 	brief.add_child(UI.label("Mission brief",18,true))
 	brief.add_child(UI.label("Select the matching kitchen illustration." if step<2 else "Identify the kitchen components from the diagram.",15))
 	if step < 2:
@@ -266,13 +267,12 @@ func _draw_parts() -> void:
 	_answer_area.add_child(_label(LocaleManager.text("Select: %s") % LocaleManager.text(NAMES[needed]), 18, BLUE))
 	_answer_area.add_child(_label("Click the corresponding area in the kitchen illustration.", 13, SUBTEXT))
 	var diagram := KitchenDiagram.new()
-	diagram.custom_minimum_size = Vector2(450, 280)
+	diagram.custom_minimum_size = Vector2(450, 260)
 	diagram.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	diagram.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	diagram.name = "KitchenPartsDiagram"
 	diagram.item_selected.connect(_select_part)
 	_answer_area.add_child(diagram)
-	_answer_area.add_child(_label("Countertop · Kitchen board · Range hood · Half wall · Other fixtures", 13, SUBTEXT))
 
 
 func _select_part(which: int) -> void:

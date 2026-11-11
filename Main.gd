@@ -121,7 +121,7 @@ class ReferencePlanViewer extends Control:
 class StaticCustomerAvatar extends TextureRect:
 
 	func _init() -> void:
-		custom_minimum_size = Vector2(110, 110)
+		custom_minimum_size = Vector2(168, 168)
 		expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
@@ -403,13 +403,13 @@ func _compact_button_style(button: Button, warning: bool = false, primary: bool 
 		edge = "55cddd"
 		ink = "ffffff"
 	for state in ["normal", "hover", "pressed", "disabled"]:
-		var box := _stage1_surface(Color(fill), Color(edge), 7, 4)
+		var box := _stage1_surface(Color(fill), Color(edge), 17, 4)
 		if state in ["hover", "pressed"]: box.bg_color = box.bg_color.darkened(0.06 if state == "hover" else 0.12)
 		box.shadow_size = 0
 		box.content_margin_left = 8
 		box.content_margin_right = 8
 		button.add_theme_stylebox_override(state, box)
-	var focus := _stage1_surface(Color.TRANSPARENT, Color("258fc4"), 7, 0)
+	var focus := _stage1_surface(Color.TRANSPARENT, Color("258fc4"), 17, 0)
 	focus.set_border_width_all(2)
 	button.add_theme_stylebox_override("focus", focus)
 	for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
@@ -472,14 +472,11 @@ func _stage1_surface(fill: Color, edge: Color, radius: int = 18, pad: int = 9) -
 
 
 func _stage1_glass(variant: String = "panel", pad: int = 12) -> StyleBoxFlat:
-	var fill := Color("fff1f2") if variant == "danger" else (Color("f5faff") if variant == "speech" else Color(0.94,0.98,1,0.92))
+	var fill := Color("fff1f2") if variant == "danger" else (Color("eef9fc") if variant == "speech" else Color(0.94,0.98,1,0.82))
 	return UI.box(fill,Color("edb8c2") if variant == "danger" else (UI.EDGE if variant == "speech" else Color.WHITE),18,pad)
 
 func _stage1_bold(control: Control) -> void:
-	var font := FontVariation.new()
-	font.base_font = theme.default_font
-	font.variation_embolden = 0.6
-	control.add_theme_font_override("font", font)
+	control.add_theme_font_override("font",UI.font(true))
 
 
 func _stage1_header_button(glyph: String) -> Button:
@@ -604,7 +601,7 @@ func _build_ui() -> void:
 	chat_panel.name = "Stage1CustomerCard"
 	chat_panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	chat_panel.size_flags_stretch_ratio = 0.92
-	chat_panel.custom_minimum_size.y = 390
+	chat_panel.custom_minimum_size.y = 330
 	chat_panel.add_theme_stylebox_override("panel", _stage1_glass("customer", 14))
 	left.add_child(chat_panel)
 
@@ -621,17 +618,17 @@ func _build_ui() -> void:
 	var avatar_column := VBoxContainer.new()
 	avatar_column.name = "Stage1CustomerPortrait"
 	avatar_column.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	avatar_column.custom_minimum_size.x = 140
+	avatar_column.custom_minimum_size.x = 178
 	avatar_column.add_theme_constant_override("separation", 10)
 	customer_row.add_child(avatar_column)
 
 	var avatar_holder := CenterContainer.new()
 	# Match the 110 x 110 customer portrait used in Stage 2.
-	avatar_holder.custom_minimum_size = Vector2(110, 110)
+	avatar_holder.custom_minimum_size = Vector2(168, 168)
 	avatar_column.add_child(avatar_holder)
 	var avatar: StaticCustomerAvatar = StaticCustomerAvatar.new()
 	avatar.name = "Stage1CustomerAvatar"
-	avatar.custom_minimum_size = Vector2(110, 110)
+	avatar.custom_minimum_size = Vector2(168, 168)
 	avatar_holder.add_child(avatar)
 
 	var name_plate := PanelContainer.new()
@@ -667,7 +664,7 @@ func _build_ui() -> void:
 	heading_box.shadow_offset = Vector2(0,1)
 	request_header.add_theme_stylebox_override("panel", heading_box)
 	speech_stack.add_child(request_header)
-	var request_heading := _label("Customer Request", 16, "173b61")
+	var request_heading := _label("Customer Request", 18, "173b61")
 	_stage1_bold(request_heading)
 	request_heading.autowrap_mode = TextServer.AUTOWRAP_OFF
 	request_header.add_child(request_heading)
@@ -715,9 +712,7 @@ func _build_ui() -> void:
 	dialog_scroll.add_child(text_container)
 
 	request_label = _rich_label(16, "102c51")
-	var request_font := FontVariation.new()
-	request_font.base_font = theme.default_font
-	request_font.variation_embolden = 0.25
+	var request_font := UI.font(false)
 	request_label.add_theme_font_override("normal_font", request_font)
 	request_label.add_theme_constant_override("line_separation", 2)
 	text_container.add_child(request_label)
@@ -825,7 +820,7 @@ func _build_ui() -> void:
 	right.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	right_panel.add_child(right)
 
-	var drawing_heading := _label("Layout Drawing Area", 17, "163657")
+	var drawing_heading := _label("Layout Drawing Area", 21, "163657")
 	drawing_heading.name = "Stage1DrawingHeading"
 	right.add_child(drawing_heading)
 	var drawing_hint := _label("1 Small Grid = 100 mm (e.g., 1,000 mm = 10 grids) | Click points to draw (straight or angled) | Drag = Move", 12, "45617b")
@@ -852,16 +847,21 @@ func _build_ui() -> void:
 		button.name = "Stage1Tool" + label_text.replace(" ", "")
 		button.custom_minimum_size.y = 34
 		button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-		button.clip_text = true
+		button.clip_text = false
 		button.add_theme_font_size_override("font_size", 14)
-		_compact_button_style(button, warning)
+		_compact_button_style(button, false)
+		var kind: String = {"Undo":"undo","Redo":"redo","Delete Last":"layers","Delete":"trash","Zoom In":"zoom","Zoom Out":"zoomout"}[label_text]
+		button.icon = UI.icon(kind)
+		button.add_theme_color_override("icon_normal_color",UI.TEAL)
+		button.add_theme_color_override("icon_hover_color",UI.INK)
+		button.add_theme_constant_override("icon_max_width",16)
 		tools_row.add_child(button)
-	add_tool.call("Undo", _undo, 66)
-	add_tool.call("Redo", _redo, 66)
-	add_tool.call("Delete Last", _delete, 92, true)
-	add_tool.call("Delete", func() -> void: canvas.delete_selected_line(), 75, true)
-	add_tool.call("Zoom In", _zoom_in, 78)
-	add_tool.call("Zoom Out", _zoom_out, 79)
+	add_tool.call("Undo", _undo, 80)
+	add_tool.call("Redo", _redo, 80)
+	add_tool.call("Delete Last", _delete, 124, true)
+	add_tool.call("Delete", func() -> void: canvas.delete_selected_line(), 92, true)
+	add_tool.call("Zoom In", _zoom_in, 106)
+	add_tool.call("Zoom Out", _zoom_out, 116)
 
 	# Separate Reset control keeps its original reset-view (zoom/pan) behavior.
 	var reset_view_button := _button("Reset", _reset_view, 98)

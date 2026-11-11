@@ -50,7 +50,7 @@ jobs:
           godot --headless --path . --export-release Web "Web Game/${build_name}.html"
           mv "Web Game/${build_name}.html" "Web Game/index.html"
           mkdir -p "Web Game/assets"
-          cp "MenuAssets/Modern Teal Kitchen with Warm Accents (1).png" "Web Game/assets/loading-kitchen.png"
+          cp "LoadingAssets/BlueKitchen.png" "Web Game/assets/loading-kitchen.png"
           cp "LoadingAssets/KitchenLogo.webp" "Web Game/assets/game-logo.webp"
           test -s "Web Game/assets/loading-kitchen.png"
           test -s "Web Game/assets/game-logo.webp"
