@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="64" viewBox="0 0 192 64">
+<defs>
+<linearGradient id="body" x1="0%" y1="0%" x2="0%" y2="100%"><stop stop-color="#55e5f2"/><stop offset=".30" stop-color="#08a5bd"/><stop offset=".58" stop-color="#007d9b"/><stop offset=".84" stop-color="#00a9c2"/><stop offset="1" stop-color="#2cf3f4"/></linearGradient>
+<linearGradient id="shine" x1="0%" y1="0%" x2="0%" y2="100%"><stop stop-color="#fff" stop-opacity=".92"/><stop offset="1" stop-color="#fff" stop-opacity=".04"/></linearGradient>
+</defs>
+<rect x="6" y="6" width="180" height="52" rx="26" fill="none" stroke="#30f5ff" stroke-width="12" opacity=".16"/>
+<rect x="6" y="6" width="180" height="52" rx="26" fill="url(#body)" stroke="#038fa9" stroke-width="2"/>
+<rect x="9" y="9" width="174" height="46" rx="23" fill="none" stroke="#9affff" stroke-width="1.6"/>
+<path d="M32 11H160Q178 11 181 29H11Q14 11 32 11Z" fill="url(#shine)"/>
+<path d="M24 51Q16 48 13 40M31 54H159Q174 54 179 42" fill="none" stroke="#4bffff" stroke-width="1.6" opacity=".85"/>
+<path d="M34 9H151" stroke="#fff" stroke-width="2.3" stroke-linecap="round" opacity=".9"/>
+<path d="M164 12h9" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".9"/>
+</svg>

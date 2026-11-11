@@ -203,6 +203,23 @@ func _style_level_action(button: Button, font_size: int) -> void:
 	button.add_theme_constant_override("icon_max_width",21)
 	button.add_theme_constant_override("h_separation",8)
 
+
+func _style_level_play(button: Button) -> void:
+	_style_level_action(button,15 if Progress.get_language() == "mm" else 17)
+	for state in ["normal","hover","pressed"]:
+		var style := StyleBoxTexture.new()
+		style.texture = preload("res://MenuAssets/level-play-capsule.svg")
+		# Stretch only the middle horizontally; keep the full rounded end caps.
+		style.texture_margin_left = 36
+		style.texture_margin_right = 36
+		for side in [SIDE_LEFT,SIDE_RIGHT,SIDE_TOP,SIDE_BOTTOM]:
+			style.set_expand_margin(side,4)
+			style.set_content_margin(side,16 if side in [SIDE_LEFT,SIDE_RIGHT] else 2)
+		style.modulate_color = Color("cfffff") if state == "hover" else (Color("a8dce7") if state == "pressed" else Color.WHITE)
+		button.add_theme_stylebox_override(state,style)
+	button.add_theme_constant_override("icon_max_width",20)
+	button.add_theme_constant_override("h_separation",10)
+
 func _thumbnail(stage: int) -> Texture2D:
 	match stage:
 		1:return preload("res://reference_sketch.png")
@@ -295,10 +312,10 @@ func _card(stage: int, rect: Rect2) -> void:
 	if selected:
 		var play := _button("Play",false,16)
 		play.name="SelectedPlayButton"
-		_style_level_action(play,14 if Progress.get_language() == "mm" else 17)
+		_style_level_play(play)
 		play.icon = preload("res://MenuAssets/level-play.svg")
 		play.pressed.connect(func() -> void:stage_requested.emit(stage))
-		_put(card,play,Rect2(29,204,150,36))
+		_put(card,play,Rect2(26,200,156,40))
 	else:
 		var badge := Panel.new()
 		badge.name = "StageStatusBadge"
