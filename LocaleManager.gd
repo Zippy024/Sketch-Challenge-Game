@@ -1,6 +1,7 @@
 extends Node
 signal language_changed(language: String)
 const Catalog = preload("res://Localization/Messages.gd")
+const RedesignCatalog = preload("res://Localization/RedesignMessages.gd")
 const Progress = preload("res://GameProgress.gd")
 var language: String = "jp"
 var _index: Dictionary = {}
@@ -17,7 +18,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_space.compile(" +")
 	_slots.compile("%[-+0-9.]*[dsf]")
-	for row in Catalog.MESSAGES:
+	for row in Catalog.MESSAGES + RedesignCatalog.MESSAGES:
 		var sources: Array = [row.en,row.mm,row.jp]
 		sources.append_array(row.aliases)
 		for source in sources:

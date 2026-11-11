@@ -4,6 +4,7 @@ signal next_requested
 signal levels_requested
 signal replay_requested
 
+const UI = preload("res://KitchenUI.gd")
 const BG := Color(0.06, 0.12, 0.18, 0.35)
 const WHITE := Color("ffffff")
 const TEXT := Color("1f3c56")
@@ -57,19 +58,7 @@ func _label(text_value: String, size_value: int, color_value: Color = TEXT, cent
 	return l
 
 func _button(text_value: String, primary: bool = false) -> Button:
-	var b := Button.new()
-	b.text = LocaleManager.text(text_value)
-	b.custom_minimum_size = Vector2(150, 44)
-	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	b.add_theme_font_size_override("font_size", 14)
-	b.add_theme_color_override("font_color", WHITE if primary else TEXT)
-	b.add_theme_color_override("font_hover_color", WHITE if primary else GREEN_DARK)
-	b.add_theme_color_override("font_pressed_color", WHITE if primary else GREEN_DARK)
-	b.add_theme_stylebox_override("normal", _style(GREEN if primary else WHITE, GREEN if primary else OUTLINE, 12, 10))
-	b.add_theme_stylebox_override("hover", _style(GREEN_DARK if primary else GREEN_PALE, GREEN, 12, 10))
-	b.add_theme_stylebox_override("pressed", _style(GREEN_DARK if primary else GREEN_PALE, GREEN, 12, 10))
-	b.add_theme_stylebox_override("focus", _style(Color.TRANSPARENT, GREEN, 12, 0))
-	return b
+	return UI.button(text_value,Callable(),primary,150,14)
 
 func _build() -> void:
 	for child in get_children():
@@ -87,8 +76,9 @@ func _build() -> void:
 	add_child(center)
 
 	var card := PanelContainer.new()
-	card.custom_minimum_size = Vector2(420, 300)
-	card.add_theme_stylebox_override("panel", _style(WHITE, OUTLINE, 24, 24))
+	card.name = "MissionCompleteCard"
+	card.custom_minimum_size = Vector2(640, 430)
+	card.add_theme_stylebox_override("panel", UI.box(Color(0.97,0.99,1,0.97),Color.WHITE,24,24))
 	center.add_child(card)
 
 	var stack := VBoxContainer.new()
@@ -99,14 +89,19 @@ func _build() -> void:
 	var icon_circle := PanelContainer.new()
 	icon_circle.custom_minimum_size = Vector2(86, 86)
 	icon_circle.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	icon_circle.add_theme_stylebox_override("panel", _style(GREEN, GREEN, 43, 0))
+	icon_circle.add_theme_stylebox_override("panel", UI.box(UI.TEAL,UI.TEAL,43,0))
 	stack.add_child(icon_circle)
-	var check := _label("✓", 46, WHITE, true)
+	var check := _label("✓", 36, WHITE, true)
 	check.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	icon_circle.add_child(check)
 
 	stack.add_child(_label(title_text, 28, TEXT, true))
-	stack.add_child(_label(subtitle_text, 15, SUBTEXT, true))
+	stack.add_child(_label(subtitle_text, 16, SUBTEXT, true))
+	for criterion in ["Closed outline","Correct wall dimensions","Connected LDK area"]:
+		stack.add_child(UI.label("✓  "+UI.text(criterion),16,true,UI.TEAL))
+	var quote := UI.card_stack(stack)
+	quote.add_child(UI.label("Thank you! I can see the space clearly now.",16))
+	stack.add_child(UI.progress_strip())
 
 	var row := HBoxContainer.new()
 	row.alignment = BoxContainer.ALIGNMENT_CENTER

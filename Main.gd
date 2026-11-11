@@ -1,6 +1,7 @@
 extends Control
 
 const CanvasScript = preload("res://DrawingCanvas.gd")
+const UI = preload("res://KitchenUI.gd")
 const Progress = preload("res://GameProgress.gd")
 
 # Reference ပုံအမှန်ကို မူရင်းအတိုင်း ပြသပေးပြီး နှိပ်လိုက်ပါက ပုံအကြီး ချဲ့ကြည့်နိုင်သည့် Viewer
@@ -179,6 +180,7 @@ var start_button: Button
 var again_button_row: HBoxContainer
 var again_button: Button
 var stage_transition_running: bool = false
+var _reviewing_completed: bool = false
 var intro_overlay: ColorRect
 var game_has_started: bool = false
 var status_label: Label
@@ -265,7 +267,7 @@ func _ready() -> void:
 const BILINGUAL_THEME: Theme = preload("res://WebBilingualTheme.tres")
 
 func _setup_multilang_font() -> void:
-	theme = BILINGUAL_THEME
+	theme = UI.make_theme()
 
 func _show_intro_screen() -> void:
 	# Keep the game UI constructed underneath the intro screen.
@@ -390,23 +392,7 @@ func _rich_label(font_size: int, color: String = "17233b") -> RichTextLabel:
 	return r
 
 func _modern_button_style(button: Button, kind: String = "secondary") -> void:
-	var variant := "primary" if kind == "primary" else ("danger" if kind == "warning" else "button")
-	var ink := "ffffff" if kind == "primary" else ("b02146" if kind == "warning" else "083e66")
-	for state in ["normal", "hover", "pressed", "disabled"]:
-		var box := _stage1_glass(variant, 8)
-		box.modulate_color = Color("d6f7ff") if state == "hover" else (Color("b8dfef") if state == "pressed" else Color.WHITE)
-		if state == "disabled": box.modulate_color = Color(0.8, 0.85, 0.9, 0.7)
-		button.add_theme_stylebox_override(state, box)
-	var focus := _stage1_surface(Color.TRANSPARENT, Color("ffffff"), 20, 0)
-	focus.set_border_width_all(2)
-	button.add_theme_stylebox_override("focus", focus)
-	for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
-		button.add_theme_color_override(state, Color(ink))
-	button.add_theme_color_override("font_disabled_color", Color("6b8d9e"))
-	button.add_theme_font_size_override("font_size", 15)
-	_stage1_bold(button)
-	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-
+	UI.style_button(button,kind=="primary",14,kind=="warning")
 
 func _compact_button_style(button: Button, warning: bool = false, primary: bool = false) -> void:
 	var fill := "e8f1f8" if not warning else "ffe6e8"
@@ -485,25 +471,9 @@ func _stage1_surface(fill: Color, edge: Color, radius: int = 18, pad: int = 9) -
 	return box
 
 
-func _stage1_glass(variant: String = "panel", pad: int = 12) -> StyleBoxTexture:
-	var textures := {
-		"panel": preload("res://Stage1Assets/glass-panel.svg"),
-		"customer": preload("res://Stage1Assets/customer-card.svg"),
-		"button": preload("res://Stage1Assets/glass-button.svg"),
-		"danger": preload("res://Stage1Assets/glass-danger.svg"),
-		"primary": preload("res://Stage1Assets/glass-primary.svg"),
-		"speech": preload("res://Stage1Assets/glass-speech.svg")
-	}
-	var box := StyleBoxTexture.new()
-	box.texture = textures.get(variant, textures["panel"])
-	var corner := 36 if variant == "panel" else (26 if variant in ["speech", "customer"] else 24)
-	var glow := 10 if variant == "panel" else 3
-	for side in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
-		box.set_texture_margin(side, 20 if variant not in ["panel", "speech", "customer"] and side in [SIDE_TOP, SIDE_BOTTOM] else corner)
-		box.set_expand_margin(side, glow)
-		box.set_content_margin(side, pad)
-	return box
-
+func _stage1_glass(variant: String = "panel", pad: int = 12) -> StyleBoxFlat:
+	var fill := Color("fff1f2") if variant == "danger" else (Color("f5faff") if variant == "speech" else Color(0.94,0.98,1,0.92))
+	return UI.box(fill,Color("edb8c2") if variant == "danger" else (UI.EDGE if variant == "speech" else Color.WHITE),18,pad)
 
 func _stage1_bold(control: Control) -> void:
 	var font := FontVariation.new()
@@ -589,108 +559,14 @@ func _stage1_toolbar_button(index: int, caption: String, action: Callable, activ
 
 
 func _build_ui() -> void:
-	# Match the supplied blue glass reference with the original neon backdrop.
-	var background := TextureRect.new()
-	background.name = "Stage1KitchenBackground"
-	background.texture = preload("res://MenuAssets/Neon Wave Kitchen Bokeh Background.png")
-	background.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	background.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(background)
-	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-
-	var base := PanelContainer.new()
-	add_child(base)
-	base.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	base.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	UI.background(self)
 	var screen_layout := VBoxContainer.new()
-	screen_layout.add_theme_constant_override("separation", 0)
-	base.add_child(screen_layout)
-
-	var hud := PanelContainer.new()
-	hud.name = "Stage1Header"
-	hud.custom_minimum_size.y = 52
-	var hud_style := _stage1_surface(Color(0.0, 0.17, 0.26, 0.65), Color(0.31, 0.91, 1.0, 0.6), 0, 4)
-	hud_style.content_margin_left = 18
-	hud_style.content_margin_right = 18
-	hud_style.shadow_color = Color(0.0, 0.88, 1.0, 0.24)
-	hud_style.shadow_size = 5
-	hud.add_theme_stylebox_override("panel", hud_style)
+	add_child(screen_layout)
+	screen_layout.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	screen_layout.add_theme_constant_override("separation",0)
+	var hud := UI.header(1,"LDK Boundary Drawing",_open_game_menu,_switch_language)
 	screen_layout.add_child(hud)
-	var hud_row := HBoxContainer.new()
-	hud_row.add_theme_constant_override("separation", 12)
-	hud.add_child(hud_row)
-	var logo := TextureRect.new()
-	logo.name = "Stage1Logo"
-	logo.texture = preload("res://LoadingAssets/KitchenLogo.webp")
-	logo.custom_minimum_size = Vector2(132, 40)
-	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	hud_row.add_child(logo)
-	hud_row.add_child(VSeparator.new())
-
-	var stage_badge := PanelContainer.new()
-	stage_badge.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	stage_badge.add_theme_stylebox_override("panel", _stage1_surface(Color("085b75"), Color("4aafc6"), 9, 4))
-	hud_row.add_child(stage_badge)
-	var stage_text := _label("STAGE 1", 15, "ffffff")
-	_stage1_bold(stage_text)
-	stage_text.custom_minimum_size.x = 84
-	stage_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	stage_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	stage_badge.add_child(stage_text)
-	hud_row.add_child(VSeparator.new())
-	var mission_title := _label("LDK Boundary Drawing", 16, "ffffff")
-	mission_title.autowrap_mode = TextServer.AUTOWRAP_OFF
-	mission_title.clip_text = true
-	mission_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_stage1_bold(mission_title)
-	hud_row.add_child(mission_title)
-	var spacer := Control.new()
-	spacer.custom_minimum_size.x = 8
-	hud_row.add_child(spacer)
-
-	_stage1_language_picker = OptionButton.new()
-	_stage1_language_picker.name = "Stage1LanguagePicker"
-	_stage1_language_picker.custom_minimum_size = Vector2(118, 34)
-	_stage1_language_picker.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_stage1_language_picker.fit_to_longest_item = false
-	_stage1_language_picker.add_item("日本語", 0)
-	_stage1_language_picker.add_item("မြန်မာ", 1)
-	_stage1_language_picker.add_item("English", 2)
-	_stage1_language_picker.select({"jp":0, "mm":1, "en":2}.get(current_lang, 0))
-	_stage1_language_picker.text = _stage1_language_label(current_lang)
-	_stage1_language_picker.icon = _stage1_icon_texture(0)
-	_stage1_language_picker.add_theme_color_override("icon_normal_color", Color("16a4b5"))
-	_stage1_language_picker.add_theme_font_size_override("font_size", 12)
-	_stage1_language_picker.add_theme_constant_override("icon_max_width", 22)
-	for state in ["font_color","font_hover_color","font_pressed_color","font_focus_color"]:
-		_stage1_language_picker.add_theme_color_override(state, Color("17495a"))
-	var picker_style := _stage1_surface(Color("e8f5ff"), Color("a3d9ee"), 8, 4)
-	for state in ["normal","hover","pressed","focus"]:
-		_stage1_language_picker.add_theme_stylebox_override(state, picker_style)
-	_stage1_language_picker.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	_stage1_language_picker.item_selected.connect(func(index: int) -> void:
-		_switch_language(["jp","mm","en"][index])
-	)
-	hud_row.add_child(_stage1_language_picker)
-
-	var pause_button := _stage1_header_button("Ⅱ")
-	pause_button.name = "Stage1PauseButton"
-	pause_button.pressed.connect(_open_game_menu)
-	pause_button.tooltip_text = "Pause / Level Menu"
-	hud_row.add_child(pause_button)
-	var menu_button := _stage1_header_button("")
-	menu_button.icon = preload("res://Stage1Assets/menu-lines.svg")
-	menu_button.expand_icon = false
-	menu_button.add_theme_constant_override("icon_max_width", 21)
-	menu_button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	menu_button.name = "Stage1MenuButton"
-	menu_button.pressed.connect(_open_game_menu)
-	menu_button.tooltip_text = "Menu"
-	hud_row.add_child(menu_button)
-
+	_stage1_language_picker = hud.find_child("Stage1LanguagePicker",true,false)
 	var margin := MarginContainer.new()
 	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -728,7 +604,7 @@ func _build_ui() -> void:
 	chat_panel.name = "Stage1CustomerCard"
 	chat_panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	chat_panel.size_flags_stretch_ratio = 0.92
-	chat_panel.custom_minimum_size.y = 328
+	chat_panel.custom_minimum_size.y = 390
 	chat_panel.add_theme_stylebox_override("panel", _stage1_glass("customer", 14))
 	left.add_child(chat_panel)
 
@@ -817,6 +693,13 @@ func _build_ui() -> void:
 	_set_voice_icon(voice_stop_button, "pause")
 	voice_replay_button.tooltip_text = "Replay from beginning"
 	voice_stop_button.tooltip_text = "Pause / Resume"
+	var voice_controls := HBoxContainer.new()
+	voice_controls.add_theme_constant_override("separation",7)
+	speech_stack.add_child(voice_controls)
+	voice_controls.add_child(voice_replay_button)
+	voice_controls.add_child(UI.inline_label("Replay",12))
+	voice_controls.add_child(voice_stop_button)
+	voice_controls.add_child(UI.inline_label("Pause",12))
 
 	dialog_scroll = ScrollContainer.new()
 	dialog_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -831,7 +714,7 @@ func _build_ui() -> void:
 	text_container.add_theme_constant_override("separation", 8)
 	dialog_scroll.add_child(text_container)
 
-	request_label = _rich_label(15, "102c51")
+	request_label = _rich_label(16, "102c51")
 	var request_font := FontVariation.new()
 	request_font.base_font = theme.default_font
 	request_font.variation_embolden = 0.25
@@ -945,7 +828,7 @@ func _build_ui() -> void:
 	var drawing_heading := _label("Layout Drawing Area", 17, "163657")
 	drawing_heading.name = "Stage1DrawingHeading"
 	right.add_child(drawing_heading)
-	var drawing_hint := _label("1 Small Grid = 100 mm (e.g., 1,000 mm = 10 grids) | Click points to draw (straight or angled) | Drag = Move", 10, "45617b")
+	var drawing_hint := _label("1 Small Grid = 100 mm (e.g., 1,000 mm = 10 grids) | Click points to draw (straight or angled) | Drag = Move", 12, "45617b")
 	drawing_hint.name = "Stage1DrawingHint"
 	right.add_child(drawing_hint)
 	# Compact tools grouped together; each callback retains its original function.
@@ -1036,6 +919,9 @@ func _build_ui() -> void:
 	clear_button.add_theme_constant_override("icon_max_width", 18)
 	clear_button.custom_minimum_size = Vector2(78, 34)
 	_compact_button_style(clear_button)
+	var hint := UI.button("Hint",func(): _set_status("Trace only the connected LDK area. Check each wall length and close the outline.",false),false,55,12)
+	hint.name = "Stage1Hint"
+	footer.add_child(hint)
 	footer.add_child(clear_button)
 	again_button_row.size_flags_horizontal = Control.SIZE_SHRINK_END
 	footer.add_child(again_button_row)
@@ -1260,6 +1146,9 @@ func _on_start_pressed() -> void:
 	_set_status("Drawing started! Click points on the grid to draw the layout.", false)
 
 func _reset_feedback_ui() -> void:
+	_reviewing_completed = false
+	stage_transition_running = false
+	ok_button.text = UI.text("Check Answer")
 	last_eval_state = "none"
 	request_label.visible = true
 	request_label.text = DIALOGUE_TEXTS[current_lang]["request"]
@@ -1279,6 +1168,10 @@ func _on_again_pressed() -> void:
 	_set_status("Canvas cleared. Please draw the layout again.", false)
 
 func _confirm() -> void:
+	if _reviewing_completed:
+		_stop_voice()
+		get_tree().change_scene_to_file("res://stage_2.tscn")
+		return
 	if not conversation_finished or not is_drawing_started:
 		return
 	ok_button.disabled = true
@@ -1445,6 +1338,13 @@ func _set_voice_icon(button: Button, icon_name: String) -> void:
 	button.text = ""
 	button.icon = tex
 	button.expand_icon = true
+	button.custom_minimum_size = Vector2(30,30)
+	button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	button.add_theme_constant_override("icon_max_width",18)
+	for state in ["normal","hover","pressed"]:
+		var compact := UI.box(Color("eff8ff"),UI.EDGE,15,4)
+		compact.shadow_size = 0
+		button.add_theme_stylebox_override(state,compact)
 	button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
 func _stop_voice() -> void:
@@ -1488,34 +1388,29 @@ func _start_auto_stage_transition() -> void:
 	if stage_transition_running or last_eval_state != "correct" or not is_inside_tree():
 		return
 	stage_transition_running = true
-	_set_status("Stage 2 is starting automatically...", false, true)
+	_set_status("Stage 1 complete. Continue when you are ready.", false, true)
 	_run_stage_transition()
 
 func _run_stage_transition() -> void:
-	# Keep the customer response visible briefly, then fade to Stage 2.
-	await get_tree().create_timer(0.75, false).timeout
-	if not is_inside_tree() or last_eval_state != "correct":
+	var overlay := preload("res://StageCompleteOverlay.gd").new()
+	overlay.name = "Stage1CompleteOverlay"
+	overlay.configure("Stage 1 complete!","The LDK boundary matches the reference plan.","Continue to Stage 2","View Levels","Review drawing",true,true)
+	overlay.next_requested.connect(func():
+		_stop_voice()
+		get_tree().change_scene_to_file("res://stage_2.tscn")
+	)
+	overlay.levels_requested.connect(func():
+		Progress.show_levels_on_open = true
+		get_tree().change_scene_to_file("res://GameMenu.tscn")
+	)
+	overlay.replay_requested.connect(func():
+		overlay.queue_free()
 		stage_transition_running = false
-		return
-	var fade := ColorRect.new()
-	fade.color = Color(0.91, 0.95, 1.0, 0.0)
-	fade.mouse_filter = Control.MOUSE_FILTER_STOP
-	fade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(fade)
-	fade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var tween := create_tween()
-	tween.tween_property(fade, "color:a", 1.0, 0.65).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	await tween.finished
-	if not is_inside_tree():
-		return
-	_stop_voice()
-	var result: Error = get_tree().change_scene_to_file("res://stage_2.tscn")
-	if result != OK:
-		push_error("Cannot open res://stage_2.tscn")
-		stage_transition_running = false
-		fade.queue_free()
+		_reviewing_completed = true
+		ok_button.text = UI.text("Continue to Stage 2")
+	)
+	add_child(overlay)
 
-# Subtle outlined control, matching the level selector without a solid grey block.
 func _make_levels_menu_button() -> Button:
 	var btn := Button.new()
 	btn.text = "LEVELS"

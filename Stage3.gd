@@ -1,7 +1,8 @@
 extends Control
 
 # Stage 3 only: two image-choice questions followed by five kitchen-part selections.
-# The previous stages, AI code, audio assets, and the existing menu visuals are unchanged.
+# Two layout questions and five components; completion is saved only after all seven checks.
+const UI = preload("res://KitchenUI.gd")
 const Progress = preload("res://GameProgress.gd")
 const UI_THEME: Theme = preload("res://WebBilingualTheme.tres")
 const PORTRAIT: Texture2D = preload("res://customer_portrait_ui.png")
@@ -11,8 +12,8 @@ const BG := Color("e9eef5")
 const PANEL := Color("f1f5f9")
 const TEXT := Color("1f3c56")
 const SUBTEXT := Color("6b7f98")
-const BLUE := Color("2563eb")
-const GREEN := Color("15803d")
+const BLUE := Color("008f98")
+const GREEN := Color("008f98")
 const OUTLINE := Color("d6e2ef")
 const NAMES: Array[String] = ["カウンター", "キッチンボード", "フード", "腰壁", "その他"]
 const EN_PARTS: Array[String] = ["Countertop", "Kitchen board", "Range hood", "Half wall", "Other fixtures"]
@@ -29,7 +30,7 @@ var _card_texture_cache: Dictionary = {}
 
 
 func _ready() -> void:
-	theme = UI_THEME
+	theme = UI.make_theme()
 	current_lang = Progress.get_language()
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_refresh()
@@ -56,18 +57,7 @@ func _label(t: String, font_size: int = 17, color: Color = TEXT, wrap_text: bool
 
 
 func _btn(t: String, main: bool = false, w: float = 92.0) -> Button:
-	var b := Button.new()
-	b.text = LocaleManager.text(t)
-	b.custom_minimum_size = Vector2(w, 36)
-	b.add_theme_font_size_override("font_size", 12)
-	b.add_theme_color_override("font_color", Color.WHITE if main else BLUE)
-	b.add_theme_color_override("font_hover_color", Color.WHITE if main else BLUE)
-	b.add_theme_stylebox_override("normal", _style(BLUE if main else Color.WHITE, BLUE if main else OUTLINE))
-	b.add_theme_stylebox_override("hover", _style(Color("1d4ed8") if main else Color("e7f0ff"), BLUE))
-	b.add_theme_stylebox_override("pressed", _style(Color("1d4ed8") if main else Color("e7f0ff"), BLUE))
-	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	return b
-
+	return UI.button(t,Callable(),main,int(w),14)
 
 func _panel() -> PanelContainer:
 	var p := PanelContainer.new()
@@ -83,173 +73,79 @@ func _clear() -> void:
 
 func _refresh() -> void:
 	_clear()
-	var background := PanelContainer.new()
-	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	background.add_theme_stylebox_override("panel", _style(BG, BG, 0))
-	add_child(background)
-	var frame := HBoxContainer.new()
-	frame.add_theme_constant_override("separation", 14)
-	background.add_child(frame)
-	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	frame.offset_left = 15
-	frame.offset_right = -15
-	frame.offset_top = 15
-	frame.offset_bottom = -15
-	var left := _panel()
-	left.custom_minimum_size.x = 450
+	if step >= 7:
+		var results := preload("res://ResultsScreen.gd").new()
+		results.levels_requested.connect(_go_levels)
+		results.replay_requested.connect(func():
+			step = 0
+			last_wrong = false
+			_refresh()
+		)
+		results.home_requested.connect(func(): get_tree().change_scene_to_file("res://GameMenu.tscn"))
+		add_child(results)
+		return
+	var page := UI.page(self,3,"S-Class Kitchen Selection",_open_game_menu,_change_lang)
+	var split := HBoxContainer.new()
+	split.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	split.add_theme_constant_override("separation",18)
+	page.add_child(split)
+	var left := VBoxContainer.new()
 	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	left.size_flags_stretch_ratio = 0.38
-	frame.add_child(left)
-	var left_pad := MarginContainer.new()
-	left_pad.add_theme_constant_override("margin_left", 13)
-	left_pad.add_theme_constant_override("margin_right", 13)
-	left_pad.add_theme_constant_override("margin_top", 12)
-	left_pad.add_theme_constant_override("margin_bottom", 12)
-	left.add_child(left_pad)
-	var contents := VBoxContainer.new()
-	contents.add_theme_constant_override("separation", 12)
-	left_pad.add_child(contents)
-	var header := HBoxContainer.new()
-	header.add_theme_constant_override("separation", 6)
-	contents.add_child(header)
-	var heading := _label("STAGE 3", 19, TEXT, false)
-	heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header.add_child(heading)
-	var jp := _btn("日本語", false, 62)
-	var mm := _btn("မြန်မာ", false, 64)
-	var en := _btn("English",false,64)
-	var levels := _btn("LEVELS", false, 72)
-	levels.icon=preload("res://MenuAssets/BackArrow.svg")
-	levels.add_theme_color_override("icon_normal_color",Color("297b62"))
-	levels.add_theme_color_override("icon_hover_color",Color("297b62"))
-	levels.add_theme_stylebox_override("normal", _style(Color("f8fcfa"), Color("a5d6bc"), 10))
-	levels.add_theme_stylebox_override("hover", _style(Color("e6f5ee"), Color("82c6a5"), 10))
-	levels.add_theme_color_override("font_color", Color("297b62"))
-	levels.add_theme_color_override("font_hover_color", Color("297b62"))
-	for button in [jp, mm, en, levels]:
-		button.custom_minimum_size.y = 36
-		header.add_child(button)
-	jp.pressed.connect(_change_lang.bind("jp"))
-	mm.pressed.connect(_change_lang.bind("mm"))
-	en.pressed.connect(_change_lang.bind("en"))
-	levels.pressed.connect(_open_game_menu)
-	for pair in [[jp, "jp"], [mm, "mm"], [en,"en"]]:
-		var button: Button = pair[0]
-		if current_lang == pair[1]:
-			button.add_theme_stylebox_override("normal", _style(BLUE, BLUE))
-			button.add_theme_color_override("font_color", Color.WHITE)
-	var customer := _panel()
-	customer.custom_minimum_size.y = 230
-	customer.add_theme_stylebox_override("panel", _style(Color("e1e9f5")))
-	contents.add_child(customer)
-	var customer_row := HBoxContainer.new()
-	customer_row.add_theme_constant_override("separation", 12)
-	customer.add_child(customer_row)
-	var face := TextureRect.new()
-	face.texture = PORTRAIT
-	face.custom_minimum_size = Vector2(110, 110)
-	face.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	face.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
-	var avatar_shader := Shader.new()
-	avatar_shader.code = """
-shader_type canvas_item;
-uniform vec4 ring_color : source_color = vec4(0.47, 0.70, 1.0, 1.0);
-uniform float ring_width = 0.035;
-void fragment() {
- vec2 p = UV - vec2(0.5);
- float d = length(p);
- float aa = max(fwidth(d), 0.001);
- float a = 1.0 - smoothstep(0.5-aa,0.5+aa,d);
- vec4 t = texture(TEXTURE,UV);
- float ring = smoothstep(0.5-ring_width-aa,0.5-ring_width+aa,d);
- COLOR = vec4(mix(t.rgb,ring_color.rgb,ring), t.a*a);
-}
-"""
-	var avatar_mat := ShaderMaterial.new()
-	avatar_mat.shader = avatar_shader
-	face.material = avatar_mat
-	face.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	face.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	customer_row.add_child(face)
-	var talk_card := _panel()
-	talk_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	talk_card.add_theme_stylebox_override("panel", _style(Color.WHITE))
-	customer_row.add_child(talk_card)
-	var talk_pad := MarginContainer.new()
-	for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
-		talk_pad.add_theme_constant_override(side, 12)
-	talk_card.add_child(talk_pad)
-	_left_dialogue = VBoxContainer.new()
-	_left_dialogue.add_theme_constant_override("separation", 9)
-	talk_pad.add_child(_left_dialogue)
-	_left_dialogue.add_child(_label("細川さん（女性）" if current_lang == "jp" else "ဟိုဆိုကာဝါစံ (Customer)", 16, BLUE))
-	_left_dialogue.add_child(_label("CUSTOMER QUESTION", 12, SUBTEXT, false))
-	_left_dialogue.add_child(_label(_question_text(), 16))
-	var info := _panel()
-	info.add_theme_stylebox_override("panel", _style(Color.WHITE))
-	contents.add_child(info)
-	var info_pad := MarginContainer.new()
-	for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
-		info_pad.add_theme_constant_override(side, 13)
-	info.add_child(info_pad)
-	var info_col := VBoxContainer.new()
-	info_col.add_theme_constant_override("separation", 9)
-	info_pad.add_child(info_col)
-	info_col.add_child(_label("STAGE 3 / PART %s" % ("1" if step < 2 else "2"), 17, BLUE, false))
-	info_col.add_child(_label("S-CLASS KITCHEN TRAINING", 14, TEXT, false))
-	info_col.add_child(_label("Select the matching kitchen illustration." if step < 2 else "Identify the kitchen components from the diagram.", 13, SUBTEXT))
-	var right := _panel()
-	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	right.size_flags_stretch_ratio = 0.62
-	frame.add_child(right)
-	var right_margin := MarginContainer.new()
-	for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
-		right_margin.add_theme_constant_override(side, 16)
-	right.add_child(right_margin)
-	var right_col := VBoxContainer.new()
-	right_col.add_theme_constant_override("separation", 11)
-	right_margin.add_child(right_col)
-	right_col.add_child(_label("Kitchen Selection" if step < 2 else "Kitchen Parts", 23, TEXT, false))
-	right_col.add_child(_label(("QUESTION %d / 2" % (step + 1)) if step < 2 else ("PARTS  %d / 5" % (step - 1) if step < 7 else "STAGE 3 COMPLETED"), 12, SUBTEXT, false))
-	_answer_area = VBoxContainer.new()
-	_answer_area.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_answer_area.add_theme_constant_override("separation", 12)
-	right_col.add_child(_answer_area)
+	left.size_flags_stretch_ratio = 7
+	left.add_theme_constant_override("separation",12)
+	split.add_child(left)
+	var customer := UI.customer(left)
+	customer.question.text = _question_text()
+	customer.bubble.custom_minimum_size.y = 110
+	customer.voice.hide()
+	var brief := UI.card_stack(left,true)
+	brief.add_child(UI.label("Mission brief",18,true))
+	brief.add_child(UI.label("Select the matching kitchen illustration." if step<2 else "Identify the kitchen components from the diagram.",15))
 	if step < 2:
-		_draw_choices()
-	elif step < 7:
-		_draw_parts()
+		var plan := TextureRect.new()
+		plan.texture = preload("res://reference_sketch.png")
+		plan.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		plan.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		plan.custom_minimum_size.y = 145
+		plan.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		brief.add_child(plan)
 	else:
-		_draw_completed()
-	_feedback = _label("", 15, GREEN, false)
-	_feedback.custom_minimum_size.y = 30
-	right_col.add_child(_feedback)
-	if last_wrong:
-		_feedback.text = "ちょっと違うようです。もう一度選んでください。" if current_lang == "jp" else "မမှန်သေးပါ။ ပြန်ရွေးပါ။"
-		_feedback.add_theme_color_override("font_color", Color("c24144"))
-	var progress_panel := PanelContainer.new()
-	progress_panel.add_theme_stylebox_override("panel", _style(Color.WHITE, OUTLINE, 13))
-	right_col.add_child(progress_panel)
-	var progress_box := VBoxContainer.new()
-	progress_box.add_theme_constant_override("separation", 8)
-	progress_panel.add_child(progress_box)
-	var progress_title := HBoxContainer.new()
-	progress_box.add_child(progress_title)
-	progress_title.add_child(_label("CHALLENGE PROGRESS", 13, SUBTEXT, false))
-	var spacer := Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	progress_title.add_child(spacer)
-	progress_title.add_child(_label("%d / 7" % mini(step, 7), 13, GREEN, false))
+		brief.add_child(UI.label("Parts checklist",16,true))
+		for i in range(5):
+			brief.add_child(UI.label(("✓  " if i<step-2 else "○  ")+UI.text(EN_PARTS[i]),15,i==step-2,UI.TEAL if i<=step-2 else UI.MUTED))
+		brief.add_child(UI.button("Hint",func():
+			_feedback.text = UI.text(["Find the work surface above the base cabinets.","Look for the storage cabinets above the work surface.","Find the extractor above the cooktop.","Look for the low wall in front of the kitchen.","Find the tall fixture at the side of the kitchen."][step-2])
+			_feedback.add_theme_color_override("font_color",UI.TEAL)
+		,false,100))
+	var right := UI.card_stack(split,true)
+	right.get_parent().size_flags_stretch_ratio = 13
+	right.add_child(UI.label("Kitchen Selection" if step<2 else "Kitchen Parts",25,true))
+	right.add_child(UI.label(UI.text("Question %d of 2")%(step+1) if step<2 else UI.text("Part %d of 5")%(step-1),14,false,UI.MUTED))
+	_answer_area = VBoxContainer.new()
+	_answer_area.add_theme_constant_override("separation",14)
+	_answer_area.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	right.add_child(_answer_area)
+	if step<2: _draw_choices()
+	else: _draw_parts()
+	_feedback = UI.label("Please try another choice." if last_wrong else "",15,false,Color("b32741") if last_wrong else UI.TEAL)
+	_feedback.custom_minimum_size.y = 28
+	right.add_child(_feedback)
+	var progress := HBoxContainer.new()
+	progress.add_theme_constant_override("separation",12)
+	right.add_child(progress)
+	progress.add_child(UI.inline_label("Challenge progress",14,true))
 	_progress_bar = ProgressBar.new()
-	_progress_bar.custom_minimum_size.y = 9
-	_progress_bar.min_value = 0
+	_progress_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_progress_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_progress_bar.custom_minimum_size.y = 10
 	_progress_bar.max_value = 7
 	_progress_bar.value = step
 	_progress_bar.show_percentage = false
-	_progress_bar.add_theme_stylebox_override("background", _style(Color("dce6f2"), Color("dce6f2"), 5))
-	_progress_bar.add_theme_stylebox_override("fill", _style(GREEN, GREEN, 5))
-	progress_box.add_child(_progress_bar)
-
+	_progress_bar.add_theme_stylebox_override("background",UI.box(Color("d7e6ed"),Color.TRANSPARENT,5,0))
+	_progress_bar.add_theme_stylebox_override("fill",UI.box(UI.TEAL,Color.TRANSPARENT,5,0))
+	progress.add_child(_progress_bar)
+	progress.add_child(UI.inline_label("%d / 7"%step,14,true))
+	page.add_child(UI.progress_strip())
 
 func _question_text() -> String:
 	if step == 0:
@@ -301,7 +197,7 @@ func _draw_choices() -> void:
 	var cards := GridContainer.new()
 	# Desktop: all the choices on one row. Small windows wrap rather than scroll sideways.
 	var viewport_width: float = get_viewport_rect().size.x
-	cards.columns = labels.size() if viewport_width >= 1320.0 else mini(3, labels.size())
+	cards.columns = labels.size() if viewport_width >= 1100.0 else mini(3, labels.size())
 	cards.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	cards.add_theme_constant_override("h_separation", 11)
 	cards.add_theme_constant_override("v_separation", 12)
@@ -315,8 +211,9 @@ func _draw_choices() -> void:
 		option.add_theme_stylebox_override("normal", _style(Color.WHITE, OUTLINE, 9))
 		option.add_theme_stylebox_override("hover", _style(Color("f9fbfd"), Color("b5c6d9"), 9))
 		option.add_theme_stylebox_override("pressed", _style(Color("f7faff"), Color("b5c6d9"), 9))
-		option.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
-		option.focus_mode = Control.FOCUS_NONE
+		option.add_theme_stylebox_override("focus",UI.box(Color.TRANSPARENT,UI.TEAL,12,0))
+		option.focus_mode = Control.FOCUS_ALL
+		option.name = "KitchenChoice%d" % i
 		option.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		cards.add_child(option)
 
@@ -355,6 +252,7 @@ func _choose(index: int) -> void:
 	var correct_index: int = 2 if step == 0 else 1
 	if index == correct_index:
 		step += 1
+		if step == 7: Progress.complete(3)
 		last_wrong = false
 		_refresh()
 	else:
@@ -368,9 +266,10 @@ func _draw_parts() -> void:
 	_answer_area.add_child(_label(LocaleManager.text("Select: %s") % LocaleManager.text(NAMES[needed]), 18, BLUE))
 	_answer_area.add_child(_label("Click the corresponding area in the kitchen illustration.", 13, SUBTEXT))
 	var diagram := KitchenDiagram.new()
-	diagram.custom_minimum_size = Vector2(560, 355)
+	diagram.custom_minimum_size = Vector2(450, 280)
 	diagram.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	diagram.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	diagram.name = "KitchenPartsDiagram"
 	diagram.item_selected.connect(_select_part)
 	_answer_area.add_child(diagram)
 	_answer_area.add_child(_label("Countertop · Kitchen board · Range hood · Half wall · Other fixtures", 13, SUBTEXT))
@@ -379,6 +278,7 @@ func _draw_parts() -> void:
 func _select_part(which: int) -> void:
 	if which == step - 2:
 		step += 1
+		if step == 7: Progress.complete(3)
 		last_wrong = false
 		_refresh()
 	else:
@@ -442,12 +342,13 @@ func _resume_from_game_menu() -> void:
 
 class KitchenDiagram extends Control:
 	signal item_selected(which: int)
-	var zones: Array[Rect2] = []
+	var zones: Array[Rect2] = [Rect2(89,181,445,44),Rect2(205,77,323,94),Rect2(100,70,99,68),Rect2(88,260,488,58),Rect2(531,161,58,150)]
 	var tip_colors: Array[Color] = [Color("72bbdf"), Color("c2d7e7"), Color("8ba6c5"), Color("d4c4b1"), Color("f3d8ab")]
 
 	func _ready() -> void:
 		mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		mouse_filter = Control.MOUSE_FILTER_STOP
+		resized.connect(queue_redraw)
 
 	func _draw() -> void:
 		# A deliberately simple schematic, not a substituted 3D model asset.
@@ -487,17 +388,20 @@ class KitchenDiagram extends Control:
 		for center in [Vector2(156,208),Vector2(186,208)]:
 			draw_arc(center,9,0,TAU,20,Color("64798e"),2)
 		# clickable outlines identify the five conceptual elements.
-		zones = [Rect2(89,181,445,44),Rect2(205,77,323,94),Rect2(100,70,99,68),Rect2(88,260,488,58),Rect2(531,161,58,150)]
 		for r in zones:
 			draw_rect(r,Color(0.58, 0.66, 0.75, 0.25),false,1)
 		draw_set_transform(Vector2.ZERO)
+		for i in range(zones.size()):
+			var point := (zones[i].position+Vector2(15,15))*Vector2(sx,sy)
+			draw_circle(point,12,Color("008f98"))
+			draw_string(ThemeDB.fallback_font,point+Vector2(-4,5),str(i+1),HORIZONTAL_ALIGNMENT_LEFT,-1,14,Color.WHITE)
 
 	func _gui_input(event: InputEvent) -> void:
 		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 			var point: Vector2 = Vector2(event.position.x * 650.0 / maxf(size.x,1.0), event.position.y * 390.0 / maxf(size.y,1.0))
 			# smaller elements first to avoid overlap
 			for i in [2, 1, 4, 3, 0]:
-				if zones[i].has_point(point):
-					item_selected.emit(i)
+				if i < zones.size() and zones[i].has_point(point):
 					accept_event()
+					item_selected.emit(i)
 					return

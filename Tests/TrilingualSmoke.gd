@@ -13,7 +13,9 @@ func _collect(scene: Node, label: String) -> void:
 	report[Progress.get_language()+"/"+label]=values
 func _run() -> void:
 	manager=root.get_node("LocaleManager")
+	Progress.reset_progress()
 	for language in ["en","mm","jp"]:
+		Progress.reset_progress()
 		Progress.set_language(language)
 		assert(manager.language==language)
 		assert(root.title==str(ProjectSettings.get_setting("application/config/name")))
@@ -30,11 +32,10 @@ func _run() -> void:
 		await create_timer(2.2).timeout
 		var picker=menu.find_child("LanguageSelectionScreen",true,false)
 		assert(picker!=null)
-		assert(picker.find_child("LanguageContinue",true,false).text=="Continue")
-		for label in picker.find_children("*","Label",true,false): assert(label.text=="Select Language")
-		var options=picker.find_child("LanguageDropdown",true,false)
-		assert(not options.is_item_disabled(2))
-		options.select({"jp":0,"mm":1,"en":2}[language])
+		assert(picker.find_child("LanguageContinue",true,false).text=="Continue   →")
+		var choice=picker.find_child("LanguageOption"+language,true,false)
+		assert(choice!=null and not choice.disabled)
+		choice.pressed.emit()
 		picker.find_child("LanguageContinue",true,false).pressed.emit()
 		await _wait()
 		_collect(menu,"home")
@@ -46,7 +47,7 @@ func _run() -> void:
 		await _wait()
 		picker=menu.find_child("LanguageSelectionScreen",true,false)
 		assert(picker!=null)
-		assert(picker.find_child("LanguageContinue",true,false).text=="Continue")
+		assert(picker.find_child("LanguageContinue",true,false).text=="Continue   →")
 		picker.find_child("LanguageContinue",true,false).pressed.emit()
 		await _wait()
 		menu.call("_show_levels")
@@ -165,7 +166,29 @@ func _run() -> void:
 		await _wait()
 		assert(game.get("speaker_name_label").text==customer_name)
 		_collect(game,"stage1")
-		change_scene_to_file("res://stage_2.tscn")
+		# The real six-wall validator must reject a 1 mm error and accept the exact plan.
+		var vertices := [Vector2(0,0),Vector2(7380,0),Vector2(7380,2360),Vector2(7680,2360),Vector2(7680,3400),Vector2(0,3400)]
+		drawing.lines.clear()
+		for i in range(6): drawing.lines.append(PackedVector2Array([vertices[i],vertices[(i+1)%6]]))
+		drawing.lines[0][1].x += 1
+		assert(not drawing.analyze_reference())
+		drawing.lines[0][1].x -= 1
+		assert(drawing.analyze_reference())
+		game.call("_confirm")
+		game.call("_stop_voice")
+		game.call("_on_voice_finished")
+		await _wait()
+		assert(Progress.is_completed(1))
+		var complete=game.find_child("Stage1CompleteOverlay",true,false)
+		assert(complete!=null and current_scene==game)
+		assert(game.get_global_rect().encloses(complete.find_child("MissionCompleteCard",true,false).get_global_rect()))
+		if language == "en":
+			complete.replay_requested.emit()
+			await _wait()
+			assert(current_scene==game and game.get("ok_button").text==manager.text("Continue to Stage 2"))
+			game.get("ok_button").pressed.emit()
+		else:
+			complete.next_requested.emit()
 		await _wait()
 		game=current_scene
 		assert(game.get("current_lang")==language)
@@ -189,9 +212,11 @@ func _run() -> void:
 		input.text="PS is a vertical shaft for water supply and drainage pipes and cannot easily be moved during renovation."
 		game.call("_check_demo_answer")
 		assert(game.get("last_eval_state")=="good")
+		assert(Progress.is_completed(2))
+		assert(game.find_child("ContinueStage3",true,false).is_visible_in_tree())
 		await _wait()
 		_collect(game,"stage2-correct")
-		change_scene_to_file("res://stage_3.tscn")
+		game.find_child("ContinueStage3",true,false).pressed.emit()
 		await _wait()
 		game=current_scene
 		assert(game.get("current_lang")==language)
@@ -205,10 +230,33 @@ func _run() -> void:
 		game.call("_choose",1)
 		await _wait()
 		_collect(game,"stage3-parts")
-		for i in range(5):game.call("_select_part",i)
+		for i in range(5):
+			await _wait()
+			var diagram=game.find_child("KitchenPartsDiagram",true,false)
+			var click:=InputEventMouseButton.new()
+			click.button_index=MOUSE_BUTTON_LEFT
+			click.pressed=true
+			var zone: Rect2 = diagram.zones[i]
+			click.position=(zone.position+zone.size*0.5)*diagram.size/Vector2(650,390)
+			diagram.call("_gui_input",click)
 		assert(game.get("step")==7)
+		assert(Progress.is_completed(3))
 		await _wait()
 		_collect(game,"stage3-complete")
+		assert(Progress.completed_count()==3)
+		assert(game.find_child("ResultsTitle",true,false).text==manager.text("Training complete!"))
+		assert(game.get_global_rect().encloses(game.find_child("ResultsCard",true,false).get_global_rect()))
+	# Reload persisted flags; directly clearing Stage 3 must not claim all missions complete.
+	Progress.reset_progress()
+	Progress.complete(3)
+	Progress._loaded=false
+	assert(Progress.completed_count()==1 and Progress.next_stage()==1)
+	assert(not Progress.is_completed(1) and not Progress.is_completed(2) and Progress.is_completed(3))
+	var partial=load("res://ResultsScreen.gd").new()
+	root.add_child(partial)
+	await _wait()
+	assert(partial.find_child("ResultsTitle",true,false).text==manager.text("Stage 3 complete!"))
+	partial.queue_free()
 	var file=FileAccess.open("user://translation-audit.json",FileAccess.WRITE)
 	file.store_string(JSON.stringify(report,"\t"))
 	print("TRILINGUAL_SMOKE_OK: three languages across all menu pages and Stage 1/2/3; ten cards, preserved answer validation and player input")

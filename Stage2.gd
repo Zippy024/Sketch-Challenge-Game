@@ -1,5 +1,6 @@
 extends Control
 
+const UI = preload("res://KitchenUI.gd")
 const Progress = preload("res://GameProgress.gd")
 const AIConfig = preload("res://AIConfig.gd")
 
@@ -229,7 +230,7 @@ func _ready() -> void:
 const BILINGUAL_THEME: Theme = preload("res://WebBilingualTheme.tres")
 
 func _setup_multilang_font() -> void:
-	theme = BILINGUAL_THEME
+	theme = UI.make_theme()
 
 func _apply_web_readability(_node: Node) -> void:
 	# Preserve the successful bundled-font rendering on desktop and Web.
@@ -257,25 +258,7 @@ func _label(t: String, sz: int = 16, c: String = "17233b") -> Label:
 	return l
 
 func _modern_button_style(button: Button, kind: String = "secondary") -> void:
-	var backgrounds := {"primary": "2563eb", "secondary": "ffffff", "back": "dbeafe", "warning": "fff0d9"}
-	var borders := {"primary": "1d4ed8", "secondary": "93c5fd", "back": "93c5fd", "warning": "fdba74"}
-	var hovers := {"primary": "1d4ed8", "secondary": "eff6ff", "back": "bfdbfe", "warning": "ffedd5"}
-	var ink := "ffffff" if kind == "primary" else ("9a3412" if kind == "warning" else "1e40af")
-	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
-		var style := StyleBoxFlat.new()
-		style.bg_color = Color(hovers.get(kind, "eff6ff")) if state in ["hover", "pressed"] else Color(backgrounds.get(kind, "ffffff"))
-		style.border_color = Color(borders.get(kind, "93c5fd"))
-		style.set_border_width_all(1)
-		style.set_corner_radius_all(10)
-		style.content_margin_left = 14
-		style.content_margin_right = 14
-		style.content_margin_top = 8
-		style.content_margin_bottom = 8
-		button.add_theme_stylebox_override(state, style)
-	for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_disabled_color"]:
-		button.add_theme_color_override(state, Color(ink))
-	button.add_theme_font_size_override("font_size", 14)
-	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	UI.style_button(button,kind=="primary",14,kind=="warning")
 
 func _btn(t: String, min_width: float = 85.0) -> Button:
 	var b := Button.new()
@@ -287,264 +270,91 @@ func _btn(t: String, min_width: float = 85.0) -> Button:
 	return b
 
 func _build_ui() -> void:
-	var background := PanelContainer.new()
-	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	background.add_theme_stylebox_override("panel", _style("e9eef5"))
-	add_child(background)
-
-	var outside := MarginContainer.new()
-	for s in ["left", "right", "top", "bottom"]:
-		outside.add_theme_constant_override("margin_" + s, 15)
-	background.add_child(outside)
-
-	var split := HSplitContainer.new()
+	var page := UI.page(self,2,"Pipe Shaft Q&A",_open_game_menu,_change_language)
+	var split := HBoxContainer.new()
+	split.add_theme_constant_override("separation",18)
 	split.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	split.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	split.split_offset = 490
-	outside.add_child(split)
-
-	var left_card := PanelContainer.new()
-	left_card.custom_minimum_size.x = 450
-	left_card.add_theme_stylebox_override("panel", _style("f1f5f9"))
-	split.add_child(left_card)
+	page.add_child(split)
 	var left := VBoxContainer.new()
-	left.add_theme_constant_override("separation", 12)
-	left_card.add_child(left)
-
-	var header := HBoxContainer.new()
-	header.add_theme_constant_override("separation", 6)
-	left.add_child(header)
-	var title := _label("STAGE 2", 19, "1f3c56")
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header.add_child(title)
-
-	jp_button = Button.new()
-	jp_button.text = "日本語"
-	jp_button.custom_minimum_size = Vector2(53, 29)
-	jp_button.add_theme_font_size_override("font_size", 12)
-	jp_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	jp_button.pressed.connect(func(): _change_language("jp"))
-	header.add_child(jp_button)
-
-	mm_button = Button.new()
-	mm_button.text = "မြန်မာ"
-	mm_button.custom_minimum_size = Vector2(53, 29)
-	mm_button.add_theme_font_size_override("font_size", 12)
-	mm_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	mm_button.pressed.connect(func(): _change_language("mm"))
-	en_button = Button.new()
-	en_button.text = "English"
-	en_button.custom_minimum_size = Vector2(53, 29)
-	en_button.add_theme_font_size_override("font_size", 12)
-	en_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	en_button.pressed.connect(func(): _change_language("en"))
-	header.add_child(mm_button)
-	header.add_child(en_button)
-
-	var menu_button := _make_levels_menu_button()
-	menu_button.pressed.connect(_open_game_menu)
-	header.add_child(menu_button)
-
-	var customer_panel := PanelContainer.new()
-	customer_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	customer_panel.size_flags_stretch_ratio = 0.9
-	customer_panel.custom_minimum_size.y = 230
-	customer_panel.add_theme_stylebox_override("panel", _style("e2e8f0"))
-	left.add_child(customer_panel)
-	var customer_row := HBoxContainer.new()
-	customer_row.add_theme_constant_override("separation", 12)
-	customer_panel.add_child(customer_row)
-
-	var avatar := TextureRect.new()
-	avatar.custom_minimum_size = Vector2(110, 110)
-	avatar.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	avatar.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	avatar.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
-	avatar.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	var avatar_path := "res://customer_portrait_ui.png"
-	if ResourceLoader.exists(avatar_path):
-		avatar.texture = load(avatar_path) as Texture2D
-	var avatar_shader := Shader.new()
-	avatar_shader.code = """
-shader_type canvas_item;
-uniform vec4 ring_color : source_color = vec4(0.47, 0.70, 1.0, 1.0);
-uniform float ring_width = 0.035;
-void fragment() {
-	vec2 centered = UV - vec2(0.5);
-	float dist = length(centered);
-	float aa = max(fwidth(dist), 0.001);
-	float circle_alpha = 1.0 - smoothstep(0.5 - aa, 0.5 + aa, dist);
-	vec4 tex = texture(TEXTURE, UV);
-	float ring = smoothstep(0.5 - ring_width - aa, 0.5 - ring_width + aa, dist);
-	vec3 rgb = mix(tex.rgb, ring_color.rgb, ring);
-	COLOR = vec4(rgb, tex.a * circle_alpha);
-}
-"""
-	var avatar_mat := ShaderMaterial.new()
-	avatar_mat.shader = avatar_shader
-	avatar.material = avatar_mat
-	customer_row.add_child(avatar)
-
-	bubble = PanelContainer.new()
-	bubble.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	bubble.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	bubble.add_theme_stylebox_override("panel", _style("ffffff", "d6e2ef"))
-	customer_row.add_child(bubble)
-
-	var bubble_box := VBoxContainer.new()
-	bubble_box.add_theme_constant_override("separation", 8)
-	bubble.add_child(bubble_box)
-
-	var name_voice_row := HBoxContainer.new()
-	name_voice_row.add_theme_constant_override("separation", 4)
-	bubble_box.add_child(name_voice_row)
-
-	name_label = _label("", 15, "1d4ed8")
-	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	name_voice_row.add_child(name_label)
-
-	var voice_controls := HBoxContainer.new()
-	voice_controls.add_theme_constant_override("separation", 3)
-	voice_controls.size_flags_horizontal = Control.SIZE_SHRINK_END
-	name_voice_row.add_child(voice_controls)
-
-	var customer_question_subtitle := _label("CUSTOMER QUESTION", 11, "64748b")
-	bubble_box.add_child(customer_question_subtitle)
-
-	voice_replay_button = Button.new()
-	voice_replay_button.text = ""
-	voice_replay_button.pressed.connect(_replay_voice)
-
-	voice_stop_button = Button.new()
-	voice_stop_button.text = ""
-	voice_stop_button.pressed.connect(_toggle_voice_pause)
-
-	for btn in [voice_replay_button, voice_stop_button]:
-		btn.custom_minimum_size = Vector2(32, 32)
-		btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-		btn.size_flags_horizontal = Control.SIZE_SHRINK_END
-		btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		btn.add_theme_font_size_override("font_size", 17)
-		btn.add_theme_color_override("font_color", Color("1d4ed8"))
-		btn.add_theme_color_override("font_hover_color", Color("1e40af"))
-		btn.add_theme_color_override("font_pressed_color", Color("1e40af"))
-		btn.add_theme_color_override("font_focus_color", Color("1d4ed8"))
-		for state in ["normal", "hover", "pressed", "focus"]:
-			var style := StyleBoxFlat.new()
-			style.bg_color = Color("eaf2ff") if state == "normal" else Color("cfe2ff")
-			style.border_color = Color("93c5fd")
-			style.set_border_width_all(1)
-			style.set_corner_radius_all(5)
-			style.set_content_margin_all(4)
-			btn.add_theme_stylebox_override(state, style)
-	_set_voice_icon(voice_replay_button, "replay")
-	_set_voice_icon(voice_stop_button, "pause")
-	voice_replay_button.tooltip_text = "Replay from beginning"
-	voice_stop_button.tooltip_text = "Pause / Resume"
-	# Voice buttons hidden; audio and subtitles still run.
-
-	question_label = _label("", 14, "17233b")
-	bubble_box.add_child(question_label)
-
+	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	left.size_flags_stretch_ratio = 7
+	left.add_theme_constant_override("separation",12)
+	split.add_child(left)
+	var customer := UI.customer(left)
+	name_label = customer.name
+	bubble = customer.bubble
+	question_label = customer.question
+	var dialogue: VBoxContainer = customer.dialogue
 	feedback_divider = ColorRect.new()
 	feedback_divider.custom_minimum_size.y = 1
-	feedback_divider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	feedback_divider.color = Color("93c5fd")
-	feedback_divider.visible = false
-	bubble_box.add_child(feedback_divider)
-
-	feedback_label = _label("", 14, "991b1b")
-	feedback_label.visible = false
-	bubble_box.add_child(feedback_label)
-
-	var ref_title := _btn("Reference Plan  ↗", 200)
-	ref_title.flat = true
+	feedback_divider.color = UI.EDGE
+	dialogue.add_child(feedback_divider)
+	feedback_label = UI.label("",15)
+	dialogue.add_child(feedback_label)
+	voice_replay_button = UI.button("",_replay_voice,false,30,12)
+	voice_stop_button = UI.button("",_toggle_voice_pause,false,30,12)
+	_set_voice_icon(voice_replay_button,"replay")
+	_set_voice_icon(voice_stop_button,"pause")
+	customer.voice.add_child(voice_replay_button)
+	customer.voice.add_child(UI.inline_label("Replay",12))
+	customer.voice.add_child(voice_stop_button)
+	customer.voice.add_child(UI.inline_label("Pause",12))
+	var reference := UI.card_stack(left,true)
+	var ref_title := UI.button("Reference Plan  ↗",_open_reference_popup,false,160,16)
 	ref_title.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	ref_title.pressed.connect(_open_reference_popup)
-	left.add_child(ref_title)
-
-	var image_frame := PanelContainer.new()
-	image_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	image_frame.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	image_frame.size_flags_stretch_ratio = 1.45
-	image_frame.custom_minimum_size.y = 220
-	image_frame.add_theme_stylebox_override("panel", _style("ffffff"))
-	left.add_child(image_frame)
-
-	var texture_path := "res://reference_ps_stage2.png"
-	var loaded_tex: Texture2D = null
-	if ResourceLoader.exists(texture_path):
-		loaded_tex = load(texture_path) as Texture2D
-	else:
-		push_warning("Reference image not found: " + texture_path)
-	var embedded_viewer := PlanViewer.new(loaded_tex)
-	embedded_viewer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	embedded_viewer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	embedded_viewer.open_requested.connect(_open_reference_popup)
-	image_frame.add_child(embedded_viewer)
-	_create_reference_popup(loaded_tex)
-
-	var right_card := PanelContainer.new()
-	right_card.custom_minimum_size.x = 570
-	right_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	right_card.add_theme_stylebox_override("panel", _style("f1f5f9"))
-	split.add_child(right_card)
+	reference.add_child(ref_title)
+	var texture := preload("res://reference_ps_stage2.png")
+	var embedded := PlanViewer.new(texture)
+	embedded.custom_minimum_size.y = 170
+	embedded.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	embedded.open_requested.connect(_open_reference_popup)
+	reference.add_child(embedded)
+	_create_reference_popup(texture)
+	var right_panel := PanelContainer.new()
+	right_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right_panel.size_flags_stretch_ratio = 13
+	right_panel.add_theme_stylebox_override("panel",UI.box())
+	split.add_child(right_panel)
 	var right := VBoxContainer.new()
-	right.add_theme_constant_override("separation", 14)
-	right_card.add_child(right)
-	right.add_child(_label("Answer Area", 23))
-	status_label = _label("DEMO CHECK — AI will be connected later", 13, "64748b")
+	right.add_theme_constant_override("separation",12)
+	right_panel.add_child(right)
+	right.add_child(UI.label("Your answer",25,true))
+	right.add_child(UI.label("Explain the purpose of PS and what it means for this renovation.",15,false,UI.MUTED))
+	status_label = UI.label("",12)
+	status_label.hide()
 	right.add_child(status_label)
-	answer_title = _label("", 18)
+	answer_title = UI.label("",16,true)
 	right.add_child(answer_title)
+	answer_title.hide()
 	answer_input = TextEdit.new()
-	answer_input.custom_minimum_size.y = 220
-	answer_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	answer_input.add_theme_font_size_override("font_size", 18)
+	answer_input.name = "Stage2AnswerInput"
+	answer_input.custom_minimum_size.y = 190
+	answer_input.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	answer_input.add_theme_font_size_override("font_size",18)
 	answer_input.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
-	# Modern light answer editor, including focus/readonly states.
-	answer_input.add_theme_color_override("background_color", Color("ffffff"))
-	answer_input.add_theme_color_override("font_color", Color("17233b"))
-	answer_input.add_theme_color_override("font_placeholder_color", Color("94a3b8"))
-	answer_input.add_theme_color_override("caret_color", Color("2563eb"))
-	answer_input.add_theme_color_override("selection_color", Color("bfdbfe"))
-	answer_input.add_theme_color_override("current_line_color", Color("f8fafc"))
-	for state in ["normal", "focus", "read_only"]:
-		var editor_style := StyleBoxFlat.new()
-		editor_style.bg_color = Color("ffffff")
-		editor_style.border_color = Color("2563eb") if state == "focus" else Color("cbd5e1")
-		editor_style.set_border_width_all(2 if state == "focus" else 1)
-		editor_style.set_corner_radius_all(14)
-		editor_style.content_margin_left = 18
-		editor_style.content_margin_right = 18
-		editor_style.content_margin_top = 16
-		editor_style.content_margin_bottom = 16
-		answer_input.add_theme_stylebox_override(state, editor_style)
+	answer_input.add_theme_color_override("font_color",UI.INK)
+	answer_input.add_theme_color_override("font_placeholder_color",UI.MUTED)
+	answer_input.add_theme_color_override("caret_color",UI.TEAL)
+	for state in ["normal","focus","read_only"]:
+		answer_input.add_theme_stylebox_override(state,UI.box(Color.WHITE,UI.TEAL if state=="focus" else UI.EDGE,14,16))
 	right.add_child(answer_input)
-
 	var actions := HBoxContainer.new()
-	actions.add_theme_constant_override("separation", 10)
+	actions.add_theme_constant_override("separation",10)
 	right.add_child(actions)
-	submit_button = _btn("Check Answer", 150)
-	_modern_button_style(submit_button, "primary")
+	submit_button = UI.button("Check Answer",_check_ai_or_demo_answer,true,150)
+	reset_button = UI.button("Clear",_reset_answer,false,90)
 	actions.add_child(submit_button)
-	reset_button = _btn("Clear", 90)
 	actions.add_child(reset_button)
-	submit_button.pressed.connect(_check_ai_or_demo_answer)
-	reset_button.pressed.connect(_reset_answer)
-
-	# The bottom panel is player progress, NOT a second copy of customer speech.
+	actions.add_child(UI.button("Hint",func():
+		progress_description.text = UI.text("Think about the services inside PS and whether they can be relocated easily.")
+	,false,90))
 	_build_progress_panel(right)
+	page.add_child(UI.progress_strip())
 
-	var spacer := Control.new()
-	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	right.add_child(spacer)
-
-# ---------------- Option A: challenge progress panel ----------------
 func _build_progress_panel(parent: VBoxContainer) -> void:
 	progress_card = PanelContainer.new()
 	# Compact fixed-height result card; the bottom spacer gets leftover space.
-	progress_card.custom_minimum_size.y = 156
+	progress_card.custom_minimum_size.y = 130
 	progress_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	progress_card.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	progress_card.add_theme_stylebox_override("panel", _style("ffffff", "d6e2ef", 13))
@@ -559,7 +369,7 @@ func _build_progress_panel(parent: VBoxContainer) -> void:
 	header_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header_row.add_theme_constant_override("separation", 12)
 	content.add_child(header_row)
-	var heading := _label("CHALLENGE PROGRESS", 13, "475569")
+	var heading := _label("Answer feedback", 13, "475569")
 	heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	heading.autowrap_mode = TextServer.AUTOWRAP_OFF
 	heading.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -597,6 +407,7 @@ func _build_progress_panel(parent: VBoxContainer) -> void:
 	progress_bar.add_theme_stylebox_override("background", track)
 	progress_bar.add_theme_stylebox_override("fill", fill)
 	content.add_child(progress_bar)
+	progress_bar.hide()
 
 	var bottom_row := HBoxContainer.new()
 	bottom_row.add_theme_constant_override("separation", 10)
@@ -605,6 +416,7 @@ func _build_progress_panel(parent: VBoxContainer) -> void:
 	progress_percent.autowrap_mode = TextServer.AUTOWRAP_OFF
 	progress_percent.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bottom_row.add_child(progress_percent)
+	progress_percent.hide()
 
 	progress_actions = HBoxContainer.new()
 	progress_actions.add_theme_constant_override("separation", 8)
@@ -623,6 +435,12 @@ func _build_progress_panel(parent: VBoxContainer) -> void:
 	_modern_button_style(progress_levels_button, "primary")
 	progress_levels_button.pressed.connect(_open_game_menu)
 	progress_actions.add_child(progress_levels_button)
+	var next := UI.button("Continue to Stage 3",func():
+		_stop_voice()
+		get_tree().change_scene_to_file("res://stage_3.tscn")
+	,true,185)
+	next.name = "ContinueStage3"
+	progress_actions.add_child(next)
 	progress_actions.visible = false
 	_set_progress_state("pending")
 
@@ -646,8 +464,8 @@ func _set_progress_state(state: String, message: String = "") -> void:
 			title = "Stage 2 Completed" if not jp else "ステージ2 クリア"
 			detail = "Customer question task finished." if not jp else "お客様の質問への回答が完了しました。"
 			badge = "COMPLETED"
-			bg_color = "f0fdf4"
-			border_color = "86efac"
+			bg_color = "eefaf8"
+			border_color = "79c8bf"
 			badge_color = "15803d"
 			pct = 100
 		"incorrect":
@@ -693,12 +511,15 @@ func _set_progress_state(state: String, message: String = "") -> void:
 	progress_card.add_theme_stylebox_override("panel", _style(bg_color, border_color, 13))
 	progress_title.text = title
 	progress_description.text = detail
+	if state == "completed": progress_description.text = UI.text("You explained the vertical pipe shaft and why it is difficult to move.")
 	progress_badge.text = badge
 	progress_badge.add_theme_color_override("font_color", Color(badge_color))
 	progress_bar.value = float(pct)
 	progress_percent.text = "100% COMPLETED" if pct == 100 else "0% · IN PROGRESS"
 	progress_percent.add_theme_color_override("font_color", Color(badge_color))
 	progress_actions.visible = state == "completed"
+	var overall := find_child("OverallProgressStrip",true,false)
+	if overall: UI.update_progress(overall)
 	if progress_levels_button != null:
 		progress_levels_button.text = "レベル一覧" if jp else "View Levels"
 	if progress_replay_button != null:
@@ -720,6 +541,9 @@ func _change_language(lang: String) -> void:
 	Progress.set_language(lang)
 	_stop_voice()
 	current_lang = lang
+	theme = UI.make_theme()
+	var picker := find_child("GameLanguagePicker",true,false) as OptionButton
+	if picker: picker.select({"jp":0,"mm":1,"en":2}[lang])
 	_update_lang_buttons_style()
 	var d: Dictionary = QUESTIONS[lang]
 	name_label.text = str(d["name"])
@@ -835,11 +659,12 @@ func _show_ai_error() -> void:
 func _show_check_result(correct: bool) -> void:
 	var d: Dictionary = QUESTIONS[current_lang]
 	if correct:
+		Progress.complete(2)
 		last_eval_state = "good"
 		question_label.visible = false
 		feedback_divider.visible = false
 		feedback_label.visible = true
-		bubble.add_theme_stylebox_override("panel", _style("dcfce7", "4ade80"))
+		bubble.add_theme_stylebox_override("panel", _style("eefaf8", "79c8bf"))
 		feedback_label.add_theme_color_override("font_color", Color("14532d"))
 		_set_progress_state("completed")
 		_play_voice("good")
@@ -1031,6 +856,13 @@ func _set_voice_icon(button: Button, icon_name: String) -> void:
 	button.text = ""
 	button.icon = tex
 	button.expand_icon = true
+	button.custom_minimum_size = Vector2(30,30)
+	button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	button.add_theme_constant_override("icon_max_width",18)
+	for state in ["normal","hover","pressed"]:
+		var compact := UI.box(Color("eff8ff"),UI.EDGE,15,4)
+		compact.shadow_size = 0
+		button.add_theme_stylebox_override(state,compact)
 	button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
 func _stop_voice() -> void:
