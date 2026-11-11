@@ -728,7 +728,7 @@ func _build_ui() -> void:
 	chat_panel.name = "Stage1CustomerCard"
 	chat_panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	chat_panel.size_flags_stretch_ratio = 0.92
-	chat_panel.custom_minimum_size.y = 306
+	chat_panel.custom_minimum_size.y = 328
 	chat_panel.add_theme_stylebox_override("panel", _stage1_glass("customer", 14))
 	left.add_child(chat_panel)
 
@@ -745,26 +745,31 @@ func _build_ui() -> void:
 	var avatar_column := VBoxContainer.new()
 	avatar_column.name = "Stage1CustomerPortrait"
 	avatar_column.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	avatar_column.custom_minimum_size.x = 108
+	avatar_column.custom_minimum_size.x = 140
 	avatar_column.add_theme_constant_override("separation", 10)
 	customer_row.add_child(avatar_column)
 
 	var avatar_holder := CenterContainer.new()
-	avatar_holder.custom_minimum_size = Vector2(96, 96)
+	# Match the 110 x 110 customer portrait used in Stage 2.
+	avatar_holder.custom_minimum_size = Vector2(110, 110)
 	avatar_column.add_child(avatar_holder)
 	var avatar: StaticCustomerAvatar = StaticCustomerAvatar.new()
 	avatar.name = "Stage1CustomerAvatar"
-	avatar.custom_minimum_size = Vector2(96, 96)
+	avatar.custom_minimum_size = Vector2(110, 110)
 	avatar_holder.add_child(avatar)
 
 	var name_plate := PanelContainer.new()
 	name_plate.name = "Stage1CustomerIdentity"
 	name_plate.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var identity_spacing := StyleBoxEmpty.new()
-	identity_spacing.set_content_margin_all(3)
-	name_plate.add_theme_stylebox_override("panel", identity_spacing)
+	var identity_box := _stage1_surface(Color("edf7ff"), Color("89b6d9"), 8, 6)
+	identity_box.content_margin_left = 8
+	identity_box.content_margin_right = 8
+	identity_box.shadow_size = 1
+	identity_box.shadow_offset = Vector2(0,1)
+	name_plate.add_theme_stylebox_override("panel", identity_box)
 	avatar_column.add_child(name_plate)
-	speaker_name_label = _label(DIALOGUE_TEXTS[current_lang]["speaker"], 12, "315a89")
+	speaker_name_label = _label(DIALOGUE_TEXTS[current_lang]["speaker"], 15, "173b61")
+	_stage1_bold(speaker_name_label)
 	speaker_name_label.name = "Stage1CustomerName"
 	speaker_name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	speaker_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -777,13 +782,16 @@ func _build_ui() -> void:
 	customer_row.add_child(speech_stack)
 	var request_header := PanelContainer.new()
 	request_header.name = "CustomerRequestHeader"
+	request_header.custom_minimum_size.x = 220
 	request_header.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	var heading_spacing := StyleBoxEmpty.new()
-	heading_spacing.content_margin_left = 8
-	heading_spacing.content_margin_bottom = 2
-	request_header.add_theme_stylebox_override("panel", heading_spacing)
+	var heading_box := _stage1_surface(Color("e7f3ff"), Color("94bddb"), 8, 6)
+	heading_box.content_margin_left = 10
+	heading_box.content_margin_right = 10
+	heading_box.shadow_size = 1
+	heading_box.shadow_offset = Vector2(0,1)
+	request_header.add_theme_stylebox_override("panel", heading_box)
 	speech_stack.add_child(request_header)
-	var request_heading := _label("Customer Request", 13, "315a89")
+	var request_heading := _label("Customer Request", 16, "173b61")
 	_stage1_bold(request_heading)
 	request_heading.autowrap_mode = TextServer.AUTOWRAP_OFF
 	request_header.add_child(request_heading)

@@ -66,7 +66,9 @@ func _run() -> void:
 			assert(caption.position.y+caption.size.y<=204)
 			assert(title.position.y>=0 and title.position.y+title.size.y<=title.get_parent().size.y+0.1)
 			var play=card.find_child("SelectedPlayButton",true,false)
-			if play!=null: assert(card.size.y-play.position.y-play.size.y>=12)
+			if play!=null:
+				assert(card.size.y-play.position.y-play.size.y>=12)
+				assert(caption.position.y+caption.size.y<=play.position.y)
 		screen.find_child("StageCard02",true,false).pressed.emit()
 		await _wait()
 		assert(screen.find_child("StageCard02",true,false).find_child("SelectedPlayButton",true,false)!=null)
@@ -106,8 +108,10 @@ func _run() -> void:
 		assert(game.find_child("Stage1Header",true,false).size.y<=58)
 		assert(game.find_child("Stage1Logo",true,false).texture.resource_path=="res://LoadingAssets/KitchenLogo.webp")
 		var avatar=game.find_child("Stage1CustomerAvatar",true,false)
+		var stage_one_avatar_size: Vector2 = avatar.size
 		var name_plate=game.find_child("Stage1CustomerIdentity",true,false)
 		assert(name_plate.global_position.y>=avatar.get_global_rect().end.y)
+		assert(name_plate.get_global_rect().encloses(game.get("speaker_name_label").get_global_rect()))
 		var request_header=game.find_child("CustomerRequestHeader",true,false)
 		assert(request_header.visible)
 		assert(request_header.get_global_rect().end.y<=game.get("dialog_bubble").global_position.y)
@@ -169,6 +173,12 @@ func _run() -> void:
 		game.call("_on_voice_finished")
 		await _wait()
 		assert(game.get("name_label").text==customer_name)
+		var stage_two_avatar: TextureRect = null
+		for portrait in game.find_children("*","TextureRect",true,false):
+			if portrait.texture!=null and portrait.texture.resource_path=="res://customer_portrait_ui.png":
+				stage_two_avatar=portrait
+				break
+		assert(stage_two_avatar!=null and stage_two_avatar.size==stage_one_avatar_size)
 		_collect(game,"stage2")
 		var input=game.get("answer_input")
 		input.text="PS means Pipe Space."
