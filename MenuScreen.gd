@@ -7,6 +7,7 @@ var paused_game: bool = false
 var selected_stage: int = 3
 var _design: Control
 var _logo: TextureRect
+var _level_fonts: Dictionary = {}
 
 func _ready() -> void:
 	name = "LevelSelectionScreen" if levels else "KitchenHomeScreen"
@@ -130,12 +131,20 @@ func _build_home() -> void:
 		_put(_design,resume,Rect2(480,546,240,45))
 
 func _build_levels() -> void:
-	_add_logo(Rect2(35,10,235,120))
-	_label(_design,"Select a Level",Rect2(295,22,620,49),34,Color.WHITE,false)
-	_label(_design,"Progress through kitchen design missions step by step.",Rect2(295,76,665,46),15,Color("d4f2fa"),false)
+	_add_logo(Rect2(25,5,285,125))
+	var divider := ColorRect.new()
+	divider.color = Color("9bf8ff")
+	divider.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_put(_design,divider,Rect2(322,27,1,78))
+	var heading := _level_label(_design,"Select a Level",Rect2(346,16,810,66),38,Color.WHITE,false,true)
+	var title_font := _level_font(true).duplicate() as FontVariation
+	title_font.variation_transform = Transform2D(Vector2(1,0),Vector2(-0.1,1),Vector2.ZERO)
+	heading.add_theme_font_override("font",title_font)
+	_level_label(_design,"Progress through kitchen design missions step by step.",Rect2(346,79,810,38),15,Color("c1e9f5"),false)
 	var panel := Panel.new()
+	panel.name = "LevelGlassFrame"
 	panel.mouse_filter=Control.MOUSE_FILTER_IGNORE
-	panel.add_theme_stylebox_override("panel",_box(Color(0.035,0.17,0.22,0.84),Color("75edff"),30,14))
+	panel.add_theme_stylebox_override("panel",_level_surface("frame"))
 	_put(_design,panel,Rect2(25,145,1150,565))
 	for n in range(1,11):
 		var column := (n-1)%5
@@ -143,7 +152,56 @@ func _build_levels() -> void:
 		_card(n,Rect2(53+column*220,170+row*270,208,252))
 	var back := _back_button("Back to Game" if paused_game else "Back to Home", "back")
 	back.name="BackFromLevels"
+	_style_level_action(back,16)
 	_put(_design,back,Rect2(42,728,210,42))
+
+
+func _level_font(bold: bool = false) -> FontVariation:
+	var language := Progress.get_language()
+	var key := language + ("/bold" if bold else "/regular")
+	if not _level_fonts.has(key):
+		var font := FontVariation.new()
+		font.base_font = preload("res://Font/NotoSansMyanmar.ttf") if language == "mm" else preload("res://Font/NotoSansCJKjp-Regular.otf")
+		font.variation_embolden = 0.5 if bold else 0.0
+		_level_fonts[key] = font
+	return _level_fonts[key] as FontVariation
+
+
+func _level_label(parent: Control, message: String, rect: Rect2, font_size: int, color: Color = Color.WHITE, center: bool = true, bold: bool = false) -> Label:
+	var label := _label(parent,message,rect,font_size,color,center)
+	label.add_theme_font_override("font",_level_font(bold))
+	label.size = rect.size
+	return label
+
+
+func _level_surface(kind: String) -> StyleBoxTexture:
+	var box := StyleBoxTexture.new()
+	box.texture = preload("res://MenuAssets/level-card.svg") if kind == "card" else (preload("res://MenuAssets/levels-panel.svg") if kind == "frame" else preload("res://Stage1Assets/glass-primary.svg"))
+	for side in [SIDE_LEFT,SIDE_RIGHT,SIDE_TOP,SIDE_BOTTOM]:
+		var margin := 34 if kind == "frame" else (28 if kind == "card" else 24)
+		if kind == "card" and side == SIDE_TOP: margin = 56
+		if kind == "action" and side in [SIDE_TOP,SIDE_BOTTOM]: margin = 20
+		box.set_texture_margin(side,margin)
+		box.set_expand_margin(side,8 if kind in ["card","frame"] else 3)
+		box.set_content_margin(side,2 if kind == "action" else 0)
+	if kind == "action":
+		box.content_margin_left = 12
+		box.content_margin_right = 12
+	return box
+
+
+func _style_level_action(button: Button, font_size: int) -> void:
+	button.add_theme_font_override("font",_level_font(true))
+	button.add_theme_font_size_override("font_size",font_size)
+	for state in ["normal","hover","pressed"]:
+		var style := _level_surface("action")
+		style.modulate_color = Color("b9faff") if state == "hover" else (Color("9dd7e5") if state == "pressed" else Color.WHITE)
+		button.add_theme_stylebox_override(state,style)
+	var focus := _box(Color.TRANSPARENT,Color.WHITE,20)
+	focus.shadow_size = 0
+	button.add_theme_stylebox_override("focus",focus)
+	button.add_theme_constant_override("icon_max_width",21)
+	button.add_theme_constant_override("h_separation",8)
 
 func _thumbnail(stage: int) -> Texture2D:
 	match stage:
@@ -163,45 +221,101 @@ func _card(stage: int, rect: Rect2) -> void:
 	card.disabled=not available
 	card.text=""
 	card.mouse_default_cursor_shape=Control.CURSOR_POINTING_HAND if available else Control.CURSOR_ARROW
-	card.add_theme_stylebox_override("normal",_box(Color("e8f7fc"),Color("64f1ff") if selected else Color("8fc2d1"),21,12 if selected else 0))
-	card.add_theme_stylebox_override("disabled",_box(Color("c5d9df"),Color("82aebd"),21))
-	card.add_theme_stylebox_override("hover",_box(Color("f4fdff"),Color("8af6ff"),21,10))
-	card.add_theme_stylebox_override("focus",_box(Color.TRANSPARENT,Color("c5ffff"),21))
+	card.add_theme_stylebox_override("normal",_level_surface("card"))
+	var disabled_style := _level_surface("card")
+	disabled_style.modulate_color = Color(0.91,0.96,0.98)
+	card.add_theme_stylebox_override("disabled",disabled_style)
+	var hover := _level_surface("card")
+	hover.modulate_color = Color("d5ffff")
+	card.add_theme_stylebox_override("hover",hover)
+	var focus := _box(Color.TRANSPARENT,Color("c5ffff"),21)
+	focus.shadow_size = 0
+	card.add_theme_stylebox_override("focus",focus)
 	card.pressed.connect(func() -> void:
 		selected_stage=stage
 		_build()
 	)
 	_put(_design,card,rect)
-	var ribbon := Panel.new()
-	ribbon.mouse_filter=Control.MOUSE_FILTER_IGNORE
-	ribbon.add_theme_stylebox_override("panel",_box(Color("06445b"),Color("a7deed"),17))
-	_put(card,ribbon,Rect2(4,4,200,40))
-	var title := _label(ribbon,LocaleManager.text("Stage %02d")%stage,Rect2(4,0,192,40),15)
+	if selected:
+		var glow := Panel.new()
+		glow.name = "SelectedStageGlow"
+		glow.show_behind_parent = true
+		glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var outline := _box(Color.TRANSPARENT,Color("c0ffff"),22,17)
+		outline.set_border_width_all(3)
+		outline.shadow_color = Color(0.0,1.0,1.0,0.65)
+		outline.shadow_offset = Vector2.ZERO
+		glow.add_theme_stylebox_override("panel",outline)
+		_put(card,glow,Rect2(-3,-3,214,258))
+		var ring := Panel.new()
+		ring.name = "SelectedStageOutline"
+		ring.z_index = 2
+		ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var ring_style := _box(Color.TRANSPARENT,Color("c0ffff"),22)
+		ring_style.set_border_width_all(3)
+		ring_style.shadow_size = 0
+		ring_style.draw_center = false
+		ring.add_theme_stylebox_override("panel",ring_style)
+		_put(card,ring,Rect2(-3,-3,214,258))
+	var icon := TextureRect.new()
+	icon.name = "StageSymbol"
+	var symbol := AtlasTexture.new()
+	symbol.atlas = preload("res://MenuAssets/stage-symbols.svg")
+	symbol.region = Rect2((stage-1)*32,0,32,32)
+	icon.texture = symbol
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_put(card,icon,Rect2(14,9,26,26))
+	var title := _level_label(card,LocaleManager.text("Stage %02d")%stage,Rect2(45,0,153,42),15,Color.WHITE,true,true)
 	title.name="StageTitle"
+	var image_frame := Panel.new()
+	image_frame.name = "StageThumbnailFrame"
+	image_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	image_frame.clip_children = CanvasItem.CLIP_CHILDREN_AND_DRAW
+	var image_style := _box(Color("f4fcff"),Color("d4f7ff"),12)
+	image_style.shadow_size = 0
+	image_frame.add_theme_stylebox_override("panel",image_style)
+	_put(card,image_frame,Rect2(7,44,194,100))
 	var image := TextureRect.new()
+	image.name = "StageThumbnail"
 	image.texture=_thumbnail(stage)
 	image.expand_mode=TextureRect.EXPAND_IGNORE_SIZE
-	image.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	image.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED if stage == 1 else TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	image.mouse_filter=Control.MOUSE_FILTER_IGNORE
-	image.modulate=Color.WHITE if available else Color(0.72,0.81,0.85,1)
-	_put(card,image,Rect2(8,50,192,91))
+	image.modulate=Color.WHITE if available else Color(0.86,0.93,0.96)
+	_put(image_frame,image,Rect2(4,4,186,92))
 	var caption: String="Coming soon"
 	if stage==1:caption="LDK Boundary Drawing"
 	elif stage==2:caption="Pipe Shaft Q&A"
 	elif stage==3:caption="S-Class Kitchen Selection"
-	_label(card,caption,Rect2(12,147,184,52),14,Color("11374a"))
+	var caption_font_size := 12 if Progress.get_language() == "mm" else 14
+	var caption_view := _level_label(card,caption,Rect2(9,147,190,53),caption_font_size,Color("11374a"),true,true)
+	caption_view.name = "StageCaption"
 	if selected:
-		var play := _button("Play",false,13)
+		var play := _button("Play",false,16)
 		play.name="SelectedPlayButton"
-		for state in ["normal","hover","pressed","focus"]:
-			var play_style := _box(Color("04768d") if state=="normal" else Color("0994a6"),Color("93eafb"),16)
-			play_style.content_margin_top=2
-			play_style.content_margin_bottom=2
-			play.add_theme_stylebox_override(state,play_style)
+		_style_level_action(play,14 if Progress.get_language() == "mm" else 17)
+		play.icon = preload("res://MenuAssets/level-play.svg")
 		play.pressed.connect(func() -> void:stage_requested.emit(stage))
-		_put(card,play,Rect2(48,204,112,34))
+		_put(card,play,Rect2(29,204,150,36))
 	else:
-		_label(card,"Ready" if available else "Locked",Rect2(16,204,176,34),13,Color("22657c"))
+		var badge := Panel.new()
+		badge.name = "StageStatusBadge"
+		badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var badge_style := _box(Color("91e2e9") if available else Color("9ebecb"),Color(0.9,1.0,1.0,0.5),14)
+		badge_style.shadow_size = 0
+		badge_style.set_border_width_all(1)
+		badge.add_theme_stylebox_override("panel",badge_style)
+		_put(card,badge,Rect2(44,210,120,28))
+		if not available:
+			var lock := TextureRect.new()
+			lock.name = "StageLock"
+			lock.texture = preload("res://MenuAssets/level-lock.svg")
+			lock.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			lock.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			_put(badge,lock,Rect2(14,6,16,16))
+		_level_label(badge,"Ready" if available else "Locked",Rect2(4 if available else 31,0,112 if available else 85,28),12,Color("245b70"),true,true)
 
 func _fit() -> void:
 	if not is_instance_valid(_design):return
