@@ -87,22 +87,21 @@ func _add_logo(rect: Rect2) -> void:
 	_logo.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 
 func _top_controls() -> void:
-	var language := OptionButton.new()
-	for title in ["日本語","မြန်မာ","English"]: language.add_item(title)
-	language.select({"jp":0,"mm":1,"en":2}[Progress.get_language()])
-	UI.style_button(language,false,16)
-	language.item_selected.connect(func(index: int):
-		Progress.set_language(["jp","mm","en"][index])
+	var language := UI.language_switcher(func(lang: String):
+		Progress.set_language(lang)
 		_build()
-	)
-	_put(_design,language,Rect2(1165,22,170,44))
-	var settings := _button("",false,16)
-	settings.name = "Settings"
-	settings.icon = UI.icon("gear")
+	,13)
+	_put(_design,language,Rect2(1080,22,250,42))
+	var settings := UI.button("",func():action_requested.emit("settings"),false,44,16)
+	settings.name="Settings"
+	settings.icon=UI.icon("gear")
+	settings.icon_alignment=HORIZONTAL_ALIGNMENT_CENTER
+	settings.alignment=HORIZONTAL_ALIGNMENT_CENTER
 	settings.add_theme_color_override("icon_normal_color",UI.INK)
+	settings.add_theme_color_override("icon_hover_color",UI.TEAL)
 	settings.add_theme_constant_override("icon_max_width",24)
-	settings.pressed.connect(func():action_requested.emit("settings"))
-	_put(_design,settings,Rect2(1350,22,52,44))
+	settings.tooltip_text=UI.text("Settings")
+	_put(_design,settings,Rect2(1350,22,46,44))
 
 func _build_home() -> void:
 	_add_logo(Rect2(44,8,290,126))
@@ -112,18 +111,25 @@ func _build_home() -> void:
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	panel.add_theme_stylebox_override("panel",UI.box(Color(0.93,0.98,1,0.66),Color.WHITE,28,0))
 	_put(_design,panel,Rect2(32,152,980,628))
-	var title := _level_label(_design,"Welcome, Designer",Rect2(88,179,920,110),57,UI.INK,false,true)
+	var title := _level_label(_design,"Welcome",Rect2(88,179,920,110),57,UI.INK,false,true)
 	title.autowrap_mode = TextServer.AUTOWRAP_OFF
+	title.name="HomeWelcomeTitle"
 	_level_label(_design,"Turn kitchen plans into clear design decisions.",Rect2(92,286,850,55),25,UI.INK,false)
-	var start := _button(("Play Again" if Progress.completed_count()==3 else "Continue Game") if Progress.completed_count()>0 else "Start Game",true,31)
-	start.name = "StartGame"
-	start.icon = UI.icon("play")
-	start.add_theme_constant_override("icon_max_width",34)
-	start.pressed.connect(func():
-		if Progress.completed_count() in [1,2]: stage_requested.emit(Progress.next_stage())
-		else: action_requested.emit("levels")
-	)
-	_put(_design,start,Rect2(233,350,500,83))
+	var start := _button("Start Game",true,25)
+	start.name="StartGame"
+	start.icon=UI.icon("play")
+	start.add_theme_constant_override("icon_max_width",28)
+	start.pressed.connect(func():action_requested.emit("new_game"))
+	_put(_design,start,Rect2(104,350,370,77))
+	var continue_button := _button("Continue Game",false,25)
+	continue_button.name="ContinueGame"
+	continue_button.icon=UI.icon("redo")
+	continue_button.add_theme_color_override("icon_normal_color",UI.TEAL)
+	continue_button.add_theme_constant_override("icon_max_width",28)
+	continue_button.disabled=not paused_game and not Progress.has_session()
+	continue_button.tooltip_text=UI.text("Resume your saved game") if not continue_button.disabled else UI.text("Start a game first")
+	continue_button.pressed.connect(func():action_requested.emit("continue"))
+	_put(_design,continue_button,Rect2(500,350,370,77))
 	for i in range(2):
 		var button := _button("Select Level" if i==0 else "How to Play",false,22)
 		button.name = "SelectLevel" if i==0 else "HowToPlay"

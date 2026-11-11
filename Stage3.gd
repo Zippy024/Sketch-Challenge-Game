@@ -21,6 +21,8 @@ const EN_PARTS: Array[String] = ["Countertop", "Kitchen board", "Range hood", "H
 var current_lang: String = "jp"
 var step: int = 0 # 0 = S-Class type, 1 = wall layout, 2..6 = identify five components, 7 = completed
 var last_wrong: bool = false
+var _completion_acknowledged: bool = false
+var _session_save_suspended: bool = false
 var _left_dialogue: VBoxContainer
 var _answer_area: VBoxContainer
 var _pause_menu: Control
@@ -33,6 +35,9 @@ func _ready() -> void:
 	theme = UI.make_theme()
 	current_lang = Progress.get_language()
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	if Progress.resume_stage()!=3: Progress.open_stage(3)
+	step=Progress.kitchen_step()
+	_completion_acknowledged=step>=7
 	_refresh()
 
 
@@ -73,11 +78,17 @@ func _clear() -> void:
 
 func _refresh() -> void:
 	_clear()
+	if step >= 7 and not _completion_acknowledged:
+		UI.background(self)
+		_show_completion()
+		return
 	if step >= 7:
 		var results := preload("res://ResultsScreen.gd").new()
 		results.levels_requested.connect(_go_levels)
 		results.replay_requested.connect(func():
+			Progress.open_stage(3)
 			step = 0
+			_completion_acknowledged=false
 			last_wrong = false
 			_refresh()
 		)
@@ -253,6 +264,7 @@ func _choose(index: int) -> void:
 	var correct_index: int = 2 if step == 0 else 1
 	if index == correct_index:
 		step += 1
+		Progress.save_kitchen_step(step)
 		if step == 7: Progress.complete(3)
 		last_wrong = false
 		_refresh()
@@ -278,6 +290,7 @@ func _draw_parts() -> void:
 func _select_part(which: int) -> void:
 	if which == step - 2:
 		step += 1
+		Progress.save_kitchen_step(step)
 		if step == 7: Progress.complete(3)
 		last_wrong = false
 		_refresh()
@@ -317,6 +330,7 @@ func _go_levels() -> void:
 
 
 func _open_game_menu() -> void:
+	_save_session()
 	if is_instance_valid(_pause_menu):
 		return
 	var overlay := preload("res://GameMenu.tscn").instantiate() as Control
@@ -338,6 +352,28 @@ func _resume_from_game_menu() -> void:
 	if current_lang != Progress.get_language():
 		current_lang = Progress.get_language()
 		_refresh()
+
+
+func _show_completion() -> void:
+	var popup := preload("res://StageCompleteOverlay.gd").new()
+	popup.name="Stage3CompleteOverlay"
+	popup.stage_index=3
+	popup.configure("","","View Results","View Levels")
+	popup.next_requested.connect(func():
+		_completion_acknowledged=true
+		_refresh()
+	)
+	popup.levels_requested.connect(_go_levels)
+	add_child(popup)
+
+func _save_session() -> void:
+	if not _session_save_suspended and Progress.resume_stage()==3: Progress.save_kitchen_step(step)
+
+func _suspend_session_save() -> void:
+	_session_save_suspended=true
+
+func _exit_tree() -> void:
+	_save_session()
 
 
 class KitchenDiagram extends Control:

@@ -181,6 +181,7 @@ var again_button_row: HBoxContainer
 var again_button: Button
 var stage_transition_running: bool = false
 var _reviewing_completed: bool = false
+var _session_save_suspended: bool = false
 var intro_overlay: ColorRect
 var game_has_started: bool = false
 var status_label: Label
@@ -191,7 +192,7 @@ var ok_button: Button
 var jp_lang_btn: Button
 var mm_lang_btn: Button
 var en_lang_btn: Button
-var _stage1_language_picker: OptionButton
+var _stage1_language_picker: Control
 
 # Recorded voice files. Place the three MP3 files in res:// (the project root).
 var voice_player: AudioStreamPlayer
@@ -249,7 +250,20 @@ func _ready() -> void:
 	add_child(voice_player)
 	voice_player.finished.connect(_on_voice_finished)
 	current_lang = Progress.get_language()
+	if Progress.resume_stage()!=1: Progress.open_stage(1)
 	_build_ui()
+	var saved := Progress.drawing()
+	if not saved.is_empty():
+		canvas.lines=saved
+		var view := Progress.drawing_view()
+		canvas.zoom_level=view.zoom
+		canvas.pan=view.pan
+		canvas.queue_redraw()
+	var autosave := Timer.new()
+	autosave.wait_time=1.0
+	autosave.timeout.connect(_save_session)
+	add_child(autosave)
+	autosave.start()
 	speaker_name_label.text = DIALOGUE_TEXTS[current_lang]["speaker"]
 	_apply_web_readability(self)
 	_update_lang_buttons_style()
@@ -939,8 +953,7 @@ func _build_ui() -> void:
 
 func _update_lang_buttons_style() -> void:
 	if is_instance_valid(_stage1_language_picker):
-		_stage1_language_picker.select({"jp":0, "mm":1, "en":2}.get(current_lang, 0))
-		_stage1_language_picker.text = _stage1_language_label(current_lang)
+		UI.update_language_switcher(_stage1_language_picker,current_lang)
 	var active_s := _stage1_surface(Color("187f95"), Color("77bdc9"), 11, 5)
 	var inactive_s := _stage1_surface(Color("f1f8fa"), Color("adced9"), 11, 5)
 	for pair in [[jp_lang_btn,"jp"],[mm_lang_btn,"mm"],[en_lang_btn,"en"]]:
@@ -1190,6 +1203,7 @@ func _confirm() -> void:
 		_set_status("Please wait for the customer to finish speaking.", false, true)
 		feedback_label.text = DIALOGUE_TEXTS[current_lang]["correct"]
 		_play_voice("correct")
+		_start_auto_stage_transition()
 	else:
 		last_eval_state = "wrong"
 		canvas.set_drawing_enabled(false)
@@ -1394,7 +1408,7 @@ func _start_auto_stage_transition() -> void:
 func _run_stage_transition() -> void:
 	var overlay := preload("res://StageCompleteOverlay.gd").new()
 	overlay.name = "Stage1CompleteOverlay"
-	overlay.configure("Stage 1 complete!","The LDK boundary matches the reference plan.","Continue to Stage 2","View Levels","Review drawing",true,true)
+	overlay.configure("Stage 1 complete!","The LDK boundary matches the reference plan.","Next Stage","View Levels","Review drawing",true,true)
 	overlay.next_requested.connect(func():
 		_stop_voice()
 		get_tree().change_scene_to_file("res://stage_2.tscn")
@@ -1438,6 +1452,7 @@ func _make_levels_menu_button() -> Button:
 
 # Show the menu ON TOP of the running scene. Do not lose the drawing or timer.
 func _open_game_menu() -> void:
+	_save_session()
 	if is_instance_valid(_pause_menu):
 		return
 	_voice_paused_for_menu = voice_player != null and voice_player.playing and not voice_player.stream_paused
@@ -1465,3 +1480,13 @@ func _resume_from_game_menu() -> void:
 	elif _voice_paused_for_menu and voice_player != null:
 		voice_player.stream_paused = false
 	_voice_paused_for_menu = false
+
+func _save_session() -> void:
+	if _session_save_suspended or Progress.resume_stage()!=1 or not is_instance_valid(canvas) or last_eval_state=="correct": return
+	Progress.save_drawing(canvas.lines,canvas.zoom_level,canvas.pan)
+
+func _suspend_session_save() -> void:
+	_session_save_suspended=true
+
+func _exit_tree() -> void:
+	_save_session()

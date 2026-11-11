@@ -167,6 +167,8 @@ var last_eval_state := "none" # "none", "good", "needs"
 var last_evaluation_source: String = "offline"
 var _ai_http: HTTPRequest
 var _ai_busy: bool = false
+var _completion_shown: bool = false
+var _session_save_suspended: bool = false
 var name_label: Label
 var bubble: PanelContainer
 var question_label: Label
@@ -219,7 +221,10 @@ func _ready() -> void:
 	add_child(voice_player)
 	voice_player.finished.connect(_on_voice_finished)
 
+	if Progress.resume_stage()!=2: Progress.open_stage(2)
 	_build_ui()
+	answer_input.text=Progress.answer()
+	answer_input.text_changed.connect(_save_session)
 	_apply_web_readability(self)
 	_change_language(Progress.get_language())
 	_play_entrance_fade()
@@ -542,8 +547,8 @@ func _change_language(lang: String) -> void:
 	_stop_voice()
 	current_lang = lang
 	theme = UI.make_theme()
-	var picker := find_child("GameLanguagePicker",true,false) as OptionButton
-	if picker: picker.select({"jp":0,"mm":1,"en":2}[lang])
+	var picker := find_child("GameLanguagePicker",true,false) as Control
+	if picker: UI.update_language_switcher(picker,lang)
 	_update_lang_buttons_style()
 	var d: Dictionary = QUESTIONS[lang]
 	name_label.text = str(d["name"])
@@ -578,6 +583,7 @@ func _change_language(lang: String) -> void:
 		_play_voice("question")
 
 func _reset_answer() -> void:
+	_completion_shown=false
 	_cancel_ai_request()
 	_stop_voice()
 	last_eval_state = "none"
@@ -668,6 +674,7 @@ func _show_check_result(correct: bool) -> void:
 		feedback_label.add_theme_color_override("font_color", Color("14532d"))
 		_set_progress_state("completed")
 		_play_voice("good")
+		_show_completion()
 	else:
 		last_eval_state = "needs"
 		question_label.visible = true
@@ -969,6 +976,7 @@ func _make_levels_menu_button() -> Button:
 
 
 func _open_game_menu() -> void:
+	_save_session()
 	if is_instance_valid(_pause_menu):
 		return
 	_voice_paused_for_menu = voice_player != null and voice_player.playing and not voice_player.stream_paused
@@ -996,3 +1004,32 @@ func _resume_from_game_menu() -> void:
 	elif _voice_paused_for_menu and voice_player != null:
 		voice_player.stream_paused = false
 	_voice_paused_for_menu = false
+
+func _show_completion() -> void:
+	if _completion_shown: return
+	_completion_shown=true
+	var popup := preload("res://StageCompleteOverlay.gd").new()
+	popup.name="Stage2CompleteOverlay"
+	popup.stage_index=2
+	popup.configure("","","Next Stage","View Levels","Review answer",true,true)
+	popup.next_requested.connect(func():
+		_stop_voice()
+		get_tree().change_scene_to_file("res://stage_3.tscn")
+	)
+	popup.levels_requested.connect(func():
+		_stop_voice()
+		Progress.show_levels_on_open=true
+		get_tree().change_scene_to_file("res://GameMenu.tscn")
+	)
+	popup.replay_requested.connect(func():popup.queue_free())
+	add_child(popup)
+
+func _save_session() -> void:
+	if _session_save_suspended or Progress.resume_stage()!=2 or not is_instance_valid(answer_input) or last_eval_state=="good": return
+	Progress.save_answer(answer_input.text)
+
+func _suspend_session_save() -> void:
+	_session_save_suspended=true
+
+func _exit_tree() -> void:
+	_save_session()

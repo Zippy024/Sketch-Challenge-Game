@@ -5,6 +5,12 @@ static var _loaded: bool = false
 static var _stage1_cleared: bool = false
 static var _stage2_cleared: bool = false
 static var _stage3_cleared: bool = false
+static var _resume_stage: int = 0
+static var _stage1_draft: Array[PackedVector2Array] = []
+static var _stage1_zoom: float = 1.0
+static var _stage1_pan := Vector2(72,60)
+static var _stage2_draft: String = ""
+static var _stage3_step: int = 0
 static var _language: String = "jp"
 static var show_levels_on_open: bool = false
 # Set only by the Level Select button; skip the redundant Stage 1 intro screen.
@@ -21,6 +27,18 @@ static func _ensure_loaded() -> void:
 		_stage3_cleared = bool(config.get_value("progress", "stage3_cleared", false))
 		var saved_lang: String = str(config.get_value("settings", "language", "jp"))
 		_language = saved_lang if saved_lang in ["jp", "mm", "en"] else "jp"
+		_resume_stage = int(config.get_value("session","stage",0))
+		_stage1_draft.clear()
+		for segment in config.get_value("session","drawing",[]):
+			if segment is PackedVector2Array and segment.size()==2: _stage1_draft.append(segment)
+		_stage1_zoom = clampf(float(config.get_value("session","zoom",1.0)),0.1,8.0)
+		_stage1_pan = config.get_value("session","pan",Vector2(72,60))
+		_stage2_draft = str(config.get_value("session","answer",""))
+		_stage3_step = clampi(int(config.get_value("session","step",0)),0,7)
+		# Existing verified saves remain resumable after this update.
+		if _resume_stage==0 and (_stage1_cleared or _stage2_cleared or _stage3_cleared):
+			_resume_stage = next_stage()
+			if _stage3_cleared and completed_count()==3: _stage3_step=7
 
 static func _save() -> void:
 	var config := ConfigFile.new()
@@ -28,6 +46,12 @@ static func _save() -> void:
 	config.set_value("progress", "stage2_cleared", _stage2_cleared)
 	config.set_value("progress", "stage3_cleared", _stage3_cleared)
 	config.set_value("settings", "language", _language)
+	config.set_value("session","stage",_resume_stage)
+	config.set_value("session","drawing",_stage1_draft)
+	config.set_value("session","zoom",_stage1_zoom)
+	config.set_value("session","pan",_stage1_pan)
+	config.set_value("session","answer",_stage2_draft)
+	config.set_value("session","step",_stage3_step)
 	var result := config.save(SAVE_PATH)
 	if result != OK:
 		push_warning("Could not save game progress: " + str(result))
@@ -54,11 +78,7 @@ static func is_level_unlocked(level: int) -> bool:
 	return level >= 1 and level <= 3
 
 static func unlock_level(level: int) -> void:
-	_ensure_loaded()
-	# Only the verified Stage 1 success path in Main.gd calls unlock_level(2).
-	if level == 2 and not _stage1_cleared:
-		_stage1_cleared = true
-		_save()
+	if level==2: complete(1)
 
 static func get_highest_unlocked() -> int:
 	_ensure_loaded()
@@ -74,6 +94,14 @@ static func complete(stage: int) -> void:
 	elif stage == 2: _stage2_cleared = true
 	elif stage == 3: _stage3_cleared = true
 	else: return
+	_resume_stage = mini(stage+1,3)
+	if stage==1:
+		_stage1_draft.clear()
+		_stage2_draft=""
+	if stage==2:
+		_stage2_draft=""
+		_stage3_step=0
+	if stage==3: _stage3_step=7
 	_save()
 
 static func completed_count() -> int:
@@ -91,4 +119,72 @@ static func reset_progress() -> void:
 	_stage1_cleared = false
 	_stage2_cleared = false
 	_stage3_cleared = false
+	_resume_stage = 0
+	_stage1_draft.clear()
+	_stage1_zoom=1.0
+	_stage1_pan=Vector2(72,60)
+	_stage2_draft=""
+	_stage3_step=0
 	_save()
+
+static func has_session() -> bool:
+	_ensure_loaded()
+	return _resume_stage in [1,2,3]
+
+static func resume_stage() -> int:
+	_ensure_loaded()
+	return _resume_stage
+
+static func start_new_game() -> void:
+	reset_progress()
+	open_stage(1)
+
+static func open_stage(stage: int, resume: bool = false) -> void:
+	_ensure_loaded()
+	if stage not in [1,2,3]: return
+	_resume_stage=stage
+	if not resume:
+		if stage==1:
+			_stage1_draft.clear()
+			_stage1_zoom=1.0
+			_stage1_pan=Vector2(72,60)
+		if stage==2: _stage2_draft=""
+		if stage==3: _stage3_step=0
+	_save()
+
+static func save_drawing(lines: Array, zoom: float, pan: Vector2) -> void:
+	_ensure_loaded()
+	if _stage1_draft==lines and is_equal_approx(zoom,_stage1_zoom) and pan==_stage1_pan: return
+	_stage1_draft.clear()
+	for segment in lines: _stage1_draft.append(PackedVector2Array(segment))
+	_stage1_zoom=zoom
+	_stage1_pan=pan
+	_save()
+
+static func drawing() -> Array[PackedVector2Array]:
+	_ensure_loaded()
+	return _stage1_draft.duplicate(true)
+
+static func drawing_view() -> Dictionary:
+	_ensure_loaded()
+	return {"zoom":_stage1_zoom,"pan":_stage1_pan}
+
+static func save_answer(answer: String) -> void:
+	_ensure_loaded()
+	if _stage2_draft==answer: return
+	_stage2_draft=answer
+	_save()
+
+static func answer() -> String:
+	_ensure_loaded()
+	return _stage2_draft
+
+static func save_kitchen_step(step: int) -> void:
+	_ensure_loaded()
+	if _stage3_step==step: return
+	_stage3_step=clampi(step,0,7)
+	_save()
+
+static func kitchen_step() -> int:
+	_ensure_loaded()
+	return _stage3_step
