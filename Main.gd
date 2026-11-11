@@ -705,6 +705,8 @@ func _build_ui() -> void:
 	voice_replay_button.tooltip_text = "Replay from beginning"
 	voice_stop_button.tooltip_text = "Pause / Resume"
 	var voice_controls := HBoxContainer.new()
+	voice_controls.name="CustomerVoiceControls"
+	voice_controls.hide()
 	voice_controls.add_theme_constant_override("separation",7)
 	speech_stack.add_child(voice_controls)
 	voice_controls.add_child(voice_replay_button)
@@ -1415,6 +1417,12 @@ func _run_stage_transition() -> void:
 	)
 	overlay.levels_requested.connect(func():
 		Progress.show_levels_on_open = true
+		get_tree().change_scene_to_file("res://GameMenu.tscn")
+	)
+	overlay.home_requested.connect(func():
+		_stop_voice()
+		Progress.show_home_on_open=true
+		Progress.show_levels_on_open=false
 		get_tree().change_scene_to_file("res://GameMenu.tscn")
 	)
 	overlay.replay_requested.connect(func():

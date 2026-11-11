@@ -300,6 +300,8 @@ func _build_ui() -> void:
 	voice_stop_button = UI.button("",_toggle_voice_pause,false,30,12)
 	_set_voice_icon(voice_replay_button,"replay")
 	_set_voice_icon(voice_stop_button,"pause")
+	customer.voice.name="CustomerVoiceControls"
+	customer.voice.hide()
 	customer.voice.add_child(voice_replay_button)
 	customer.voice.add_child(UI.inline_label("Replay",12))
 	customer.voice.add_child(voice_stop_button)
@@ -1019,6 +1021,12 @@ func _show_completion() -> void:
 	popup.levels_requested.connect(func():
 		_stop_voice()
 		Progress.show_levels_on_open=true
+		get_tree().change_scene_to_file("res://GameMenu.tscn")
+	)
+	popup.home_requested.connect(func():
+		_stop_voice()
+		Progress.show_home_on_open=true
+		Progress.show_levels_on_open=false
 		get_tree().change_scene_to_file("res://GameMenu.tscn")
 	)
 	popup.replay_requested.connect(func():popup.queue_free())

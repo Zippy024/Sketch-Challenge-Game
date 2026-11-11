@@ -363,6 +363,11 @@ func _show_completion() -> void:
 		_completion_acknowledged=true
 		_refresh()
 	)
+	popup.home_requested.connect(func():
+		Progress.show_home_on_open=true
+		Progress.show_levels_on_open=false
+		get_tree().change_scene_to_file("res://GameMenu.tscn")
+	)
 	popup.levels_requested.connect(_go_levels)
 	add_child(popup)
 

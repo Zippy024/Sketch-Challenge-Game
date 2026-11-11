@@ -176,17 +176,6 @@ func _build_levels() -> void:
 		var column := (n-1)%5
 		var row := floori(float(n-1)/5.0)
 		_card(n,Rect2(82+column*257,178+row*258,238,248))
-	var brief := PanelContainer.new()
-	brief.name = "MissionBrief"
-	brief.add_theme_stylebox_override("panel",UI.box(Color(0.87,0.97,1,0.85),Color.WHITE,20,14))
-	_put(_design,brief,Rect2(46,700,1348,62))
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation",24)
-	brief.add_child(row)
-	row.add_child(UI.inline_label("Your mission",23,true))
-	var message := UI.label(["Draw the connected living, dining and kitchen area.","Explain the pipe shaft and the limits on moving it.","Choose a kitchen layout and identify five components."][selected_stage-1],17)
-	message.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(message)
 	var back := _back_button("Back to Game" if paused_game else "Back to Home","back")
 	back.name = "BackFromLevels"
 	_put(_design,back,Rect2(46,768,230,36))
