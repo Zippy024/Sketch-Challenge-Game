@@ -29,12 +29,8 @@ func _build() -> void:
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	brand.add_child(spacer)
-	var language := OptionButton.new()
-	for title in ["日本語","မြန်မာ","English"]: language.add_item(title)
-	language.select({"jp":0,"mm":1,"en":2}[Progress.get_language()])
-	UI.style_button(language,false,13)
-	language.item_selected.connect(func(index: int):
-		Progress.set_language(["jp","mm","en"][index])
+	var language := UI.language_switcher(func(lang: String):
+		Progress.set_language(lang)
 		_build()
 	)
 	brand.add_child(language)

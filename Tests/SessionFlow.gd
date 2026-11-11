@@ -1,0 +1,87 @@
+extends SceneTree
+const Progress=preload("res://GameProgress.gd")
+func _initialize() -> void: call_deferred("_run")
+func _wait() -> void: await create_timer(0.3).timeout
+func _home() -> Control:
+	Progress.show_levels_on_open=true
+	change_scene_to_file("res://GameMenu.tscn")
+	await _wait()
+	current_scene.call("_show_home")
+	await _wait()
+	return current_scene.find_child("KitchenHomeScreen",true,false)
+func _run() -> void:
+	Progress.reset_progress()
+	Progress.set_language("en")
+	var home=await _home()
+	assert(home.find_child("ContinueGame",true,false).disabled)
+	home.find_child("StartGame",true,false).pressed.emit()
+	await _wait()
+	var game=current_scene
+	assert(Progress.resume_stage()==1 and Progress.completed_count()==0)
+	var canvas=game.get("canvas")
+	canvas.lines.append(PackedVector2Array([Vector2.ZERO,Vector2(1000,0)]))
+	canvas.lines.append(PackedVector2Array([Vector2(1000,0),Vector2(1000,500)]))
+	canvas.zoom_level=1.5
+	canvas.pan=Vector2(88,97)
+	game.call("_save_session")
+	Progress._loaded=false
+	assert(Progress.drawing().size()==2 and Progress.drawing_view().pan==Vector2(88,97))
+	# Continue in the pause menu resumes the same live game.
+	game.call("_open_game_menu")
+	assert(paused)
+	var overlay=game.get("_pause_menu")
+	overlay.call("_show_home")
+	await _wait()
+	overlay.find_child("ContinueGame",true,false).pressed.emit()
+	await _wait()
+	assert(not paused and current_scene==game and canvas.lines.size()==2)
+	# Continue after returning home restores the exact saved geometry and view.
+	home=await _home()
+	assert(not home.find_child("ContinueGame",true,false).disabled)
+	home.find_child("ContinueGame",true,false).pressed.emit()
+	await _wait()
+	game=current_scene
+	canvas=game.get("canvas")
+	assert(canvas.lines.size()==2 and is_equal_approx(canvas.zoom_level,1.5) and canvas.pan==Vector2(88,97))
+	# Start Game from a paused scene discards its draft before the old scene exits.
+	game.call("_open_game_menu")
+	overlay=game.get("_pause_menu")
+	overlay.call("_show_home")
+	await _wait()
+	overlay.find_child("StartGame",true,false).pressed.emit()
+	await _wait()
+	assert(not paused and current_scene.get("canvas").lines.is_empty() and Progress.drawing().is_empty())
+	Progress.open_stage(2)
+	change_scene_to_file("res://stage_2.tscn")
+	await _wait()
+	var draft="My answer: PS — လိုင်း ၁\nDo not translate player input."
+	current_scene.get("answer_input").text=draft
+	current_scene.get("answer_input").text_changed.emit()
+	await _wait()
+	Progress._loaded=false
+	assert(Progress.answer()==draft)
+	home=await _home()
+	home.find_child("ContinueGame",true,false).pressed.emit()
+	await _wait()
+	assert(current_scene.get("answer_input").text==draft and Progress.resume_stage()==2)
+	Progress.open_stage(3)
+	change_scene_to_file("res://stage_3.tscn")
+	await _wait()
+	current_scene.call("_choose",2)
+	current_scene.call("_choose",1)
+	current_scene.call("_select_part",0)
+	assert(current_scene.get("step")==3)
+	Progress._loaded=false
+	assert(Progress.kitchen_step()==3)
+	home=await _home()
+	home.find_child("ContinueGame",true,false).pressed.emit()
+	await _wait()
+	assert(current_scene.get("step")==3 and current_scene.find_child("KitchenPartsDiagram",true,false)!=null)
+	Progress.complete(1)
+	Progress.complete(2)
+	home=await _home()
+	home.find_child("StartGame",true,false).pressed.emit()
+	await _wait()
+	assert(Progress.completed_count()==0 and Progress.resume_stage()==1 and current_scene.get("canvas").lines.is_empty())
+	print("SESSION_FLOW_OK: fresh start, pause resume, saved drawing, answer draft and Stage 3 checkpoint")
+	quit()

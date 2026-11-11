@@ -156,13 +156,9 @@ static func header(stage: int, title: String, menu_action: Callable, language_ac
 	var mark := logo(144,44)
 	mark.name = "Stage1Logo" if stage == 1 else "GameLogo"
 	row.add_child(mark)
-	var badge := PanelContainer.new()
-	badge.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	badge.add_theme_stylebox_override("panel",box(TEAL,TEAL,15,5))
+	var badge := ribbon(text("Stage %d")%stage,15)
+	badge.name="StageRibbon"
 	row.add_child(badge)
-	var stage_label := label("Stage %d" % stage,15,true,Color.WHITE)
-	stage_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	badge.add_child(stage_label)
 	var heading := label(title,22,true)
 	heading.autowrap_mode = TextServer.AUTOWRAP_OFF
 	heading.clip_text = true
@@ -171,15 +167,9 @@ static func header(stage: int, title: String, menu_action: Callable, language_ac
 	var count := label(text("Stage %d of 3") % stage,12,false,MUTED)
 	count.autowrap_mode = TextServer.AUTOWRAP_OFF
 	row.add_child(count)
-	var picker := OptionButton.new()
-	picker.name = "Stage1LanguagePicker" if stage == 1 else "GameLanguagePicker"
-	for language in ["日本語","မြန်မာ","English"]: picker.add_item(language)
-	picker.select({"jp":0,"mm":1,"en":2}[Progress.get_language()])
-	picker.fit_to_longest_item = false
-	picker.custom_minimum_size = Vector2(105,34)
-	picker.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	style_button(picker,false,12)
-	picker.item_selected.connect(func(index: int): language_action.call(["jp","mm","en"][index]))
+	var picker := language_switcher(language_action)
+	picker.name = "Stage1LanguagePicker" if stage==1 else "GameLanguagePicker"
+	picker.size_flags_vertical=Control.SIZE_SHRINK_CENTER
 	row.add_child(picker)
 	var pause := button("Ⅱ",menu_action,false,34,15)
 	pause.name = "Stage1PauseButton" if stage == 1 else "GamePauseButton"
@@ -220,7 +210,7 @@ static func progress_strip(compact: bool = false) -> PanelContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation",10)
 	strip.add_child(row)
-	row.add_child(inline_label("Your progress",14,true))
+	row.add_child(ribbon("Your progress",13))
 	for n in range(1,4):
 		var segment := PanelContainer.new()
 		segment.name = "MissionSegment%d" % n
@@ -315,7 +305,7 @@ static func icon(kind: String) -> Texture2D:
 		"play":'<path d="M8 4l13 8L8 20z" fill="currentColor" stroke="none"/>',
 		"layers":'<path d="M12 3l10 6-10 6L2 9zM2 13l10 6 10-6M2 17l10 6 10-6"/>',
 		"help":'<circle cx="12" cy="12" r="10"/><path d="M9 8a3 3 0 1 1 4 3c-1 1-1 2-1 3M12 17v1"/>',
-		"gear":'<path d="M9 2h6l1 3 3 1 3 4-2 3 1 3-4 4-3-1-3 3-4-2v-3l-3-2v-5l3-1 1-3z"/><circle cx="12" cy="12" r="4"/>',
+		"gear":'<path d="M9.5 2h5l.6 3 1.4.8 2.9-1 2.5 4.3-2.3 2v1.8l2.3 2-2.5 4.3-2.9-1-1.4.8-.6 3h-5l-.6-3-1.4-.8-2.9 1L1.6 15l2.3-2v-1.8l-2.3-2 2.5-4.3 2.9 1 1.4-.8z"/><circle cx="12" cy="12" r="3.4"/>',
 		"plan":'<path d="M3 3h18v18H3zM7 3v7h6v11M13 10h8M3 15h4"/>',
 		"chat":'<path d="M3 3h18v14H9l-6 5zM7 8h1m4 0h1m4 0h1"/>',
 		"cube":'<path d="M12 2l10 6v10l-10 6-10-6V8zM2 8l10 6 10-6M12 14v10"/>',
@@ -351,3 +341,45 @@ static func _refresh_primary(button: Button) -> void:
 		box.content_margin_bottom = 4
 		box.modulate_color = Color("dfffff") if state=="hover" else (Color("acdce0") if state=="pressed" else Color.WHITE)
 		button.add_theme_stylebox_override(state,box)
+
+static func ribbon(value: String, size: int = 15) -> PanelContainer:
+	var panel := PanelContainer.new()
+	panel.size_flags_vertical=Control.SIZE_SHRINK_CENTER
+	panel.mouse_filter=Control.MOUSE_FILTER_IGNORE
+	var style := StyleBoxTexture.new()
+	style.texture=preload("res://UIAssets/ribbon.svg")
+	style.texture_margin_left=30
+	style.texture_margin_right=30
+	style.content_margin_left=23
+	style.content_margin_right=23
+	style.content_margin_top=2 if size<=13 else 4
+	style.content_margin_bottom=2 if size<=13 else 4
+	panel.add_theme_stylebox_override("panel",style)
+	var caption := label(value,size,true,Color.WHITE)
+	caption.autowrap_mode=TextServer.AUTOWRAP_OFF
+	caption.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+	panel.add_child(caption)
+	return panel
+
+static func language_switcher(action: Callable, size: int = 12) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation",4)
+	for entry in [["jp","日本語"],["mm","မြန်မာ"],["en","English"]]:
+		var b := button(entry[1],Callable(),false,76,size)
+		b.name="SwitchLanguage"+entry[0]
+		b.set_meta("language",entry[0])
+		b.custom_minimum_size.y=34
+		b.pressed.connect(func():
+			action.call(entry[0])
+			if is_instance_valid(row): update_language_switcher(row,Progress.get_language())
+		)
+		row.add_child(b)
+	update_language_switcher(row,Progress.get_language())
+	return row
+
+static func update_language_switcher(row: Control, language: String) -> void:
+	for child in row.get_children():
+		if child is Button:
+			var active: bool=child.get_meta("language","")==language
+			child.add_theme_stylebox_override("normal",box(Color("c4f3f3") if active else Color("f5fbff"),TEAL if active else EDGE,1000,4))
+			child.add_theme_font_override("font",font(active))

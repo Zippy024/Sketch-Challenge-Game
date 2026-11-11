@@ -247,6 +247,10 @@ func _show_presentation(levels: bool) -> void:
 	screen.action_requested.connect(func(action: String) -> void:
 		match action:
 			"levels":_show_levels()
+			"new_game":_start_new_game()
+			"continue":
+				if is_pause_overlay: _resume_paused()
+				elif Progress.has_session(): _start_level(Progress.resume_stage(),true)
 			"language":_show_language_select()
 			"guide":_show_help()
 			"settings":_show_settings()
@@ -503,9 +507,19 @@ func _on_volume_changed(value: float) -> void:
 	Extras.apply_audio()
 
 
-func _start_level(level: int) -> void:
+func _start_new_game() -> void:
+	var current := get_tree().current_scene
+	if current.has_method("_suspend_session_save"): current.call("_suspend_session_save")
+	Progress.start_new_game()
+	_start_level(1)
+
+func _start_level(level: int, resume: bool = false) -> void:
 	if level > 3 or not Progress.is_level_unlocked(level):
 		return
+	var current := get_tree().current_scene
+	if current.has_method("_save_session"): current.call("_save_session")
+	if current.has_method("_suspend_session_save"): current.call("_suspend_session_save")
+	Progress.open_stage(level,resume)
 	Progress.launch_from_level_menu = (level == 1)
 	if is_pause_overlay:
 		get_tree().paused = false

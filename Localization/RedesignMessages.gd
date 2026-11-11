@@ -359,5 +359,47 @@ const MESSAGES = [
 		"mm": "သင့်မစ်ရှင်",
 		"jp": "今回のミッション",
 		"aliases": []
+	},
+	{
+		"en": "Welcome",
+		"mm": "ကြိုဆိုပါတယ်",
+		"jp": "ようこそ",
+		"aliases": []
+	},
+	{
+		"en": "Stage %d complete!",
+		"mm": "အဆင့် %d အောင်မြင်ပါပြီ။",
+		"jp": "ステージ%d クリア！",
+		"aliases": []
+	},
+	{
+		"en": "Next Stage",
+		"mm": "နောက်အဆင့်",
+		"jp": "次のステージ",
+		"aliases": []
+	},
+	{
+		"en": "View Results",
+		"mm": "ရလဒ် ကြည့်မည်",
+		"jp": "結果を見る",
+		"aliases": []
+	},
+	{
+		"en": "Review answer",
+		"mm": "အဖြေ ပြန်ကြည့်မည်",
+		"jp": "回答を確認",
+		"aliases": []
+	},
+	{
+		"en": "Start a game first",
+		"mm": "အရင် စကစားပါ",
+		"jp": "ゲームを開始してください",
+		"aliases": []
+	},
+	{
+		"en": "Resume your saved game",
+		"mm": "သိမ်းထားသည့်နေရာမှ ဆက်ကစားမည်",
+		"jp": "保存した続きから再開",
+		"aliases": []
 	}
 ]

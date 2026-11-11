@@ -22,8 +22,8 @@ func _ready() -> void:
 	var panel := PanelContainer.new()
 	panel.add_theme_stylebox_override("panel",UI.box(Color(0.94,0.98,1,0.74),Color.WHITE,28,30))
 	_layout.add_child(panel)
-	panel.position = Vector2(280,196)
-	panel.size = Vector2(880,580)
+	panel.position = Vector2(280,235)
+	panel.size = Vector2(880,440)
 	var stack := VBoxContainer.new()
 	stack.alignment = BoxContainer.ALIGNMENT_CENTER
 	stack.add_theme_constant_override("separation",14)
@@ -36,14 +36,18 @@ func _ready() -> void:
 	subtitle.text = "You can change this later in Settings."
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	stack.add_child(subtitle)
+	var options := HBoxContainer.new()
+	options.add_theme_constant_override("separation",12)
+	stack.add_child(options)
 	for entry in [["jp","日本語"],["mm","မြန်မာ"],["en","English"]]:
-		var choice := UI.button("",_choose.bind(entry[0]),false,800,24)
+		var choice := UI.button("",_choose.bind(entry[0]),false,250,24)
 		choice.name = "LanguageOption"+entry[0]
-		choice.custom_minimum_size.y = 66
-		choice.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		choice.custom_minimum_size.y = 92
+		choice.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+		choice.alignment = HORIZONTAL_ALIGNMENT_CENTER
 		choice.set_meta("language",entry[0])
 		choice.set_meta("caption",entry[1])
-		stack.add_child(choice)
+		options.add_child(choice)
 		_choices.append(choice)
 	_continue = UI.button("",_confirm,true,430,24)
 	_continue.text = "Continue   →"
