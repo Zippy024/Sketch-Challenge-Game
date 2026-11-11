@@ -6,14 +6,15 @@ signal resume_requested
 
 const Progress = preload("res://GameProgress.gd")
 const BilingualTheme: Theme = preload("res://WebBilingualTheme.tres")
+const UI = preload("res://KitchenUI.gd")
 const Extras = preload("res://MenuExtras.gd")
 
 const BG := Color("f5f5f1")
 const WHITE := Color("ffffff")
 const INK := Color("152f32")
 const MUTED := Color("647780")
-const GREEN := Color("007c5e")
-const GREEN_DARK := Color("006448")
+const GREEN := Color("008f98")
+const GREEN_DARK := Color("007d87")
 const GREEN_PALE := Color("e2f2ea")
 const BORDER := Color("d6e0e0")
 const GOLD := Color("d5ac72")
@@ -33,7 +34,7 @@ var _stats_reset_armed: bool = false
 
 
 func _ready() -> void:
-	theme = BilingualTheme
+	theme = UI.make_theme()
 	_volume_value = Extras.volume()
 	Extras.apply_audio()
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -107,13 +108,15 @@ func _button(title: String, primary: bool = false, min_w: float = 165.0, min_h: 
 	b.add_theme_stylebox_override("hover", _style(GREEN_DARK if primary else GREEN_PALE, GREEN, 12, 9))
 	b.add_theme_stylebox_override("pressed", _style(GREEN_DARK if primary else GREEN_PALE, GREEN, 12, 9))
 	b.add_theme_stylebox_override("focus", _style(Color.TRANSPARENT, GOLD, 12, 0))
+	UI.style_button(b,primary,15)
 	return b
 
 
 func _build_frame() -> void:
+	UI.background(self)
 	var bg := PanelContainer.new()
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	bg.add_theme_stylebox_override("panel", _style(BG, BG, 0))
+	bg.add_theme_stylebox_override("panel", _style(Color(0.94,0.98,1,0.6), Color.TRANSPARENT, 0))
 	add_child(bg)
 
 	var outer := VBoxContainer.new()
@@ -121,14 +124,14 @@ func _build_frame() -> void:
 	bg.add_child(outer)
 
 	var top := PanelContainer.new()
-	top.custom_minimum_size.y = 65
+	top.custom_minimum_size.y = 58
 	top.add_theme_stylebox_override("panel", _style(WHITE, BORDER, 0))
 	outer.add_child(top)
 	var header_margin := MarginContainer.new()
 	header_margin.add_theme_constant_override("margin_left", 28)
 	header_margin.add_theme_constant_override("margin_right", 28)
-	header_margin.add_theme_constant_override("margin_top", 8)
-	header_margin.add_theme_constant_override("margin_bottom", 8)
+	header_margin.add_theme_constant_override("margin_top", 3)
+	header_margin.add_theme_constant_override("margin_bottom", 3)
 	top.add_child(header_margin)
 	var header := HBoxContainer.new()
 	header.add_theme_constant_override("separation", 12)
@@ -136,8 +139,8 @@ func _build_frame() -> void:
 
 	# Single brand mark shared by the in-game header, desktop icon and Web favicon.
 	var mark := TextureRect.new()
-	mark.custom_minimum_size = Vector2(45, 45)
-	mark.texture = preload("res://Branding/SketchChallengeLogo.png")
+	mark.custom_minimum_size = Vector2(132, 44)
+	mark.texture = preload("res://LoadingAssets/KitchenLogo.webp")
 	mark.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	mark.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	mark.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
@@ -603,15 +606,16 @@ func _show_progress() -> void:
 		if not Extras.last_date().is_empty():
 			last_label += "  •  " + Extras.last_date()
 	v.add_child(_label(LocaleManager.text("Last selected: %s") % LocaleManager.text(last_label), 13, MUTED))
+	_body.add_child(UI.progress_strip())
 	var grid := HBoxContainer.new()
 	grid.add_theme_constant_override("separation", 11)
 	_body.add_child(grid)
 	for n in range(1, 4):
-		var text_status := "COMPLETED (VERIFIED)" if n == 1 and Extras.stage1_completed() else ("NOT YET VERIFIED" if n == 1 else "COMPLETION NOT TRACKED")
+		var text_status := "COMPLETED (VERIFIED)" if Progress.is_completed(n) else "NOT YET VERIFIED"
 		var panel := _info_panel("STAGE %d" % n, "Level Menu launches: %d\n%s" % [Extras.count(n), LocaleManager.text(text_status)], "AVAILABLE TO PLAY")
 		panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		grid.add_child(panel)
-	_body.add_child(_info_panel("About progress", "Stage 1 completion is read from the existing verified save file. Stage 2/3 completion is not stored there, so this screen does not claim they were completed. Launch counts only include starts from Level Select."))
+	_body.add_child(_info_panel("About progress", "Each mission is saved after its answer checks pass. Launch counts only include starts from Level Select."))
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
 	_body.add_child(row)
