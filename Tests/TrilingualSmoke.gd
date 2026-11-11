@@ -88,6 +88,16 @@ func _run() -> void:
 		var workspace=game.find_child("Stage1WorkspaceSplit",true,false)
 		var customer_card=game.find_child("Stage1CustomerCard",true,false)
 		var drawing_card=game.find_child("Stage1DrawingCard",true,false)
+		assert(game.find_child("Stage1Header",true,false).size.y<=58)
+		assert(game.find_child("Stage1Logo",true,false).texture.resource_path=="res://LoadingAssets/KitchenLogo.webp")
+		var avatar=game.find_child("Stage1CustomerAvatar",true,false)
+		var name_plate=game.find_child("Stage1CustomerIdentity",true,false)
+		assert(name_plate.global_position.y>=avatar.get_global_rect().end.y)
+		var request_header=game.find_child("CustomerRequestHeader",true,false)
+		assert(request_header.visible)
+		assert(request_header.get_global_rect().end.y<=game.get("dialog_bubble").global_position.y)
+		for tool in game.find_child("Stage1SixToolGroup",true,false).get_children():
+			assert(tool.size.y<=40)
 		assert(absf(customer_card.size.x/workspace.size.x-0.35)<0.025)
 		assert(not customer_card.get_global_rect().intersects(drawing_card.get_global_rect()))
 		for card_name in ["Stage1CustomerCard","Stage1ReferenceCard","Stage1DrawingCard"]:
