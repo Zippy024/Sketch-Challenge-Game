@@ -760,7 +760,9 @@ func _build_ui() -> void:
 	var name_plate := PanelContainer.new()
 	name_plate.name = "Stage1CustomerIdentity"
 	name_plate.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	name_plate.add_theme_stylebox_override("panel", _stage1_surface(Color("e5f1ff"), Color("a7cdee"), 7, 5))
+	var identity_spacing := StyleBoxEmpty.new()
+	identity_spacing.set_content_margin_all(3)
+	name_plate.add_theme_stylebox_override("panel", identity_spacing)
 	avatar_column.add_child(name_plate)
 	speaker_name_label = _label(DIALOGUE_TEXTS[current_lang]["speaker"], 12, "315a89")
 	speaker_name_label.name = "Stage1CustomerName"
@@ -775,11 +777,14 @@ func _build_ui() -> void:
 	customer_row.add_child(speech_stack)
 	var request_header := PanelContainer.new()
 	request_header.name = "CustomerRequestHeader"
-	request_header.custom_minimum_size.x = 200
 	request_header.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	request_header.add_theme_stylebox_override("panel", _stage1_surface(Color("d9ebff"), Color("a9cfef"), 7, 5))
+	var heading_spacing := StyleBoxEmpty.new()
+	heading_spacing.content_margin_left = 8
+	heading_spacing.content_margin_bottom = 2
+	request_header.add_theme_stylebox_override("panel", heading_spacing)
 	speech_stack.add_child(request_header)
 	var request_heading := _label("Customer Request", 13, "315a89")
+	_stage1_bold(request_heading)
 	request_heading.autowrap_mode = TextServer.AUTOWRAP_OFF
 	request_header.add_child(request_heading)
 
