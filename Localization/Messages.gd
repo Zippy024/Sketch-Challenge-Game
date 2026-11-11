@@ -748,10 +748,10 @@ const MESSAGES = [
 		"aliases": []
 	},
 	{
-		"en": "Draw the requested layout, then click OK.",
-		"mm": "တောင်းဆိုထားသော ပုံစံကို ဆွဲပြီး အတည်ပြုမည် ကို နှိပ်ပါ။",
-		"jp": "指定の間取りを描いて、確認を押してください。",
-		"aliases": []
+		"en": "Draw the requested layout, then click Check Answer.",
+		"mm": "တောင်းဆိုထားသော ပုံစံကို ဆွဲပြီး အဖြေစစ်မည် ကို နှိပ်ပါ။",
+		"jp": "指定の間取りを描いて、「回答を確認」を押してください。",
+		"aliases": ["Draw the requested layout, then click OK."]
 	},
 	{
 		"en": "Drawing started! Click points on the grid to draw the layout.",
