@@ -85,6 +85,13 @@ func _run() -> void:
 		await _wait()
 		var customer_name: String = game.get("speaker_name_label").text
 		assert(customer_name==manager.text("Ms. Hosokawa"))
+		var workspace=game.find_child("Stage1WorkspaceSplit",true,false)
+		var customer_card=game.find_child("Stage1CustomerCard",true,false)
+		var drawing_card=game.find_child("Stage1DrawingCard",true,false)
+		assert(absf(customer_card.size.x/workspace.size.x-0.35)<0.025)
+		assert(not customer_card.get_global_rect().intersects(drawing_card.get_global_rect()))
+		for card_name in ["Stage1CustomerCard","Stage1ReferenceCard","Stage1DrawingCard"]:
+			assert(game.get_global_rect().encloses(game.find_child(card_name,true,false).get_global_rect()))
 		# Exercise the visible Stage 1 controls, including the two distinct Resets.
 		var drawing=game.get("canvas")
 		var wall=PackedVector2Array([Vector2.ZERO,Vector2(1000,0)])
@@ -113,6 +120,10 @@ func _run() -> void:
 		await _wait()
 		assert(game.get("last_eval_state")=="wrong")
 		assert(game.get("again_button_row").visible)
+		for control_name in ["Stage1DrawingToolbar","Stage1ResetDrawing","Stage1CheckAnswer"]:
+			var control=game.find_child(control_name,true,false)
+			assert(drawing_card.get_global_rect().encloses(control.get_global_rect()))
+		assert(drawing_card.get_global_rect().encloses(game.get("again_button").get_global_rect()))
 		game.get("again_button").pressed.emit()
 		assert(game.get("last_eval_state")=="none" and drawing.drawing_enabled)
 		# Language changes must not restore the old, hard-coded customer name.
