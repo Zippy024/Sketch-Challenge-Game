@@ -5,6 +5,7 @@ const MUTED := Color("526d82")
 const TEAL := Color("008f98")
 const EDGE := Color("c3dce9")
 static var _fonts: Dictionary = {}
+static var _backdrop_texture: Texture2D
 
 static func text(value: String) -> String:
 	var tree := Engine.get_main_loop() as SceneTree
@@ -97,17 +98,38 @@ static func button(value: String, action: Callable, primary: bool = false, width
 	if action.is_valid(): b.pressed.connect(action)
 	return b
 
+static func _backdrop() -> Texture2D:
+	if _backdrop_texture != null: return _backdrop_texture
+	# The photograph is static. Blur it once, then reuse the rendered texture
+	# across pages instead of running 25 texture samples per pixel every frame.
+	var viewport := SubViewport.new()
+	viewport.name = "CachedKitchenBackdrop"
+	viewport.size = Vector2i(960,540)
+	viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
+	var photo := TextureRect.new()
+	photo.texture = preload("res://MenuAssets/Modern Teal Kitchen with Warm Accents (1).png")
+	photo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	photo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	photo.size = Vector2(960,540)
+	var material := ShaderMaterial.new()
+	material.shader = preload("res://UIAssets/kitchen-soft.gdshader")
+	photo.material = material
+	viewport.add_child(photo)
+	var tree := Engine.get_main_loop() as SceneTree
+	var manager := tree.root.get_node_or_null("LocaleManager")
+	if manager: manager.add_child(viewport)
+	else: tree.root.call_deferred("add_child",viewport)
+	_backdrop_texture = viewport.get_texture()
+	return _backdrop_texture
+
 static func background(parent: Control) -> void:
 	parent.theme = make_theme()
 	var photo := TextureRect.new()
 	photo.name = "KitchenBackdrop"
-	photo.texture = preload("res://MenuAssets/Modern Teal Kitchen with Warm Accents (1).png")
+	photo.texture = _backdrop()
 	photo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	photo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	photo.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var mat := ShaderMaterial.new()
-	mat.shader = preload("res://UIAssets/kitchen-soft.gdshader")
-	photo.material = mat
 	parent.add_child(photo)
 	photo.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var wash := ColorRect.new()
