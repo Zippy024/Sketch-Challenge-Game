@@ -62,6 +62,7 @@ func _run() -> void:
 		await _wait()
 		var screen=menu.find_child("LevelSelectionScreen",true,false)
 		assert(screen!=null)
+		assert(screen.find_child("MissionBrief",true,false)==null)
 		var cards=screen.find_children("StageCard*","Button",true,false)
 		assert(cards.size()==10)
 		assert(screen.find_children("SelectedPlayButton","Button",true,false).size()==1)
@@ -95,6 +96,33 @@ func _run() -> void:
 			menu.call(page)
 			await _wait()
 			_collect(menu,page)
+			if page=="_show_settings":
+				var settings_page=menu.find_child("KitchenSettingsScreen",true,false)
+				var settings_card=settings_page.find_child("SettingsCard",true,false)
+				var settings_home=settings_page.find_child("SettingsHome",true,false)
+				assert(settings_page.get_global_rect().encloses(settings_card.get_global_rect()))
+				assert(settings_card.get_global_rect().end.y<settings_home.global_position.y)
+				for item in settings_card.find_children("*","Control",true,false):
+					if item is Label or item is Button or item is HSlider:
+						assert(settings_card.get_global_rect().encloses(item.get_global_rect()))
+				var extras=load("res://MenuExtras.gd")
+				var old_volume: float=extras.volume()
+				settings_page.find_child("SettingsVolume",true,false).value=0.4
+				assert(is_equal_approx(extras.volume(),0.4))
+				settings_page.find_child("SettingsVolume",true,false).value=old_volume
+				var old_mute: bool=extras.muted()
+				var mute=settings_page.find_child("SettingsMute",true,false)
+				mute.button_pressed=not old_mute
+				assert(extras.muted()!=old_mute)
+				mute.button_pressed=old_mute
+				var settings_languages=settings_page.find_child("SettingsLanguages",true,false)
+				settings_languages.get_children()[1].pressed.emit()
+				await _wait()
+				assert(Progress.get_language()=="mm")
+				var original_index: int=["jp","mm","en"].find(language)
+				settings_page.find_child("SettingsLanguages",true,false).get_children()[original_index].pressed.emit()
+				await _wait()
+				assert(Progress.get_language()==language)
 		# Select a card and launch through its visible Play control.
 		menu.call("_show_levels")
 		await _wait()
@@ -106,6 +134,8 @@ func _run() -> void:
 		var game=current_scene
 		assert(game.get("current_lang")==language)
 		assert(game.get("canvas")!=null)
+		assert(not game.find_child("CustomerVoiceControls",true,false).is_visible_in_tree())
+		assert(game.find_child("Stage1PauseButton",true,false)==null)
 		game.call("_stop_voice")
 		game.call("_on_voice_finished")
 		await _wait()
@@ -190,7 +220,10 @@ func _run() -> void:
 		assert(Progress.is_completed(1))
 		var complete=game.find_child("Stage1CompleteOverlay",true,false)
 		assert(complete!=null and current_scene==game)
-		assert(complete.find_child("CelebrationArtwork",true,false)!=null)
+		assert(complete.find_child("CelebrationArtwork",true,false).texture.resource_path=="res://UIAssets/HosokawaThumbsUp.webp")
+		assert(complete.find_child("CompletionConfetti",true,false).mouse_filter==Control.MOUSE_FILTER_IGNORE)
+		assert(complete.find_child("MissionCompleteCard",true,false).size.x>complete.find_child("MissionCompleteCard",true,false).size.y*2)
+		assert(complete.find_child("CompletionHome",true,false)!=null)
 		assert(complete.find_children("*","Label",true,false).size()==1)
 		assert(game.get_global_rect().encloses(complete.find_child("MissionCompleteCard",true,false).get_global_rect()))
 		if language == "en":
@@ -198,6 +231,13 @@ func _run() -> void:
 			await _wait()
 			assert(current_scene==game and game.get("ok_button").text==manager.text("Continue to Stage 2"))
 			game.get("ok_button").pressed.emit()
+		elif language=="mm":
+			complete.find_child("CompletionHome",true,false).pressed.emit()
+			await _wait()
+			assert(current_scene.find_child("KitchenHomeScreen",true,false)!=null)
+			assert(current_scene.find_child("LanguageSelectionScreen",true,false)==null)
+			assert(Progress.resume_stage()==2 and Progress.is_completed(1))
+			current_scene.find_child("ContinueGame",true,false).pressed.emit()
 		else:
 			complete.next_requested.emit()
 		await _wait()
@@ -207,6 +247,8 @@ func _run() -> void:
 		game.call("_on_voice_finished")
 		await _wait()
 		assert(game.get("name_label").text==customer_name)
+		assert(not game.find_child("CustomerVoiceControls",true,false).is_visible_in_tree())
+		assert(game.find_child("GamePauseButton",true,false)==null)
 		var stage_two_avatar: TextureRect = null
 		for portrait in game.find_children("*","TextureRect",true,false):
 			if portrait.texture!=null and portrait.texture.resource_path=="res://customer_portrait_ui.png":
@@ -230,7 +272,14 @@ func _run() -> void:
 		var second_popup=game.find_child("Stage2CompleteOverlay",true,false)
 		assert(second_popup!=null and second_popup.stage_index==2)
 		assert(second_popup.find_children("*","Label",true,false).size()==1)
-		second_popup.find_child("CompletionNext",true,false).pressed.emit()
+		if language=="en":
+			second_popup.find_child("CompletionHome",true,false).pressed.emit()
+			await _wait()
+			assert(current_scene.find_child("KitchenHomeScreen",true,false)!=null)
+			assert(Progress.resume_stage()==3 and Progress.is_completed(2))
+			current_scene.find_child("ContinueGame",true,false).pressed.emit()
+		else:
+			second_popup.find_child("CompletionNext",true,false).pressed.emit()
 		await _wait()
 		game=current_scene
 		assert(game.get("current_lang")==language)
@@ -262,7 +311,16 @@ func _run() -> void:
 		var third_popup=game.find_child("Stage3CompleteOverlay",true,false)
 		assert(third_popup!=null and third_popup.stage_index==3)
 		assert(third_popup.find_children("*","Label",true,false).size()==1)
-		third_popup.find_child("CompletionNext",true,false).pressed.emit()
+		if language=="jp":
+			third_popup.find_child("CompletionHome",true,false).pressed.emit()
+			await _wait()
+			assert(current_scene.find_child("KitchenHomeScreen",true,false)!=null)
+			assert(Progress.completed_count()==3)
+			current_scene.find_child("ContinueGame",true,false).pressed.emit()
+			await _wait()
+			game=current_scene
+		else:
+			third_popup.find_child("CompletionNext",true,false).pressed.emit()
 		await _wait()
 		assert(Progress.completed_count()==3)
 		assert(game.find_child("ResultsTitle",true,false).text==manager.text("Training complete!"))

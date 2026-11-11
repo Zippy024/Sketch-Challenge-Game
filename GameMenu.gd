@@ -41,7 +41,10 @@ func _ready() -> void:
 	_build_frame()
 	resized.connect(_fit_content)
 	_fit_content()
-	if is_pause_overlay or Progress.show_levels_on_open:
+	if Progress.show_home_on_open:
+		Progress.show_home_on_open=false
+		_show_home()
+	elif is_pause_overlay or Progress.show_levels_on_open:
 		Progress.show_levels_on_open = false
 		_show_levels()
 	else:
@@ -225,6 +228,7 @@ func _clear() -> void:
 	# Remove only the full-screen home presentation when changing to another page.
 	# The existing menu/level/game logic and shared frame remain unchanged.
 	if is_instance_valid(_home_overlay):
+		remove_child(_home_overlay)
 		_home_overlay.queue_free()
 		_home_overlay = null
 	for c in _body.get_children():
@@ -424,81 +428,15 @@ func _show_help() -> void:
 
 
 func _show_settings() -> void:
-	_reset_armed = false
 	_clear()
-	_body.add_child(_label("SETTINGS", 31, INK))
-	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", _style(WHITE, BORDER, 18, 30))
-	_body.add_child(panel)
-	var contents := VBoxContainer.new()
-	contents.add_theme_constant_override("separation", 20)
-	panel.add_child(contents)
-	contents.add_child(_label("LANGUAGE", 18, GREEN))
-	var languages := HBoxContainer.new()
-	contents.add_child(languages)
-	var japanese := _button("日本語", false, 140, 48)
-	japanese.pressed.connect(func() -> void: _set_language("jp"))
-	languages.add_child(japanese)
-	var myanmar := _button("မြန်မာ", false, 140, 48)
-	myanmar.pressed.connect(func() -> void: _set_language("mm"))
-	languages.add_child(myanmar)
-	var english := _button("English",false,140,48)
-	english.pressed.connect(func() -> void: _set_language("en"))
-	languages.add_child(english)
-	contents.add_child(_label("GAME VOLUME", 18, GREEN))
-	var volume := HSlider.new()
-	volume.min_value = 0.0
-	volume.max_value = 1.0
-	volume.step = 0.05
-	volume.value = _volume_value
-	volume.custom_minimum_size = Vector2(300, 36)
-	volume.value_changed.connect(_on_volume_changed)
-	contents.add_child(volume)
-	var sound_row := HBoxContainer.new()
-	sound_row.add_theme_constant_override("separation", 12)
-	contents.add_child(sound_row)
-	var sound_lbl := _label("MUTE ALL GAME AUDIO", 15, MUTED)
-	sound_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	sound_row.add_child(sound_lbl)
-	var mute_toggle := CheckButton.new()
-	mute_toggle.text = "OFF" if not Extras.muted() else "ON"
-	mute_toggle.button_pressed = Extras.muted()
-	mute_toggle.toggled.connect(func(value: bool) -> void:
-		Extras.set_muted(value)
-		Extras.apply_audio()
-		mute_toggle.text = "ON" if value else "OFF"
-	)
-	sound_row.add_child(mute_toggle)
-	contents.add_child(_label("DISPLAY", 18, GREEN))
-	var full_row := HBoxContainer.new()
-	full_row.add_theme_constant_override("separation", 12)
-	contents.add_child(full_row)
-	var fullscreen_btn := _button("TOGGLE FULLSCREEN", false, 220, 39)
-	fullscreen_btn.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	fullscreen_btn.pressed.connect(_toggle_fullscreen)
-	full_row.add_child(fullscreen_btn)
-	full_row.add_child(_label("Browser fullscreen may require user permission.", 12, MUTED))
-	contents.add_child(_label("Volume and mute settings are saved locally.", 12, MUTED))
-	contents.add_child(_label("SAVED GAME PROGRESS", 18, GREEN))
-	contents.add_child(_label("Reset saved stage progress; all available stages remain playable.", 14, MUTED))
-	var reset := _button("RESET LEVEL PROGRESS", false, 255, 45)
-	reset.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	reset.pressed.connect(_on_reset_progress_pressed.bind(reset))
-	contents.add_child(reset)
-	var go := _button("BACK TO HOME", true, 190, 48)
-	go.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	go.pressed.connect(_show_home)
-	contents.add_child(go)
-
-
-func _on_reset_progress_pressed(b: Button) -> void:
-	if not _reset_armed:
-		_reset_armed = true
-		b.text = "CONFIRM RESET"
-		return
-	_reset_armed = false
-	Progress.reset_progress()
-	_show_levels()
+	var screen := preload("res://SettingsScreen.gd").new()
+	screen.home_requested.connect(_show_home)
+	screen.levels_requested.connect(_show_levels)
+	screen.language_requested.connect(_set_language)
+	screen.fullscreen_requested.connect(_toggle_fullscreen)
+	screen.volume_changed.connect(_on_volume_changed)
+	_home_overlay=screen
+	add_child(screen)
 
 
 func _on_volume_changed(value: float) -> void:

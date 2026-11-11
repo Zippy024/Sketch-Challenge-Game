@@ -171,11 +171,6 @@ static func header(stage: int, title: String, menu_action: Callable, language_ac
 	picker.name = "Stage1LanguagePicker" if stage==1 else "GameLanguagePicker"
 	picker.size_flags_vertical=Control.SIZE_SHRINK_CENTER
 	row.add_child(picker)
-	var pause := button("Ⅱ",menu_action,false,34,15)
-	pause.name = "Stage1PauseButton" if stage == 1 else "GamePauseButton"
-	pause.tooltip_text = text("Pause / Level Menu")
-	pause.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(pause)
 	var menu := button("",menu_action,false,34,15)
 	menu.icon = preload("res://Stage1Assets/menu-lines.svg")
 	menu.add_theme_color_override("icon_normal_color",INK)

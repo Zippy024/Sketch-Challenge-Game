@@ -13,6 +13,7 @@ static var _stage2_draft: String = ""
 static var _stage3_step: int = 0
 static var _language: String = "jp"
 static var show_levels_on_open: bool = false
+static var show_home_on_open: bool = false
 # Set only by the Level Select button; skip the redundant Stage 1 intro screen.
 static var launch_from_level_menu: bool = false
 
