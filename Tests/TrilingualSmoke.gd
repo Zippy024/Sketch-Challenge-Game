@@ -29,6 +29,9 @@ func _run() -> void:
 		var menu=current_scene
 		var loading_caption=menu.find_child("LoadingCaption",true,false)
 		assert(loading_caption!=null and loading_caption.text.begins_with("Loading..."))
+		var loader=menu.find_child("KitchenLoadingScreen",true,false)
+		assert(loader.get_global_rect().encloses(loading_caption.get_global_rect()))
+		assert(loader.find_child("OriginalLoadingKitchen",true,false).texture.resource_path=="res://LoadingAssets/BlueKitchen.png")
 		await create_timer(2.2).timeout
 		var picker=menu.find_child("LanguageSelectionScreen",true,false)
 		assert(picker!=null)
@@ -118,6 +121,7 @@ func _run() -> void:
 		assert(request_header.get_global_rect().end.y<=game.get("dialog_bubble").global_position.y)
 		for tool in game.find_child("Stage1SixToolGroup",true,false).get_children():
 			assert(tool.size.y<=40)
+			assert(drawing_card.get_global_rect().encloses(tool.get_global_rect()))
 		assert(absf(customer_card.size.x/workspace.size.x-0.35)<0.025)
 		assert(not customer_card.get_global_rect().intersects(drawing_card.get_global_rect()))
 		for card_name in ["Stage1CustomerCard","Stage1ReferenceCard","Stage1DrawingCard"]:
@@ -230,6 +234,8 @@ func _run() -> void:
 		game.call("_choose",1)
 		await _wait()
 		_collect(game,"stage3-parts")
+		for panel in game.find_children("*","PanelContainer",true,false):
+			if panel.is_visible_in_tree(): assert(game.get_global_rect().encloses(panel.get_global_rect()))
 		for i in range(5):
 			await _wait()
 			var diagram=game.find_child("KitchenPartsDiagram",true,false)

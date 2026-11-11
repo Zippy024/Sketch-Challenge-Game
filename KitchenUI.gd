@@ -1,10 +1,11 @@
 extends RefCounted
 const Progress = preload("res://GameProgress.gd")
-const INK := Color("102e50")
-const MUTED := Color("526d82")
+const INK := Color("082744")
+const MUTED := Color("355c72")
 const TEAL := Color("008f98")
 const EDGE := Color("c3dce9")
 static var _fonts: Dictionary = {}
+static var _pill_textures: Dictionary = {}
 static var _backdrop_texture: Texture2D
 
 static func text(value: String) -> String:
@@ -17,9 +18,10 @@ static func font(bold: bool = false) -> FontVariation:
 	var key := lang + str(bold)
 	if not _fonts.has(key):
 		var f := FontVariation.new()
-		f.base_font = preload("res://Font/NotoSansMyanmar.ttf") if lang == "mm" else preload("res://Font/NotoSansCJKjp-Regular.otf")
+		f.base_font = preload("res://Font/NotoSansMyanmar-VariableFont_wdth,wght.ttf") if lang == "mm" else preload("res://Font/NotoSansJP-VariableFont_wght.ttf")
 		f.fallbacks = [preload("res://Font/NotoSansCJKjp-Regular.otf"),preload("res://Font/NotoSansMyanmar.ttf")]
-		f.variation_embolden = 0.5 if bold else 0.0
+		f.variation_opentype = {2003265652:700.0 if bold else 450.0}
+		f.variation_embolden = 0.1 if bold else 0.0
 		_fonts[key] = f
 	return _fonts[key]
 
@@ -29,7 +31,7 @@ static func make_theme() -> Theme:
 	result.default_font_size = 15
 	return result
 
-static func box(fill: Color = Color(0.95,0.98,1.0,0.91), edge: Color = Color(1,1,1,0.9), radius: int = 16, pad: int = 16) -> StyleBoxFlat:
+static func box(fill: Color = Color(0.94,0.98,1.0,0.82), edge: Color = Color(1,1,1,0.9), radius: int = 20, pad: int = 16) -> StyleBoxFlat:
 	var s := StyleBoxFlat.new()
 	s.bg_color = fill
 	s.border_color = edge
@@ -61,26 +63,18 @@ static func style_button(b: Button, primary: bool = false, size: int = 14, warni
 		if state == "hover": fill = fill.darkened(0.05)
 		if state == "pressed": fill = fill.darkened(0.11)
 		if state == "disabled": fill = Color("dce8ed")
-		var style := box(fill,Color("65c9d1") if primary else EDGE,20,4)
+		var style := box(fill,Color("65c9d1") if primary else EDGE,1000,4)
 		style.content_margin_left = 14
 		style.content_margin_right = 14
 		style.shadow_size = 2 if primary else 0
 		b.add_theme_stylebox_override(state,style)
+	b.set_meta("uses_primary_gloss",primary)
 	if primary:
-		for state in ["normal","hover","pressed"]:
-			var gloss := StyleBoxTexture.new()
-			gloss.texture = preload("res://UIAssets/primary.svg")
-			gloss.texture_margin_left = 22
-			gloss.texture_margin_right = 22
-			gloss.texture_margin_top = 20
-			gloss.texture_margin_bottom = 20
-			gloss.content_margin_left = 14
-			gloss.content_margin_right = 14
-			gloss.content_margin_top = 4
-			gloss.content_margin_bottom = 4
-			gloss.modulate_color = Color("dbffff") if state=="hover" else (Color("a8d8df") if state=="pressed" else Color.WHITE)
-			b.add_theme_stylebox_override(state,gloss)
-	var focus := box(Color.TRANSPARENT,TEAL,20,0)
+		_refresh_primary(b)
+		if not b.has_meta("primary_resize_connected"):
+			b.set_meta("primary_resize_connected",true)
+			b.resized.connect(_refresh_primary.bind(b))
+	var focus := box(Color.TRANSPARENT,TEAL,1000,0)
 	focus.set_border_width_all(2)
 	focus.shadow_size = 0
 	b.add_theme_stylebox_override("focus",focus)
@@ -107,7 +101,7 @@ static func _backdrop() -> Texture2D:
 	viewport.size = Vector2i(960,540)
 	viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
 	var photo := TextureRect.new()
-	photo.texture = preload("res://MenuAssets/Modern Teal Kitchen with Warm Accents (1).png")
+	photo.texture = preload("res://UIAssets/ConceptKitchen.webp")
 	photo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	photo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	photo.size = Vector2(960,540)
@@ -133,7 +127,7 @@ static func background(parent: Control) -> void:
 	parent.add_child(photo)
 	photo.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var wash := ColorRect.new()
-	wash.color = Color(0.83,0.94,0.96,0.43)
+	wash.color = Color(0.90,0.98,1.0,0.06)
 	wash.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(wash)
 	wash.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -151,7 +145,7 @@ static func header(stage: int, title: String, menu_action: Callable, language_ac
 	var panel := PanelContainer.new()
 	panel.name = "Stage1Header" if stage == 1 else "GameHeader"
 	panel.custom_minimum_size.y = 58
-	var style := box(Color(0.95,0.99,1,0.54),Color(1,1,1,0.6),0,5)
+	var style := box(Color(0.95,0.99,1,0.14),Color(1,1,1,0.28),0,4)
 	style.content_margin_left = 18
 	style.content_margin_right = 18
 	style.shadow_size = 0
@@ -159,7 +153,7 @@ static func header(stage: int, title: String, menu_action: Callable, language_ac
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation",14)
 	panel.add_child(row)
-	var mark := logo(132,44)
+	var mark := logo(144,44)
 	mark.name = "Stage1Logo" if stage == 1 else "GameLogo"
 	row.add_child(mark)
 	var badge := PanelContainer.new()
@@ -169,7 +163,7 @@ static func header(stage: int, title: String, menu_action: Callable, language_ac
 	var stage_label := label("Stage %d" % stage,15,true,Color.WHITE)
 	stage_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	badge.add_child(stage_label)
-	var heading := label(title,20,true)
+	var heading := label(title,22,true)
 	heading.autowrap_mode = TextServer.AUTOWRAP_OFF
 	heading.clip_text = true
 	heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -251,7 +245,7 @@ static func update_progress(strip: Control) -> void:
 static func portrait() -> TextureRect:
 	var face := TextureRect.new()
 	face.texture = preload("res://customer_portrait_ui.png")
-	face.custom_minimum_size = Vector2(110,110)
+	face.custom_minimum_size = Vector2(168,168)
 	face.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	face.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	face.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -279,14 +273,14 @@ static func customer(parent: Control) -> Dictionary:
 	row.add_theme_constant_override("separation",12)
 	stack.add_child(row)
 	var identity := VBoxContainer.new()
-	identity.custom_minimum_size.x = 140
+	identity.custom_minimum_size.x = 178
 	identity.add_theme_constant_override("separation",10)
 	row.add_child(identity)
 	identity.add_child(portrait())
 	var plate := PanelContainer.new()
 	plate.add_theme_stylebox_override("panel",box(Color("e8f4ff"),EDGE,8,6))
 	identity.add_child(plate)
-	var customer_name := label("Ms. Hosokawa",15,true)
+	var customer_name := label("Ms. Hosokawa",16,true)
 	customer_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	plate.add_child(customer_name)
 	var talk := VBoxContainer.new()
@@ -315,3 +309,45 @@ static func inline_label(value: String, size: int = 14, bold: bool = false) -> L
 	var result := label(value,size,bold)
 	result.autowrap_mode = TextServer.AUTOWRAP_OFF
 	return result
+
+static func icon(kind: String) -> Texture2D:
+	var shapes := {
+		"play":'<path d="M8 4l13 8L8 20z" fill="currentColor" stroke="none"/>',
+		"layers":'<path d="M12 3l10 6-10 6L2 9zM2 13l10 6 10-6M2 17l10 6 10-6"/>',
+		"help":'<circle cx="12" cy="12" r="10"/><path d="M9 8a3 3 0 1 1 4 3c-1 1-1 2-1 3M12 17v1"/>',
+		"gear":'<path d="M9 2h6l1 3 3 1 3 4-2 3 1 3-4 4-3-1-3 3-4-2v-3l-3-2v-5l3-1 1-3z"/><circle cx="12" cy="12" r="4"/>',
+		"plan":'<path d="M3 3h18v18H3zM7 3v7h6v11M13 10h8M3 15h4"/>',
+		"chat":'<path d="M3 3h18v14H9l-6 5zM7 8h1m4 0h1m4 0h1"/>',
+		"cube":'<path d="M12 2l10 6v10l-10 6-10-6V8zM2 8l10 6 10-6M12 14v10"/>',
+		"undo":'<path d="M9 4L3 10l6 6M3 10h11a6 6 0 0 1 0 12"/>',
+		"redo":'<path d="M15 4l6 6-6 6M21 10H10a6 6 0 0 0 0 12"/>',
+		"trash":'<path d="M3 6h18M9 6V3h6v3M5 6l1 16h12l1-16M9 10v8M15 10v8"/>',
+		"zoom":'<circle cx="10" cy="10" r="7"/><path d="M15 15l7 7M6 10h8M10 6v8"/>',
+		"zoomout":'<circle cx="10" cy="10" r="7"/><path d="M15 15l7 7M6 10h8"/>',
+		"clock":'<circle cx="12" cy="12" r="10"/><path d="M12 5v7l4 3"/>'
+	}
+	var svg := '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+str(shapes.get(kind,shapes["layers"])).replace("currentColor","#ffffff")+'</g></svg>'
+	var img := Image.new()
+	img.load_svg_from_buffer(svg.to_utf8_buffer())
+	return ImageTexture.create_from_image(img)
+
+static func _refresh_primary(button: Button) -> void:
+	if not bool(button.get_meta("uses_primary_gloss",false)): return
+	var height := maxi(38,roundi(button.size.y))
+	if not _pill_textures.has(height):
+		var radius := float(height)/2
+		var svg := '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="%d"><defs><linearGradient id="a" x2="0" y2="1"><stop stop-color="#39bac0"/><stop offset=".45" stop-color="#00959c"/><stop offset="1" stop-color="#006c77"/></linearGradient></defs><rect x="1" y="1" width="318" height="%d" rx="%s" fill="url(#a)" stroke="#e6ffff" stroke-width="1.5"/></svg>'%[height,height-2,str(radius-1)]
+		var img := Image.new()
+		img.load_svg_from_buffer(svg.to_utf8_buffer())
+		_pill_textures[height] = ImageTexture.create_from_image(img)
+	for state in ["normal","hover","pressed"]:
+		var box := StyleBoxTexture.new()
+		box.texture = _pill_textures[height]
+		box.texture_margin_left = float(height)/2+2
+		box.texture_margin_right = float(height)/2+2
+		box.content_margin_left = 14
+		box.content_margin_right = 14
+		box.content_margin_top = 4
+		box.content_margin_bottom = 4
+		box.modulate_color = Color("dfffff") if state=="hover" else (Color("acdce0") if state=="pressed" else Color.WHITE)
+		button.add_theme_stylebox_override(state,box)

@@ -434,13 +434,13 @@ func _draw_dynamic_grid() -> void:
 
 		var x: float = fposmod(pan.x, sub_px)
 		while x < size.x:
-			var col: Color = Color("c9eaf8") if is_zero_approx(fposmod(x - pan.x, major_px)) else Color("e3f3fc")
+			var col: Color = Color("c9eaf8") if is_zero_approx(fposmod(x - pan.x, major_px)) else Color("d3ecfa")
 			draw_line(Vector2(x, 0), Vector2(x, size.y), col, 1.0)
 			x += sub_px
 
 		var y: float = fposmod(pan.y, sub_px)
 		while y < size.y:
-			var col: Color = Color("c9eaf8") if is_zero_approx(fposmod(y - pan.y, major_px)) else Color("e3f3fc")
+			var col: Color = Color("c9eaf8") if is_zero_approx(fposmod(y - pan.y, major_px)) else Color("d3ecfa")
 			draw_line(Vector2(0, y), Vector2(size.x, y), col, 1.0)
 			y += sub_px
 

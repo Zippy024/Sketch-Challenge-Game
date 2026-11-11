@@ -65,7 +65,7 @@ func _build() -> void:
 		child.queue_free()
 	UI.background(self)
 	_design=Control.new()
-	_design.size=Vector2(1200,780)
+	_design.size=Vector2(1440,810)
 	add_child(_design)
 	if levels:_build_levels()
 	else:_build_home()
@@ -86,83 +86,107 @@ func _add_logo(rect: Rect2) -> void:
 	_logo.material = motion
 	_logo.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 
-func _build_home() -> void:
-	_add_logo(Rect2(365,0,470,210))
-	var panel := Panel.new()
-	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	panel.add_theme_stylebox_override("panel",UI.box())
-	_put(_design,panel,Rect2(350,215,500,435))
-	_label(_design,"Your kitchen design journey",Rect2(375,235,450,45),27,UI.INK)
-	_label(_design,"Three missions. One thoughtful kitchen.",Rect2(380,283,440,35),15,UI.MUTED)
-	var captions := [("Play Again" if Progress.completed_count()==3 else "Continue Game") if Progress.completed_count()>0 else "Start Game","Select Level","How to Play"]
-	for i in range(3):
-		var button := _button(captions[i],i==0,18)
-		button.name = ["StartGame","SelectLevel","HowToPlay"][i]
-		if i == 0 and Progress.completed_count() in [1,2]:
-			button.pressed.connect(func(): stage_requested.emit(Progress.next_stage()))
-		else:
-			button.pressed.connect(func(): action_requested.emit("guide" if i==2 else "levels"))
-		_put(_design,button,Rect2(420,340+i*65,360,48))
-	var progress := UI.progress_strip(true)
-	_put(_design,progress,Rect2(380,560,440,55))
-	# Keep the compact home progress readable inside its narrower card.
-	progress.find_child("OverallProgressCaption",true,false).hide()
-	var settings := _button("Settings",false,15)
+func _top_controls() -> void:
+	var language := OptionButton.new()
+	for title in ["日本語","မြန်မာ","English"]: language.add_item(title)
+	language.select({"jp":0,"mm":1,"en":2}[Progress.get_language()])
+	UI.style_button(language,false,16)
+	language.item_selected.connect(func(index: int):
+		Progress.set_language(["jp","mm","en"][index])
+		_build()
+	)
+	_put(_design,language,Rect2(1165,22,170,44))
+	var settings := _button("",false,16)
 	settings.name = "Settings"
-	settings.pressed.connect(func(): action_requested.emit("settings"))
-	_put(_design,settings,Rect2(1020,24,150,40))
-	var back := _back_button("Language", "language")
+	settings.icon = UI.icon("gear")
+	settings.add_theme_color_override("icon_normal_color",UI.INK)
+	settings.add_theme_constant_override("icon_max_width",24)
+	settings.pressed.connect(func():action_requested.emit("settings"))
+	_put(_design,settings,Rect2(1350,22,52,44))
+
+func _build_home() -> void:
+	_add_logo(Rect2(44,8,290,126))
+	_top_controls()
+	var panel := Panel.new()
+	panel.name = "HomeHeroPanel"
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.add_theme_stylebox_override("panel",UI.box(Color(0.93,0.98,1,0.66),Color.WHITE,28,0))
+	_put(_design,panel,Rect2(32,152,980,628))
+	var title := _level_label(_design,"Welcome, Designer",Rect2(88,179,920,110),57,UI.INK,false,true)
+	title.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_level_label(_design,"Turn kitchen plans into clear design decisions.",Rect2(92,286,850,55),25,UI.INK,false)
+	var start := _button(("Play Again" if Progress.completed_count()==3 else "Continue Game") if Progress.completed_count()>0 else "Start Game",true,31)
+	start.name = "StartGame"
+	start.icon = UI.icon("play")
+	start.add_theme_constant_override("icon_max_width",34)
+	start.pressed.connect(func():
+		if Progress.completed_count() in [1,2]: stage_requested.emit(Progress.next_stage())
+		else: action_requested.emit("levels")
+	)
+	_put(_design,start,Rect2(233,350,500,83))
+	for i in range(2):
+		var button := _button("Select Level" if i==0 else "How to Play",false,22)
+		button.name = "SelectLevel" if i==0 else "HowToPlay"
+		button.icon = UI.icon("layers" if i==0 else "help")
+		button.add_theme_color_override("icon_normal_color",UI.INK)
+		button.add_theme_constant_override("icon_max_width",30)
+		button.pressed.connect(func(): action_requested.emit("levels" if i==0 else "guide"))
+		_put(_design,button,Rect2(175+i*337,459,310,65))
+	var progress := UI.progress_strip()
+	_put(_design,progress,Rect2(60,566,928,64))
+	var line := ColorRect.new()
+	line.color = Color(0.20,0.55,0.65,0.3)
+	_put(_design,line,Rect2(72,657,885,1))
+	for i in range(3):
+		var feature := HBoxContainer.new()
+		feature.add_theme_constant_override("separation",12)
+		_put(_design,feature,Rect2(80+i*300,680,284,65))
+		var picture := TextureRect.new()
+		picture.texture = UI.icon(["plan","chat","cube"][i])
+		picture.modulate = UI.TEAL
+		picture.custom_minimum_size = Vector2(46,46)
+		picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		feature.add_child(picture)
+		var caption := UI.label(["Read plans","Explain clearly","Choose components"][i],17,true)
+		caption.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		feature.add_child(caption)
+	var back := _back_button("Language","language")
 	back.name = "BackToLanguage"
-	_put(_design,back,Rect2(42,728,170,42))
+	_put(_design,back,Rect2(1180,740,220,42))
 	if paused_game:
 		var resume := _button("Back to Game",true,16)
 		resume.pressed.connect(func():action_requested.emit("back"))
-		_put(_design,resume,Rect2(480,680,240,42))
+		_put(_design,resume,Rect2(1180,678,220,42))
 
 func _build_levels() -> void:
-	_add_logo(Rect2(25,5,285,125))
-	var divider := ColorRect.new()
-	divider.color = Color("9bf8ff")
-	divider.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_put(_design,divider,Rect2(322,27,1,78))
-	var heading := _level_label(_design,"Select a Level",Rect2(346,16,810,66),38,UI.INK,false,true)
-	var title_font := _level_font(true).duplicate() as FontVariation
-	title_font.variation_transform = Transform2D(Vector2(1,0),Vector2(-0.1,1),Vector2.ZERO)
-	heading.add_theme_font_override("font",title_font)
-	_level_label(_design,"Progress through kitchen design missions step by step.",Rect2(346,79,810,38),15,UI.MUTED,false)
-	var panel := Panel.new()
-	panel.name = "LevelGlassFrame"
-	panel.mouse_filter=Control.MOUSE_FILTER_IGNORE
-	panel.add_theme_stylebox_override("panel",_level_surface("frame"))
-	_put(_design,panel,Rect2(25,135,1150,535))
+	_add_logo(Rect2(46,0,270,112))
+	_top_controls()
+	_level_label(_design,"Select a Level",Rect2(375,0,775,72),42,UI.INK,false,true)
+	_level_label(_design,"Choose a mission to build your kitchen design skills.",Rect2(378,69,760,36),20,UI.INK,false)
+	var progress := UI.progress_strip()
+	_put(_design,progress,Rect2(310,110,825,48))
 	for n in range(1,11):
 		var column := (n-1)%5
 		var row := floori(float(n-1)/5.0)
-		_card(n,Rect2(53+column*220,151+row*258,208,252))
+		_card(n,Rect2(82+column*257,178+row*258,238,248))
 	var brief := PanelContainer.new()
 	brief.name = "MissionBrief"
-	brief.add_theme_stylebox_override("panel",UI.box(Color(0.96,0.99,1,0.92),Color.WHITE,16,8))
-	_put(_design,brief,Rect2(280,680,895,100))
-	var brief_col := VBoxContainer.new()
-	brief_col.add_theme_constant_override("separation",6)
-	brief.add_child(brief_col)
-	brief_col.add_child(UI.label(["Draw the connected living, dining and kitchen area.","Explain the pipe shaft and the limits on moving it.","Choose a kitchen layout and identify five components."][selected_stage-1],14,true))
-	brief_col.add_child(UI.progress_strip())
-	var back := _back_button("Back to Game" if paused_game else "Back to Home", "back")
-	back.name="BackFromLevels"
-	_style_level_action(back,16)
-	_put(_design,back,Rect2(42,728,210,42))
-
+	brief.add_theme_stylebox_override("panel",UI.box(Color(0.87,0.97,1,0.85),Color.WHITE,20,14))
+	_put(_design,brief,Rect2(46,700,1348,62))
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation",24)
+	brief.add_child(row)
+	row.add_child(UI.inline_label("Your mission",23,true))
+	var message := UI.label(["Draw the connected living, dining and kitchen area.","Explain the pipe shaft and the limits on moving it.","Choose a kitchen layout and identify five components."][selected_stage-1],17)
+	message.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(message)
+	var back := _back_button("Back to Game" if paused_game else "Back to Home","back")
+	back.name = "BackFromLevels"
+	_put(_design,back,Rect2(46,768,230,36))
 
 func _level_font(bold: bool = false) -> FontVariation:
-	var language := Progress.get_language()
-	var key := language + ("/bold" if bold else "/regular")
-	if not _level_fonts.has(key):
-		var font := FontVariation.new()
-		font.base_font = preload("res://Font/NotoSansMyanmar.ttf") if language == "mm" else preload("res://Font/NotoSansCJKjp-Regular.otf")
-		font.variation_embolden = 0.5 if bold else 0.0
-		_level_fonts[key] = font
-	return _level_fonts[key] as FontVariation
+	return UI.font(bold)
 
 
 func _level_label(parent: Control, message: String, rect: Rect2, font_size: int, color: Color = Color.WHITE, center: bool = true, bold: bool = false) -> Label:
@@ -187,6 +211,7 @@ func _thumbnail(stage: int) -> Texture2D:
 		2:return preload("res://MenuAssets/Level2.png")
 		3:return preload("res://MenuAssets/Level3.png")
 		4,7:return preload("res://MenuAssets/Level4.png")
+		6:return preload("res://MenuAssets/Level5.png")
 		5,8:return preload("res://MenuAssets/Level5.png")
 		_:return preload("res://MenuAssets/Level5.png")
 
@@ -224,7 +249,7 @@ func _card(stage: int, rect: Rect2) -> void:
 		outline.shadow_color = Color(0.0,0.6,0.7,0.18)
 		outline.shadow_offset = Vector2.ZERO
 		glow.add_theme_stylebox_override("panel",outline)
-		_put(card,glow,Rect2(-3,-3,214,258))
+		_put(card,glow,Rect2(-3,-3,244,254))
 		var ring := Panel.new()
 		ring.name = "SelectedStageOutline"
 		ring.z_index = 2
@@ -234,19 +259,28 @@ func _card(stage: int, rect: Rect2) -> void:
 		ring_style.shadow_size = 0
 		ring_style.draw_center = false
 		ring.add_theme_stylebox_override("panel",ring_style)
-		_put(card,ring,Rect2(-3,-3,214,258))
+		_put(card,ring,Rect2(-3,-3,244,254))
+	var banner := Panel.new()
+	banner.name = "StageCardHeader"
+	banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var banner_style := UI.box(Color("00888f") if available else Color("507f90"),Color.WHITE,18,0)
+	banner_style.corner_radius_bottom_left = 0
+	banner_style.corner_radius_bottom_right = 0
+	banner_style.shadow_size = 0
+	banner.add_theme_stylebox_override("panel",banner_style)
+	_put(card,banner,Rect2(0,0,238,43))
 	var icon := TextureRect.new()
 	icon.name = "StageSymbol"
 	var symbol := AtlasTexture.new()
 	symbol.atlas = preload("res://MenuAssets/stage-symbols.svg")
 	symbol.region = Rect2((stage-1)*32,0,32,32)
 	icon.texture = symbol
-	icon.modulate = UI.TEAL
+	icon.modulate = Color.WHITE
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_put(card,icon,Rect2(14,9,26,26))
-	var title := _level_label(card,LocaleManager.text("Stage %02d")%stage,Rect2(45,0,153,42),15,UI.INK,true,true)
+	var title := _level_label(card,LocaleManager.text("Stage %02d")%stage,Rect2(45,0,183,42),17,Color.WHITE,true,true)
 	title.name="StageTitle"
 	var image_frame := Panel.new()
 	image_frame.name = "StageThumbnailFrame"
@@ -255,7 +289,7 @@ func _card(stage: int, rect: Rect2) -> void:
 	var image_style := _box(Color("f4fcff"),Color("d4f7ff"),12)
 	image_style.shadow_size = 0
 	image_frame.add_theme_stylebox_override("panel",image_style)
-	_put(card,image_frame,Rect2(7,44,194,100))
+	_put(card,image_frame,Rect2(5,44,228,108))
 	var image := TextureRect.new()
 	image.name = "StageThumbnail"
 	image.texture=_thumbnail(stage)
@@ -263,13 +297,13 @@ func _card(stage: int, rect: Rect2) -> void:
 	image.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED if stage == 1 else TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	image.mouse_filter=Control.MOUSE_FILTER_IGNORE
 	image.modulate=Color.WHITE if available else Color(0.86,0.93,0.96)
-	_put(image_frame,image,Rect2(4,4,186,92))
-	var caption: String="Coming soon"
+	_put(image_frame,image,Rect2(3,3,222,102))
+	var caption: String=""
 	if stage==1:caption="LDK Boundary Drawing"
 	elif stage==2:caption="Pipe Shaft Q&A"
 	elif stage==3:caption="S-Class Kitchen Selection"
 	var caption_font_size := 12 if Progress.get_language() == "mm" else 14
-	var caption_view := _level_label(card,caption,Rect2(9,147,190,49),caption_font_size,Color("11374a"),true,true)
+	var caption_view := _level_label(card,caption,Rect2(7,153,224,36),caption_font_size,Color("11374a"),true,true)
 	caption_view.name = "StageCaption"
 	if selected:
 		var play := _button("Play",false,16)
@@ -277,7 +311,7 @@ func _card(stage: int, rect: Rect2) -> void:
 		_style_level_play(play)
 		play.icon = preload("res://MenuAssets/level-play.svg")
 		play.pressed.connect(func() -> void:stage_requested.emit(stage))
-		_put(card,play,Rect2(26,198,156,40))
+		_put(card,play,Rect2(25,194,188,38))
 	else:
 		var badge := Panel.new()
 		badge.name = "StageStatusBadge"
@@ -286,7 +320,7 @@ func _card(stage: int, rect: Rect2) -> void:
 		badge_style.shadow_size = 0
 		badge_style.set_border_width_all(1)
 		badge.add_theme_stylebox_override("panel",badge_style)
-		_put(card,badge,Rect2(44,210,120,28))
+		_put(card,badge,Rect2(30,200,178,30))
 		if not available:
 			var lock := TextureRect.new()
 			lock.name = "StageLock"
@@ -294,10 +328,10 @@ func _card(stage: int, rect: Rect2) -> void:
 			lock.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 			lock.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			_put(badge,lock,Rect2(14,6,16,16))
-		_level_label(badge,("Completed" if Progress.is_completed(stage) else "Ready") if available else "Locked",Rect2(4 if available else 31,0,112 if available else 85,28),12,Color("245b70"),true,true)
+		_level_label(badge,("Completed" if Progress.is_completed(stage) else "Ready") if available else "Coming soon",Rect2(4 if available else 31,0,170 if available else 143,30),12,Color("245b70"),true,true)
 
 func _fit() -> void:
 	if not is_instance_valid(_design):return
-	var factor := minf(minf(size.x/1260.0,size.y/820.0),1.2)
+	var factor := minf(size.x/1440.0,size.y/810.0)
 	_design.scale=Vector2.ONE*factor
-	_design.position=(size-Vector2(1200,780)*factor)*0.5
+	_design.position=(size-Vector2(1440,810)*factor)*0.5

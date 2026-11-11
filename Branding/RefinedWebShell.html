@@ -4,26 +4,24 @@
 <meta name="theme-color" content="#c7e2e9"><title>$GODOT_PROJECT_NAME</title>
 $GODOT_HEAD_INCLUDE
 <style>
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#c7e2e9;font-family:system-ui,sans-serif;color:#102e50}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#123e60;font-family:system-ui,sans-serif;color:white}
 #canvas{width:100%;height:100%;display:block;outline:none;touch-action:none}
-#sketch-loading{position:fixed;inset:0;z-index:10000;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-direction:column;transition:opacity .35s,visibility .35s}
-#sketch-loading::before{content:"";position:absolute;inset:-16px;background:linear-gradient(#d4edf06e,#d4edf06e),url("assets/loading-kitchen.png") center/cover;filter:blur(7px);z-index:-1}
+#sketch-loading{position:fixed;inset:0;z-index:10000;overflow:hidden;background:linear-gradient(#062e4d18,#0a31552e),url("assets/loading-kitchen.png") center/cover;transition:opacity .35s,visibility .35s;border:1px solid #bbefff}
 #sketch-loading.hide{opacity:0;visibility:hidden;pointer-events:none}
-.loading-logo{width:min(560px,75vw);height:245px;object-fit:contain;filter:drop-shadow(0 6px 8px #12507826)}
-.loading-tagline{font-size:22px;font-weight:600;text-align:center;margin:22px 18px 60px}
-.loading-footer{width:min(560px,78vw);text-align:center}
-.progress-track{height:12px;border-radius:10px;background:#d6e7ec;border:1px solid white;overflow:hidden}
-.progress-bar{height:100%;width:0;border-radius:10px;background:#008f98;transition:width .12s}
-#status-pct{display:block;margin-top:22px;font-size:16px}
-.loading-tip{font-size:14px;color:#526d82;margin-top:22px}
-#status-text{display:none}#sketch-loading.failed #status-text{display:block;margin-top:8px}
-@media(max-width:600px){.loading-logo{height:180px}.loading-tagline{font-size:18px;margin-bottom:40px}.loading-tip{font-size:12px}}
+.loading-logo{position:absolute;top:1.8%;left:50%;transform:translateX(-50%);width:min(47vw,530px);height:31%;object-fit:contain;filter:drop-shadow(0 6px 10px #103d6255)}
+.loading-ring{position:absolute;left:50%;top:78%;transform:translate(-50%,0);width:72%;height:18%;border:2px solid #bdffff;border-radius:50%;box-shadow:0 0 10px 4px #49e6ff66,inset 0 0 12px #5ff4ff;mask-image:linear-gradient(to bottom,transparent 42%,black 56%);margin-top:-9vh}
+.loading-footer{position:absolute;top:89%;left:50%;transform:translateX(-50%);width:min(48vw,560px);text-align:center}
+.progress-track{height:12px;border-radius:8px;background:#153f62;border:1px solid #b5efff;overflow:hidden}
+.progress-bar{height:100%;width:0;border-radius:8px;background:linear-gradient(#baffff,#45d9ed)}
+#status-pct{display:inline-block;margin-top:16px;padding:5px 18px;border-radius:18px;background:#082d4ba6;font-size:16px;font-weight:600;text-shadow:0 1px 3px #12385d}
+.loading-tagline,.loading-tip,#status-text{display:none}#sketch-loading.failed #status-text{display:block;margin-top:8px}
+@media(max-width:600px){.loading-logo{width:75vw;height:29%}.loading-footer{width:74vw}}
 @media(prefers-reduced-motion:reduce){#sketch-loading,.progress-bar{transition:none}}
 </style></head><body>
 <canvas id="canvas" tabindex="0">A browser with WebGL is required.</canvas>
 <div id="sketch-loading" role="status" aria-live="polite" aria-label="Loading Kitchen Decoration Game">
 <img class="loading-logo" src="assets/game-logo.webp" alt="Kitchen Decoration Game">
-<p class="loading-tagline">Design a kitchen. Build your confidence.</p>
+<div class="loading-ring" aria-hidden="true"></div><p class="loading-tagline">Design a kitchen. Build your confidence.</p>
 <div class="loading-footer"><div class="progress-track"><div class="progress-bar" id="sketch-bar"></div></div><span id="status-pct">Loading... 0%</span><span id="status-text"></span><p class="loading-tip">Read the plan. Understand the space. Make it yours.</p></div>
 </div><noscript>Enable JavaScript to play.</noscript>
   <script src="$GODOT_URL"></script>
