@@ -641,7 +641,7 @@ func _build_ui() -> void:
 	split.add_theme_constant_override("separation", 12)
 	split.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	split.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	margin.add_child(split)	margin.add_child(split)
+	margin.add_child(split)
 
 	# --- ဘယ်ဘက်ခြမ်း ---
 	var left_panel: PanelContainer = PanelContainer.new()
