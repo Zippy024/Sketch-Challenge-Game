@@ -192,7 +192,12 @@ static func header(stage: int, title: String, menu_action: Callable, language_ac
 	pause.tooltip_text = text("Pause / Level Menu")
 	pause.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(pause)
-	var menu := button("☰",menu_action,false,34,15)
+	var menu := button("",menu_action,false,34,15)
+	menu.icon = preload("res://Stage1Assets/menu-lines.svg")
+	menu.add_theme_color_override("icon_normal_color",INK)
+	menu.add_theme_color_override("icon_hover_color",TEAL)
+	menu.add_theme_color_override("icon_pressed_color",INK)
+	menu.tooltip_text = text("Menu")
 	menu.name = "Stage1MenuButton" if stage == 1 else "GameMenuButton"
 	menu.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(menu)
