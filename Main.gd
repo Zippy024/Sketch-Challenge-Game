@@ -634,11 +634,11 @@ func _build_ui() -> void:
 	margin.add_theme_constant_override("margin_left", 11)
 	margin.add_theme_constant_override("margin_right", 11)
 	margin.add_theme_constant_override("margin_top", 5)
-	margin.add_theme_constant_override("margin_bottom", 7)
+	margin.add_theme_constant_override("margin_bottom", 12)
 	screen_layout.add_child(margin)
 
 	var split := HBoxContainer.new()
-	split.add_theme_constant_override("separation", 12)
+	split.add_theme_constant_override("separation", 15)
 	split.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	split.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	margin.add_child(split)
@@ -648,7 +648,7 @@ func _build_ui() -> void:
 	left_panel.custom_minimum_size.x = 0
 	left_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	left_panel.size_flags_stretch_ratio = 2.0
-	left_panel.add_theme_stylebox_override("panel", _stage1_surface(Color(0.58, 0.86, 0.94, 0.92), Color(0.37, 0.91, 0.98), 22, 12))
+	left_panel.add_theme_stylebox_override("panel", _stage1_surface(Color(0.67, 0.89, 0.95, 0.94), Color(0.51, 0.82, 0.92), 22, 13))
 	split.add_child(left_panel)
 
 	var left: VBoxContainer = VBoxContainer.new()
@@ -665,10 +665,10 @@ func _build_ui() -> void:
 	# Conversation Box
 	var chat_panel: PanelContainer = PanelContainer.new()
 	chat_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	chat_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	chat_panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	chat_panel.size_flags_stretch_ratio = 1.14
-	chat_panel.custom_minimum_size.y = 278
-	chat_panel.add_theme_stylebox_override("panel", _stage1_surface(Color(0.57, 0.83, 0.91, 0.86), Color(0.60, 0.90, 0.94), 18, 9))
+	chat_panel.custom_minimum_size.y = 248
+	chat_panel.add_theme_stylebox_override("panel", _stage1_surface(Color(0.78, 0.91, 0.97, 0.9), Color(0.64, 0.85, 0.93), 18, 10))
 	left.add_child(chat_panel)
 
 	var row: HBoxContainer = HBoxContainer.new()
@@ -713,7 +713,7 @@ func _build_ui() -> void:
 	dialog_bubble = PanelContainer.new()
 	dialog_bubble.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	dialog_bubble.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	dialog_bubble.add_theme_stylebox_override("panel", _stage1_surface(Color(0.985, 0.995, 1.0, 0.99), Color(0.72, 0.87, 0.91), 18, 10))
+	dialog_bubble.add_theme_stylebox_override("panel", _stage1_surface(Color("fcfeff"), Color("b6d9e5"), 17, 11))
 	speech_stack.add_child(dialog_bubble)
 
 	var bubble_vbox := VBoxContainer.new()
@@ -805,7 +805,7 @@ func _build_ui() -> void:
 	ref_title_btn.flat = true
 	ref_title_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	ref_title_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	ref_title_btn.add_theme_font_size_override("font_size", 17)
+	ref_title_btn.add_theme_font_size_override("font_size", 19)
 	ref_title_btn.add_theme_color_override("font_color", Color("164c61"))
 	ref_title_btn.add_theme_color_override("font_hover_color", Color("117489"))
 	ref_title_btn.pressed.connect(_open_reference_popup)
@@ -816,13 +816,13 @@ func _build_ui() -> void:
 	image_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	image_frame.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	image_frame.size_flags_stretch_ratio = 1.0
-	image_frame.custom_minimum_size.y = 218
+	image_frame.custom_minimum_size.y = 268
 
-	image_frame.add_theme_stylebox_override("panel", _stage1_surface(Color("ffffff"), Color("afcfdc"), 16, 7))
+	image_frame.add_theme_stylebox_override("panel", _stage1_surface(Color("ffffff"), Color("b5d5e0"), 15, 5))
 	var reference_card := PanelContainer.new()
 	reference_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	reference_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	reference_card.add_theme_stylebox_override("panel", _stage1_surface(Color(0.70, 0.89, 0.95, 0.95), Color(0.63, 0.91, 0.96), 19, 8))
+	reference_card.add_theme_stylebox_override("panel", _stage1_surface(Color(0.75, 0.91, 0.97, 0.96), Color(0.61, 0.84, 0.92), 19, 9))
 	left.add_child(reference_card)
 	var ref_contents := VBoxContainer.new()
 	ref_contents.add_theme_constant_override("separation", 5)
@@ -844,7 +844,7 @@ func _build_ui() -> void:
 	right_panel.size_flags_stretch_ratio = 3.0
 	right_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	right_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	right_panel.add_theme_stylebox_override("panel", _stage1_surface(Color(0.74, 0.92, 0.97, 0.93), Color(0.38, 0.90, 0.98), 22, 10))
+	right_panel.add_theme_stylebox_override("panel", _stage1_surface(Color(0.78, 0.93, 0.97, 0.95), Color(0.52, 0.82, 0.92), 22, 12))
 	split.add_child(right_panel)
 
 	var right: VBoxContainer = VBoxContainer.new()
@@ -866,21 +866,21 @@ func _build_ui() -> void:
 
 	var tools_frame := PanelContainer.new()
 	tools_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	tools_frame.add_theme_stylebox_override("panel", _stage1_surface(Color("dff1f9"), Color("acd9ea"), 16, 5))
+	tools_frame.add_theme_stylebox_override("panel", _stage1_surface(Color("e3f2f9"), Color("b2d4e2"), 16, 6))
 	toolbar.add_child(tools_frame)
 	var tools_row := HBoxContainer.new()
 	tools_row.name = "Stage1SixToolGroup"
-	tools_row.add_theme_constant_override("separation", 6)
+	tools_row.add_theme_constant_override("separation", 7)
 	tools_frame.add_child(tools_row)
 
 	var add_tool := func(label_text: String, action: Callable, min_width: float, warning: bool = false) -> void:
 		var button := _button(label_text, action, min_width)
-		button.custom_minimum_size.y = 39
+		button.custom_minimum_size.y = 43
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.clip_text = true
-		button.add_theme_font_size_override("font_size", 14)
-		var surface := _stage1_surface(Color("fff1f1") if warning else Color("ffffff"), Color("d6a7b1") if warning else Color("aad0e1"), 12, 7)
-		var hover := _stage1_surface(Color("fddfe3") if warning else Color("d4effa"), Color("cf8394") if warning else Color("7bbbd7"), 12, 7)
+		button.add_theme_font_size_override("font_size", 15)
+		var surface := _stage1_surface(Color("fff3f3") if warning else Color("fdfefe"), Color("d6a7b1") if warning else Color("b0d2df"), 13, 7)
+		var hover := _stage1_surface(Color("f7dfe3") if warning else Color("dceff8"), Color("cf8394") if warning else Color("7bbbd7"), 13, 7)
 		button.add_theme_stylebox_override("normal", surface)
 		button.add_theme_stylebox_override("hover", hover)
 		button.add_theme_stylebox_override("pressed", hover)
@@ -915,7 +915,7 @@ func _build_ui() -> void:
 	var drawing_frame := PanelContainer.new()
 	drawing_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	drawing_frame.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	drawing_frame.add_theme_stylebox_override("panel", _stage1_surface(Color(0.98, 0.995, 1.0, 0.96), Color(0.65, 0.82, 0.89, 1.0), 17, 5))
+	drawing_frame.add_theme_stylebox_override("panel", _stage1_surface(Color("ffffff"), Color("b6d8e4"), 17, 5))
 	right.add_child(drawing_frame)
 	canvas = CanvasScript.new()
 	canvas.custom_minimum_size = Vector2(450, 350)
@@ -946,19 +946,19 @@ func _build_ui() -> void:
 	_stage1_status_mark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_stage1_status_mark.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_stage1_status_icon.add_child(_stage1_status_mark)
-	status_label = _label("Draw the requested layout, then click Check Answer.", 13)
+	status_label = _label("Draw the requested layout, then click Check Answer.", 14, "183f56")
 	status_label.custom_minimum_size.y = 45
 	status_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	status_row.add_child(status_label)
 
 	var clear_button := _button("Reset", _clear)
-	clear_button.custom_minimum_size = Vector2(88, 44)
+	clear_button.custom_minimum_size = Vector2(90, 46)
 	footer.add_child(clear_button)
 	again_button_row.size_flags_horizontal = Control.SIZE_SHRINK_END
 	footer.add_child(again_button_row)
-	again_button.custom_minimum_size = Vector2(115, 44)
+	again_button.custom_minimum_size = Vector2(115, 46)
 	ok_button = _button("Check Answer", _confirm)
-	ok_button.custom_minimum_size = Vector2(158, 44)
+	ok_button.custom_minimum_size = Vector2(166, 46)
 	_modern_button_style(ok_button, "primary")
 	footer.add_child(ok_button)
 
