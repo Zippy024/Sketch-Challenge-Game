@@ -139,6 +139,8 @@ func _run() -> void:
 		var active_header=game.find_child("Stage1Header",true,false)
 		var header_language=active_header.find_child("LanguageMenu",true,false)
 		assert(header_language is MenuButton and header_language.icon!=null and header_language.get_popup().item_count==3)
+		var language_popup_style:=header_language.get_popup().get_theme_stylebox("panel") as StyleBoxFlat
+		assert(language_popup_style!=null and language_popup_style.bg_color.get_luminance()>0.8)
 		assert(active_header.find_child("GameHomeButton",true,false).icon!=null)
 		assert(active_header.get_global_rect().encloses(reach.get_global_rect()))
 		assert(active_header.find_child("StageRibbon",true,false)==null)
@@ -184,6 +186,7 @@ func _run() -> void:
 		assert(request.get_content_height()<=game.get("dialog_scroll").size.y+2)
 		for line in request.text.split("\n"): assert(line.begins_with("• "))
 		assert(request_header.get_global_rect().end.y<=game.get("dialog_bubble").global_position.y)
+		assert(game.find_child("CustomerAnswerBadge",true,false).get_parent().get_parent()==request_header)
 		for tool in game.find_child("Stage1SixToolGroup",true,false).get_children():
 			assert(tool.size.y<=40)
 			assert(drawing_card.get_global_rect().encloses(tool.get_global_rect()))
@@ -220,6 +223,7 @@ func _run() -> void:
 		assert(game.get("last_eval_state")=="wrong")
 		assert(game.find_child("CustomerAnswerLabel",true,false).text==manager.text("Incorrect"))
 		var wrong_tint=game.get("dialog_bubble").get_meta("tint_strength")
+		assert(wrong_tint>0.0 and wrong_tint<0.1)
 		assert(game.get("dialog_bubble").get_theme_stylebox("panel").bg_color.r>game.get("dialog_bubble").get_theme_stylebox("panel").bg_color.g)
 		assert(game.get("again_button_row").visible)
 		for control_name in ["Stage1DrawingToolbar","Stage1ResetDrawing","Stage1CheckAnswer"]:
@@ -293,6 +297,7 @@ func _run() -> void:
 		assert(game.find_child("Stage2QATitle",true,false).text==manager.text("Plan Q&A"))
 		assert(game.find_child("CustomerNamePlate",true,false).get_theme_stylebox("panel").texture.resource_path==customer_frame)
 		assert(game.find_child("CustomerRequestHeader",true,false).get_theme_stylebox("panel").texture.resource_path==customer_frame)
+		assert(game.find_child("CustomerAnswerBadge",true,false).get_parent().get_parent()==game.find_child("CustomerRequestHeader",true,false))
 		assert(game.get("answer_input").size.y/qa_card.size.y>0.6)
 		assert(game.get("submit_button").text=="OK")
 		assert(game.get("progress_description").text==manager.text("Type your answer, then press OK."))
@@ -356,6 +361,7 @@ func _run() -> void:
 		game=current_scene
 		assert(game.get("current_lang")==language)
 		assert(game.find_child("GameHeader",true,false).find_child("CurrentStageLabel",true,false).text==manager.text("Stage %d")%3)
+		assert(game.find_child("CustomerAnswerBadge",true,false).get_parent().get_parent()==game.find_child("CustomerRequestHeader",true,false))
 		_collect(game,"stage3-q1")
 		game.call("_choose",0)
 		assert(game.get("step")==0)

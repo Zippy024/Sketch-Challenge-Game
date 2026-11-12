@@ -670,10 +670,16 @@ func _build_ui() -> void:
 	var heading_box := UI.customer_plate()
 	request_header.add_theme_stylebox_override("panel", heading_box)
 	speech_stack.add_child(request_header)
+	var request_heading_row := HBoxContainer.new()
+	request_heading_row.add_theme_constant_override("separation",7)
+	request_header.add_child(request_heading_row)
 	var request_heading := _label("Customer Request", 15, "082744")
 	_stage1_bold(request_heading)
 	request_heading.autowrap_mode = TextServer.AUTOWRAP_OFF
-	request_header.add_child(request_heading)
+	request_heading_row.add_child(request_heading)
+	var request_heading_spacer := Control.new()
+	request_heading_spacer.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+	request_heading_row.add_child(request_heading_spacer)
 
 	# A separate request heading and clear text box match the supplied conversation.
 	dialog_bubble = PanelContainer.new()
@@ -688,7 +694,7 @@ func _build_ui() -> void:
 	bubble_vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	bubble_vbox.add_theme_constant_override("separation", 8)
 	dialog_bubble.add_child(bubble_vbox)
-	UI.add_customer_feedback(dialog_bubble,bubble_vbox)
+	UI.add_customer_feedback(dialog_bubble,request_heading_row)
 
 	# Preserve recorded voice and UI feedback behavior.
 	voice_replay_button = _button("", _replay_voice, 26)

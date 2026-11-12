@@ -6,7 +6,7 @@ const TEAL := Color("008f98")
 const EDGE := Color("c3dce9")
 const SUCCESS := Color("2da36b")
 const FAILURE := Color("cd4c5e")
-const FEEDBACK_TINT := 0.22
+const FEEDBACK_TINT := 0.055
 static var _fonts: Dictionary = {}
 static var _font_files: Dictionary = {}
 static var _pill_textures: Dictionary = {}
@@ -305,9 +305,18 @@ static func customer(parent: Control) -> Dictionary:
 	row.add_child(talk)
 	var tag := PanelContainer.new()
 	tag.name="CustomerRequestHeader"
+	tag.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	tag.add_theme_stylebox_override("panel",customer_plate())
 	talk.add_child(tag)
-	tag.add_child(label("Customer Request",15,true))
+	var header_row:=HBoxContainer.new()
+	header_row.add_theme_constant_override("separation",7)
+	tag.add_child(header_row)
+	var request_title:=label("Customer Request",15,true)
+	request_title.autowrap_mode=TextServer.AUTOWRAP_OFF
+	header_row.add_child(request_title)
+	var header_spacer:=Control.new()
+	header_spacer.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+	header_row.add_child(header_spacer)
 	var bubble := PanelContainer.new()
 	bubble.name="CustomerConversation"
 	bubble.add_theme_stylebox_override("panel",conversation_style())
@@ -316,7 +325,7 @@ static func customer(parent: Control) -> Dictionary:
 	var dialogue := VBoxContainer.new()
 	dialogue.add_theme_constant_override("separation",9)
 	bubble.add_child(dialogue)
-	add_customer_feedback(bubble,dialogue)
+	add_customer_feedback(bubble,header_row)
 	var question := label("",14)
 	question.set_meta("locale_ignore",true)
 	dialogue.add_child(question)
@@ -344,18 +353,18 @@ static func conversation_style(state: String="neutral") -> StyleBoxFlat:
 	var edge:=EDGE
 	if state!="neutral":
 		fill=fill.lerp(accent,FEEDBACK_TINT)
-		edge=edge.lerp(accent,0.7)
+		edge=edge.lerp(accent,0.22)
 	var style:=box(fill,edge,18,12)
 	style.shadow_size=4
 	return style
 
-static func add_customer_feedback(bubble: PanelContainer,content: VBoxContainer) -> void:
+static func add_customer_feedback(bubble: PanelContainer,header_row: HBoxContainer) -> void:
+	# Keep the verdict alongside "Customer Request", never inside customer speech.
 	var badge:=PanelContainer.new()
 	badge.name="CustomerAnswerBadge"
-	badge.size_flags_horizontal=Control.SIZE_SHRINK_BEGIN
+	badge.size_flags_horizontal=Control.SIZE_SHRINK_END
 	badge.mouse_filter=Control.MOUSE_FILTER_IGNORE
-	content.add_child(badge)
-	content.move_child(badge,0)
+	header_row.add_child(badge)
 	var row:=HBoxContainer.new()
 	row.add_theme_constant_override("separation",7)
 	badge.add_child(row)
@@ -393,14 +402,18 @@ static func set_customer_feedback(bubble: PanelContainer,state: String,animate: 
 		tween.tween_property(surface,"bg_color",target,0.24).set_trans(Tween.TRANS_SINE)
 	badge.visible=state!="neutral"
 	if not badge.visible:return
-	var accent:=SUCCESS if state=="correct" else FAILURE
-	var style:=box(accent,accent.lightened(0.3),9,5)
-	style.content_margin_left=10
-	style.content_margin_right=10
-	style.shadow_size=2
+	var accent:=Color("237454") if state=="correct" else Color("a84655")
+	var style:=box(Color("e7f6ee") if state=="correct" else Color("fff0f2"),Color("a5d9be") if state=="correct" else Color("e9b7c0"),1000,4)
+	style.content_margin_left=9
+	style.content_margin_right=9
+	style.shadow_size=0
 	badge.add_theme_stylebox_override("panel",style)
-	badge.find_child("CustomerAnswerLabel",true,false).text=text("Correct" if state=="correct" else "Incorrect")
-	badge.find_child("AnswerVerdictIcon",true,false).texture=icon("check" if state=="correct" else "close")
+	var verdict_label:=badge.find_child("CustomerAnswerLabel",true,false) as Label
+	verdict_label.text=text("Correct" if state=="correct" else "Incorrect")
+	verdict_label.add_theme_color_override("font_color",accent)
+	var verdict_icon:=badge.find_child("AnswerVerdictIcon",true,false) as TextureRect
+	verdict_icon.texture=icon("check" if state=="correct" else "close")
+	verdict_icon.modulate=accent
 	if changed and animate:
 		badge.scale=Vector2(0.94,0.94)
 		badge.modulate.a=0.3
@@ -500,6 +513,42 @@ static func ribbon(value: String, size: int = 15) -> PanelContainer:
 	panel.add_child(caption)
 	return panel
 
+static func _language_radio_icon(selected: bool) -> Texture2D:
+	var fill:="#008f98" if selected else "#ffffff"
+	var svg:='<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" fill="#ffffff" stroke="#72aeb5" stroke-width="1.8"/><circle cx="10" cy="10" r="3.5" fill="'+fill+'"/></svg>'
+	var image:=Image.new()
+	image.load_svg_from_buffer(svg.to_utf8_buffer())
+	return ImageTexture.create_from_image(image)
+
+static func style_language_popup(popup: PopupMenu) -> void:
+	# PopupMenu is a Window: it does not inherit the surrounding Control's local theme.
+	# Style the popup directly so it stays light in the game and in Settings.
+	var panel:=box(Color("f7fcfd"),Color("9fcdd4"),13,8)
+	panel.content_margin_left=10
+	panel.content_margin_right=10
+	panel.content_margin_top=8
+	panel.content_margin_bottom=8
+	panel.shadow_size=5
+	panel.shadow_color=Color(0.02,0.22,0.27,0.16)
+	popup.add_theme_stylebox_override("panel",panel)
+	var hover:=box(Color("e6f5f6"),Color.TRANSPARENT,9,4)
+	hover.set_border_width_all(0)
+	hover.shadow_size=0
+	popup.add_theme_stylebox_override("hover",hover)
+	popup.add_theme_font_override("font",font())
+	popup.add_theme_font_size_override("font_size",15)
+	popup.add_theme_color_override("font_color",INK)
+	popup.add_theme_color_override("font_hover_color",Color("006d76"))
+	popup.add_theme_color_override("font_disabled_color",MUTED)
+	popup.add_theme_color_override("font_outline_color",Color.TRANSPARENT)
+	popup.add_theme_constant_override("v_separation",10)
+	popup.add_theme_constant_override("h_separation",9)
+	popup.add_theme_constant_override("item_start_padding",6)
+	popup.add_theme_constant_override("item_end_padding",6)
+	popup.add_theme_icon_override("radio_checked",_language_radio_icon(true))
+	popup.add_theme_icon_override("radio_unchecked",_language_radio_icon(false))
+	popup.min_size=Vector2i(220,0)
+
 static func language_switcher(action: Callable, size: int = 12) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	var picker:=MenuButton.new()
@@ -528,6 +577,7 @@ static func language_switcher(action: Callable, size: int = 12) -> HBoxContainer
 	chevron.offset_bottom=6
 	var popup:=picker.get_popup()
 	popup.set_meta("locale_ignore",true)
+	style_language_popup(popup)
 	popup.add_radio_check_item("日本語  ·  Japanese",0)
 	popup.add_radio_check_item("မြန်မာ  ·  Myanmar",1)
 	popup.add_radio_check_item("English",2)
@@ -544,4 +594,5 @@ static func update_language_switcher(row: Control, language: String) -> void:
 	picker.text=str({"jp":"日本語","mm":"မြန်မာ","en":"English"}.get(language,"English"))
 	picker.tooltip_text=text("Language")
 	picker.add_theme_font_override("font",font(true))
+	picker.get_popup().add_theme_font_override("font",font())
 	for i in range(3):picker.get_popup().set_item_checked(i,["jp","mm","en"][i]==language)
