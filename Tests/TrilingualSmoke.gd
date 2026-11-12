@@ -139,6 +139,8 @@ func _run() -> void:
 		var active_header=game.find_child("Stage1Header",true,false)
 		assert(active_header.get_global_rect().encloses(reach.get_global_rect()))
 		assert(active_header.find_child("StageRibbon",true,false)==null)
+		assert(active_header.find_child("CurrentStageLabel",true,false).text==manager.text("Stage %d")%1)
+		assert(reach.find_child("ReachNode01",true,false).get_global_rect().encloses(reach.find_child("CurrentStageLabel",true,false).get_global_rect()))
 		for heading in active_header.find_children("*","Label",true,false):assert(heading.text!=manager.text("LDK Boundary Drawing"))
 		var active_point=reach.find_child("ReachNode01",true,false)
 		var small_point=reach.find_child("ReachNode04",true,false)
@@ -275,6 +277,8 @@ func _run() -> void:
 		var qa_header=game.find_child("GameHeader",true,false)
 		var qa_reach=game.find_child("LevelReachBar",true,false)
 		assert(qa_header.get_global_rect().encloses(qa_reach.get_global_rect()))
+		assert(qa_header.find_child("CurrentStageLabel",true,false).text==manager.text("Stage %d")%2)
+		assert(qa_reach.find_child("ReachNode02",true,false).get_global_rect().encloses(qa_reach.find_child("CurrentStageLabel",true,false).get_global_rect()))
 		assert(game.find_child("Stage2QATitle",true,false).text==manager.text("Plan Q&A"))
 		assert(game.get("answer_input").size.y/qa_card.size.y>0.6)
 		assert(game.get("submit_button").text=="OK")
@@ -289,10 +293,8 @@ func _run() -> void:
 		game.get("submit_button").pressed.emit()
 		await _wait()
 		assert(not game.get("progress_description").text.is_empty())
-		game.get("answer_input").text="Temporary answer"
-		game.find_child("Stage2ClearAnswer",true,false).pressed.emit()
-		assert(game.get("answer_input").text.is_empty())
-		assert(game.get("progress_description").text==manager.text("Type your answer, then press OK."))
+		for removed in ["Stage2GuestBadge","Stage2ClearAnswer","Stage2AnswerHelp"]:
+			assert(game.find_child(removed,true,false)==null)
 		assert(game.get("question_label").text.begins_with("• "))
 		assert(game.find_child("LevelReachBar",true,false).find_child("ReachNode02",true,false).get_meta("current"))
 		assert(not game.find_child("CustomerVoiceControls",true,false).is_visible_in_tree())
@@ -337,6 +339,7 @@ func _run() -> void:
 		await _wait()
 		game=current_scene
 		assert(game.get("current_lang")==language)
+		assert(game.find_child("GameHeader",true,false).find_child("CurrentStageLabel",true,false).text==manager.text("Stage %d")%3)
 		_collect(game,"stage3-q1")
 		game.call("_choose",0)
 		assert(game.get("step")==0)

@@ -183,8 +183,6 @@ var progress_card: PanelContainer
 var progress_description: Label
 var progress_actions: HBoxContainer
 var submit_button: Button
-var reset_button: Button
-var _answer_help: Button
 var jp_button: Button
 var mm_button: Button
 var en_button: Button
@@ -318,7 +316,7 @@ func _build_ui() -> void:
 	right_panel.name="Stage2AnswerCard"
 	right_panel.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	right_panel.size_flags_stretch_ratio=13
-	right_panel.add_theme_stylebox_override("panel",UI.box(Color("e4f3ff"),Color.WHITE,24,18))
+	right_panel.add_theme_stylebox_override("panel",UI.box(Color(0.94,0.98,1.0,0.82),Color.WHITE,24,18))
 	split.add_child(right_panel)
 	var right := VBoxContainer.new()
 	right.add_theme_constant_override("separation",14)
@@ -328,32 +326,16 @@ func _build_ui() -> void:
 	right.add_child(header)
 	var mark := TextureRect.new()
 	mark.texture=UI.icon("planqa")
-	mark.modulate=Color("174eaa")
+	mark.modulate=UI.TEAL
 	mark.custom_minimum_size=Vector2(30,32)
 	mark.expand_mode=TextureRect.EXPAND_IGNORE_SIZE
 	mark.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	header.add_child(mark)
-	answer_title=UI.label("Plan Q&A",24,true,Color("1554bb"))
+	answer_title=UI.label("Plan Q&A",24,true)
 	answer_title.name="Stage2QATitle"
 	answer_title.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	header.add_child(answer_title)
-	_build_guest_badge(header)
-	reset_button=_qa_button("",_reset_answer,false,36,16)
-	reset_button.name="Stage2ClearAnswer"
-	reset_button.custom_minimum_size.y=36
-	reset_button.size_flags_vertical=Control.SIZE_SHRINK_CENTER
-	reset_button.icon=UI.icon("redo")
-	reset_button.add_theme_color_override("icon_normal_color",Color("2766b7"))
-	reset_button.add_theme_color_override("icon_hover_color",Color("1554bb"))
-	reset_button.tooltip_text=UI.text("Clear")
-	header.add_child(reset_button)
-	_answer_help=_qa_button("?",_show_answer_help,false,34,18)
-	_answer_help.name="Stage2AnswerHelp"
-	_answer_help.custom_minimum_size.y=36
-	_answer_help.size_flags_vertical=Control.SIZE_SHRINK_CENTER
-	_answer_help.tooltip_text=UI.text("How to answer")
-	header.add_child(_answer_help)
-	var instructions:=UI.label("Type your answer, then press OK.",14,false,Color("2361d5"))
+	var instructions:=UI.label("Type your answer, then press OK.",14,false,UI.MUTED)
 	instructions.name="Stage2AnswerInstructions"
 	right.add_child(instructions)
 	status_label=UI.label("",12)
@@ -362,7 +344,7 @@ func _build_ui() -> void:
 	var input_frame:=PanelContainer.new()
 	input_frame.name="Stage2AnswerFrame"
 	input_frame.size_flags_vertical=Control.SIZE_EXPAND_FILL
-	input_frame.add_theme_stylebox_override("panel",UI.box(Color("f3faff"),Color.WHITE,12,10))
+	input_frame.add_theme_stylebox_override("panel",UI.box(Color("f3faff"),UI.EDGE,12,10))
 	right.add_child(input_frame)
 	answer_input=TextEdit.new()
 	answer_input.name="Stage2AnswerInput"
@@ -372,73 +354,19 @@ func _build_ui() -> void:
 	answer_input.wrap_mode=TextEdit.LINE_WRAPPING_BOUNDARY
 	answer_input.add_theme_color_override("font_color",UI.INK)
 	answer_input.add_theme_color_override("font_placeholder_color",Color("99a6ba"))
-	answer_input.add_theme_color_override("caret_color",Color("2469ff"))
+	answer_input.add_theme_color_override("caret_color",UI.TEAL)
 	for state in ["normal","focus","read_only"]:
-		var border:=UI.box(Color.WHITE,Color("2b6cff") if state=="focus" else Color("5d94ee"),14,16)
-		border.set_border_width_all(2)
+		var border:=UI.box(Color.WHITE,UI.TEAL if state=="focus" else UI.EDGE,14,16)
+		border.set_border_width_all(2 if state=="focus" else 1)
 		border.shadow_size=0
 		answer_input.add_theme_stylebox_override(state,border)
 	input_frame.add_child(answer_input)
 	_build_progress_panel(right)
 
 func _qa_button(value: String,action: Callable,primary: bool,width: int=104,font_size: int=16) -> Button:
-	var button:=UI.button(value,action,false,width,font_size)
+	var button:=UI.button(value,action,primary,width,font_size)
 	button.custom_minimum_size.y=48
-	for state in ["normal","hover","pressed","disabled"]:
-		var fill:=Color("117df4") if primary else Color("e8f5ff")
-		if state=="hover":fill=fill.darkened(0.04)
-		if state=="pressed":fill=fill.darkened(0.09)
-		if state=="disabled":fill=Color("c5dbef")
-		var style:=UI.box(fill,Color("74bdfb"),10,6)
-		style.shadow_size=0
-		button.add_theme_stylebox_override(state,style)
-	for state in ["font_color","font_hover_color","font_pressed_color","font_focus_color"]:button.add_theme_color_override(state,Color.WHITE if primary else Color("245ba8"))
-	button.add_theme_color_override("font_disabled_color",Color("68839c"))
 	return button
-
-func _build_guest_badge(parent: Control) -> void:
-	var badge:=PanelContainer.new()
-	badge.name="Stage2GuestBadge"
-	badge.custom_minimum_size=Vector2(150,36)
-	badge.size_flags_vertical=Control.SIZE_SHRINK_CENTER
-	var style:=UI.box(Color("e5f3ff"),Color("75bfff"),10,5)
-	style.shadow_size=0
-	badge.add_theme_stylebox_override("panel",style)
-	parent.add_child(badge)
-	var row:=HBoxContainer.new()
-	row.add_theme_constant_override("separation",8)
-	badge.add_child(row)
-	var user_name: String=preload("res://MenuExtras.gd").get_display_name()
-	var initial_box:=PanelContainer.new()
-	var initial_style:=UI.box(Color("eaf6ff"),Color("8bc5fc"),100,1)
-	initial_style.shadow_size=0
-	initial_box.add_theme_stylebox_override("panel",initial_style)
-	row.add_child(initial_box)
-	var initial:=UI.inline_label(user_name.substr(0,1).to_upper(),13,false)
-	initial.add_theme_color_override("font_color",Color("3067ae"))
-	initial.set_meta("locale_ignore",true)
-	initial.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
-	initial.custom_minimum_size=Vector2(26,26)
-	initial_box.add_child(initial)
-	var caption:=UI.inline_label(user_name,12,false)
-	caption.add_theme_color_override("font_color",Color("5378a3"))
-	caption.set_meta("locale_ignore",true)
-	caption.size_flags_horizontal=Control.SIZE_EXPAND_FILL
-	caption.clip_text=true
-	caption.tooltip_text=user_name
-	row.add_child(caption)
-
-func _show_answer_help() -> void:
-	var dialog:=AcceptDialog.new()
-	dialog.name="Stage2AnswerHelpDialog"
-	dialog.title=UI.text("Plan Q&A")
-	dialog.dialog_text=UI.text("Read the reference plan, write your answer in your own words, then press OK.")
-	dialog.theme=UI.make_theme()
-	dialog.exclusive=true
-	add_child(dialog)
-	dialog.confirmed.connect(dialog.queue_free)
-	dialog.canceled.connect(dialog.queue_free)
-	dialog.popup_centered(Vector2i(440,180))
 
 func _build_progress_panel(parent: VBoxContainer) -> void:
 	var footer:=HBoxContainer.new()
@@ -450,7 +378,7 @@ func _build_progress_panel(parent: VBoxContainer) -> void:
 	progress_card.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	progress_card.custom_minimum_size.y=50
 	footer.add_child(progress_card)
-	progress_description=UI.label("",14,false,Color("2e6399"))
+	progress_description=UI.label("",14,false,UI.MUTED)
 	progress_description.name="Stage2AnswerStatusText"
 	progress_card.add_child(progress_description)
 	submit_button=_qa_button("OK",_check_ai_or_demo_answer,true,104,16)
@@ -476,9 +404,9 @@ func _replay_stage_two() -> void:
 func _set_progress_state(state: String,message: String="") -> void:
 	if progress_card==null:return
 	var text: String="Type your answer, then press OK."
-	var fill:=Color("e6f4ff")
-	var edge:=Color("65b9fa")
-	var ink:=Color("2e6399")
+	var fill:=Color("f0fafc")
+	var edge:=UI.EDGE
+	var ink:=UI.MUTED
 	match state:
 		"completed":
 			text="Stage 2 complete!" if _completion_voice_finished else "Please wait for the customer to finish speaking."
@@ -509,7 +437,6 @@ func _set_progress_state(state: String,message: String="") -> void:
 	progress_actions.visible=ready_for_next
 	submit_button.visible=not ready_for_next
 	submit_button.disabled=_ai_busy or state in ["checking","completed"]
-	_answer_help.disabled=_ai_busy or state in ["checking","completed"]
 
 func _update_lang_buttons_style() -> void:
 	var active_s := _style("2563eb", "1d4ed8")
@@ -536,8 +463,6 @@ func _change_language(lang: String) -> void:
 	answer_title.text = UI.text("Plan Q&A")
 	answer_input.placeholder_text = str(d["answer_hint"])
 	submit_button.text = "OK"
-	reset_button.text = ""
-	reset_button.tooltip_text = UI.text("Clear")
 	status_label.text = "AI CHECK · 3 MODELS" if _is_ai_configured() else "LOCAL CHECK · OFFLINE"
 
 	if last_eval_state == "good":

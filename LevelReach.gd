@@ -52,10 +52,10 @@ func _rebuild() -> void:
 		point.set_meta("completed",point.done)
 		point.set_meta("current",point.current)
 		point.set_meta("locked",point.locked)
-		point.custom_minimum_size=Vector2(70,32) if point.current else Vector2(54,28)
+		point.custom_minimum_size=Vector2(116,34) if point.current else Vector2(54,28)
 		point.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 		point.size_flags_vertical=Control.SIZE_SHRINK_CENTER
-		point.size_flags_stretch_ratio=1.25 if point.current else 1.0
+		point.size_flags_stretch_ratio=1.6 if point.current else 1.0
 		point.tooltip_text=UI.text("Stage %d")%n+"\n"+UI.text("Coming soon" if n>3 else ("Completed" if point.done else "Ready"))
 		route.add_child(point)
 		var row:=HBoxContainer.new()
@@ -73,8 +73,9 @@ func _rebuild() -> void:
 		icon.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon.mouse_filter=Control.MOUSE_FILTER_IGNORE
 		row.add_child(icon)
-		var number:=UI.inline_label("%02d"%n,12 if point.current else 11,true)
-		number.set_meta("locale_ignore",true)
+		var number:=UI.inline_label(UI.text("Stage %d")%n if point.current else "%02d"%n,14 if point.current else 11,true)
+		number.name="CurrentStageLabel" if point.current else "ReachStageLabel"
+		number.set_meta("locale_ignore",not point.current)
 		number.add_theme_color_override("font_color",Color.WHITE if point.current else (UI.MUTED if point.locked else UI.INK))
 		row.add_child(number)
 
