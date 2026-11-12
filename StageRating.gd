@@ -31,7 +31,6 @@ static func begin(stage: int,fresh: bool=false) -> void:
 	_ensure_loaded()
 	if not TARGET_SECONDS.has(stage):return
 	if not fresh and sessions.has(stage):return
-	if not fresh and latest.has(stage):return
 	sessions[stage]={"elapsed":0.0,"mistakes":0}
 	latest.erase(stage)
 	_dirty=true
