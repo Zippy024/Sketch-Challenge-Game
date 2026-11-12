@@ -578,7 +578,6 @@ func _build_ui() -> void:
 	screen_layout.add_theme_constant_override("separation",0)
 	var hud := UI.header(1,"LDK Boundary Drawing",_open_game_menu,_switch_language)
 	screen_layout.add_child(hud)
-	screen_layout.add_child(UI.level_reach(1))
 	_stage1_language_picker = hud.find_child("Stage1LanguagePicker",true,false)
 	var margin := MarginContainer.new()
 	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
