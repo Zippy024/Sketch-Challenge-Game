@@ -4,6 +4,7 @@ extends Control
 # Two layout questions and five components; completion is saved only after all seven checks.
 const UI = preload("res://KitchenUI.gd")
 const Progress = preload("res://GameProgress.gd")
+const StageRating = preload("res://StageRating.gd")
 const UI_THEME: Theme = preload("res://WebBilingualTheme.tres")
 const PORTRAIT: Texture2D = preload("res://customer_portrait_ui.png")
 const IMAGES_Q1: Array[Texture2D] = [preload("res://Stage3Assets/q1_1.png"), preload("res://Stage3Assets/q1_2.png"), preload("res://Stage3Assets/q1_3.png"), preload("res://Stage3Assets/q1_4.png"), preload("res://Stage3Assets/q1_5.png")]
@@ -39,6 +40,7 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	if Progress.resume_stage()!=3: Progress.open_stage(3)
 	step=Progress.kitchen_step()
+	StageRating.begin(3)
 	_completion_acknowledged=step>=7
 	_refresh()
 
@@ -93,6 +95,7 @@ func _refresh() -> void:
 			_completion_acknowledged=false
 			last_wrong = false
 			_answer_state="neutral"
+			StageRating.begin(3)
 			_refresh()
 		)
 		results.home_requested.connect(func(): get_tree().change_scene_to_file("res://GameMenu.tscn"))
@@ -271,6 +274,7 @@ func _choose(index: int) -> void:
 		last_wrong = false
 		_refresh()
 	else:
+		StageRating.mistake(3)
 		last_wrong = true
 		_answer_state="incorrect"
 		UI.set_customer_feedback(_customer_bubble,"incorrect")
@@ -300,6 +304,7 @@ func _select_part(which: int) -> void:
 		last_wrong = false
 		_refresh()
 	else:
+		StageRating.mistake(3)
 		last_wrong = true
 		_answer_state="incorrect"
 		UI.set_customer_feedback(_customer_bubble,"incorrect")
@@ -376,6 +381,15 @@ func _show_completion() -> void:
 		get_tree().change_scene_to_file("res://GameMenu.tscn")
 	)
 	popup.levels_requested.connect(_go_levels)
+	popup.retry_requested.connect(func():
+		Progress.open_stage(3)
+		step=0
+		_completion_acknowledged=false
+		last_wrong=false
+		_answer_state="neutral"
+		StageRating.begin(3)
+		_refresh()
+	)
 	add_child(popup)
 
 func _save_session() -> void:

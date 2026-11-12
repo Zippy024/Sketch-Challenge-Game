@@ -280,6 +280,7 @@ func _ready() -> void:
 # Reference-project method: one bundled bilingual Theme for both desktop and Web.
 # This avoids SystemFont dependency and provides Myanmar glyph fallback.
 const BILINGUAL_THEME: Theme = preload("res://WebBilingualTheme.tres")
+const StageRating = preload("res://StageRating.gd")
 
 func _setup_multilang_font() -> void:
 	theme = UI.make_theme()
@@ -1107,6 +1108,7 @@ func _reveal_reference_after_talk() -> void:
 	fade.tween_property(ref_viewer, "modulate:a", 1.0, 0.65)
 
 func _run_conversation() -> void:
+	StageRating.begin(1)
 	if ref_viewer != null:
 		ref_viewer.modulate.a = 0.0
 	speaker_name_label.text = DIALOGUE_TEXTS[current_lang]["speaker"]
@@ -1205,6 +1207,7 @@ func _confirm() -> void:
 		feedback_label.text = DIALOGUE_TEXTS[current_lang]["correct"]
 		_play_voice("correct")
 	else:
+		StageRating.mistake(1)
 		last_eval_state = "wrong"
 		canvas.set_drawing_enabled(false)
 		request_label.visible = true
@@ -1441,6 +1444,13 @@ func _run_stage_transition() -> void:
 		Progress.show_home_on_open=true
 		Progress.show_levels_on_open=false
 		get_tree().change_scene_to_file("res://GameMenu.tscn")
+	)
+	overlay.retry_requested.connect(func():
+		_stop_voice()
+		_suspend_session_save()
+		Progress.open_stage(1)
+		Progress.launch_from_level_menu=true
+		get_tree().change_scene_to_file("res://main.tscn")
 	)
 	add_child(overlay)
 

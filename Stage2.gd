@@ -3,6 +3,7 @@ extends Control
 const UI = preload("res://KitchenUI.gd")
 const Progress = preload("res://GameProgress.gd")
 const AIConfig = preload("res://AIConfig.gd")
+const StageRating = preload("res://StageRating.gd")
 
 const QUESTIONS := {
 	"en": {
@@ -217,6 +218,7 @@ func _ready() -> void:
 	voice_player.finished.connect(_on_voice_finished)
 
 	if Progress.resume_stage()!=2: Progress.open_stage(2)
+	StageRating.begin(2)
 	_build_ui()
 	answer_input.text=Progress.answer()
 	answer_input.text_changed.connect(_save_session)
@@ -585,6 +587,7 @@ func _show_check_result(correct: bool) -> void:
 		progress_actions.hide()
 		_play_voice("good")
 	else:
+		StageRating.mistake(2)
 		last_eval_state = "needs"
 		question_label.visible = true
 		question_label.text = UI.bullet_text(str(d["question"]))
@@ -946,6 +949,12 @@ func _show_completion() -> void:
 		Progress.show_home_on_open=true
 		Progress.show_levels_on_open=false
 		get_tree().change_scene_to_file("res://GameMenu.tscn")
+	)
+	popup.retry_requested.connect(func():
+		_stop_voice()
+		_suspend_session_save()
+		Progress.open_stage(2)
+		get_tree().change_scene_to_file("res://stage_2.tscn")
 	)
 	add_child(popup)
 

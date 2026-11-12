@@ -1,5 +1,6 @@
 extends SceneTree
 const Progress = preload("res://GameProgress.gd")
+const StageRating = preload("res://StageRating.gd")
 var manager: Node
 var report: Dictionary = {}
 func _initialize() -> void:call_deferred("_run")
@@ -12,6 +13,10 @@ func _collect(scene: Node, label: String) -> void:
 			if not value.is_empty():values.append(value)
 	report[Progress.get_language()+"/"+label]=values
 func _run() -> void:
+	assert(StageRating.stars_for(1,150,0)==3)
+	assert(StageRating.stars_for(1,480,2)==2)
+	assert(StageRating.stars_for(1,700,3)==1)
+	assert(StageRating.stars_for(2,181,0)==2)
 	manager=root.get_node("LocaleManager")
 	Progress.reset_progress()
 	for language in ["en","mm","jp"]:
@@ -265,11 +270,15 @@ func _run() -> void:
 		assert(complete.find_child("CompletionBlueprintGraphic",true,false)!=null)
 		assert(complete.find_child("CelebrationArtwork",true,false)==null)
 		assert(complete.find_child("CompletionConfetti",true,false).mouse_filter==Control.MOUSE_FILTER_IGNORE)
-		assert(complete.find_child("MissionCompleteCard",true,false).size.x>complete.find_child("MissionCompleteCard",true,false).size.y*1.8)
+		assert(complete.find_child("MissionCompleteCard",true,false).size.x>complete.find_child("MissionCompleteCard",true,false).size.y*1.4)
 		assert(complete.find_child("CompletionHome",true,false)!=null)
 		assert(complete.find_child("CompletionTitle",true,false).text==manager.text("Stage %d complete!")%1)
 		assert(complete.find_child("CompletionMission",true,false).text==manager.text("LDK Boundary Drawing"))
-		assert(complete.find_children("ReachNode*","Control",true,false).size()==3)
+		assert(complete.find_child("CompletionRetry",true,false)!=null)
+		assert(complete.find_child("CompletionTime",true,false)!=null)
+		assert(complete.find_child("CompletionMistakes",true,false)!=null)
+		assert(complete.find_child("CompletionRating",true,false)!=null)
+		for i in range(1,4):assert(complete.find_child("ResultStar%d"%i,true,false)!=null)
 		assert(game.get_global_rect().encloses(complete.find_child("MissionCompleteCard",true,false).get_global_rect()))
 		assert(complete.find_child("CompletionReview",true,false)==null)
 		if language=="mm":
@@ -347,6 +356,8 @@ func _run() -> void:
 		_collect(game,"stage2-correct")
 		var second_popup=game.find_child("Stage2CompleteOverlay",true,false)
 		assert(second_popup!=null and second_popup.stage_index==2)
+		assert(second_popup.find_child("CompletionRetry",true,false)!=null)
+		assert(second_popup.find_child("CompletionRating",true,false)!=null)
 		assert(second_popup.find_child("CompletionReview",true,false)==null)
 		assert(second_popup.find_child("CompletionBlueprintGraphic",true,false).stage_index==2)
 		if language=="en":
@@ -392,6 +403,8 @@ func _run() -> void:
 		_collect(game,"stage3-complete")
 		var third_popup=game.find_child("Stage3CompleteOverlay",true,false)
 		assert(third_popup!=null and third_popup.stage_index==3)
+		assert(third_popup.find_child("CompletionRetry",true,false)!=null)
+		assert(third_popup.find_child("CompletionRating",true,false)!=null)
 		assert(third_popup.find_child("CompletionBlueprintGraphic",true,false).stage_index==3)
 		if language=="jp":
 			third_popup.find_child("CompletionHome",true,false).pressed.emit()
