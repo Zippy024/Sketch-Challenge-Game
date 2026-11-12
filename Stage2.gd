@@ -178,18 +178,13 @@ var feedback_divider: ColorRect
 var feedback_label: Label
 var answer_title: Label
 var answer_input: TextEdit
-# Option A: Challenge Progress panel (keeps customer voice in the left bubble).
+# Plan Q&A status stays in the answer footer; customer speech stays on the left.
 var progress_card: PanelContainer
-var progress_badge: Label
-var progress_title: Label
 var progress_description: Label
-var progress_bar: ProgressBar
-var progress_percent: Label
 var progress_actions: HBoxContainer
-var progress_replay_button: Button
-var progress_levels_button: Button
 var submit_button: Button
 var reset_button: Button
+var _answer_help: Button
 var jp_button: Button
 var mm_button: Button
 var en_button: Button
@@ -320,215 +315,201 @@ func _build_ui() -> void:
 	reference.add_child(embedded)
 	_create_reference_popup(texture)
 	var right_panel := PanelContainer.new()
-	right_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	right_panel.size_flags_stretch_ratio = 13
-	right_panel.add_theme_stylebox_override("panel",UI.box())
+	right_panel.name="Stage2AnswerCard"
+	right_panel.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+	right_panel.size_flags_stretch_ratio=13
+	right_panel.add_theme_stylebox_override("panel",UI.box(Color("e4f3ff"),Color.WHITE,24,18))
 	split.add_child(right_panel)
 	var right := VBoxContainer.new()
-	right.add_theme_constant_override("separation",12)
+	right.add_theme_constant_override("separation",14)
 	right_panel.add_child(right)
-	right.add_child(UI.label("Your answer",25,true))
-	right.add_child(UI.label("Explain the purpose of PS and what it means for this renovation.",15,false,UI.MUTED))
-	status_label = UI.label("",12)
+	var header := HBoxContainer.new()
+	header.add_theme_constant_override("separation",10)
+	right.add_child(header)
+	var mark := TextureRect.new()
+	mark.texture=UI.icon("planqa")
+	mark.modulate=Color("174eaa")
+	mark.custom_minimum_size=Vector2(30,32)
+	mark.expand_mode=TextureRect.EXPAND_IGNORE_SIZE
+	mark.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	header.add_child(mark)
+	answer_title=UI.label("Plan Q&A",24,true,Color("1554bb"))
+	answer_title.name="Stage2QATitle"
+	answer_title.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+	header.add_child(answer_title)
+	_build_guest_badge(header)
+	reset_button=_qa_button("",_reset_answer,false,36,16)
+	reset_button.name="Stage2ClearAnswer"
+	reset_button.custom_minimum_size.y=36
+	reset_button.size_flags_vertical=Control.SIZE_SHRINK_CENTER
+	reset_button.icon=UI.icon("redo")
+	reset_button.add_theme_color_override("icon_normal_color",Color("2766b7"))
+	reset_button.add_theme_color_override("icon_hover_color",Color("1554bb"))
+	reset_button.tooltip_text=UI.text("Clear")
+	header.add_child(reset_button)
+	_answer_help=_qa_button("?",_show_answer_help,false,34,18)
+	_answer_help.name="Stage2AnswerHelp"
+	_answer_help.custom_minimum_size.y=36
+	_answer_help.size_flags_vertical=Control.SIZE_SHRINK_CENTER
+	_answer_help.tooltip_text=UI.text("How to answer")
+	header.add_child(_answer_help)
+	var instructions:=UI.label("Type your answer, then press OK.",14,false,Color("2361d5"))
+	instructions.name="Stage2AnswerInstructions"
+	right.add_child(instructions)
+	status_label=UI.label("",12)
 	status_label.hide()
 	right.add_child(status_label)
-	answer_title = UI.label("",16,true)
-	right.add_child(answer_title)
-	answer_title.hide()
-	answer_input = TextEdit.new()
-	answer_input.name = "Stage2AnswerInput"
-	answer_input.custom_minimum_size.y = 190
-	answer_input.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var input_frame:=PanelContainer.new()
+	input_frame.name="Stage2AnswerFrame"
+	input_frame.size_flags_vertical=Control.SIZE_EXPAND_FILL
+	input_frame.add_theme_stylebox_override("panel",UI.box(Color("f3faff"),Color.WHITE,12,10))
+	right.add_child(input_frame)
+	answer_input=TextEdit.new()
+	answer_input.name="Stage2AnswerInput"
+	answer_input.custom_minimum_size.y=260
+	answer_input.size_flags_vertical=Control.SIZE_EXPAND_FILL
 	answer_input.add_theme_font_size_override("font_size",18)
-	answer_input.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
+	answer_input.wrap_mode=TextEdit.LINE_WRAPPING_BOUNDARY
 	answer_input.add_theme_color_override("font_color",UI.INK)
-	answer_input.add_theme_color_override("font_placeholder_color",UI.MUTED)
-	answer_input.add_theme_color_override("caret_color",UI.TEAL)
+	answer_input.add_theme_color_override("font_placeholder_color",Color("99a6ba"))
+	answer_input.add_theme_color_override("caret_color",Color("2469ff"))
 	for state in ["normal","focus","read_only"]:
-		answer_input.add_theme_stylebox_override(state,UI.box(Color.WHITE,UI.TEAL if state=="focus" else UI.EDGE,14,16))
-	right.add_child(answer_input)
-	var actions := HBoxContainer.new()
-	actions.add_theme_constant_override("separation",10)
-	right.add_child(actions)
-	submit_button = UI.button("Check Answer",_check_ai_or_demo_answer,true,150)
-	reset_button = UI.button("Clear",_reset_answer,false,90)
-	actions.add_child(submit_button)
-	actions.add_child(reset_button)
+		var border:=UI.box(Color.WHITE,Color("2b6cff") if state=="focus" else Color("5d94ee"),14,16)
+		border.set_border_width_all(2)
+		border.shadow_size=0
+		answer_input.add_theme_stylebox_override(state,border)
+	input_frame.add_child(answer_input)
 	_build_progress_panel(right)
 
+func _qa_button(value: String,action: Callable,primary: bool,width: int=104,font_size: int=16) -> Button:
+	var button:=UI.button(value,action,false,width,font_size)
+	button.custom_minimum_size.y=48
+	for state in ["normal","hover","pressed","disabled"]:
+		var fill:=Color("117df4") if primary else Color("e8f5ff")
+		if state=="hover":fill=fill.darkened(0.04)
+		if state=="pressed":fill=fill.darkened(0.09)
+		if state=="disabled":fill=Color("c5dbef")
+		var style:=UI.box(fill,Color("74bdfb"),10,6)
+		style.shadow_size=0
+		button.add_theme_stylebox_override(state,style)
+	for state in ["font_color","font_hover_color","font_pressed_color","font_focus_color"]:button.add_theme_color_override(state,Color.WHITE if primary else Color("245ba8"))
+	button.add_theme_color_override("font_disabled_color",Color("68839c"))
+	return button
+
+func _build_guest_badge(parent: Control) -> void:
+	var badge:=PanelContainer.new()
+	badge.name="Stage2GuestBadge"
+	badge.custom_minimum_size=Vector2(150,36)
+	badge.size_flags_vertical=Control.SIZE_SHRINK_CENTER
+	var style:=UI.box(Color("e5f3ff"),Color("75bfff"),10,5)
+	style.shadow_size=0
+	badge.add_theme_stylebox_override("panel",style)
+	parent.add_child(badge)
+	var row:=HBoxContainer.new()
+	row.add_theme_constant_override("separation",8)
+	badge.add_child(row)
+	var user_name: String=preload("res://MenuExtras.gd").get_display_name()
+	var initial_box:=PanelContainer.new()
+	var initial_style:=UI.box(Color("eaf6ff"),Color("8bc5fc"),100,1)
+	initial_style.shadow_size=0
+	initial_box.add_theme_stylebox_override("panel",initial_style)
+	row.add_child(initial_box)
+	var initial:=UI.inline_label(user_name.substr(0,1).to_upper(),13,false)
+	initial.add_theme_color_override("font_color",Color("3067ae"))
+	initial.set_meta("locale_ignore",true)
+	initial.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+	initial.custom_minimum_size=Vector2(26,26)
+	initial_box.add_child(initial)
+	var caption:=UI.inline_label(user_name,12,false)
+	caption.add_theme_color_override("font_color",Color("5378a3"))
+	caption.set_meta("locale_ignore",true)
+	caption.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+	caption.clip_text=true
+	caption.tooltip_text=user_name
+	row.add_child(caption)
+
+func _show_answer_help() -> void:
+	var dialog:=AcceptDialog.new()
+	dialog.name="Stage2AnswerHelpDialog"
+	dialog.title=UI.text("Plan Q&A")
+	dialog.dialog_text=UI.text("Read the reference plan, write your answer in your own words, then press OK.")
+	dialog.theme=UI.make_theme()
+	dialog.exclusive=true
+	add_child(dialog)
+	dialog.confirmed.connect(dialog.queue_free)
+	dialog.canceled.connect(dialog.queue_free)
+	dialog.popup_centered(Vector2i(440,180))
+
 func _build_progress_panel(parent: VBoxContainer) -> void:
-	progress_card = PanelContainer.new()
-	# Compact fixed-height result card; the bottom spacer gets leftover space.
-	progress_card.custom_minimum_size.y = 130
-	progress_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	progress_card.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	progress_card.add_theme_stylebox_override("panel", _style("ffffff", "d6e2ef", 13))
-	parent.add_child(progress_card)
-
-	var content := VBoxContainer.new()
-	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	content.add_theme_constant_override("separation", 7)
-	progress_card.add_child(content)
-
-	var header_row := HBoxContainer.new()
-	header_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header_row.add_theme_constant_override("separation", 12)
-	content.add_child(header_row)
-	var heading := _label("Answer feedback", 13, "475569")
-	heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	heading.autowrap_mode = TextServer.AUTOWRAP_OFF
-	heading.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	header_row.add_child(heading)
-	progress_badge = _label("WAITING", 12, "64748b")
-	# Important: shrink-right + word-wrap made WAITING one letter per line,
-	# stretching the entire panel down the screen. Reserve badge width.
-	progress_badge.autowrap_mode = TextServer.AUTOWRAP_OFF
-	progress_badge.custom_minimum_size = Vector2(140, 22)
-	progress_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	progress_badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	progress_badge.size_flags_horizontal = Control.SIZE_SHRINK_END
-	progress_badge.clip_text = true
-	header_row.add_child(progress_badge)
-
-	progress_title = _label("", 17, "1f3c56")
-	progress_title.custom_minimum_size.y = 26
-	content.add_child(progress_title)
-	progress_description = _label("", 14, "64748b")
-	content.add_child(progress_description)
-
-	progress_bar = ProgressBar.new()
-	progress_bar.min_value = 0.0
-	progress_bar.max_value = 100.0
-	progress_bar.value = 0.0
-	progress_bar.show_percentage = false
-	progress_bar.custom_minimum_size.y = 9
-	progress_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var track := StyleBoxFlat.new()
-	track.bg_color = Color("e2e8f0")
-	track.set_corner_radius_all(6)
-	var fill := StyleBoxFlat.new()
-	fill.bg_color = Color("16a34a")
-	fill.set_corner_radius_all(6)
-	progress_bar.add_theme_stylebox_override("background", track)
-	progress_bar.add_theme_stylebox_override("fill", fill)
-	content.add_child(progress_bar)
-	progress_bar.hide()
-
-	var bottom_row := HBoxContainer.new()
-	bottom_row.add_theme_constant_override("separation", 10)
-	content.add_child(bottom_row)
-	progress_percent = _label("0%", 12, "64748b")
-	progress_percent.autowrap_mode = TextServer.AUTOWRAP_OFF
-	progress_percent.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	bottom_row.add_child(progress_percent)
-	progress_percent.hide()
-
-	progress_actions = HBoxContainer.new()
-	progress_actions.add_theme_constant_override("separation", 8)
-	progress_actions.size_flags_horizontal = Control.SIZE_SHRINK_END
-	bottom_row.add_child(progress_actions)
-
-	progress_replay_button = _btn("Replay Stage 2", 117)
-	progress_replay_button.custom_minimum_size.y = 31
-	progress_replay_button.add_theme_font_size_override("font_size", 12)
-	progress_replay_button.pressed.connect(_replay_stage_two)
-	progress_actions.add_child(progress_replay_button)
-
-	progress_levels_button = _btn("View Levels", 104)
-	progress_levels_button.custom_minimum_size.y = 31
-	progress_levels_button.add_theme_font_size_override("font_size", 12)
-	_modern_button_style(progress_levels_button, "primary")
-	progress_levels_button.pressed.connect(_open_game_menu)
-	progress_actions.add_child(progress_levels_button)
-	var next := UI.button("Continue to Stage 3",func():
+	var footer:=HBoxContainer.new()
+	footer.name="Stage2AnswerFooter"
+	footer.add_theme_constant_override("separation",12)
+	parent.add_child(footer)
+	progress_card=PanelContainer.new()
+	progress_card.name="Stage2AnswerStatus"
+	progress_card.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+	progress_card.custom_minimum_size.y=50
+	footer.add_child(progress_card)
+	progress_description=UI.label("",14,false,Color("2e6399"))
+	progress_description.name="Stage2AnswerStatusText"
+	progress_card.add_child(progress_description)
+	submit_button=_qa_button("OK",_check_ai_or_demo_answer,true,104,16)
+	submit_button.name="Stage2SubmitAnswer"
+	submit_button.set_meta("locale_ignore",true)
+	submit_button.text="OK"
+	footer.add_child(submit_button)
+	progress_actions=HBoxContainer.new()
+	footer.add_child(progress_actions)
+	var next:=_qa_button("Next Stage",func():
 		_stop_voice()
 		get_tree().change_scene_to_file("res://stage_3.tscn")
-	,true,185)
-	next.name = "ContinueStage3"
+	,true,120,15)
+	next.name="ContinueStage3"
 	progress_actions.add_child(next)
-	progress_actions.visible = false
+	progress_actions.hide()
 	_set_progress_state("pending")
 
 func _replay_stage_two() -> void:
 	_reset_answer()
 	_play_voice("question")
 
-func _set_progress_state(state: String, message: String = "") -> void:
-	if progress_card == null:
-		return
-	var jp: bool = current_lang == "jp"
-	var title: String = ""
-	var detail: String = ""
-	var badge: String = ""
-	var border_color: String = "d6e2ef"
-	var bg_color: String = "ffffff"
-	var badge_color: String = "64748b"
-	var pct: int = 0
+func _set_progress_state(state: String,message: String="") -> void:
+	if progress_card==null:return
+	var text: String="Type your answer, then press OK."
+	var fill:=Color("e6f4ff")
+	var edge:=Color("65b9fa")
+	var ink:=Color("2e6399")
 	match state:
 		"completed":
-			title = "Stage 2 Completed" if not jp else "ステージ2 クリア"
-			detail = "Customer question task finished." if not jp else "お客様の質問への回答が完了しました。"
-			badge = "COMPLETED"
-			bg_color = "eefaf8"
-			border_color = "79c8bf"
-			badge_color = "15803d"
-			pct = 100
+			text="Stage 2 complete!" if _completion_voice_finished else "Please wait for the customer to finish speaking."
+			fill=Color("edf9f4")
+			edge=Color("7acbb5")
+			ink=Color("246c58")
 		"incorrect":
-			title = "Challenge In Progress" if not jp else "チャレンジ進行中"
-			detail = "Revise your explanation and try again." if not jp else "説明を見直してもう一度試してください。"
-			badge = "NOT COMPLETED"
-			bg_color = "fff7f7"
-			border_color = "fecaca"
-			badge_color = "b91c1c"
-		"checking":
-			title = "Checking your answer..." if not jp else "AIが回答を確認中…"
-			detail = "Please wait for the result." if not jp else "結果が出るまでお待ちください。"
-			badge = "CHECKING"
+			text="Revise your explanation and try again."
+			fill=Color("fff3f2")
+			edge=Color("edafa9")
+			ink=Color("ad3743")
+		"checking":text="Checking your answer..."
 		"error":
-			title = "AI Connection Error" if not jp else "AIとの接続エラー"
-			detail = "Please try again. This is not a wrong answer." if not jp else "後ほど再試行してください。誤答扱いにはなりません。"
-			badge = "RETRY"
-			bg_color = "fffaf0"
-			border_color = "fed7aa"
-			badge_color = "9a3412"
+			text="Please try again. This is not a wrong answer."
+			fill=Color("fff7e8")
+			edge=Color("e8c17d")
+			ink=Color("98632c")
 		"invalid":
-			title = "Answer needed" if not jp else "回答を入力してください"
-			detail = message
-			badge = "WAITING"
-		_:
-			title = "Stage 2 — Customer Question" if not jp else "ステージ2・お客様の質問"
-			detail = "Explain PS in your own words." if not jp else "PSの意味を自分の言葉で説明してください。"
-			badge = "WAITING"
-	if current_lang == "mm":
-		match state:
-			"completed":
-				title = "Stage 2 Completed"
-				detail = "Customer မေးခွန်းကို အောင်မြင်စွာ ဖြေဆိုပြီးပါပြီ။"
-			"incorrect":
-				title = "Challenge In Progress"
-				detail = "အဖြေကို ပြန်စဉ်းစားပြီး ထပ်မံဖြေဆိုနိုင်ပါတယ်။"
-			"checking":
-				detail = "AI က အဖြေစစ်နေပါတယ်။ ခဏစောင့်ပါ။"
-			"error":
-				detail = "AI ချိတ်ဆက်မှု မအောင်မြင်ပါ။ အဖြေမှားတယ်လို့ မသတ်မှတ်ပါ။"
-			"pending":
-				detail = "PS အကြောင်းကို ကိုယ့်စကားနဲ့ ရှင်းပြပါ။"
-	progress_card.add_theme_stylebox_override("panel", _style(bg_color, border_color, 13))
-	progress_title.text = title
-	progress_description.text = detail
-	if state == "completed": progress_description.text = UI.text("You explained the vertical pipe shaft and why it is difficult to move.")
-	progress_badge.text = badge
-	progress_badge.add_theme_color_override("font_color", Color(badge_color))
-	progress_bar.value = float(pct)
-	progress_percent.text = "100% COMPLETED" if pct == 100 else "0% · IN PROGRESS"
-	progress_percent.add_theme_color_override("font_color", Color(badge_color))
-	progress_actions.visible = state == "completed"
-	var overall := find_child("OverallProgressStrip",true,false)
-	if overall: UI.update_progress(overall)
-	if progress_levels_button != null:
-		progress_levels_button.text = "レベル一覧" if jp else "View Levels"
-	if progress_replay_button != null:
-		progress_replay_button.text = "もう一度" if jp else "Replay Stage 2"
+			text=message if not message.is_empty() else "Answer needed"
+			edge=Color("edafa9")
+			ink=Color("ad3743")
+	var style:=UI.box(fill,edge,10,12)
+	style.shadow_size=0
+	progress_card.add_theme_stylebox_override("panel",style)
+	progress_description.text=UI.text(text)
+	progress_description.add_theme_color_override("font_color",ink)
+	var ready_for_next: bool=state=="completed" and _completion_voice_finished
+	progress_actions.visible=ready_for_next
+	submit_button.visible=not ready_for_next
+	submit_button.disabled=_ai_busy or state in ["checking","completed"]
+	_answer_help.disabled=_ai_busy or state in ["checking","completed"]
 
 func _update_lang_buttons_style() -> void:
 	var active_s := _style("2563eb", "1d4ed8")
@@ -552,10 +533,11 @@ func _change_language(lang: String) -> void:
 	_update_lang_buttons_style()
 	var d: Dictionary = QUESTIONS[lang]
 	name_label.text = str(d["name"])
-	answer_title.text = str(d["answer_title"])
+	answer_title.text = UI.text("Plan Q&A")
 	answer_input.placeholder_text = str(d["answer_hint"])
-	submit_button.text = str(d["check"])
-	reset_button.text = str(d["reset"])
+	submit_button.text = "OK"
+	reset_button.text = ""
+	reset_button.tooltip_text = UI.text("Clear")
 	status_label.text = "AI CHECK · 3 MODELS" if _is_ai_configured() else "LOCAL CHECK · OFFLINE"
 
 	if last_eval_state == "good":
@@ -908,7 +890,7 @@ func _on_voice_finished() -> void:
 		voice_caption.text = UI.bullet_text(str(QUESTIONS[current_lang][voice_kind])) if voice_kind=="question" else str(QUESTIONS[current_lang][voice_kind])
 		if voice_kind=="good" and last_eval_state=="good":
 			_completion_voice_finished=true
-			progress_actions.show()
+			_set_progress_state("completed")
 			_show_completion()
 
 func _create_reference_popup(tex: Texture2D) -> void:

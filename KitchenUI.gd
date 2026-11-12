@@ -149,7 +149,7 @@ static func logo(width: int = 150, height: int = 54) -> TextureRect:
 	mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return mark
 
-static func header(stage: int, title: String, menu_action: Callable, language_action: Callable) -> PanelContainer:
+static func header(stage: int, _title: String, menu_action: Callable, language_action: Callable) -> PanelContainer:
 	var panel := PanelContainer.new()
 	panel.name = "Stage1Header" if stage == 1 else "GameHeader"
 	panel.custom_minimum_size.y = 58
@@ -164,17 +164,10 @@ static func header(stage: int, title: String, menu_action: Callable, language_ac
 	var mark := logo(144,44)
 	mark.name = "Stage1Logo" if stage == 1 else "GameLogo"
 	row.add_child(mark)
-	var badge := ribbon(text("Stage %d")%stage,15)
-	badge.name="StageRibbon"
-	row.add_child(badge)
-	var heading := label(title,20,true)
-	heading.autowrap_mode = TextServer.AUTOWRAP_OFF
-	heading.clip_text = true
-	heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(heading)
-	var count := label(text("Stage %d of 3") % stage,12,false,MUTED)
-	count.autowrap_mode = TextServer.AUTOWRAP_OFF
-	row.add_child(count)
+	var reach := level_reach(stage,true)
+	reach.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+	reach.size_flags_vertical=Control.SIZE_SHRINK_CENTER
+	row.add_child(reach)
 	var picker := language_switcher(language_action)
 	picker.name = "Stage1LanguagePicker" if stage==1 else "GameLanguagePicker"
 	picker.size_flags_vertical=Control.SIZE_SHRINK_CENTER
@@ -197,14 +190,15 @@ static func bullet_text(value: String) -> String:
 		if not line.is_empty():lines.append(line if line.begins_with("• ") else "• "+line)
 	return "\n".join(lines)
 
-static func level_reach(stage: int) -> MarginContainer:
+static func level_reach(stage: int, in_header: bool=false) -> MarginContainer:
 	var margin:=MarginContainer.new()
 	margin.name="LevelReachBar"
-	for side in ["left","right"]:margin.add_theme_constant_override("margin_"+side,18)
-	margin.add_theme_constant_override("margin_top",4)
-	margin.add_theme_constant_override("margin_bottom",4)
+	for side in ["left","right"]:margin.add_theme_constant_override("margin_"+side,0 if in_header else 18)
+	margin.add_theme_constant_override("margin_top",0 if in_header else 4)
+	margin.add_theme_constant_override("margin_bottom",0 if in_header else 4)
 	var track=load("res://LevelReach.gd").new()
 	track.current_stage=stage
+	track.in_header=in_header
 	margin.add_child(track)
 	return margin
 
@@ -215,7 +209,6 @@ static func page(parent: Control, stage: int, title: String, menu_action: Callab
 	parent.add_child(root)
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.add_child(header(stage,title,menu_action,language_action))
-	root.add_child(level_reach(stage))
 	var margin := MarginContainer.new()
 	for side in ["left","right","bottom"]: margin.add_theme_constant_override("margin_"+side,18)
 	margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -325,6 +318,7 @@ static func inline_label(value: String, size: int = 14, bold: bool = false) -> L
 
 static func icon(kind: String) -> Texture2D:
 	var shapes := {
+		"planqa":'<path d="M3 3h14v12H3zM6 6h8v6H6zM8 8h3v2M12 11h9v8h-5l-4 3z"/>',
 		"check":'<path d="M4 12l5 5L21 5"/>',
 		"play":'<path d="M8 4l13 8L8 20z" fill="currentColor" stroke="none"/>',
 		"layers":'<path d="M12 3l10 6-10 6L2 9zM2 13l10 6 10-6M2 17l10 6 10-6"/>',

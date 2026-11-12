@@ -67,7 +67,7 @@ func _ready() -> void:
 	for state in ["normal","hover","pressed","disabled"]:levels.add_theme_stylebox_override(state,StyleBoxEmpty.new())
 	_put(_design,levels,Rect2(311,284,370,28))
 	var reach=load("res://LevelReach.gd").new()
-	reach.current_stage=mini(stage_index+1,3)
+	reach.current_stage=stage_index
 	reach.compact=true
 	_put(_design,reach,Rect2(34,329,672,44))
 	resized.connect(_fit)

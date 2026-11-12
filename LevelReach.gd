@@ -3,6 +3,7 @@ const UI=preload("res://KitchenUI.gd")
 const Progress=preload("res://GameProgress.gd")
 var current_stage: int=1
 var compact: bool=false
+var in_header: bool=false
 var _state: int=-1
 var _elapsed: float=0.0
 
@@ -11,8 +12,8 @@ func _ready() -> void:
 	custom_minimum_size.y=42
 	mouse_filter=Control.MOUSE_FILTER_IGNORE
 	var style:=UI.box(Color(0.94,0.99,1,0.94) if not compact else Color(0.86,0.96,0.99,0.7),Color("bbdee9") if not compact else Color.TRANSPARENT,14,5)
-	style.content_margin_left=12
-	style.content_margin_right=12
+	style.content_margin_left=8 if in_header else 12
+	style.content_margin_right=8 if in_header else 12
 	style.shadow_size=0
 	add_theme_stylebox_override("panel",style)
 	_rebuild()
@@ -30,9 +31,9 @@ func _rebuild() -> void:
 		remove_child(child)
 		child.queue_free()
 	var route:=HBoxContainer.new()
-	route.add_theme_constant_override("separation",5)
+	route.add_theme_constant_override("separation",3 if in_header else 5)
 	add_child(route)
-	if not compact:
+	if not compact and not in_header:
 		var title:=UI.inline_label("Level reach",12,true)
 		title.custom_minimum_size.x=110
 		route.add_child(title)
@@ -40,7 +41,7 @@ func _rebuild() -> void:
 		if n>1:
 			var bridge:=Bridge.new()
 			bridge.active=Progress.is_completed(n-1)
-			bridge.custom_minimum_size.x=13
+			bridge.custom_minimum_size.x=8 if in_header else 13
 			route.add_child(bridge)
 		var point:=Checkpoint.new()
 		point.name="ReachNode%02d"%n
@@ -51,10 +52,10 @@ func _rebuild() -> void:
 		point.set_meta("completed",point.done)
 		point.set_meta("current",point.current)
 		point.set_meta("locked",point.locked)
-		point.custom_minimum_size=Vector2(65 if n<=3 else 43,30)
+		point.custom_minimum_size=Vector2(70,32) if point.current else Vector2(54,28)
 		point.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 		point.size_flags_vertical=Control.SIZE_SHRINK_CENTER
-		point.size_flags_stretch_ratio=1.5 if n<=3 else 0.75
+		point.size_flags_stretch_ratio=1.25 if point.current else 1.0
 		point.tooltip_text=UI.text("Stage %d")%n+"\n"+UI.text("Coming soon" if n>3 else ("Completed" if point.done else "Ready"))
 		route.add_child(point)
 		var row:=HBoxContainer.new()
@@ -67,12 +68,12 @@ func _rebuild() -> void:
 		var icon:=TextureRect.new()
 		icon.texture=preload("res://MenuAssets/level-lock.svg") if n>3 else UI.icon("check" if point.done else ["plan","chat","cube"][n-1])
 		icon.modulate=Color.WHITE if point.current else (UI.TEAL if point.done else UI.MUTED)
-		icon.custom_minimum_size=Vector2(15 if n>3 else 18,18)
+		icon.custom_minimum_size=Vector2(18,18) if point.current else Vector2(15,15)
 		icon.expand_mode=TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon.mouse_filter=Control.MOUSE_FILTER_IGNORE
 		row.add_child(icon)
-		var number:=UI.inline_label("%02d"%n,12,true)
+		var number:=UI.inline_label("%02d"%n,12 if point.current else 11,true)
 		number.set_meta("locale_ignore",true)
 		number.add_theme_color_override("font_color",Color.WHITE if point.current else (UI.MUTED if point.locked else UI.INK))
 		row.add_child(number)
@@ -102,4 +103,4 @@ class Bridge extends Control:
 		resized.connect(queue_redraw)
 	func _draw() -> void:
 		var ink:=Color("24b9ba") if active else Color("b9d4df")
-		for i in range(3):draw_circle(Vector2(2+i*4,size.y*0.5),1.3,ink)
+		for i in range(3):draw_circle(Vector2(1+i*(size.x-2)/2.0,size.y*0.5),1.1,ink)

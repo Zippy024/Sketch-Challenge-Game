@@ -413,5 +413,29 @@ const MESSAGES = [
 		"mm": "အဆင့်တိုးတက်မှု",
 		"jp": "ステージ到達",
 		"aliases": []
+	},
+	{
+		"en": "Plan Q&A",
+		"mm": "ပုံစံ မေးခွန်း–အဖြေ",
+		"jp": "図面 Q&A",
+		"aliases": []
+	},
+	{
+		"en": "Type your answer, then press OK.",
+		"mm": "အဖြေရေးပြီး OK ကို နှိပ်ပါ။",
+		"jp": "回答を入力して、OKを押してください。",
+		"aliases": []
+	},
+	{
+		"en": "How to answer",
+		"mm": "ဖြေဆိုနည်း",
+		"jp": "回答のしかた",
+		"aliases": []
+	},
+	{
+		"en": "Read the reference plan, write your answer in your own words, then press OK.",
+		"mm": "ကိုးကားပုံစံကို ကြည့်ပြီး အဖြေကို ကိုယ့်စကားဖြင့် ရေးပါ။ ပြီးလျှင် OK ကို နှိပ်ပါ။",
+		"jp": "参考図面を見て、自分の言葉で回答を書き、OKを押してください。",
+		"aliases": []
 	}
 ]
