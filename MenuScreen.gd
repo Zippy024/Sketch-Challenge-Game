@@ -91,7 +91,7 @@ func _top_controls() -> void:
 		Progress.set_language(lang)
 		_build()
 	,13)
-	_put(_design,language,Rect2(1080,22,250,42))
+	_put(_design,language,Rect2(1150,22,180,40))
 	var settings := UI.button("",func():action_requested.emit("settings"),false,44,16)
 	settings.name="Settings"
 	settings.icon=UI.icon("gear")
@@ -104,59 +104,42 @@ func _top_controls() -> void:
 	_put(_design,settings,Rect2(1350,22,46,44))
 
 func _build_home() -> void:
-	_add_logo(Rect2(44,8,290,126))
+	_add_logo(Rect2(44,12,240,100))
 	_top_controls()
 	var panel := Panel.new()
 	panel.name = "HomeHeroPanel"
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	panel.add_theme_stylebox_override("panel",UI.box(Color(0.93,0.98,1,0.66),Color.WHITE,28,0))
-	_put(_design,panel,Rect2(32,152,980,628))
-	var title := _level_label(_design,"Welcome",Rect2(88,179,920,110),57,UI.INK,false,true)
+	panel.add_theme_stylebox_override("panel",UI.box(Color(0.94,0.99,1,0.76),Color.WHITE,26,0))
+	_put(_design,panel,Rect2(260,202,820,396))
+	var title := _level_label(_design,"Welcome",Rect2(308,219,724,72),35 if Progress.get_language()=="mm" else 40,UI.INK,false,true)
 	title.autowrap_mode = TextServer.AUTOWRAP_OFF
 	title.name="HomeWelcomeTitle"
-	_level_label(_design,"Turn kitchen plans into clear design decisions.",Rect2(92,286,850,55),25,UI.INK,false)
-	var start := _button("Start Game",true,25)
+	_level_label(_design,"Turn kitchen plans into clear design decisions.",Rect2(310,297,720,40),18,UI.INK,false)
+	var start := _button("Start Game",true,19)
 	start.name="StartGame"
 	start.icon=UI.icon("play")
-	start.add_theme_constant_override("icon_max_width",28)
+	start.add_theme_constant_override("icon_max_width",22)
 	start.pressed.connect(func():action_requested.emit("new_game"))
-	_put(_design,start,Rect2(104,350,370,77))
-	var continue_button := _button("Continue Game",false,25)
+	_put(_design,start,Rect2(310,354,336,56))
+	var continue_button := _button("Continue Game",false,19)
 	continue_button.name="ContinueGame"
 	continue_button.icon=UI.icon("redo")
 	continue_button.add_theme_color_override("icon_normal_color",UI.TEAL)
-	continue_button.add_theme_constant_override("icon_max_width",28)
+	continue_button.add_theme_constant_override("icon_max_width",22)
 	continue_button.disabled=not paused_game and not Progress.has_session()
 	continue_button.tooltip_text=UI.text("Resume your saved game") if not continue_button.disabled else UI.text("Start a game first")
 	continue_button.pressed.connect(func():action_requested.emit("continue"))
-	_put(_design,continue_button,Rect2(500,350,370,77))
+	_put(_design,continue_button,Rect2(670,354,360,56))
 	for i in range(2):
-		var button := _button("Select Level" if i==0 else "How to Play",false,22)
+		var button := _button("Select Level" if i==0 else "How to Play",false,16)
 		button.name = "SelectLevel" if i==0 else "HowToPlay"
 		button.icon = UI.icon("layers" if i==0 else "help")
 		button.add_theme_color_override("icon_normal_color",UI.INK)
-		button.add_theme_constant_override("icon_max_width",30)
+		button.add_theme_constant_override("icon_max_width",23)
 		button.pressed.connect(func(): action_requested.emit("levels" if i==0 else "guide"))
-		_put(_design,button,Rect2(175+i*337,459,310,65))
+		_put(_design,button,Rect2(364+i*304,430,280 if i==0 else 310,48))
 	var progress := UI.progress_strip()
-	_put(_design,progress,Rect2(60,566,928,64))
-	var line := ColorRect.new()
-	line.color = Color(0.20,0.55,0.65,0.3)
-	_put(_design,line,Rect2(72,657,885,1))
-	for i in range(3):
-		var feature := HBoxContainer.new()
-		feature.add_theme_constant_override("separation",12)
-		_put(_design,feature,Rect2(80+i*300,680,284,65))
-		var picture := TextureRect.new()
-		picture.texture = UI.icon(["plan","chat","cube"][i])
-		picture.modulate = UI.TEAL
-		picture.custom_minimum_size = Vector2(46,46)
-		picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		feature.add_child(picture)
-		var caption := UI.label(["Read plans","Explain clearly","Choose components"][i],17,true)
-		caption.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		feature.add_child(caption)
+	_put(_design,progress,Rect2(288,510,764,54))
 	var back := _back_button("Language","language")
 	back.name = "BackToLanguage"
 	_put(_design,back,Rect2(1180,740,220,42))

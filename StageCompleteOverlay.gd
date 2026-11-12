@@ -30,12 +30,14 @@ func _put(parent: Control, node: Control, rect: Rect2) -> void:
 	node.position = rect.position
 	node.size = rect.size
 
-func _caption(value: String, rect: Rect2, font_size: int, bold: bool = false, ink: Color = UI.INK) -> Label:
-	var label := UI.label(value, font_size, bold, ink)
-	label.text = value
+func _caption(value: String, rect: Rect2, font_size: int, bold: bool = false, ink: Color = UI.INK, numeric: bool = false) -> Label:
+	# Establish the wrapping width before text can raise the label's minimum height.
+	var label := UI.label("", font_size, bold, ink)
+	if numeric:label.add_theme_font_override("font",UI.font(bold,"en"))
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_put(_design, label, rect)
+	label.text = value
 	return label
 
 func _panel(name: String, rect: Rect2, fill: Color, outline: Color, radius: int = 17) -> Panel:
@@ -132,10 +134,10 @@ func _ready() -> void:
 	_panel("CompletionTimeCard", Rect2(361, 329, 207, 76), Color("e5f6fa"), Color("b9dfe6"))
 	_panel("CompletionMistakesCard", Rect2(584, 329, 234, 76), Color("fff4f5"), Color("efccd1"))
 	_caption(_tr("TIME", "အချိန်", "時間"), Rect2(372, 336, 188, 24), 13, true, Color("387b87"))
-	var time_value := _caption("%02d:%02d" % [seconds/60, seconds%60], Rect2(373, 360, 187, 38), 23, true)
+	var time_value := _caption("%02d:%02d" % [seconds/60, seconds%60], Rect2(373, 355, 187, 45), 20, true, UI.INK, true)
 	time_value.name = "CompletionTime"
 	_caption(_tr("MISTAKES", "အမှားအရေအတွက်", "ミス回数"), Rect2(595, 336, 212, 24), 13, true, Color("aa6070"))
-	var error_value := _caption(str(errors), Rect2(595, 360, 212, 38), 24, true, Color("af425b"))
+	var error_value := _caption(str(errors), Rect2(595, 355, 212, 45), 20, true, Color("af425b"), true)
 	error_value.name = "CompletionMistakes"
 	var goal: int = int(Rating.TARGET_SECONDS.get(stage_index, 300))
 	var description := _tr("3★: 0 mistakes, within %d min   ·   2★: up to 2 mistakes, within %d min", "၃★ - အမှား ၀၊ %d မိနစ်အတွင်း  ·  ၂★ - အမှား ၂ ကြိမ်အထိ၊ %d မိနစ်အတွင်း", "３★：ミス0回・%d分以内　２★：ミス2回以内・%d分以内")

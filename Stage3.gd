@@ -33,6 +33,9 @@ var _customer_bubble: PanelContainer
 var _answer_state: String="neutral"
 var _card_texture_cache: Dictionary = {}
 
+func _process(delta: float) -> void:
+	StageRating.advance(3,delta)
+
 
 func _ready() -> void:
 	theme = UI.make_theme()
@@ -40,7 +43,7 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	if Progress.resume_stage()!=3: Progress.open_stage(3)
 	step=Progress.kitchen_step()
-	StageRating.begin(3)
+	if step<7:StageRating.begin(3)
 	_completion_acknowledged=step>=7
 	_refresh()
 
@@ -270,7 +273,9 @@ func _choose(index: int) -> void:
 		_answer_state="correct"
 		step += 1
 		Progress.save_kitchen_step(step)
-		if step == 7: Progress.complete(3)
+		if step == 7:
+			StageRating.finish(3)
+			Progress.complete(3)
 		last_wrong = false
 		_refresh()
 	else:
@@ -300,7 +305,9 @@ func _select_part(which: int) -> void:
 		_answer_state="correct"
 		step += 1
 		Progress.save_kitchen_step(step)
-		if step == 7: Progress.complete(3)
+		if step == 7:
+			StageRating.finish(3)
+			Progress.complete(3)
 		last_wrong = false
 		_refresh()
 	else:
@@ -342,6 +349,7 @@ func _go_levels() -> void:
 
 
 func _open_game_menu() -> void:
+	StageRating.checkpoint(true)
 	_save_session()
 	if is_instance_valid(_pause_menu):
 		return
@@ -399,6 +407,7 @@ func _suspend_session_save() -> void:
 	_session_save_suspended=true
 
 func _exit_tree() -> void:
+	StageRating.checkpoint(true)
 	_save_session()
 
 
