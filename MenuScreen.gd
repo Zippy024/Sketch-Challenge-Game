@@ -176,9 +176,14 @@ func _build_levels() -> void:
 		var column := (n-1)%5
 		var row := floori(float(n-1)/5.0)
 		_card(n,Rect2(82+column*257,178+row*258,238,248))
-	var back := _back_button("Back to Game" if paused_game else "Back to Home","back")
+	var back := _back_button("Back to Game" if paused_game else "Go to Main Menu","back")
 	back.name = "BackFromLevels"
-	_put(_design,back,Rect2(46,768,230,36))
+	_put(_design,back,Rect2(46,756,260,42))
+	if paused_game:
+		var home := _button("Go to Main Menu",false,16)
+		home.name="LevelsMainMenu"
+		home.pressed.connect(func():action_requested.emit("home"))
+		_put(_design,home,Rect2(1120,756,274,42))
 
 func _level_font(bold: bool = false) -> FontVariation:
 	return UI.font(bold)

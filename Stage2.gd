@@ -168,6 +168,8 @@ var last_evaluation_source: String = "offline"
 var _ai_http: HTTPRequest
 var _ai_busy: bool = false
 var _completion_shown: bool = false
+var _completion_voice_finished: bool = false
+var _dialogue_generation: int = 0
 var _session_save_suspended: bool = false
 var name_label: Label
 var bubble: PanelContainer
@@ -352,9 +354,6 @@ func _build_ui() -> void:
 	reset_button = UI.button("Clear",_reset_answer,false,90)
 	actions.add_child(submit_button)
 	actions.add_child(reset_button)
-	actions.add_child(UI.button("Hint",func():
-		progress_description.text = UI.text("Think about the services inside PS and whether they can be relocated easily.")
-	,false,90))
 	_build_progress_panel(right)
 	page.add_child(UI.progress_strip())
 
@@ -565,6 +564,7 @@ func _change_language(lang: String) -> void:
 		feedback_divider.visible = false
 		feedback_label.visible = true
 		_set_progress_state("completed")
+		progress_actions.hide()
 		_play_voice("good")
 		if last_evaluation_source == "local":
 			status_label.text = "LOCAL CHECK · APPROXIMATE"
@@ -613,7 +613,7 @@ func _cancel_ai_request() -> void:
 		submit_button.disabled = false
 
 func _check_ai_or_demo_answer() -> void:
-	if _ai_busy:
+	if _ai_busy or last_eval_state=="good":
 		return
 	var answer: String = answer_input.text.strip_edges()
 	var d: Dictionary = QUESTIONS[current_lang]
@@ -675,8 +675,8 @@ func _show_check_result(correct: bool) -> void:
 		bubble.add_theme_stylebox_override("panel", _style("eefaf8", "79c8bf"))
 		feedback_label.add_theme_color_override("font_color", Color("14532d"))
 		_set_progress_state("completed")
+		progress_actions.hide()
 		_play_voice("good")
-		_show_completion()
 	else:
 		last_eval_state = "needs"
 		question_label.visible = true
@@ -820,8 +820,7 @@ func _process(delta: float) -> void:
 		if elapsed >= fallback_duration:
 			fallback_typing_active = false
 			voice_caption.text = voice_segment_texts[0]
-			if voice_stop_button != null:
-				_set_voice_icon(voice_stop_button, "play")
+			_on_voice_finished()
 			return
 	else:
 		return
@@ -875,6 +874,8 @@ func _set_voice_icon(button: Button, icon_name: String) -> void:
 	button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
 func _stop_voice() -> void:
+	_dialogue_generation += 1
+	_completion_voice_finished=false
 	fallback_typing_active = false
 	if voice_player != null:
 		voice_player.stop()
@@ -905,6 +906,10 @@ func _on_voice_finished() -> void:
 		_set_voice_icon(voice_stop_button, "play")
 	if voice_caption != null and voice_kind != "":
 		voice_caption.text = str(QUESTIONS[current_lang][voice_kind])
+		if voice_kind=="good" and last_eval_state=="good":
+			_completion_voice_finished=true
+			progress_actions.show()
+			_show_completion()
 
 func _create_reference_popup(tex: Texture2D) -> void:
 	popup_window = Window.new()
@@ -1008,12 +1013,17 @@ func _resume_from_game_menu() -> void:
 	_voice_paused_for_menu = false
 
 func _show_completion() -> void:
-	if _completion_shown: return
+	if _completion_shown or not _completion_voice_finished or last_eval_state!="good": return
 	_completion_shown=true
+	var generation := _dialogue_generation
+	await get_tree().create_timer(0.35,false).timeout
+	if generation!=_dialogue_generation or not _completion_voice_finished or last_eval_state!="good" or not is_inside_tree():
+		_completion_shown=false
+		return
 	var popup := preload("res://StageCompleteOverlay.gd").new()
 	popup.name="Stage2CompleteOverlay"
 	popup.stage_index=2
-	popup.configure("","","Next Stage","View Levels","Review answer",true,true)
+	popup.configure("","","Next Stage","View Levels")
 	popup.next_requested.connect(func():
 		_stop_voice()
 		get_tree().change_scene_to_file("res://stage_3.tscn")
@@ -1029,7 +1039,6 @@ func _show_completion() -> void:
 		Progress.show_levels_on_open=false
 		get_tree().change_scene_to_file("res://GameMenu.tscn")
 	)
-	popup.replay_requested.connect(func():popup.queue_free())
 	add_child(popup)
 
 func _save_session() -> void:
