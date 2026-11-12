@@ -125,10 +125,6 @@ func _refresh() -> void:
 		brief.add_child(UI.label("Parts checklist",16,true))
 		for i in range(5):
 			brief.add_child(UI.label(("✓  " if i<step-2 else "○  ")+UI.text(EN_PARTS[i]),15,i==step-2,UI.TEAL if i<=step-2 else UI.MUTED))
-		brief.add_child(UI.button("Hint",func():
-			_feedback.text = UI.text(["Find the work surface above the base cabinets.","Look for the storage cabinets above the work surface.","Find the extractor above the cooktop.","Look for the low wall in front of the kitchen.","Find the tall fixture at the side of the kitchen."][step-2])
-			_feedback.add_theme_color_override("font_color",UI.TEAL)
-		,false,100))
 	var right := UI.card_stack(split,true)
 	right.get_parent().size_flags_stretch_ratio = 13
 	right.add_child(UI.label("Kitchen Selection" if step<2 else "Kitchen Parts",25,true))

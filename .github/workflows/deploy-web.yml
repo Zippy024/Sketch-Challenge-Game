@@ -49,6 +49,12 @@ jobs:
           grep -q "SESSION_FLOW_OK" /tmp/session-flow.log
           if grep -q "SCRIPT ERROR" /tmp/session-flow.log; then exit 1; fi
 
+      - name: Verify dialogue finishes before completion
+        run: |
+          timeout 60s godot --headless --audio-driver Dummy --path . --script res://Tests/CompletionTiming.gd --max-fps 120 --quit-after 6000 2>&1 | tee /tmp/completion-timing.log
+          grep -q "COMPLETION_TIMING_OK" /tmp/completion-timing.log
+          if grep -q "SCRIPT ERROR" /tmp/completion-timing.log; then exit 1; fi
+
       - name: Export Web game
         run: |
           mkdir -p "Web Game"

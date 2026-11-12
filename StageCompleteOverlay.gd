@@ -1,25 +1,19 @@
 extends Control
 signal next_requested
 signal levels_requested
-signal replay_requested
 signal home_requested
 const UI = preload("res://KitchenUI.gd")
 var stage_index: int = 1
 var title_text: String = "Stage complete!"
 var next_text: String = "Next Stage"
 var levels_text: String = "View Levels"
-var replay_text: String = "Review drawing"
 var show_next_button: bool = true
-var show_replay_button: bool = false
 var _design: Control
 
-func configure(title_value: String, _subtitle: String = "", next_value: String = "Next Stage", levels_value: String = "View Levels", replay_value: String = "Replay", allow_next: bool = true, allow_replay: bool = false) -> void:
+func configure(title_value: String, _subtitle: String = "", next_value: String = "Next Stage", levels_value: String = "View Levels") -> void:
 	title_text=title_value
 	next_text=next_value
 	levels_text=levels_value
-	replay_text=replay_value
-	show_next_button=allow_next
-	show_replay_button=allow_replay
 
 func _put(parent: Control, child: Control, rect: Rect2) -> void:
 	parent.add_child(child)
@@ -69,10 +63,6 @@ func _ready() -> void:
 	actions.alignment=BoxContainer.ALIGNMENT_CENTER
 	actions.add_theme_constant_override("separation",18)
 	_put(_design,actions,Rect2(270,244,430,36))
-	if show_replay_button:
-		var review := _link(replay_text,func():replay_requested.emit())
-		review.name="CompletionReview"
-		actions.add_child(review)
 	var levels := _link(levels_text,func():levels_requested.emit())
 	levels.name="CompletionLevels"
 	actions.add_child(levels)

@@ -180,7 +180,8 @@ var start_button: Button
 var again_button_row: HBoxContainer
 var again_button: Button
 var stage_transition_running: bool = false
-var _reviewing_completed: bool = false
+var _completion_voice_finished: bool = false
+var _dialogue_generation: int = 0
 var _session_save_suspended: bool = false
 var intro_overlay: ColorRect
 var game_has_started: bool = false
@@ -935,9 +936,6 @@ func _build_ui() -> void:
 	clear_button.add_theme_constant_override("icon_max_width", 18)
 	clear_button.custom_minimum_size = Vector2(78, 34)
 	_compact_button_style(clear_button)
-	var hint := UI.button("Hint",func(): _set_status("Trace only the connected LDK area. Check each wall length and close the outline.",false),false,55,12)
-	hint.name = "Stage1Hint"
-	footer.add_child(hint)
 	footer.add_child(clear_button)
 	again_button_row.size_flags_horizontal = Control.SIZE_SHRINK_END
 	footer.add_child(again_button_row)
@@ -1161,7 +1159,8 @@ func _on_start_pressed() -> void:
 	_set_status("Drawing started! Click points on the grid to draw the layout.", false)
 
 func _reset_feedback_ui() -> void:
-	_reviewing_completed = false
+	_stop_voice()
+	ok_button.disabled=false
 	stage_transition_running = false
 	ok_button.text = UI.text("Check Answer")
 	last_eval_state = "none"
@@ -1183,10 +1182,6 @@ func _on_again_pressed() -> void:
 	_set_status("Canvas cleared. Please draw the layout again.", false)
 
 func _confirm() -> void:
-	if _reviewing_completed:
-		_stop_voice()
-		get_tree().change_scene_to_file("res://stage_2.tscn")
-		return
 	if not conversation_finished or not is_drawing_started:
 		return
 	ok_button.disabled = true
@@ -1205,7 +1200,6 @@ func _confirm() -> void:
 		_set_status("Please wait for the customer to finish speaking.", false, true)
 		feedback_label.text = DIALOGUE_TEXTS[current_lang]["correct"]
 		_play_voice("correct")
-		_start_auto_stage_transition()
 	else:
 		last_eval_state = "wrong"
 		canvas.set_drawing_enabled(false)
@@ -1220,7 +1214,7 @@ func _confirm() -> void:
 		_play_voice("wrong")
 		again_button_row.visible = true
 		await _scroll_dialog_to_bottom()
-	ok_button.disabled = false
+	ok_button.disabled = last_eval_state=="correct"
 
 # ---------------- Recorded Japanese voice and synchronized subtitles ----------------
 func _voice_path(kind: String) -> String:
@@ -1259,14 +1253,14 @@ func _play_voice(kind: String) -> void:
 		if target is RichTextLabel:
 			request_label.visible_characters = -1
 		if kind == "correct" and last_eval_state == "correct":
-			_start_auto_stage_transition()
+			_finish_without_audio(_dialogue_generation)
 		return
 	var stream: AudioStream = load(voice_path) as AudioStream
 	if stream == null:
 		if kind == "talk":
 			_reveal_reference_after_talk()
 		if kind == "correct" and last_eval_state == "correct":
-			_start_auto_stage_transition()
+			_finish_without_audio(_dialogue_generation)
 		return
 	voice_player.stream = stream
 	# Timestamp groups match spoken sentences, including pauses.
@@ -1364,6 +1358,8 @@ func _set_voice_icon(button: Button, icon_name: String) -> void:
 	button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
 func _stop_voice() -> void:
+	_dialogue_generation += 1
+	_completion_voice_finished=false
 	if voice_player != null:
 		voice_player.stop()
 		voice_player.stream_paused = false
@@ -1397,20 +1393,33 @@ func _on_voice_finished() -> void:
 	elif voice_caption == feedback_label and voice_kind != "":
 		feedback_label.text = DIALOGUE_TEXTS[current_lang][voice_kind]
 		if voice_kind == "correct" and last_eval_state == "correct":
+			_completion_voice_finished=true
 			_start_auto_stage_transition()
 
 
+func _finish_without_audio(generation: int) -> void:
+	# Keep the final response readable if a recorded clip is unavailable.
+	var duration := clampf(float(DIALOGUE_TEXTS[current_lang]["correct"].length())*0.045,1.2,3.0)
+	await get_tree().create_timer(duration,false).timeout
+	if generation==_dialogue_generation and last_eval_state=="correct" and is_inside_tree():
+		_on_voice_finished()
+
 func _start_auto_stage_transition() -> void:
-	if stage_transition_running or last_eval_state != "correct" or not is_inside_tree():
+	if stage_transition_running or not _completion_voice_finished or last_eval_state != "correct" or not is_inside_tree():
 		return
 	stage_transition_running = true
+	var generation := _dialogue_generation
+	await get_tree().create_timer(0.35,false).timeout
+	if generation!=_dialogue_generation or not _completion_voice_finished or last_eval_state!="correct" or not is_inside_tree():
+		stage_transition_running=false
+		return
 	_set_status("Stage 1 complete. Continue when you are ready.", false, true)
 	_run_stage_transition()
 
 func _run_stage_transition() -> void:
 	var overlay := preload("res://StageCompleteOverlay.gd").new()
 	overlay.name = "Stage1CompleteOverlay"
-	overlay.configure("Stage 1 complete!","The LDK boundary matches the reference plan.","Next Stage","View Levels","Review drawing",true,true)
+	overlay.configure("Stage 1 complete!","The LDK boundary matches the reference plan.","Next Stage","View Levels")
 	overlay.next_requested.connect(func():
 		_stop_voice()
 		get_tree().change_scene_to_file("res://stage_2.tscn")
@@ -1424,12 +1433,6 @@ func _run_stage_transition() -> void:
 		Progress.show_home_on_open=true
 		Progress.show_levels_on_open=false
 		get_tree().change_scene_to_file("res://GameMenu.tscn")
-	)
-	overlay.replay_requested.connect(func():
-		overlay.queue_free()
-		stage_transition_running = false
-		_reviewing_completed = true
-		ok_button.text = UI.text("Continue to Stage 2")
 	)
 	add_child(overlay)
 

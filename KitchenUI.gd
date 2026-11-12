@@ -1,10 +1,11 @@
 extends RefCounted
 const Progress = preload("res://GameProgress.gd")
 const INK := Color("082744")
-const MUTED := Color("355c72")
+const MUTED := Color("284f68")
 const TEAL := Color("008f98")
 const EDGE := Color("c3dce9")
 static var _fonts: Dictionary = {}
+static var _font_files: Dictionary = {}
 static var _pill_textures: Dictionary = {}
 static var _backdrop_texture: Texture2D
 
@@ -13,15 +14,22 @@ static func text(value: String) -> String:
 	var manager := tree.root.get_node_or_null("LocaleManager") if tree else null
 	return str(manager.call("text",value)) if manager else value
 
+static func _font_file(path: String) -> FontFile:
+	if not _font_files.has(path):
+		var file := load(path).duplicate() as FontFile
+		file.oversampling=2.0
+		_font_files[path]=file
+	return _font_files[path]
+
 static func font(bold: bool = false) -> FontVariation:
 	var lang := Progress.get_language()
 	var key := lang + str(bold)
 	if not _fonts.has(key):
 		var f := FontVariation.new()
-		f.base_font = preload("res://Font/NotoSansMyanmar-VariableFont_wdth,wght.ttf") if lang == "mm" else preload("res://Font/NotoSansJP-VariableFont_wght.ttf")
-		f.fallbacks = [preload("res://Font/NotoSansCJKjp-Regular.otf"),preload("res://Font/NotoSansMyanmar.ttf")]
-		f.variation_opentype = {2003265652:700.0 if bold else 450.0}
-		f.variation_embolden = 0.1 if bold else 0.0
+		f.base_font = _font_file("res://Font/NotoSansMyanmar-VariableFont_wdth,wght.ttf") if lang == "mm" else _font_file("res://Font/NotoSansJP-VariableFont_wght.ttf")
+		f.fallbacks = [_font_file("res://Font/NotoSansCJKjp-Regular.otf"),_font_file("res://Font/NotoSansMyanmar.ttf")]
+		f.variation_opentype = {2003265652:700.0 if bold else 500.0}
+		f.variation_embolden = 0.0
 		_fonts[key] = f
 	return _fonts[key]
 

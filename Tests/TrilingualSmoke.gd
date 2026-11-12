@@ -134,6 +134,7 @@ func _run() -> void:
 		var game=current_scene
 		assert(game.get("current_lang")==language)
 		assert(game.get("canvas")!=null)
+		assert(game.find_child("Stage1Hint",true,false)==null)
 		assert(not game.find_child("CustomerVoiceControls",true,false).is_visible_in_tree())
 		assert(game.find_child("Stage1PauseButton",true,false)==null)
 		game.call("_stop_voice")
@@ -214,9 +215,10 @@ func _run() -> void:
 		drawing.lines[0][1].x -= 1
 		assert(drawing.analyze_reference())
 		game.call("_confirm")
+		assert(game.find_child("Stage1CompleteOverlay",true,false)==null)
 		game.call("_stop_voice")
 		game.call("_on_voice_finished")
-		await _wait()
+		await create_timer(0.5).timeout
 		assert(Progress.is_completed(1))
 		var complete=game.find_child("Stage1CompleteOverlay",true,false)
 		assert(complete!=null and current_scene==game)
@@ -226,12 +228,8 @@ func _run() -> void:
 		assert(complete.find_child("CompletionHome",true,false)!=null)
 		assert(complete.find_children("*","Label",true,false).size()==1)
 		assert(game.get_global_rect().encloses(complete.find_child("MissionCompleteCard",true,false).get_global_rect()))
-		if language == "en":
-			complete.replay_requested.emit()
-			await _wait()
-			assert(current_scene==game and game.get("ok_button").text==manager.text("Continue to Stage 2"))
-			game.get("ok_button").pressed.emit()
-		elif language=="mm":
+		assert(complete.find_child("CompletionReview",true,false)==null)
+		if language=="mm":
 			complete.find_child("CompletionHome",true,false).pressed.emit()
 			await _wait()
 			assert(current_scene.find_child("KitchenHomeScreen",true,false)!=null)
@@ -255,6 +253,7 @@ func _run() -> void:
 				stage_two_avatar=portrait
 				break
 		assert(stage_two_avatar!=null and stage_two_avatar.size==stage_one_avatar_size)
+		for button in game.find_children("*","Button",true,false): assert(button.text!=manager.text("Hint"))
 		_collect(game,"stage2")
 		var input=game.get("answer_input")
 		input.text="PS means Pipe Space."
@@ -266,11 +265,16 @@ func _run() -> void:
 		game.call("_check_demo_answer")
 		assert(game.get("last_eval_state")=="good")
 		assert(Progress.is_completed(2))
+		assert(game.find_child("Stage2CompleteOverlay",true,false)==null)
+		assert(not game.find_child("ContinueStage3",true,false).is_visible_in_tree())
+		game.call("_stop_voice")
+		game.call("_on_voice_finished")
+		await create_timer(0.5).timeout
 		assert(game.find_child("ContinueStage3",true,false).is_visible_in_tree())
-		await _wait()
 		_collect(game,"stage2-correct")
 		var second_popup=game.find_child("Stage2CompleteOverlay",true,false)
 		assert(second_popup!=null and second_popup.stage_index==2)
+		assert(second_popup.find_child("CompletionReview",true,false)==null)
 		assert(second_popup.find_children("*","Label",true,false).size()==1)
 		if language=="en":
 			second_popup.find_child("CompletionHome",true,false).pressed.emit()
@@ -292,6 +296,7 @@ func _run() -> void:
 		assert(game.get("step")==1)
 		game.call("_choose",1)
 		await _wait()
+		for button in game.find_children("*","Button",true,false): assert(button.text!=manager.text("Hint"))
 		_collect(game,"stage3-parts")
 		for panel in game.find_children("*","PanelContainer",true,false):
 			if panel.is_visible_in_tree(): assert(game.get_global_rect().encloses(panel.get_global_rect()))

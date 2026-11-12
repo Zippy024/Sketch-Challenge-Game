@@ -251,6 +251,7 @@ func _show_presentation(levels: bool) -> void:
 	screen.action_requested.connect(func(action: String) -> void:
 		match action:
 			"levels":_show_levels()
+			"home":_show_home()
 			"new_game":_start_new_game()
 			"continue":
 				if is_pause_overlay: _resume_paused()
