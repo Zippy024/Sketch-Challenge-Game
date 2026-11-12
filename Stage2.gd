@@ -489,6 +489,7 @@ func _change_language(lang: String) -> void:
 		feedback_label.visible = false
 		_set_progress_state("pending")
 		_play_voice("question")
+	UI.set_customer_feedback(bubble,{"good":"correct","needs":"incorrect"}.get(last_eval_state,"neutral"),false)
 
 func _reset_answer() -> void:
 	_completion_shown=false
@@ -503,7 +504,7 @@ func _reset_answer() -> void:
 	question_label.text = UI.bullet_text(str(QUESTIONS[current_lang]["question"]))
 	feedback_divider.visible = false
 	feedback_label.visible = false
-	bubble.add_theme_stylebox_override("panel", _style("ffffff", "d6e2ef"))
+	UI.set_customer_feedback(bubble,"neutral")
 	answer_input.grab_focus()
 
 # Stage 2 Gemini AI: HTTP requests go only to our Cloudflare Worker; no API key in game.
@@ -578,7 +579,7 @@ func _show_check_result(correct: bool) -> void:
 		question_label.visible = false
 		feedback_divider.visible = false
 		feedback_label.visible = true
-		bubble.add_theme_stylebox_override("panel", _style("eefaf8", "79c8bf"))
+		UI.set_customer_feedback(bubble,"correct")
 		feedback_label.add_theme_color_override("font_color", Color("14532d"))
 		_set_progress_state("completed")
 		progress_actions.hide()
@@ -589,7 +590,7 @@ func _show_check_result(correct: bool) -> void:
 		question_label.text = UI.bullet_text(str(d["question"]))
 		feedback_divider.visible = true
 		feedback_label.visible = true
-		bubble.add_theme_stylebox_override("panel", _style("dbeafe", "f87171"))
+		UI.set_customer_feedback(bubble,"incorrect")
 		feedback_divider.color = Color("f87171")
 		feedback_label.add_theme_color_override("font_color", Color("b91c1c"))
 		_set_progress_state("incorrect")

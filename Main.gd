@@ -616,7 +616,7 @@ func _build_ui() -> void:
 	chat_panel.name = "Stage1CustomerCard"
 	chat_panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	chat_panel.size_flags_stretch_ratio = 0.92
-	chat_panel.custom_minimum_size.y = 330
+	chat_panel.custom_minimum_size.y = 340
 	chat_panel.add_theme_stylebox_override("panel", _stage1_glass("customer", 14))
 	left.add_child(chat_panel)
 
@@ -649,11 +649,7 @@ func _build_ui() -> void:
 	var name_plate := PanelContainer.new()
 	name_plate.name = "Stage1CustomerIdentity"
 	name_plate.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var identity_box := _stage1_surface(Color("edf7ff"), Color("89b6d9"), 8, 6)
-	identity_box.content_margin_left = 8
-	identity_box.content_margin_right = 8
-	identity_box.shadow_size = 1
-	identity_box.shadow_offset = Vector2(0,1)
+	var identity_box := UI.customer_plate()
 	name_plate.add_theme_stylebox_override("panel", identity_box)
 	avatar_column.add_child(name_plate)
 	speaker_name_label = _label(DIALOGUE_TEXTS[current_lang]["speaker"], 15, "173b61")
@@ -670,16 +666,11 @@ func _build_ui() -> void:
 	customer_row.add_child(speech_stack)
 	var request_header := PanelContainer.new()
 	request_header.name = "CustomerRequestHeader"
-	request_header.custom_minimum_size.x = 220
-	request_header.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	var heading_box := _stage1_surface(Color("e7f3ff"), Color("94bddb"), 8, 6)
-	heading_box.content_margin_left = 10
-	heading_box.content_margin_right = 10
-	heading_box.shadow_size = 1
-	heading_box.shadow_offset = Vector2(0,1)
+	request_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var heading_box := UI.customer_plate()
 	request_header.add_theme_stylebox_override("panel", heading_box)
 	speech_stack.add_child(request_header)
-	var request_heading := _label("Customer Request", 16, "173b61")
+	var request_heading := _label("Customer Request", 15, "082744")
 	_stage1_bold(request_heading)
 	request_heading.autowrap_mode = TextServer.AUTOWRAP_OFF
 	request_header.add_child(request_heading)
@@ -689,7 +680,7 @@ func _build_ui() -> void:
 	dialog_bubble.name = "Stage1ConversationText"
 	dialog_bubble.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	dialog_bubble.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	dialog_bubble.add_theme_stylebox_override("panel", _stage1_glass("speech", 10))
+	dialog_bubble.add_theme_stylebox_override("panel", UI.conversation_style())
 	speech_stack.add_child(dialog_bubble)
 
 	var bubble_vbox := VBoxContainer.new()
@@ -697,6 +688,7 @@ func _build_ui() -> void:
 	bubble_vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	bubble_vbox.add_theme_constant_override("separation", 8)
 	dialog_bubble.add_child(bubble_vbox)
+	UI.add_customer_feedback(dialog_bubble,bubble_vbox)
 
 	# Preserve recorded voice and UI feedback behavior.
 	voice_replay_button = _button("", _replay_voice, 26)
@@ -1002,6 +994,7 @@ func _switch_language(lang: String) -> void:
 		request_label.visible_characters = -1
 		feedback_label.visible = false
 		_play_voice("talk")
+	UI.set_customer_feedback(dialog_bubble,{"correct":"correct","wrong":"incorrect"}.get(last_eval_state,"neutral"),false)
 
 func _build_reference_popup(tex: Texture2D) -> void:
 	popup_overlay = ColorRect.new()
@@ -1176,7 +1169,7 @@ func _reset_feedback_ui() -> void:
 	feedback_label.visible = false
 	feedback_label.text = ""
 	again_button_row.visible = false
-	dialog_bubble.add_theme_stylebox_override("panel", _stage1_glass("speech", 12))
+	UI.set_customer_feedback(dialog_bubble,"neutral")
 
 func _on_again_pressed() -> void:
 	typing_token += 1
@@ -1200,7 +1193,7 @@ func _confirm() -> void:
 		request_label.visible = false
 		feedback_divider.visible = false
 		feedback_label.visible = true
-		dialog_bubble.add_theme_stylebox_override("panel", _stage1_glass("speech", 12))
+		UI.set_customer_feedback(dialog_bubble,"correct")
 		feedback_label.add_theme_color_override("font_color", Color("14532d"))
 		_set_status("Please wait for the customer to finish speaking.", false, true)
 		feedback_label.text = DIALOGUE_TEXTS[current_lang]["correct"]
@@ -1211,7 +1204,7 @@ func _confirm() -> void:
 		request_label.visible = true
 		feedback_divider.visible = true
 		feedback_label.visible = true
-		dialog_bubble.add_theme_stylebox_override("panel", _stage1_glass("speech", 12))
+		UI.set_customer_feedback(dialog_bubble,"incorrect")
 		feedback_divider.color = Color("d6a49a")
 		feedback_label.add_theme_color_override("font_color", Color("b91c1c"))
 		_set_status("Red highlighted parts on the drawing are incorrect. Click 'Try Again'.", true)
