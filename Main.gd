@@ -1165,6 +1165,7 @@ func _on_start_pressed() -> void:
 	_set_status("Drawing started! Click points on the grid to draw the layout.", false)
 
 func _reset_feedback_ui() -> void:
+	if last_eval_state=="correct":StageRating.begin(1,true)
 	_stop_voice()
 	ok_button.disabled=false
 	stage_transition_running = false
@@ -1196,6 +1197,7 @@ func _confirm() -> void:
 	var is_correct: bool = canvas.analyze_reference()
 
 	if is_correct:
+		StageRating.finish(1)
 		Progress.unlock_level(2)
 		last_eval_state = "correct"
 		request_label.visible = false
@@ -1310,6 +1312,7 @@ func _play_voice(kind: String) -> void:
 	_set_voice_icon(voice_stop_button, "pause")
 
 func _process(_delta: float) -> void:
+	StageRating.advance(1,_delta)
 	if voice_player == null or not voice_player.playing or voice_player.stream_paused or voice_caption == null:
 		return
 	var elapsed: float = voice_player.get_playback_position()
@@ -1481,6 +1484,7 @@ func _make_levels_menu_button() -> Button:
 
 # Show the menu ON TOP of the running scene. Do not lose the drawing or timer.
 func _open_game_menu() -> void:
+	StageRating.checkpoint(true)
 	_save_session()
 	if is_instance_valid(_pause_menu):
 		return
@@ -1518,4 +1522,5 @@ func _suspend_session_save() -> void:
 	_session_save_suspended=true
 
 func _exit_tree() -> void:
+	StageRating.checkpoint(true)
 	_save_session()

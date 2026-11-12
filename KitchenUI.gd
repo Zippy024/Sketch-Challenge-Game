@@ -24,8 +24,8 @@ static func _font_file(path: String) -> FontFile:
 		_font_files[path]=file
 	return _font_files[path]
 
-static func font(bold: bool = false) -> FontVariation:
-	var lang := Progress.get_language()
+static func font(bold: bool = false, language: String = "") -> FontVariation:
+	var lang := language if language in ["jp","mm","en"] else Progress.get_language()
 	var key := lang + str(bold)
 	if not _fonts.has(key):
 		var f := FontVariation.new()

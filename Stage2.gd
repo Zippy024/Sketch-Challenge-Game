@@ -494,6 +494,7 @@ func _change_language(lang: String) -> void:
 	UI.set_customer_feedback(bubble,{"good":"correct","needs":"incorrect"}.get(last_eval_state,"neutral"),false)
 
 func _reset_answer() -> void:
+	if last_eval_state=="good":StageRating.begin(2,true)
 	_completion_shown=false
 	_cancel_ai_request()
 	_stop_voice()
@@ -576,6 +577,7 @@ func _show_ai_error() -> void:
 func _show_check_result(correct: bool) -> void:
 	var d: Dictionary = QUESTIONS[current_lang]
 	if correct:
+		StageRating.finish(2)
 		Progress.complete(2)
 		last_eval_state = "good"
 		question_label.visible = false
@@ -717,6 +719,7 @@ func _play_voice(kind: String) -> void:
 	voice_stop_button.text = ""
 
 func _process(delta: float) -> void:
+	StageRating.advance(2,delta)
 	if voice_caption == null or voice_segment_texts.is_empty():
 		return
 
@@ -894,6 +897,7 @@ func _make_levels_menu_button() -> Button:
 
 
 func _open_game_menu() -> void:
+	StageRating.checkpoint(true)
 	_save_session()
 	if is_instance_valid(_pause_menu):
 		return
@@ -966,4 +970,5 @@ func _suspend_session_save() -> void:
 	_session_save_suspended=true
 
 func _exit_tree() -> void:
+	StageRating.checkpoint(true)
 	_save_session()

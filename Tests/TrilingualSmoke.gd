@@ -48,6 +48,10 @@ func _run() -> void:
 		await _wait()
 		_collect(menu,"home")
 		var home=menu.find_child("KitchenHomeScreen",true,false)
+		var hero=home.find_child("HomeHeroPanel",true,false)
+		assert(hero.size.x<home.size.x*0.65 and hero.size.y<home.size.y*0.6)
+		for control in ["StartGame","ContinueGame","SelectLevel","HowToPlay"]:
+			assert(hero.get_global_rect().encloses(home.find_child(control,true,false).get_global_rect()))
 		assert(home.find_child("GameGuide",true,false)==null)
 		assert(home.find_child("HomeWelcomeTitle",true,false).text==manager.text("Welcome"))
 		assert(home.find_child("StartGame",true,false)!=null)
@@ -278,6 +282,8 @@ func _run() -> void:
 		assert(complete.find_child("CompletionTime",true,false)!=null)
 		assert(complete.find_child("CompletionMistakes",true,false)!=null)
 		assert(complete.find_child("CompletionRating",true,false)!=null)
+		for field in ["Time","Mistakes"]:
+			assert(complete.find_child("Completion"+field+"Card",true,false).get_global_rect().encloses(complete.find_child("Completion"+field,true,false).get_global_rect()))
 		for i in range(1,4):assert(complete.find_child("ResultStar%d"%i,true,false)!=null)
 		assert(game.get_global_rect().encloses(complete.find_child("MissionCompleteCard",true,false).get_global_rect()))
 		assert(complete.find_child("CompletionReview",true,false)==null)

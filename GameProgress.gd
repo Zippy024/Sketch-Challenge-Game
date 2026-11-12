@@ -1,4 +1,5 @@
 extends RefCounted
+const Rating=preload("res://StageRating.gd")
 # Shared language and level progress. Works in desktop builds and in Web user:// storage.
 const SAVE_PATH := "user://sketch_challenge_progress_v8.cfg"
 static var _loaded: bool = false
@@ -115,8 +116,9 @@ static func next_stage() -> int:
 	return 3
 
 # Testing option: reset level unlocks, keeping the chosen language.
-static func reset_progress() -> void:
+static func reset_progress(keep_best_scores: bool=false) -> void:
 	_ensure_loaded()
+	Rating.reset_run(keep_best_scores)
 	_stage1_cleared = false
 	_stage2_cleared = false
 	_stage3_cleared = false
@@ -137,7 +139,7 @@ static func resume_stage() -> int:
 	return _resume_stage
 
 static func start_new_game() -> void:
-	reset_progress()
+	reset_progress(true)
 	open_stage(1)
 
 static func open_stage(stage: int, resume: bool = false) -> void:
@@ -145,6 +147,7 @@ static func open_stage(stage: int, resume: bool = false) -> void:
 	if stage not in [1,2,3]: return
 	_resume_stage=stage
 	if not resume:
+		Rating.begin(stage,true)
 		if stage==1:
 			_stage1_draft.clear()
 			_stage1_zoom=1.0
