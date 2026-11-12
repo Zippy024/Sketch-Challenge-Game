@@ -62,9 +62,9 @@ jobs:
           godot --headless --path . --export-release Web "Web Game/${build_name}.html"
           mv "Web Game/${build_name}.html" "Web Game/index.html"
           mkdir -p "Web Game/assets"
-          cp "LoadingAssets/BlueKitchen.png" "Web Game/assets/loading-kitchen.png"
+          cp "LoadingAssets/TealKitchen.webp" "Web Game/assets/loading-kitchen.webp"
           cp "LoadingAssets/KitchenLogo.webp" "Web Game/assets/game-logo.webp"
-          test -s "Web Game/assets/loading-kitchen.png"
+          test -s "Web Game/assets/loading-kitchen.webp"
           test -s "Web Game/assets/game-logo.webp"
           test -s "Web Game/index.html"
           python3 -c 'import json,os;json.dump({"commit":os.environ["GITHUB_SHA"]},open("Web Game/build.json","w"))'

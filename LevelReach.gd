@@ -83,9 +83,14 @@ class Checkpoint extends Control:
 	var current: bool=false
 	var done: bool=false
 	var locked: bool=false
+	var _pulse: float=0.0
 	func _ready() -> void:
 		mouse_filter=Control.MOUSE_FILTER_PASS
 		resized.connect(queue_redraw)
+		set_process(current)
+	func _process(delta: float) -> void:
+		_pulse+=delta
+		queue_redraw()
 	func _draw() -> void:
 		var cut:=7.0
 		var shape:=PackedVector2Array([Vector2(cut,1),Vector2(size.x-cut,1),Vector2(size.x-1,size.y*0.5),Vector2(size.x-cut,size.y-1),Vector2(cut,size.y-1),Vector2(1,size.y*0.5)])
@@ -94,6 +99,7 @@ class Checkpoint extends Control:
 		draw_colored_polygon(shape,fill)
 		var outline:=shape.duplicate()
 		outline.append(shape[0])
+		if current:draw_polyline(outline,Color(0.2,0.85,0.86,0.13+0.08*sin(_pulse*1.8)),5.0,true)
 		draw_polyline(outline,edge,2.0 if current else 1.0,true)
 		if current:draw_line(Vector2(11,4),Vector2(size.x-11,4),Color("8df4f2"),1.0,true)
 

@@ -28,6 +28,8 @@ var _answer_area: VBoxContainer
 var _pause_menu: Control
 var _progress_bar: ProgressBar
 var _feedback: Label
+var _customer_bubble: PanelContainer
+var _answer_state: String="neutral"
 var _card_texture_cache: Dictionary = {}
 
 
@@ -90,6 +92,7 @@ func _refresh() -> void:
 			step = 0
 			_completion_acknowledged=false
 			last_wrong = false
+			_answer_state="neutral"
 			_refresh()
 		)
 		results.home_requested.connect(func(): get_tree().change_scene_to_file("res://GameMenu.tscn"))
@@ -106,9 +109,11 @@ func _refresh() -> void:
 	left.add_theme_constant_override("separation",12)
 	split.add_child(left)
 	var customer := UI.customer(left)
+	_customer_bubble=customer.bubble
 	customer.question.text = UI.bullet_text(_question_text())
 	customer.bubble.custom_minimum_size.y = 110
 	customer.voice.hide()
+	UI.set_customer_feedback(_customer_bubble,_answer_state)
 	var brief := UI.card_stack(left,true)
 	if step>=2: brief.add_theme_constant_override("separation",5)
 	brief.add_child(UI.label("Mission brief",18,true))
@@ -147,11 +152,12 @@ func _refresh() -> void:
 	_progress_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_progress_bar.custom_minimum_size.y = 10
 	_progress_bar.max_value = 7
-	_progress_bar.value = step
+	_progress_bar.value = maxi(0,step-1) if _answer_state=="correct" else step
 	_progress_bar.show_percentage = false
 	_progress_bar.add_theme_stylebox_override("background",UI.box(Color("d7e6ed"),Color.TRANSPARENT,5,0))
 	_progress_bar.add_theme_stylebox_override("fill",UI.box(UI.TEAL,Color.TRANSPARENT,5,0))
 	progress.add_child(_progress_bar)
+	if _answer_state=="correct":create_tween().tween_property(_progress_bar,"value",step,0.42).set_trans(Tween.TRANS_SINE)
 	progress.add_child(UI.inline_label("%d / 7"%step,14,true))
 
 func _question_text() -> String:
@@ -258,6 +264,7 @@ func _draw_choices() -> void:
 func _choose(index: int) -> void:
 	var correct_index: int = 2 if step == 0 else 1
 	if index == correct_index:
+		_answer_state="correct"
 		step += 1
 		Progress.save_kitchen_step(step)
 		if step == 7: Progress.complete(3)
@@ -265,6 +272,8 @@ func _choose(index: int) -> void:
 		_refresh()
 	else:
 		last_wrong = true
+		_answer_state="incorrect"
+		UI.set_customer_feedback(_customer_bubble,"incorrect")
 		_feedback.text = "ちょっと違うようです。もう一度選んでください。" if current_lang == "jp" else "မမှန်သေးပါ။ ပြန်ရွေးပါ။"
 		_feedback.add_theme_color_override("font_color", Color("c24144"))
 
@@ -284,6 +293,7 @@ func _draw_parts() -> void:
 
 func _select_part(which: int) -> void:
 	if which == step - 2:
+		_answer_state="correct"
 		step += 1
 		Progress.save_kitchen_step(step)
 		if step == 7: Progress.complete(3)
@@ -291,6 +301,8 @@ func _select_part(which: int) -> void:
 		_refresh()
 	else:
 		last_wrong = true
+		_answer_state="incorrect"
+		UI.set_customer_feedback(_customer_bubble,"incorrect")
 		_feedback.text = "ちょっと違うようです。もう一度選んでください。" if current_lang == "jp" else "မမှန်သေးပါ။ ပြန်ရွေးပါ။"
 		_feedback.add_theme_color_override("font_color", Color("c24144"))
 

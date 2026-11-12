@@ -1,6 +1,18 @@
 extends RefCounted
 const MESSAGES = [
 	{
+		"en": "Correct",
+		"mm": "မှန်ပါတယ်",
+		"jp": "正解",
+		"aliases": []
+	},
+	{
+		"en": "Incorrect",
+		"mm": "မမှန်သေးပါ",
+		"jp": "不正解",
+		"aliases": []
+	},
+	{
 		"en": "Your progress",
 		"mm": "သင့်တိုးတက်မှု",
 		"jp": "進行状況",

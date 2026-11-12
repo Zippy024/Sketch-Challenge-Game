@@ -3,6 +3,14 @@ const Progress=preload("res://GameProgress.gd")
 func _initialize() -> void: call_deferred("_run")
 func _wait() -> void: await create_timer(0.3).timeout
 func _home() -> Control:
+	var direct_home=current_scene.find_child("GameHomeButton",true,false) if current_scene else null
+	if direct_home!=null:
+		direct_home.pressed.emit()
+		await _wait()
+		assert(not paused and current_scene.find_child("LanguageSelectionScreen",true,false)==null)
+		var saved_home=current_scene.find_child("KitchenHomeScreen",true,false)
+		assert(saved_home!=null)
+		return saved_home
 	Progress.show_levels_on_open=true
 	change_scene_to_file("res://GameMenu.tscn")
 	await _wait()
