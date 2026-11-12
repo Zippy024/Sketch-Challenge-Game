@@ -296,7 +296,7 @@ func _build_ui() -> void:
 	feedback_divider.custom_minimum_size.y = 1
 	feedback_divider.color = UI.EDGE
 	dialogue.add_child(feedback_divider)
-	feedback_label = UI.label("",15)
+	feedback_label = UI.label("",14)
 	dialogue.add_child(feedback_label)
 	voice_replay_button = UI.button("",_replay_voice,false,30,12)
 	voice_stop_button = UI.button("",_toggle_voice_pause,false,30,12)
@@ -355,7 +355,6 @@ func _build_ui() -> void:
 	actions.add_child(submit_button)
 	actions.add_child(reset_button)
 	_build_progress_panel(right)
-	page.add_child(UI.progress_strip())
 
 func _build_progress_panel(parent: VBoxContainer) -> void:
 	progress_card = PanelContainer.new()
@@ -570,7 +569,7 @@ func _change_language(lang: String) -> void:
 			status_label.text = "LOCAL CHECK · APPROXIMATE"
 	elif last_eval_state == "needs":
 		question_label.visible = true
-		question_label.text = str(d["question"])
+		question_label.text = UI.bullet_text(str(d["question"]))
 		feedback_divider.visible = true
 		feedback_label.visible = true
 		_set_progress_state("incorrect")
@@ -594,7 +593,7 @@ func _reset_answer() -> void:
 	answer_input.clear()
 	_set_progress_state("pending")
 	question_label.visible = true
-	question_label.text = str(QUESTIONS[current_lang]["question"])
+	question_label.text = UI.bullet_text(str(QUESTIONS[current_lang]["question"]))
 	feedback_divider.visible = false
 	feedback_label.visible = false
 	bubble.add_theme_stylebox_override("panel", _style("ffffff", "d6e2ef"))
@@ -680,7 +679,7 @@ func _show_check_result(correct: bool) -> void:
 	else:
 		last_eval_state = "needs"
 		question_label.visible = true
-		question_label.text = str(d["question"])
+		question_label.text = UI.bullet_text(str(d["question"]))
 		feedback_divider.visible = true
 		feedback_label.visible = true
 		bubble.add_theme_stylebox_override("panel", _style("dbeafe", "f87171"))
@@ -784,6 +783,7 @@ func _play_voice(kind: String) -> void:
 	voice_segment_times.clear()
 
 	var full_text: String = str(QUESTIONS[current_lang][kind])
+	if kind=="question":full_text=UI.bullet_text(full_text)
 	target.text = ""
 
 	# ၁။ MP3 ဖိုင်ရှိပါက MP3 ဖြင့် ဖွင့်မည်
@@ -905,7 +905,7 @@ func _on_voice_finished() -> void:
 	if voice_stop_button != null:
 		_set_voice_icon(voice_stop_button, "play")
 	if voice_caption != null and voice_kind != "":
-		voice_caption.text = str(QUESTIONS[current_lang][voice_kind])
+		voice_caption.text = UI.bullet_text(str(QUESTIONS[current_lang][voice_kind])) if voice_kind=="question" else str(QUESTIONS[current_lang][voice_kind])
 		if voice_kind=="good" and last_eval_state=="good":
 			_completion_voice_finished=true
 			progress_actions.show()

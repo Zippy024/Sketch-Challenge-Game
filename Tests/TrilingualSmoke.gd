@@ -134,6 +134,13 @@ func _run() -> void:
 		var game=current_scene
 		assert(game.get("current_lang")==language)
 		assert(game.get("canvas")!=null)
+		var reach=game.find_child("LevelReachBar",true,false)
+		assert(reach!=null)
+		assert(reach.find_children("ReachNode*","Control",true,false).size()==10)
+		for n in range(1,11):
+			var point=reach.find_child("ReachNode%02d"%n,true,false)
+			assert(point.get_meta("locked")== (not Progress.is_level_unlocked(n)))
+			assert(point.get_meta("current")== (n==1))
 		assert(game.find_child("Stage1Hint",true,false)==null)
 		assert(not game.find_child("CustomerVoiceControls",true,false).is_visible_in_tree())
 		assert(game.find_child("Stage1PauseButton",true,false)==null)
@@ -154,6 +161,10 @@ func _run() -> void:
 		assert(name_plate.get_global_rect().encloses(game.get("speaker_name_label").get_global_rect()))
 		var request_header=game.find_child("CustomerRequestHeader",true,false)
 		assert(request_header.visible)
+		var request: RichTextLabel=game.get("request_label")
+		assert(request.text.count("• ")==4)
+		assert(request.get_content_height()<=game.get("dialog_scroll").size.y+2)
+		for line in request.text.split("\n"): assert(line.begins_with("• "))
 		assert(request_header.get_global_rect().end.y<=game.get("dialog_bubble").global_position.y)
 		for tool in game.find_child("Stage1SixToolGroup",true,false).get_children():
 			assert(tool.size.y<=40)
@@ -220,13 +231,17 @@ func _run() -> void:
 		game.call("_on_voice_finished")
 		await create_timer(0.5).timeout
 		assert(Progress.is_completed(1))
+		assert(reach.find_child("ReachNode01",true,false).get_meta("completed"))
 		var complete=game.find_child("Stage1CompleteOverlay",true,false)
 		assert(complete!=null and current_scene==game)
-		assert(complete.find_child("CelebrationArtwork",true,false).texture.resource_path=="res://UIAssets/HosokawaThumbsUp.webp")
+		assert(complete.find_child("CompletionBlueprintGraphic",true,false)!=null)
+		assert(complete.find_child("CelebrationArtwork",true,false)==null)
 		assert(complete.find_child("CompletionConfetti",true,false).mouse_filter==Control.MOUSE_FILTER_IGNORE)
-		assert(complete.find_child("MissionCompleteCard",true,false).size.x>complete.find_child("MissionCompleteCard",true,false).size.y*2)
+		assert(complete.find_child("MissionCompleteCard",true,false).size.x>complete.find_child("MissionCompleteCard",true,false).size.y*1.8)
 		assert(complete.find_child("CompletionHome",true,false)!=null)
-		assert(complete.find_children("*","Label",true,false).size()==1)
+		assert(complete.find_child("CompletionTitle",true,false).text==manager.text("Stage %d complete!")%1)
+		assert(complete.find_child("CompletionMission",true,false).text==manager.text("LDK Boundary Drawing"))
+		assert(complete.find_children("ReachNode*","Control",true,false).size()==3)
 		assert(game.get_global_rect().encloses(complete.find_child("MissionCompleteCard",true,false).get_global_rect()))
 		assert(complete.find_child("CompletionReview",true,false)==null)
 		if language=="mm":
@@ -245,6 +260,8 @@ func _run() -> void:
 		game.call("_on_voice_finished")
 		await _wait()
 		assert(game.get("name_label").text==customer_name)
+		assert(game.get("question_label").text.begins_with("• "))
+		assert(game.find_child("LevelReachBar",true,false).find_child("ReachNode02",true,false).get_meta("current"))
 		assert(not game.find_child("CustomerVoiceControls",true,false).is_visible_in_tree())
 		assert(game.find_child("GamePauseButton",true,false)==null)
 		var stage_two_avatar: TextureRect = null
@@ -275,7 +292,7 @@ func _run() -> void:
 		var second_popup=game.find_child("Stage2CompleteOverlay",true,false)
 		assert(second_popup!=null and second_popup.stage_index==2)
 		assert(second_popup.find_child("CompletionReview",true,false)==null)
-		assert(second_popup.find_children("*","Label",true,false).size()==1)
+		assert(second_popup.find_child("CompletionBlueprintGraphic",true,false).stage_index==2)
 		if language=="en":
 			second_popup.find_child("CompletionHome",true,false).pressed.emit()
 			await _wait()
@@ -315,7 +332,7 @@ func _run() -> void:
 		_collect(game,"stage3-complete")
 		var third_popup=game.find_child("Stage3CompleteOverlay",true,false)
 		assert(third_popup!=null and third_popup.stage_index==3)
-		assert(third_popup.find_children("*","Label",true,false).size()==1)
+		assert(third_popup.find_child("CompletionBlueprintGraphic",true,false).stage_index==3)
 		if language=="jp":
 			third_popup.find_child("CompletionHome",true,false).pressed.emit()
 			await _wait()

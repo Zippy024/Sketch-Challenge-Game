@@ -106,7 +106,7 @@ func _refresh() -> void:
 	left.add_theme_constant_override("separation",12)
 	split.add_child(left)
 	var customer := UI.customer(left)
-	customer.question.text = _question_text()
+	customer.question.text = UI.bullet_text(_question_text())
 	customer.bubble.custom_minimum_size.y = 110
 	customer.voice.hide()
 	var brief := UI.card_stack(left,true)
@@ -153,7 +153,6 @@ func _refresh() -> void:
 	_progress_bar.add_theme_stylebox_override("fill",UI.box(UI.TEAL,Color.TRANSPARENT,5,0))
 	progress.add_child(_progress_bar)
 	progress.add_child(UI.inline_label("%d / 7"%step,14,true))
-	page.add_child(UI.progress_strip())
 
 func _question_text() -> String:
 	if step == 0:
