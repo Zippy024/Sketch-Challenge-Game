@@ -167,7 +167,7 @@ static func header(stage: int, title: String, menu_action: Callable, language_ac
 	var badge := ribbon(text("Stage %d")%stage,15)
 	badge.name="StageRibbon"
 	row.add_child(badge)
-	var heading := label(title,22,true)
+	var heading := label(title,20,true)
 	heading.autowrap_mode = TextServer.AUTOWRAP_OFF
 	heading.clip_text = true
 	heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -190,6 +190,24 @@ static func header(stage: int, title: String, menu_action: Callable, language_ac
 	row.add_child(menu)
 	return panel
 
+static func bullet_text(value: String) -> String:
+	var lines:=PackedStringArray()
+	for source in value.split("\n"):
+		var line:=source.strip_edges()
+		if not line.is_empty():lines.append(line if line.begins_with("• ") else "• "+line)
+	return "\n".join(lines)
+
+static func level_reach(stage: int) -> MarginContainer:
+	var margin:=MarginContainer.new()
+	margin.name="LevelReachBar"
+	for side in ["left","right"]:margin.add_theme_constant_override("margin_"+side,18)
+	margin.add_theme_constant_override("margin_top",4)
+	margin.add_theme_constant_override("margin_bottom",4)
+	var track=load("res://LevelReach.gd").new()
+	track.current_stage=stage
+	margin.add_child(track)
+	return margin
+
 static func page(parent: Control, stage: int, title: String, menu_action: Callable, language_action: Callable) -> VBoxContainer:
 	background(parent)
 	var root := VBoxContainer.new()
@@ -197,6 +215,7 @@ static func page(parent: Control, stage: int, title: String, menu_action: Callab
 	parent.add_child(root)
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.add_child(header(stage,title,menu_action,language_action))
+	root.add_child(level_reach(stage))
 	var margin := MarginContainer.new()
 	for side in ["left","right","bottom"]: margin.add_theme_constant_override("margin_"+side,18)
 	margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -273,7 +292,7 @@ static func customer(parent: Control) -> Dictionary:
 	var plate := PanelContainer.new()
 	plate.add_theme_stylebox_override("panel",box(Color("e8f4ff"),EDGE,8,6))
 	identity.add_child(plate)
-	var customer_name := label("Ms. Hosokawa",16,true)
+	var customer_name := label("Ms. Hosokawa",15,true)
 	customer_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	plate.add_child(customer_name)
 	var talk := VBoxContainer.new()
@@ -283,7 +302,7 @@ static func customer(parent: Control) -> Dictionary:
 	var tag := PanelContainer.new()
 	tag.add_theme_stylebox_override("panel",box(Color("e5f2fc"),EDGE,8,6))
 	talk.add_child(tag)
-	tag.add_child(label("Customer Request",16,true))
+	tag.add_child(label("Customer Request",15,true))
 	var bubble := PanelContainer.new()
 	bubble.add_theme_stylebox_override("panel",box(Color("f5faff"),EDGE,14,12))
 	bubble.custom_minimum_size.y = 200
@@ -291,7 +310,8 @@ static func customer(parent: Control) -> Dictionary:
 	var dialogue := VBoxContainer.new()
 	dialogue.add_theme_constant_override("separation",9)
 	bubble.add_child(dialogue)
-	var question := label("",15)
+	var question := label("",14)
+	question.set_meta("locale_ignore",true)
 	dialogue.add_child(question)
 	var voice := HBoxContainer.new()
 	voice.add_theme_constant_override("separation",7)
@@ -305,6 +325,7 @@ static func inline_label(value: String, size: int = 14, bold: bool = false) -> L
 
 static func icon(kind: String) -> Texture2D:
 	var shapes := {
+		"check":'<path d="M4 12l5 5L21 5"/>',
 		"play":'<path d="M8 4l13 8L8 20z" fill="currentColor" stroke="none"/>',
 		"layers":'<path d="M12 3l10 6-10 6L2 9zM2 13l10 6 10-6M2 17l10 6 10-6"/>',
 		"help":'<circle cx="12" cy="12" r="10"/><path d="M9 8a3 3 0 1 1 4 3c-1 1-1 2-1 3M12 17v1"/>',

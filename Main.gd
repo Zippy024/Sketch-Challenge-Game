@@ -288,7 +288,7 @@ func _show_intro_screen() -> void:
 	# Keep the game UI constructed underneath the intro screen.
 	canvas.set_drawing_enabled(false)
 	request_label.visible = true
-	request_label.text = DIALOGUE_TEXTS[current_lang]["request"]
+	request_label.text = UI.bullet_text(DIALOGUE_TEXTS[current_lang]["request"])
 	request_label.visible_characters = -1
 	intro_overlay = ColorRect.new()
 	intro_overlay.name = "GameIntroOverlay"
@@ -578,6 +578,7 @@ func _build_ui() -> void:
 	screen_layout.add_theme_constant_override("separation",0)
 	var hud := UI.header(1,"LDK Boundary Drawing",_open_game_menu,_switch_language)
 	screen_layout.add_child(hud)
+	screen_layout.add_child(UI.level_reach(1))
 	_stage1_language_picker = hud.find_child("Stage1LanguagePicker",true,false)
 	var margin := MarginContainer.new()
 	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -679,7 +680,7 @@ func _build_ui() -> void:
 	heading_box.shadow_offset = Vector2(0,1)
 	request_header.add_theme_stylebox_override("panel", heading_box)
 	speech_stack.add_child(request_header)
-	var request_heading := _label("Customer Request", 18, "173b61")
+	var request_heading := _label("Customer Request", 16, "173b61")
 	_stage1_bold(request_heading)
 	request_heading.autowrap_mode = TextServer.AUTOWRAP_OFF
 	request_header.add_child(request_heading)
@@ -728,10 +729,11 @@ func _build_ui() -> void:
 	text_container.add_theme_constant_override("separation", 8)
 	dialog_scroll.add_child(text_container)
 
-	request_label = _rich_label(16, "102c51")
+	request_label = _rich_label(14 if current_lang=="mm" else 15, "102c51")
+	request_label.set_meta("locale_ignore",true)
 	var request_font := UI.font(false)
 	request_label.add_theme_font_override("normal_font", request_font)
-	request_label.add_theme_constant_override("line_separation", 2)
+	request_label.add_theme_constant_override("line_separation", -5 if current_lang=="mm" else 2)
 	text_container.add_child(request_label)
 
 	feedback_divider = ColorRect.new()
@@ -952,6 +954,10 @@ func _build_ui() -> void:
 	_build_reference_popup(loaded_tex)
 
 func _update_lang_buttons_style() -> void:
+	if is_instance_valid(request_label):
+		request_label.add_theme_font_override("normal_font",UI.font(false))
+		request_label.add_theme_font_size_override("normal_font_size",14 if current_lang=="mm" else 15)
+		request_label.add_theme_constant_override("line_separation",-5 if current_lang=="mm" else 2)
 	if is_instance_valid(_stage1_language_picker):
 		UI.update_language_switcher(_stage1_language_picker,current_lang)
 	var active_s := _stage1_surface(Color("187f95"), Color("77bdc9"), 11, 5)
@@ -982,7 +988,7 @@ func _switch_language(lang: String) -> void:
 		_play_voice("correct")
 	elif last_eval_state == "wrong":
 		request_label.visible = true
-		request_label.text = DIALOGUE_TEXTS[current_lang]["request"]
+		request_label.text = UI.bullet_text(DIALOGUE_TEXTS[current_lang]["request"])
 		request_label.visible_characters = -1
 		feedback_divider.visible = true
 		feedback_label.visible = true
@@ -993,7 +999,7 @@ func _switch_language(lang: String) -> void:
 		if ref_viewer != null:
 			ref_viewer.modulate.a = 0.0
 		request_label.visible = true
-		request_label.text = DIALOGUE_TEXTS[current_lang]["request"]
+		request_label.text = UI.bullet_text(DIALOGUE_TEXTS[current_lang]["request"])
 		request_label.visible_characters = -1
 		feedback_label.visible = false
 		_play_voice("talk")
@@ -1110,7 +1116,7 @@ func _run_conversation() -> void:
 	conversation_finished = true
 	canvas.set_drawing_enabled(true)
 	request_label.visible = true
-	request_label.text = DIALOGUE_TEXTS[current_lang]["request"]
+	request_label.text = UI.bullet_text(DIALOGUE_TEXTS[current_lang]["request"])
 	request_label.visible_characters = -1
 	_set_status("Draw the requested layout, then click OK.", false)
 	_play_voice("talk")
@@ -1165,7 +1171,7 @@ func _reset_feedback_ui() -> void:
 	ok_button.text = UI.text("Check Answer")
 	last_eval_state = "none"
 	request_label.visible = true
-	request_label.text = DIALOGUE_TEXTS[current_lang]["request"]
+	request_label.text = UI.bullet_text(DIALOGUE_TEXTS[current_lang]["request"])
 	request_label.visible_characters = -1
 	feedback_divider.visible = false
 	feedback_label.visible = false
@@ -1243,7 +1249,7 @@ func _play_voice(kind: String) -> void:
 	voice_segment_times.clear()
 	voice_last_visible = -1
 	if kind == "talk":
-		request_label.text = DIALOGUE_TEXTS[current_lang]["request"]
+		request_label.text = UI.bullet_text(DIALOGUE_TEXTS[current_lang]["request"])
 	else:
 		feedback_label.text = DIALOGUE_TEXTS[current_lang][kind]
 	if not ResourceLoader.exists(voice_path):
@@ -1290,6 +1296,10 @@ func _play_voice(kind: String) -> void:
 	else:
 		voice_segment_texts = [str(DIALOGUE_TEXTS[current_lang]["request" if kind == "talk" else kind])]
 		voice_segment_times = [0.0, stream.get_length()]
+	if kind=="talk":
+		for i in range(voice_segment_texts.size()):
+			var segment: String=voice_segment_texts[i]
+			voice_segment_texts[i]=UI.bullet_text(segment)+("\n" if segment.ends_with("\n") else "")
 	if target is RichTextLabel:
 		# Reveal characters in sync with the voice on Desktop and Web.
 		request_label.visible_characters = 0
