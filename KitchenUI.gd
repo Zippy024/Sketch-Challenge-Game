@@ -424,6 +424,7 @@ static func inline_label(value: String, size: int = 14, bold: bool = false) -> L
 
 static func icon(kind: String) -> Texture2D:
 	var shapes := {
+		"chevron_down":'<path d="M6 9l6 6 6-6"/>',
 		"globe":'<circle cx="12" cy="12" r="10"/><ellipse cx="12" cy="12" rx="4.5" ry="10"/><path d="M2 12h20M4 6h16M4 18h16"/>',
 		"home":'<path d="M2 11L12 3l10 8M5 9v12h5v-7h4v7h5V9"/>',
 		"close":'<path d="M6 6l12 12M18 6L6 18"/>',
@@ -512,6 +513,19 @@ static func language_switcher(action: Callable, size: int = 12) -> HBoxContainer
 	style_button(picker,false,size)
 	for state in ["icon_normal_color","icon_hover_color","icon_pressed_color"]:picker.add_theme_color_override(state,TEAL)
 	row.add_child(picker)
+	var chevron:=TextureRect.new()
+	chevron.name="LanguageChevron"
+	chevron.texture=icon("chevron_down")
+	chevron.modulate=MUTED
+	chevron.expand_mode=TextureRect.EXPAND_IGNORE_SIZE
+	chevron.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	chevron.mouse_filter=Control.MOUSE_FILTER_IGNORE
+	picker.add_child(chevron)
+	chevron.set_anchors_and_offsets_preset(Control.PRESET_CENTER_RIGHT)
+	chevron.offset_left=-23
+	chevron.offset_right=-11
+	chevron.offset_top=-6
+	chevron.offset_bottom=6
 	var popup:=picker.get_popup()
 	popup.set_meta("locale_ignore",true)
 	popup.add_radio_check_item("日本語  ·  Japanese",0)
@@ -527,7 +541,7 @@ static func language_switcher(action: Callable, size: int = 12) -> HBoxContainer
 static func update_language_switcher(row: Control, language: String) -> void:
 	var picker:=row.find_child("LanguageMenu",true,false) as MenuButton
 	if picker==null:return
-	picker.text=str({"jp":"日本語","mm":"မြန်မာ","en":"English"}.get(language,"English"))+"  ▾"
+	picker.text=str({"jp":"日本語","mm":"မြန်မာ","en":"English"}.get(language,"English"))
 	picker.tooltip_text=text("Language")
 	picker.add_theme_font_override("font",font(true))
 	for i in range(3):picker.get_popup().set_item_checked(i,["jp","mm","en"][i]==language)
