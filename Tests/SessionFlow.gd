@@ -111,6 +111,16 @@ func _run() -> void:
 	await _wait()
 	assert(Progress.completed_count()==0 and Progress.resume_stage()==1 and current_scene.get("canvas").lines.is_empty())
 	for stage in range(1,4):await _check_retry(stage)
+	# Replaying an earlier stage must start a fresh attempt in the following stage.
+	Progress.open_stage(2)
+	change_scene_to_file("res://stage_2.tscn")
+	await _wait()
+	await _win(2)
+	current_scene.find_child("CompletionNext",true,false).pressed.emit()
+	await _wait()
+	assert(current_scene.get("step")==0 and not Rating.current(3).is_empty())
+	assert(int(Rating.current(3).mistakes)==0 and float(Rating.current(3).elapsed)<2)
+	assert(int(Rating.best(3).stars)==3)
 	print("SESSION_FLOW_OK: fresh start, saved inputs and active timers, pause exclusion, three-stage Retry, persisted mistakes and best stars")
 	quit()
 
