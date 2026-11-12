@@ -379,13 +379,15 @@ static func add_customer_feedback(bubble: PanelContainer,header_row: HBoxContain
 	caption.add_theme_color_override("font_color",Color.WHITE)
 	row.add_child(caption)
 	badge.hide()
+	# The badge now lives in the sibling request header, not inside the bubble.
+	bubble.set_meta("feedback_badge",badge)
 	bubble.set_meta("answer_state","neutral")
 	bubble.set_meta("tint_strength",0.0)
 
 static func set_customer_feedback(bubble: PanelContainer,state: String,animate: bool=true) -> void:
 	if not is_instance_valid(bubble):return
-	var badge:=bubble.find_child("CustomerAnswerBadge",true,false) as PanelContainer
-	if badge==null:return
+	var badge:=bubble.get_meta("feedback_badge",null) as PanelContainer
+	if not is_instance_valid(badge):return
 	var changed: bool=str(bubble.get_meta("answer_state","neutral"))!=state
 	bubble.set_meta("answer_state",state)
 	bubble.set_meta("tint_strength",0.0 if state=="neutral" else FEEDBACK_TINT)
