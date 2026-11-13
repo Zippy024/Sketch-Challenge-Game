@@ -55,6 +55,12 @@ jobs:
           grep -q "COMPLETION_TIMING_OK" /tmp/completion-timing.log
           if grep -q "SCRIPT ERROR" /tmp/completion-timing.log; then exit 1; fi
 
+      - name: Verify recorded Stage 3 questions and speech controls
+        run: |
+          timeout 60s godot --headless --audio-driver Dummy --path . --script res://Tests/Stage3Speech.gd --max-fps 120 --quit-after 6000 2>&1 | tee /tmp/stage3-speech.log
+          grep -q "STAGE3_SPEECH_OK" /tmp/stage3-speech.log
+          if grep -q "SCRIPT ERROR" /tmp/stage3-speech.log; then exit 1; fi
+
       - name: Export Web game
         run: |
           mkdir -p "Web Game"

@@ -1182,7 +1182,10 @@ func _confirm() -> void:
 # ---------------- Recorded Japanese voice and synchronized subtitles ----------------
 func _voice_path(kind: String) -> String:
 	if current_lang == "en":
-		return "res://Voice/en/stage1_%s.mp3" % kind
+		match kind:
+			"talk": return "res://Stage 1 eng question.mp3"
+			"wrong": return "res://Stage 1 eng wrong.mp3"
+			"correct": return "res://Stage 1 eng thanks.mp3"
 	if current_lang == "jp":
 		match kind:
 			"talk": return "res://Talk.mp3"

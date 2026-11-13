@@ -667,8 +667,10 @@ func _check_demo_answer() -> void:
 # ---------------- Stage 2 Voice & Subtitle Animation ----------------
 func _voice_path(kind: String) -> String:
 	if current_lang == "en":
-		var english_path := "res://Voice/en/stage2_%s.mp3" % kind
-		return english_path if ResourceLoader.exists(english_path) else ""
+		match kind:
+			"question": return "res://Stage 2 eng.mp3"
+			"needs": return "res://Stage 2 eng dont understand.mp3"
+			"good": return "res://Stage 2 eng understand.mp3"
 	var candidates: Array[String] = []
 	if current_lang == "jp":
 		match kind:
