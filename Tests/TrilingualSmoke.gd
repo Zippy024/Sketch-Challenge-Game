@@ -74,6 +74,10 @@ func _run() -> void:
 		assert(screen.find_child("MissionBrief",true,false)==null)
 		var cards=screen.find_children("StageCard*","Button",true,false)
 		assert(cards.size()==10)
+		assert(screen.find_children("StageStars","Control",true,false).size()==3)
+		assert(screen.find_children("SelectedStageTag","Panel",true,false).size()==1)
+		assert(screen.find_child("LevelJourneyBestStars",true,false).get_meta("stars")==0)
+		assert(screen.find_child("LevelJourneyCompleted",true,false).get_meta("completed")==0)
 		assert(screen.find_children("SelectedPlayButton","Button",true,false).size()==1)
 		assert(screen.find_children("SelectedStageGlow","Panel",true,false).size()==1)
 		for card in cards:
@@ -88,7 +92,15 @@ func _run() -> void:
 			if play!=null:
 				assert(card.size.y-play.position.y-play.size.y>=12)
 				assert(caption.position.y+caption.size.y<=play.position.y)
-		screen.find_child("StageCard02",true,false).pressed.emit()
+		# Actual picture clicks must reach the card beneath its decorative children.
+		var level_image=screen.find_child("StageCard02",true,false).find_child("StageThumbnail",true,false)
+		for pressed in [true,false]:
+			var level_click:=InputEventMouseButton.new()
+			level_click.button_index=MOUSE_BUTTON_LEFT
+			level_click.pressed=pressed
+			level_click.position=level_image.get_global_rect().get_center()
+			root.push_input(level_click,true)
+			await process_frame
 		await _wait()
 		assert(screen.find_child("StageCard02",true,false).find_child("SelectedPlayButton",true,false)!=null)
 		assert(screen.find_children("SelectedPlayButton","Button",true,false).size()==1)
