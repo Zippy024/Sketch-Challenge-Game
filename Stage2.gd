@@ -337,6 +337,11 @@ func _build_ui() -> void:
 	answer_title.name="Stage2QATitle"
 	answer_title.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	header.add_child(answer_title)
+	var retry:=UI.button("Retry",_replay_stage_two,false,110,14)
+	retry.name="Stage2Retry"
+	retry.icon=preload("res://Stage1Assets/reset.svg")
+	retry.tooltip_text="Restart this stage and clear the answer"
+	header.add_child(retry)
 	var instructions:=UI.label("Type your answer, then press OK.",14,false,UI.MUTED)
 	instructions.name="Stage2AnswerInstructions"
 	right.add_child(instructions)
@@ -400,7 +405,9 @@ func _build_progress_panel(parent: VBoxContainer) -> void:
 	_set_progress_state("pending")
 
 func _replay_stage_two() -> void:
+	# Restart even when the player has not submitted yet.
 	_reset_answer()
+	Progress.open_stage(2)
 	_play_voice("question")
 
 func _set_progress_state(state: String,message: String="") -> void:
@@ -708,6 +715,7 @@ func _play_voice(kind: String) -> void:
 			voice_player.stream = stream
 			voice_segment_texts = [full_text]
 			voice_segment_times = [0.0, maxf(stream.get_length(), 0.1)]
+			target.text = full_text.substr(0,mini(6,full_text.length()))
 			voice_player.play()
 			voice_stop_button.text = ""
 			return
@@ -729,7 +737,7 @@ func _process(delta: float) -> void:
 	if voice_player != null and voice_player.playing:
 		if voice_player.stream_paused:
 			return
-		elapsed = voice_player.get_playback_position()
+		elapsed = voice_player.get_playback_position() + 0.32
 	elif fallback_typing_active:
 		fallback_elapsed += delta
 		elapsed = fallback_elapsed

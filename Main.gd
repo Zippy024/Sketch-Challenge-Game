@@ -222,6 +222,7 @@ func _ready() -> void:
 	speaker_name_label.text = DIALOGUE_TEXTS[current_lang]["speaker"]
 	_apply_web_readability(self)
 	_update_lang_buttons_style()
+	_sync_stage1_retry_text()
 	if Progress.launch_from_level_menu:
 		Progress.launch_from_level_menu = false
 		game_has_started = true
@@ -701,11 +702,12 @@ func _build_ui() -> void:
 
 	again_button_row = HBoxContainer.new()
 	again_button_row.alignment = BoxContainer.ALIGNMENT_END
-	again_button_row.visible = false
-	# Retry will be placed in the answer footer after Reset.
+	again_button_row.visible = true
+	# Keep Retry available throughout the stage, not only after a wrong answer.
 
 	again_button = Button.new()
-	again_button.text = "Try Again"
+	again_button.name = "Stage1Retry"
+	again_button.text = "Retry"
 	# V9: compact, legible retry action instead of the oversized solid-red button.
 	again_button.custom_minimum_size = Vector2(101, 30)
 	again_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
@@ -930,7 +932,7 @@ func _switch_language(lang: String) -> void:
 	current_lang = lang
 	_update_lang_buttons_style()
 	speaker_name_label.text = DIALOGUE_TEXTS[current_lang]["speaker"]
-	again_button.text = DIALOGUE_TEXTS[current_lang]["try_again"]
+	_sync_stage1_retry_text()
 	if last_eval_state == "correct":
 		request_label.visible = false
 		feedback_divider.visible = false
@@ -946,6 +948,7 @@ func _switch_language(lang: String) -> void:
 		feedback_label.visible = true
 		feedback_label.text = DIALOGUE_TEXTS[current_lang]["wrong"]
 		again_button_row.visible = true
+		_sync_stage1_retry_text()
 		_play_voice("wrong")
 	else:
 		if ref_viewer != null:
@@ -1131,22 +1134,33 @@ func _reset_feedback_ui() -> void:
 	feedback_divider.visible = false
 	feedback_label.visible = false
 	feedback_label.text = ""
-	again_button_row.visible = false
+	again_button_row.visible = true
+	_sync_stage1_retry_text()
 	UI.set_customer_feedback(dialog_bubble,"neutral")
 
+func _sync_stage1_retry_text() -> void:
+	if not is_instance_valid(again_button):return
+	if last_eval_state=="wrong":
+		again_button.text={"en":"Try Again","jp":"もう一度","mm":"ထပ်ကြိုးစားမည်"}.get(current_lang,"Try Again")
+	else:
+		again_button.text={"en":"Retry","jp":"やり直す","mm":"ပြန်စမည်"}.get(current_lang,"Retry")
+
 func _on_again_pressed() -> void:
+	# Full fresh attempt: clear drawing, reset score and replay the question.
 	typing_token += 1
 	_reset_feedback_ui()
 	canvas.clear_canvas()
+	canvas.reset_view()
+	Progress.open_stage(1)
 	canvas.set_drawing_enabled(true)
 	is_drawing_started = true
-	_set_status("Canvas cleared. Please draw the layout again.", false)
+	_run_conversation()
 
 func _confirm() -> void:
 	if not conversation_finished or not is_drawing_started:
 		return
 	ok_button.disabled = true
-	again_button_row.visible = false
+	again_button_row.visible = true
 
 	var is_correct: bool = canvas.analyze_reference()
 
@@ -1176,6 +1190,7 @@ func _confirm() -> void:
 		feedback_label.text = DIALOGUE_TEXTS[current_lang]["wrong"]
 		_play_voice("wrong")
 		again_button_row.visible = true
+		_sync_stage1_retry_text()
 		await _scroll_dialog_to_bottom()
 	ok_button.disabled = last_eval_state=="correct"
 
@@ -1262,9 +1277,9 @@ func _play_voice(kind: String) -> void:
 			voice_segment_texts[i]=UI.bullet_text(segment)+("\n" if segment.ends_with("\n") else "")
 	if target is RichTextLabel:
 		# Reveal characters in sync with the voice on Desktop and Web.
-		request_label.visible_characters = 0
+		request_label.visible_characters = mini(7,request_label.get_total_character_count())
 	else:
-		feedback_label.text = ""
+		feedback_label.text = voice_segment_texts[0].substr(0,mini(6,voice_segment_texts[0].length()))
 	voice_player.play()
 	_set_voice_icon(voice_stop_button, "pause")
 
@@ -1272,7 +1287,8 @@ func _process(_delta: float) -> void:
 	StageRating.advance(1,_delta)
 	if voice_player == null or not voice_player.playing or voice_player.stream_paused or voice_caption == null:
 		return
-	var elapsed: float = voice_player.get_playback_position()
+	# Lead subtitles by a fraction of a second so the voice never gets ahead.
+	var elapsed: float = voice_player.get_playback_position() + 0.32
 	var displayed: String = ""
 	for i in range(voice_segment_texts.size()):
 		var t0: float = voice_segment_times[i]

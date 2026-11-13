@@ -64,7 +64,7 @@ func start(target: Label, path: String) -> void:
 
 func replay_question() -> void:
 	if player.stream==null:return
-	caption.visible_characters=0
+	caption.visible_characters=mini(6,caption.get_total_character_count())
 	player.stream_paused=false
 	player.play()
 	_sync()
@@ -92,7 +92,8 @@ func stop() -> void:
 
 func _process(_delta: float) -> void:
 	if player==null or not player.playing or player.stream_paused or not is_instance_valid(caption):return
-	var ratio:=clampf(player.get_playback_position()/maxf(player.stream.get_length(),0.1),0.0,1.0)
+	# Short readable lead offsets audio startup and subtitle font-layout delay.
+	var ratio:=clampf((player.get_playback_position()+0.28)/maxf(player.stream.get_length()*0.88,0.1),0.0,1.0)
 	caption.visible_ratio=ratio
 
 func _finished() -> void:

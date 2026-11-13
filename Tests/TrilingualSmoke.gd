@@ -232,6 +232,8 @@ func _run() -> void:
 			assert(game.get_global_rect().encloses(game.find_child(card_name,true,false).get_global_rect()))
 		# Exercise the visible Stage 1 controls, including the two distinct Resets.
 		var drawing=game.get("canvas")
+		var live_retry=game.find_child("Stage1Retry",true,false)
+		assert(live_retry!=null and live_retry.is_visible_in_tree())
 		var wall=PackedVector2Array([Vector2.ZERO,Vector2(1000,0)])
 		drawing.lines.append(wall)
 		game.find_child("Stage1ToolUndo",true,false).pressed.emit()
@@ -268,6 +270,7 @@ func _run() -> void:
 		assert(drawing_card.get_global_rect().encloses(game.get("again_button").get_global_rect()))
 		game.get("again_button").pressed.emit()
 		assert(game.get("last_eval_state")=="none" and drawing.drawing_enabled)
+		assert(live_retry.is_visible_in_tree() and drawing.lines.is_empty())
 		# Language changes must not restore the old, hard-coded customer name.
 		var alternate_language="jp" if language!="jp" else "en"
 		header_language.get_popup().id_pressed.emit(["jp","mm","en"].find(alternate_language))
@@ -343,6 +346,7 @@ func _run() -> void:
 		assert(game.find_child("CustomerAnswerBadge",true,false).get_parent().get_parent()==game.find_child("CustomerConversation",true,false))
 		assert(game.get("answer_input").size.y/qa_card.size.y>0.6)
 		assert(game.get("submit_button").text=="OK")
+		assert(game.find_child("Stage2Retry",true,false)!=null and game.find_child("Stage2Retry",true,false).is_visible_in_tree())
 		assert(game.get("progress_description").text==manager.text("Type your answer, then press OK."))
 		assert(qa_card.get_global_rect().encloses(game.get("submit_button").get_global_rect()))
 		assert(qa_card.get_global_rect().encloses(game.get("progress_card").get_global_rect()))
