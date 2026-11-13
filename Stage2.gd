@@ -502,7 +502,7 @@ func _change_language(lang: String) -> void:
 	UI.set_customer_feedback(bubble,{"good":"correct","needs":"incorrect"}.get(last_eval_state,"neutral"),false)
 
 func _reset_answer() -> void:
-	if last_eval_state=="good":StageRating.begin(2,true)
+	StageRating.begin(2,true)
 	_completion_shown=false
 	_cancel_ai_request()
 	_stop_voice()
@@ -734,7 +734,7 @@ func _play_voice(kind: String) -> void:
 	voice_stop_button.text = ""
 
 func _process(delta: float) -> void:
-	StageRating.advance(2,delta)
+	if _question_ready and last_eval_state!="good":StageRating.advance(2,delta)
 	if voice_caption == null or voice_segment_texts.is_empty():
 		return
 

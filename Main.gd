@@ -1150,6 +1150,7 @@ func _sync_stage1_retry_text() -> void:
 func _on_again_pressed() -> void:
 	# Full fresh attempt: clear drawing, reset score and replay the question.
 	typing_token += 1
+	StageRating.begin(1,true)
 	_reset_feedback_ui()
 	canvas.clear_canvas()
 	canvas.reset_view()
@@ -1291,7 +1292,7 @@ func _play_voice(kind: String) -> void:
 	_set_voice_icon(voice_stop_button, "pause")
 
 func _process(_delta: float) -> void:
-	StageRating.advance(1,_delta)
+	if conversation_finished and last_eval_state=="none":StageRating.advance(1,_delta)
 	if voice_player == null or not voice_player.playing or voice_player.stream_paused or voice_caption == null:
 		return
 	# Lead subtitles by a fraction of a second so the voice never gets ahead.

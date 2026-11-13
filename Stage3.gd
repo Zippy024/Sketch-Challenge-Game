@@ -63,7 +63,7 @@ var _stage_choice_buttons: Array[Button]=[]
 
 
 func _process(delta: float) -> void:
-	StageRating.advance(3,delta)
+	if _speech_ready and not _transitioning:StageRating.advance(3,delta)
 
 
 func _ready() -> void:
@@ -271,6 +271,7 @@ func _phase_name(index: int) -> String:
 	][index]
 
 func _retry_stage() -> void:
+	StageRating.begin(3,true)
 	Progress.open_stage(3)
 	step=0
 	_completion_acknowledged=false

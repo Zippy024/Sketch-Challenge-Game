@@ -120,11 +120,17 @@ func _run() -> void:
 	change_scene_to_file("res://stage_3.tscn")
 	await _wait()
 	Rating.advance(3,14)
+	current_scene.get("_speech").player.stop()
+	current_scene.get("_speech").call("_finished")
 	current_scene.call("_choose",0)
 	current_scene.call("_choose",2)
 	await create_timer(1.1).timeout
+	current_scene.get("_speech").player.stop()
+	current_scene.get("_speech").call("_finished")
 	current_scene.call("_choose",1)
 	await create_timer(1.1).timeout
+	current_scene.get("_speech").player.stop()
+	current_scene.get("_speech").call("_finished")
 	_write_part(current_scene,0,"カウンター")
 	assert(current_scene.get("step")==3)
 	current_scene.call("_open_answer",1,true)
@@ -136,6 +142,8 @@ func _run() -> void:
 	home.find_child("ContinueGame",true,false).pressed.emit()
 	await _wait()
 	assert(current_scene.get("step")==3 and current_scene.find_child("KitchenPartsDiagram",true,false)!=null)
+	current_scene.get("_speech").player.stop()
+	current_scene.get("_speech").call("_finished")
 	assert(float(Rating.current(3).elapsed)>=14 and int(Rating.current(3).mistakes)==1)
 	current_scene.call("_open_answer",0,true)
 	assert(not current_scene.get("_answer_popover").input.editable)
@@ -189,13 +197,21 @@ func _win(stage: int) -> void:
 		for i in range(6):canvas.lines.append(PackedVector2Array([points[i],points[(i+1)%6]]))
 		game.call("_confirm")
 	elif stage==2:
+		game.call("_stop_voice")
+		game.call("_on_voice_finished")
 		game.get("answer_input").text="PS is a vertical shaft for water supply and drainage pipes and cannot easily be moved during renovation."
 		game.call("_check_demo_answer")
 	else:
+		game.get("_speech").player.stop()
+		game.get("_speech").call("_finished")
 		game.call("_choose",2)
 		await create_timer(1.1).timeout
+		game.get("_speech").player.stop()
+		game.get("_speech").call("_finished")
 		game.call("_choose",1)
 		await create_timer(1.1).timeout
+		game.get("_speech").player.stop()
+		game.get("_speech").call("_finished")
 		for i in range(8):_write_part(game,i,["カウンター","キッチンボード","フード","腰壁","シンク","水栓","IHクッキングヒーター","引き出し"][i])
 	if stage<3:
 		game.call("_stop_voice")
@@ -226,6 +242,8 @@ func _check_retry(stage: int) -> void:
 		assert(current_scene.get("step")==0)
 		assert(Progress.kitchen_parts().answers==["","","","","","","",""])
 		assert(Progress.kitchen_parts().solved==[false,false,false,false,false,false,false,false])
+		current_scene.get("_speech").player.stop()
+		current_scene.get("_speech").call("_finished")
 		current_scene.call("_choose",2)
 		await create_timer(1.1).timeout
 		Rating.advance(3,60)

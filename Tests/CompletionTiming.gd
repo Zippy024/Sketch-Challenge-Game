@@ -55,6 +55,9 @@ func _run() -> void:
 		if lang=="en":
 			for kind in ["question","needs","good"]:
 				assert(ResourceLoader.exists(game.call("_voice_path",kind)))
+		assert(not game.get("_question_ready"))
+		game.call("_stop_voice")
+		game.call("_on_voice_finished")
 		game.get("answer_input").text="PS is a vertical shaft for water supply and drainage pipes and cannot easily be moved during renovation."
 		game.call("_check_demo_answer")
 		await _wait(0.2)
@@ -73,6 +76,8 @@ func _run() -> void:
 	change_scene_to_file("res://stage_2.tscn")
 	await _wait()
 	var stage=current_scene
+	stage.call("_stop_voice")
+	stage.call("_on_voice_finished")
 	stage.get("answer_input").text="PS is a vertical shaft for water supply and drainage pipes and cannot easily be moved during renovation."
 	stage.call("_check_demo_answer")
 	var player: AudioStreamPlayer=stage.get("voice_player")
