@@ -19,6 +19,12 @@ const OUTLINE := Color("d6e2ef")
 const Parts = preload("res://Stage3Assets/Model/JapaneseParts.gd")
 const Model = preload("res://Stage3Assets/Model/KitchenModel.gd")
 const AnswerPopover = preload("res://Stage3Assets/Model/PartAnswerPopover.gd")
+const Speech = preload("res://CustomerSpeech.gd")
+const QUESTIONS := {
+	"jp":["現在のキッチンと同じ場所に設置するとすれば、S-classではどのタイプになりますか？","現行のキッチンの後ろの壁も残すとすれば、どうなりますか？","それぞれのパーツの名前を教えてもらえますか？"],
+	"mm":["ကျွန်တော့်ရဲ့ လက်ရှိမီးဖိုချောင်နဲ့ တစ်နေရာတည်းမှာ တပ်ဆင်မယ်ဆိုရင် ဘယ် S-class မော်ဒယ်က သင့်တော်မလဲ။","လက်ရှိမီးဖိုချောင်ရဲ့နောက်မှာ နံရံကိုဆက်ထားရင် ဘာဖြစ်မလဲ။","အစိတ်အပိုင်းတစ်ခုချင်းစီရဲ့ နာမည်တွေကို ပြောပြပေးနိုင်မလား။"],
+	"en":["If I were to install it in the same location as my current kitchen, which model in the S-class series would be the right choice?","What would happen if we were to keep the wall behind the existing kitchen?","Could you tell me the names of the individual parts?"]
+}
 
 
 var current_lang: String = "jp"
@@ -51,6 +57,7 @@ var _parts_model: Control
 var _parts_selected: int=0
 var _model_pose: Dictionary={}
 var _parts_message: String=""
+var _speech: Control
 
 
 func _process(delta: float) -> void:
@@ -103,6 +110,8 @@ func _panel() -> PanelContainer:
 
 
 func _clear() -> void:
+	if is_instance_valid(_speech):_speech.stop()
+	_speech=null
 	if is_instance_valid(_parts_model):_model_pose=_parts_model.view_state()
 	_parts_model=null
 	_answer_popover=null
@@ -145,7 +154,9 @@ func _refresh() -> void:
 	_customer_bubble=customer.bubble
 	customer.question.text = UI.bullet_text(_question_text())
 	customer.bubble.custom_minimum_size.y = 110
-	customer.voice.hide()
+	_speech=Speech.new()
+	customer.voice.add_child(_speech)
+	_speech.start(customer.question,Speech.voice_path(current_lang,mini(step,2)))
 	UI.set_customer_feedback(_customer_bubble,_answer_state)
 	var brief := UI.card_stack(left,true)
 	if step>=2: brief.add_theme_constant_override("separation",5)
@@ -293,11 +304,7 @@ func _enter_phase(card: Control) -> void:
 	)
 
 func _question_text() -> String:
-	if step == 0:
-		return LocaleManager.text("現在のキッチンと同じ場所に設置するとすれば、S-classではどのタイプになりますか？" if current_lang == "jp" else "လက်ရှိမီးဖိုချောင်နေရာမှာ S-Class တပ်မယ်ဆို ဘယ်ပုံစံဖြစ်မလဲ။")
-	if step == 1:
-		return LocaleManager.text("現行のキッチンの後ろの壁も残すとすれば、どうなりますか？" if current_lang == "jp" else "မူလ Kitchen နောက်ဘက်နံရံကို ဆက်ထားမယ်ဆို ဘယ်ပုံစံဖြစ်မလဲ။")
-	return LocaleManager.text("Please write the name of each numbered part in Japanese.")
+	return QUESTIONS[current_lang][mini(step,2)]
 
 # Card artwork is deliberately prepared at modest native resolution rather than
 # shrinking 1448px line art to ~210px with only one bilinear sample. Generate
@@ -615,6 +622,7 @@ func _open_game_menu() -> void:
 	_save_session()
 	if is_instance_valid(_pause_menu):
 		return
+	if is_instance_valid(_speech):_speech.pause_for_menu()
 	var overlay := preload("res://GameMenu.tscn").instantiate() as Control
 	overlay.set("is_pause_overlay", true)
 	overlay.set("pause_level", 3)
@@ -634,6 +642,7 @@ func _resume_from_game_menu() -> void:
 	if current_lang != Progress.get_language():
 		current_lang = Progress.get_language()
 		_refresh()
+	elif is_instance_valid(_speech):_speech.resume_from_menu()
 
 
 func _show_completion() -> void:

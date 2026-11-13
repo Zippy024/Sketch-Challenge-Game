@@ -9,7 +9,7 @@ func _finish_response(game: Node) -> void:
 		voice.seek(voice.stream.get_length()-0.08)
 		await _wait(1.0)
 	else:
-		# English clips are optional; its full response must remain readable first.
+		# Retain a readable fallback if a future recording is unavailable.
 		await _wait(3.7)
 func _run() -> void:
 	for lang in ["en","mm","jp"]:
@@ -19,6 +19,9 @@ func _run() -> void:
 		change_scene_to_file("res://main.tscn")
 		await _wait()
 		var game=current_scene
+		if lang=="en":
+			for kind in ["talk","wrong","correct"]:
+				assert(ResourceLoader.exists(game.call("_voice_path",kind)))
 		game.call("_stop_voice")
 		game.call("_on_voice_finished")
 		var drawing=game.get("canvas")
@@ -49,6 +52,9 @@ func _run() -> void:
 		change_scene_to_file("res://stage_2.tscn")
 		await _wait()
 		game=current_scene
+		if lang=="en":
+			for kind in ["question","needs","good"]:
+				assert(ResourceLoader.exists(game.call("_voice_path",kind)))
 		game.get("answer_input").text="PS is a vertical shaft for water supply and drainage pipes and cannot easily be moved during renovation."
 		game.call("_check_demo_answer")
 		await _wait(0.2)
