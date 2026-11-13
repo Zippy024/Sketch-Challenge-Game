@@ -28,7 +28,7 @@ func _ready() -> void:
  viewport=SubViewport.new()
  viewport.name="Kitchen3DViewport"
  viewport.own_world_3d=true
- viewport.render_target_update_mode=SubViewport.UPDATE_WHEN_VISIBLE
+ viewport.render_target_update_mode=SubViewport.UPDATE_ONCE
  viewport.msaa_3d=Viewport.MSAA_2X
  add_child(viewport)
  var image:=TextureRect.new()
@@ -213,6 +213,8 @@ func _resize_view() -> void:
 
 func _update_camera() -> void:
  if not is_instance_valid(camera):return
+ # The static model needs a new frame only after interaction or resizing.
+ viewport.render_target_update_mode=SubViewport.UPDATE_ONCE
  camera.size=zoom
  var target:=Vector3(0,1.08,0)
  camera.position=target+Vector3(sin(yaw)*cos(pitch),sin(pitch),cos(yaw)*cos(pitch))*6.0
@@ -244,6 +246,7 @@ func set_solved(values: Array[bool]) -> void:
  _update_materials()
 
 func _update_materials() -> void:
+ if is_instance_valid(viewport):viewport.render_target_update_mode=SubViewport.UPDATE_ONCE
  for i in range(_materials.size()):
   var active: bool=i==selected or i==hovered
   for entry in _materials[i]:
