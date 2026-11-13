@@ -1,5 +1,6 @@
 extends RefCounted
 const Rating=preload("res://StageRating.gd")
+const Parts=preload("res://Stage3Assets/Model/JapaneseParts.gd")
 # Shared language and level progress. Works in desktop builds and in Web user:// storage.
 const SAVE_PATH := "user://sketch_challenge_progress_v8.cfg"
 static var _loaded: bool = false
@@ -38,35 +39,31 @@ static func _ensure_loaded() -> void:
 		_stage1_zoom = clampf(float(config.get_value("session","zoom",1.0)),0.1,8.0)
 		_stage1_pan = config.get_value("session","pan",Vector2(72,60))
 		_stage2_draft = str(config.get_value("session","answer",""))
-		_stage3_step = clampi(int(config.get_value("session","step",0)),0,10)
+		_stage3_step = clampi(int(config.get_value("session","step",0)),0,Parts.CHALLENGE_STEPS)
 		_reset_kitchen_parts()
-		var parts_version: int=int(config.get_value("session","parts_version",0))
-		if parts_version>=1:
-			# v1 contained five solved names; v2 supports all eight.
+		var version: int=int(config.get_value("session","parts_version",0))
+		if version in [1,2]:
 			var answers: Variant=config.get_value("session","parts_answers",[])
 			var solved: Variant=config.get_value("session","parts_solved",[])
-			if answers is Array and solved is Array:
-				for i in range(mini(8,mini(answers.size(),solved.size()))):
+			if answers is Array and solved is Array and answers.size()==solved.size() and answers.size() in [5,Parts.COUNT]:
+				for i in range(mini(answers.size(),Parts.COUNT)):
 					_stage3_answers[i]=str(answers[i])
 					_stage3_solved[i]=bool(solved[i])
 		else:
-			# Keep verified progress from the original sequential challenge.
-			var names: Array[String]=["カウンター","キッチンボード","フード","腰壁","シンク"]
+			# Preserve progress from the former sequential picture-selection challenge.
+			var names: Array[String]=Parts.NAMES
 			for i in range(clampi(_stage3_step-2,0,5)):
 				_stage3_answers[i]=names[i]
 				_stage3_solved[i]=true
-		# Do not revoke completion already earned in previous game versions.
-		if _stage3_cleared:
-			var all_names: Array[String]=["カウンター","キッチンボード","フード","腰壁","シンク","水栓","IHクッキングヒーター","引き出し"]
-			for i in range(8):
-				if not _stage3_solved[i]:
-					_stage3_answers[i]=all_names[i]
-					_stage3_solved[i]=true
-			_stage3_step=10
-		elif _stage3_step>=2:
+		# Completed old attempts retain their results; partial attempts keep verified answers.
+		if version<2 and _stage3_cleared and _stage3_step==7:
+			_stage3_step=Parts.CHALLENGE_STEPS
+		elif _stage3_step>=2 and _stage3_step<Parts.CHALLENGE_STEPS:
 			_stage3_step=2+_stage3_solved.count(true)
+		# Existing verified saves remain resumable after this update.
 		if _resume_stage==0 and (_stage1_cleared or _stage2_cleared or _stage3_cleared):
 			_resume_stage = next_stage()
+			if _stage3_cleared and completed_count()==3: _stage3_step=Parts.CHALLENGE_STEPS
 
 static func _save() -> void:
 	var config := ConfigFile.new()
@@ -133,7 +130,7 @@ static func complete(stage: int) -> void:
 		_stage2_draft=""
 		_stage3_step=0
 		_reset_kitchen_parts()
-	if stage==3: _stage3_step=10
+	if stage==3: _stage3_step=Parts.CHALLENGE_STEPS
 	_save()
 
 static func completed_count() -> int:
@@ -219,7 +216,7 @@ static func answer() -> String:
 static func save_kitchen_step(step: int) -> void:
 	_ensure_loaded()
 	if _stage3_step==step: return
-	_stage3_step=clampi(step,0,10)
+	_stage3_step=clampi(step,0,Parts.CHALLENGE_STEPS)
 	_save()
 
 static func kitchen_step() -> int:
@@ -236,7 +233,7 @@ static func kitchen_parts() -> Dictionary:
 
 static func save_kitchen_parts(answers: Array[String], solved: Array[bool]) -> void:
 	_ensure_loaded()
-	if answers.size()!=8 or solved.size()!=8:return
+	if answers.size()!=Parts.COUNT or solved.size()!=Parts.COUNT:return
 	if _stage3_answers==answers and _stage3_solved==solved:return
 	_stage3_answers=answers.duplicate()
 	_stage3_solved=solved.duplicate()

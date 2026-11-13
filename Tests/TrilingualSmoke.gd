@@ -479,7 +479,8 @@ func _run() -> void:
 		assert(not game.find_child("CustomerAnswerBadge",true,false).visible)
 		assert(game.find_child("Kitchen3DViewport",true,false)!=null)
 		assert(game.find_child("Stage3ReferencePlan",true,false)!=null)
-		assert(game.find_child("Stage3RightProgress",true,false)!=null)
+		assert(game.find_child("Stage3RightProgress",true,false)==null)
+		assert(game.find_child("Stage3ReferencePlan",true,false).global_position.x<game.size.x*0.4)
 		assert(game.find_children("Stage3PartProgress*","Label",true,false).size()==8)
 		_collect(game,"stage3-parts")
 		var before_errors: int=int(StageRating.current(3).mistakes)
@@ -490,7 +491,7 @@ func _run() -> void:
 		await create_timer(0.30).timeout
 		# Hover opens a contextual editor. Conversion is based on the typed reading.
 		var model=game.find_child("KitchenPartsDiagram",true,false)
-		model.number_hovered.emit(3)
+		game.call("_select_part",3)
 		var editor=game.get("_answer_popover")
 		assert(editor.visible and editor.part_index==3)
 		editor.input.text="こしかべ"
@@ -555,8 +556,8 @@ func _run() -> void:
 			editor.input.text={5:"水栓",6:"IHクッキングヒーター",7:"引き出し"}[index]
 			editor.input.text_changed.emit(editor.input.text)
 			editor.find_child("CheckPartAnswer",true,false).pressed.emit()
-		assert(model._markers.size()==8)
-		for i in range(8):assert(game.find_child("PartMarker%d"%(i+1),true,false)!=null)
+		assert(model._groups.size()==8)
+		for i in range(8):assert(game.find_child("PartMarker%d"%(i+1),true,false)==null)
 		assert(Progress.kitchen_parts().solved.size()==8)
 
 		assert(game.get("step")==10)

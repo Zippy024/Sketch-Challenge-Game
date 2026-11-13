@@ -40,7 +40,7 @@ func _run() -> void:
 				game.call("_resume_from_game_menu")
 				assert(speech.player.stream_paused)
 				speech.replay_question()
-				assert(not speech.player.stream_paused and speech.caption.visible_ratio<0.2)
+				assert(not speech.player.stream_paused and speech.caption.visible_characters==mini(12,speech.caption.get_total_character_count()))
 			speech.player.seek(speech.player.stream.get_length()-0.08)
 			await _wait(0.4)
 			assert(speech.caption.visible_characters==-1)

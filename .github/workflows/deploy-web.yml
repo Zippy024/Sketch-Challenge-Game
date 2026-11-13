@@ -61,6 +61,12 @@ jobs:
           grep -q "STAGE3_SPEECH_OK" /tmp/stage3-speech.log
           if grep -q "SCRIPT ERROR" /tmp/stage3-speech.log; then exit 1; fi
 
+      - name: Verify direct selection of eight 3D components
+        run: |
+          timeout 30s godot --headless --audio-driver Dummy --path . --script res://Tests/DirectKitchenParts.gd --max-fps 120 --quit-after 3000 2>&1 | tee /tmp/direct-kitchen.log
+          grep -q "DIRECT_KITCHEN_PARTS_OK" /tmp/direct-kitchen.log
+          if grep -q "SCRIPT ERROR" /tmp/direct-kitchen.log; then exit 1; fi
+
       - name: Export Web game
         run: |
           mkdir -p "Web Game"

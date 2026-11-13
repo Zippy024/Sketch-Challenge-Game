@@ -2,30 +2,26 @@ extends Control
 # Reference-built, real 3D geometry. Distances are metres from the supplied elevation.
 signal part_selected(index: int)
 signal part_hovered(index: int)
-signal number_hovered(index: int)
 signal view_changed
 signal interaction_started
 const UI=preload("res://KitchenUI.gd")
+const Parts=preload("res://Stage3Assets/Model/JapaneseParts.gd")
 var viewport: SubViewport
 var camera: Camera3D
 var scene: Node3D
-var _room_back: Node3D
-var _room_side: Node3D
 var selected: int=-1
 var hovered: int=-1
-var yaw: float=0.55
-var pitch: float=0.43
-var zoom: float=3.42
+var yaw: float=0.62
+var pitch: float=0.45
+var zoom: float=3.15
 var _pressed: bool=false
 var _travel: float=0.0
 var _pending_pick: Vector2=Vector2(-1,-1)
 var _pending_hover: Vector2=Vector2(-1,-1)
 var _groups: Array[Node3D]=[]
 var _materials: Array=[]
-var _markers: Array[Button]=[]
 var _solved: Array[bool]=[false,false,false,false,false,false,false,false]
-var _anchors: Array[Vector3]=[Vector3(-0.05,0.86,0.33),Vector3(-0.44,1.13,-0.355),Vector3(-0.88,2.05,0.18),Vector3(1.24,1.13,-0.43),Vector3(0.75,0.86,0.03),Vector3(0.75,1.14,-0.19),Vector3(-0.91,0.87,0.06),Vector3(0.71,0.60,0.37)]
-var _label_offsets: Array[Vector2]=[Vector2(-30,-22),Vector2(32,0),Vector2(-30,-18),Vector2(24,16),Vector2(28,-19),Vector2(42,-37),Vector2(-42,20),Vector2(37,26)]
+var _anchors: Array[Vector3]=[Vector3(0.15,0.87,0.36),Vector3(0.28,1.08,-0.325),Vector3(-0.84,1.98,0.18),Vector3(0.45,0.5,-0.49),Vector3(0.74,0.84,0.03),Vector3(0.75,1.12,-0.15),Vector3(-0.91,0.86,0),Vector3(0.71,0.65,0.34)]
 
 func _ready() -> void:
  mouse_filter=Control.MOUSE_FILTER_STOP
@@ -49,21 +45,21 @@ func _ready() -> void:
  var environment:=WorldEnvironment.new()
  var settings:=Environment.new()
  settings.background_mode=Environment.BG_COLOR
- settings.background_color=Color("efeee9")
+ settings.background_color=Color("eeede7")
  settings.ambient_light_source=Environment.AMBIENT_SOURCE_COLOR
  settings.ambient_light_color=Color("ffffff")
- settings.ambient_light_energy=0.61
+ settings.ambient_light_energy=0.58
  environment.environment=settings
  scene.add_child(environment)
  var light:=DirectionalLight3D.new()
  light.rotation_degrees=Vector3(-48,-32,0)
- light.light_energy=1.04
- light.shadow_enabled=true
+ light.light_energy=0.38
+ light.shadow_enabled=false
  light.directional_shadow_max_distance=15
  scene.add_child(light)
  var fill:=DirectionalLight3D.new()
  fill.rotation_degrees=Vector3(-30,145,0)
- fill.light_energy=0.28
+ fill.light_energy=0.16
  scene.add_child(fill)
  camera=Camera3D.new()
  camera.name="KitchenOrbitCamera"
@@ -72,36 +68,14 @@ func _ready() -> void:
  camera.far=40
  viewport.add_child(camera)
  camera.current=true
- for i in range(8):
+ for i in range(Parts.COUNT):
   var group:=Node3D.new()
-  group.name="NumberedPart%d"%(i+1)
+  group.name="KitchenPart%d"%(i+1)
   group.set_meta("part",i)
   scene.add_child(group)
   _groups.append(group)
   _materials.append([])
  _build_kitchen()
- for i in range(8):
-  var marker:=Button.new()
-  marker.text=""
-  marker.tooltip_text=UI.text("Number %d")%(i+1)
-  marker.add_theme_font_override("font",UI.font(true,"en"))
-  marker.add_theme_font_size_override("font_size",13)
-  marker.mouse_default_cursor_shape=Control.CURSOR_POINTING_HAND
-  marker.name="PartMarker%d"%(i+1)
-  marker.custom_minimum_size=Vector2(30,30)
-  marker.size=Vector2(30,30)
-  marker.set_meta("part",i)
-  marker.pressed.connect(_choose.bind(i))
-  marker.mouse_entered.connect(_number_hover.bind(i))
-  marker.focus_entered.connect(_number_hover.bind(i))
-  marker.mouse_exited.connect(set_hovered.bind(-1))
-  add_child(marker)
-  var number:=UI.label(str(i+1),13,true)
-  number.name="MarkerNumber"
-  number.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
-  marker.add_child(number)
-  number.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-  _markers.append(marker)
  resized.connect(_resize_view)
  mouse_exited.connect(set_hovered.bind(-1))
  _resize_view()
@@ -153,15 +127,16 @@ func _cylinder(parent: Node3D, center: Vector3, radius: float, height: float, co
  parent.add_child(instance)
 
 func _detail(parent: Node3D, dim: Vector3, pos: Vector3, color: Color, metallic: float=0.0) -> void:
- # Unpickable detail geometry must not block the eight marked hit targets.
+ # Unpickable detail geometry must not block the eight selectable components.
  _box(parent,dim,pos,color,-1,metallic,false)
 
 func _stone(parent: Node3D, dim: Vector3, pos: Vector3) -> void:
- var tile:=_box(parent,dim,pos,Color("c3bfb8"),-1,0.0,false)
+ var tile:=_box(_groups[1],dim,pos,Color("c3bfb8"),1)
  tile.name="GrayStoneBacksplash"
  var material:=ShaderMaterial.new()
  material.shader=preload("res://Stage3Assets/Model/stone-backsplash.gdshader")
  tile.material_override=material
+ _materials[1][-1]={"material":material}
 
 func _handle(parent: Node3D, x: float, y: float, width: float=0.17) -> void:
  var ink:=Color("303536")
@@ -172,28 +147,18 @@ func _handle(parent: Node3D, x: float, y: float, width: float=0.17) -> void:
 func _build_kitchen() -> void:
  # Panasonic-inspired straight kitchen reconstructed from the supplied photo.
  # 2.57m wide, approx. 650mm deep, 850mm counter height, 900mm hood bay.
- # All geometry is real 3D and the eight answer markers retain their indices.
+ # All geometry is real 3D and the eight assessed mesh groups retain their saved indices.
  var white:=Color("f7f7f3")
  var cabinet:=Color("e1e3e0")
  var steel:=Color("a9b5b8")
  var dark:=Color("313839")
 
- # Natural light-oak parquet, with a left/rear off-white room corner.
+ # Natural light-oak parquet on an open, softly lit background.
  var floor:=_box(scene,Vector3(5.0,0.045,3.42),Vector3(0,-0.07,0.59),Color("d7b988"),-1,0.0,false)
  floor.name="RoomOakFloor"
  var wood:=ShaderMaterial.new()
  wood.shader=preload("res://Stage3Assets/Model/wood-floor.gdshader")
  floor.material_override=wood
- _room_back=Node3D.new()
- _room_back.name="RoomBackWall"
- scene.add_child(_room_back)
- _detail(_room_back,Vector3(5.0,2.8,0.065),Vector3(0,1.35,-1.07),Color("efede8"))
- _room_side=Node3D.new()
- _room_side.name="RoomSideWall"
- scene.add_child(_room_side)
- _detail(_room_side,Vector3(0.065,2.8,3.45),Vector3(-2.45,1.35,0.57),Color("efede8"))
- _detail(scene,Vector3(5.0,0.08,0.055),Vector3(0,0.02,-1.015),Color("dedbd4"))
-
  # Cabinet plinth and carcass; three distinct front zones with satin-white
  # drawers and small black horizontal handles like the reference.
  _detail(scene,Vector3(2.58,0.09,0.58),Vector3(0,0.065,0),Color("3d4543"))
@@ -215,7 +180,7 @@ func _build_kitchen() -> void:
   if right_drawer:
    # Part 8 is the large sink-side pullout drawer.
    _box(_groups[7],Vector3(width-0.01,0.31,0.027),Vector3(center_x,0.65,0.319),white,7)
-   _detail(scene,Vector3(width-0.01,0.33,0.028),Vector3(center_x,0.323,0.317),white)
+   _box(_groups[7],Vector3(width-0.01,0.33,0.028),Vector3(center_x,0.323,0.317),white,7)
    _handle(scene,center_x,0.734,0.25)
    _handle(scene,center_x,0.456,0.27)
   elif center_x < -0.60:
@@ -223,8 +188,8 @@ func _build_kitchen() -> void:
    _detail(scene,Vector3(width-0.014,0.38,0.03),Vector3(center_x,0.35,0.318),white)
    _handle(scene,center_x,0.519,0.19)
   else:
-   _detail(scene,Vector3(width-0.012,0.27,0.028),Vector3(center_x,0.685,0.317),white)
-   _detail(scene,Vector3(width-0.012,0.31,0.028),Vector3(center_x,0.383,0.317),white)
+   _box(_groups[7],Vector3(width-0.012,0.27,0.028),Vector3(center_x,0.685,0.317),white,7)
+   _box(_groups[7],Vector3(width-0.012,0.31,0.028),Vector3(center_x,0.383,0.317),white,7)
    _handle(scene,center_x,0.745,0.16)
    _handle(scene,center_x,0.47,0.17)
   _detail(scene,Vector3(0.006,0.62,0.011),Vector3(left+width,0.47,0.334),Color("c8cbc7"))
@@ -286,7 +251,7 @@ func _build_kitchen() -> void:
   var t: float=float(i)/18
   var k: float=1.0-t
   var pt:=Vector3(0.75,0.924,-0.252)*k*k*k+Vector3(0.75,1.32,-0.252)*3*k*k*t+Vector3(0.75,1.36,-0.04)*3*k*t*t+Vector3(0.75,1.09,-0.04)*t*t*t
-  _pipe(faucet,previous,pt,0.012,steel)
+  _pipe(faucet,previous,pt,0.012,steel,5)
   previous=pt
  _detail(faucet,Vector3(0.055,0.013,0.019),Vector3(0.796,0.953,-0.252),steel,0.5)
 
@@ -303,16 +268,14 @@ func _update_camera() -> void:
  var target:=Vector3(0,1.08,0)
  camera.position=target+Vector3(sin(yaw)*cos(pitch),sin(pitch),cos(yaw)*cos(pitch))*6.0
  camera.look_at(target,Vector3.UP)
- # Hide room enclosure only when the camera travels behind it.
- if is_instance_valid(_room_back):_room_back.visible=cos(yaw)>-0.10
- if is_instance_valid(_room_side):_room_side.visible=sin(yaw)>-0.70
- _position_markers()
+
  view_changed.emit()
 
 func set_view(which: String) -> void:
- yaw={"front":0.0,"rear":PI,"perspective":0.55}.get(which,0.55)
- pitch=0.18 if which=="front" else (0.32 if which=="rear" else 0.43)
- zoom=3.42
+ interaction_started.emit()
+ yaw={"front":0.0,"rear":PI,"perspective":0.62}.get(which,0.62)
+ pitch=0.15 if which=="front" else (0.30 if which=="rear" else 0.45)
+ zoom=3.15
  _update_camera()
 
 func zoom_by(amount: float) -> void:
@@ -326,6 +289,7 @@ func set_selected(index: int) -> void:
 func set_hovered(index: int) -> void:
  if hovered==index:return
  hovered=index
+ mouse_default_cursor_shape=Control.CURSOR_POINTING_HAND if index>=0 else Control.CURSOR_DRAG
  part_hovered.emit(index)
  _update_materials()
 
@@ -338,34 +302,30 @@ func _update_materials() -> void:
  for i in range(_materials.size()):
   var active: bool=i==selected or i==hovered
   for entry in _materials[i]:
-   entry.material.albedo_color=entry.color.lerp(Color("5bc4b5"),0.18) if active else entry.color
-  if i<_markers.size():
-   var marker: Button=_markers[i]
-   var style:=UI.box(Color("008f98") if active else (Color("e4f6e8") if _solved[i] else Color("fffdf0")),Color("008f98") if active else Color("8fb6ab"),18,0)
-   style.shadow_size=2
-   for state in ["normal","hover","pressed","focus","disabled","hover_pressed"]:marker.add_theme_stylebox_override(state,style)
-   marker.get_node("MarkerNumber").add_theme_color_override("font_color",Color.WHITE if active else UI.INK)
+   if entry.material is ShaderMaterial:
+    entry.material.set_shader_parameter("highlighted",1.0 if active else 0.0)
+    continue
+   entry.material.albedo_color=entry.color.lerp(Color("55cabb"),0.32) if active else entry.color
+   entry.material.emission_enabled=active
+   entry.material.emission=Color("257769")
+   entry.material.emission_energy_multiplier=0.24 if active else 0.0
 
-func _position_markers() -> void:
- if not is_instance_valid(camera):return
- for i in range(_markers.size()):
-  var point:=camera.unproject_position(_anchors[i])*size/Vector2(viewport.size)
-  var center:=point+_label_offsets[i]
-  center=center.clamp(Vector2(18,18),size-Vector2(18,18))
-  _markers[i].position=center-Vector2(15,15)
- queue_redraw()
+func part_center(index: int) -> Vector2:
+ if not is_instance_valid(camera) or not camera.is_inside_tree() or index<0 or index>=_anchors.size():return size*0.5
+ return (camera.unproject_position(_anchors[index])*size/Vector2(viewport.size)).clamp(Vector2(18,18),size-Vector2(18,18))
 
-func _draw() -> void:
- if not is_instance_valid(camera):return
- for i in range(_markers.size()):
-  var point:=camera.unproject_position(_anchors[i])*size/Vector2(viewport.size)
-  draw_line(point,_markers[i].position+Vector2(15,15),Color("368d82"),1.2,true)
+func rotate_by(amount: float) -> void:
+ interaction_started.emit()
+ set_hovered(-1)
+ yaw=wrapf(yaw+amount,-PI,PI)
+ _update_camera()
 
 func _choose(index: int) -> void:
  set_selected(index)
  part_selected.emit(index)
 
 func _ray_part(position: Vector2) -> int:
+ if size.x<=0 or size.y<=0:return -1
  var point:=position*Vector2(viewport.size)/size
  var origin:=camera.project_ray_origin(point)
  var end:=origin+camera.project_ray_normal(point)*30.0
@@ -386,7 +346,22 @@ func _physics_process(_delta: float) -> void:
   if index>=0:_choose(index)
 
 func _gui_input(event: InputEvent) -> void:
- if event is InputEventMouseButton:
+ if event is InputEventScreenTouch:
+  if event.pressed:
+   interaction_started.emit()
+   _pressed=true
+   _travel=0
+  else:
+   if _pressed and _travel<6:_pending_pick=event.position
+   _pressed=false
+  accept_event()
+ elif event is InputEventScreenDrag and _pressed:
+  _travel+=event.relative.length()
+  yaw=wrapf(yaw-event.relative.x*0.009,-PI,PI)
+  pitch=clampf(pitch+event.relative.y*0.007,0.08,1.20)
+  _update_camera()
+  accept_event()
+ elif event is InputEventMouseButton:
   if event.button_index==MOUSE_BUTTON_WHEEL_UP and event.pressed:zoom_by(-0.15)
   elif event.button_index==MOUSE_BUTTON_WHEEL_DOWN and event.pressed:zoom_by(0.15)
   elif event.button_index in [MOUSE_BUTTON_LEFT,MOUSE_BUTTON_RIGHT]:
@@ -400,12 +375,17 @@ func _gui_input(event: InputEvent) -> void:
   accept_event()
  elif event is InputEventMouseMotion and _pressed:
   _travel+=event.relative.length()
-  yaw-=event.relative.x*0.009
+  yaw=wrapf(yaw-event.relative.x*0.009,-PI,PI)
   pitch=clampf(pitch+event.relative.y*0.007,0.08,1.20)
   _update_camera()
   accept_event()
  elif event is InputEventMouseMotion:
   _pending_hover=event.position
+
+func _unhandled_input(event: InputEvent) -> void:
+ # A release outside the model must not leave orbiting latched on.
+ if event is InputEventMouseButton and not event.pressed and _pressed:
+  _pressed=false
 
 func view_state() -> Dictionary:
  return {"yaw":yaw,"pitch":pitch,"zoom":zoom}
@@ -416,14 +396,7 @@ func apply_view_state(state: Dictionary) -> void:
  zoom=clampf(float(state.get("zoom",zoom)),2.55,4.8)
  _update_camera()
 
-func marker_center(index: int) -> Vector2:
- return _markers[index].position+_markers[index].size*0.5 if index>=0 and index<_markers.size() else size*0.5
-
-func _number_hover(index: int) -> void:
- set_hovered(index)
- if not _pressed:number_hovered.emit(index)
-
-func _pipe(parent: Node3D, a: Vector3, b: Vector3, radius: float, color: Color) -> void:
+func _pipe(parent: Node3D, a: Vector3, b: Vector3, radius: float, color: Color, part: int=-1) -> void:
  var instance:=MeshInstance3D.new()
  var mesh:=CylinderMesh.new()
  mesh.top_radius=radius
@@ -435,6 +408,17 @@ func _pipe(parent: Node3D, a: Vector3, b: Vector3, radius: float, color: Color) 
  instance.position=(a+b)*0.5
  instance.quaternion=Quaternion(Vector3.UP,(b-a).normalized())
  parent.add_child(instance)
+ if part>=0:
+  _materials[part].append({"material":instance.material_override,"color":color})
+  var body:=StaticBody3D.new()
+  body.set_meta("part",part)
+  var collision:=CollisionShape3D.new()
+  var shape:=CylinderShape3D.new()
+  shape.radius=radius*1.5
+  shape.height=mesh.height
+  collision.shape=shape
+  body.add_child(collision)
+  instance.add_child(body)
 
 func _rounded_ring(width: float, depth: float, radius: float, y: float) -> PackedVector3Array:
  var points:=PackedVector3Array()

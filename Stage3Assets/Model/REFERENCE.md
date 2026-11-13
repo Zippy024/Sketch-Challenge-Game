@@ -1,35 +1,25 @@
-# Stage 3: numbered kitchen model
+# Stage 3: directly selectable kitchen model
 
-The model is constructed from actual Godot 3D meshes using the supplied
-`Recording 2026-11-13 111914.mp4` and elevation as visual references. It uses a
-2573 mm worktop, approximately 850 mm finished height, 750/750/1050 mm cabinet
-bays, a 900 mm hood/support area and approximately 2400 mm total support height.
-The elevation and video guide the proportions; this is an educational rebuild.
+Real Godot meshes follow the supplied video, elevation, and latest white-kitchen
+reference: 2573 mm worktop, approximately 850 mm finished height, 750/750/1050 mm
+front bays, 900 mm full-height support, stainless sink and curved mixer, white
+cabinet fronts, black IH hob, pale gray back panels/hood and a light wooden floor.
+No person is included in the model scene.
 
-The eight fixed assessed parts keep their labels when the 3D model rotates:
-1 counter/worktop, 2 kitchen board, 3 range hood, 4 waist-height rear wall,
-5 sink, 6 faucet, 7 IH cooktop, 8 upper drawer. The oak floor and surrounding
-cabinetry provide the visual context.
-All are meshes rather than a flattened substitute image. Number markers track
-3D positions as the camera rotates. The rear view reveals the waist wall.
+Eight assessed parts have independent collision and highlight groups: worktop,
+kitchen panel, range hood, waist-height rear wall, sink, faucet, IH hob and drawers.
+Hover highlights the actual mesh. Clicking/tapping a visible part opens one
+contextual Japanese answer editor. No numbered buttons obscure the model.
+Dragging or the orbit buttons supports a full 360° rotation; front/rear/perspective
+presets and zoom remain available. The rear view reveals the waist wall.
 
-Students type Japanese names. `JapaneseParts.gd` accepts relevant Japanese
-synonyms and normalizes spacing, Hiragana and half-width Katakana. It does not
-accept English names or score a mere click as a correct answer. Empty entries
-do not add mistakes. Correct entries lock; drafts and individual solved flags
-persist in the existing save file. Legacy sequential-selection saves migrate
-without losing already verified progress. Retry resets only the current attempt.
+Hiragana conversion candidates depend only on the typed reading, not the target.
+Japanese synonyms, full-width/half-width forms, IH and proper okurigana are
+accepted. Empty or unconverted readings do not add mistakes. Correct answers lock
+and briefly confirm; drafts and solved flags persist. Two layout questions plus
+eight names make ten challenge checks. Retry resets only the current attempt.
 
-The full model workspace uses a supersampled viewport with on-demand redraws,
-subtle greige cabinet grain, a curved mixer and a rounded stainless basin.
-Hovering or clicking a number opens one contextual answer editor; dragging or
-closing restores the unobstructed view. Students enter a Hiragana reading,
-choose a Kanji/Katakana candidate based only on that reading, then submit.
-Conversions are independent of the assessed part. Correct answers briefly
-confirm and dismiss the editor; each question starts without an old verdict.
-
-## Reference-matching showroom rebuild (13 November 2026)
-
-The procedural kitchen uses a light oak plank floor, off-white corner walls, grey stone back panel and cooking bay, warm white slab counter with recessed metallic sink, curved silver mixer, black IH rings, oven controls, matte-grey range hood and satin off-white black-handled cabinets. The model intentionally contains **no person**. The room walls hide only when viewed from behind, so 360-degree drag/orbit and zoom remain possible; all eight fixed part markers and Japanese answer bindings remain active.
-
-This reconstruction is an approximation of the supplied screenshot, not a photogrammetric scan or a byte-for-byte import of the supplied GLB. The interactive Godot meshes are kept instead of replacing assessable parts with a single opaque GLB.
+Version 2 extends old five-answer saves without losing drafts or verified names.
+Previously completed attempts retain completion and best scores; a fresh attempt
+requires all eight names. Supersampling and on-demand viewport redraws keep the
+model clear without continuously rendering a static scene.

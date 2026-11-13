@@ -475,5 +475,12 @@ const MESSAGES = [
 	{"en": "Type in hiragana, then choose a conversion.", "mm": "ဟိရဂနာနဲ့ရေးပြီး ပြောင်းလဲရေးသားပုံကို ရွေးပါ။", "jp": "ひらがなで入力して、候補から選んでください。", "aliases": []},
 	{"en": "No candidates. Check the full hiragana reading.", "mm": "ပြောင်းလဲရေးသားပုံ မတွေ့ပါ။ ဟိရဂနာစာလုံးပေါင်းကို ပြန်စစ်ပါ။", "jp": "候補がありません。ひらがなの読みを確認してください。", "aliases": []},
 	{"en": "Choose a conversion.", "mm": "ပြောင်းလဲရေးသားပုံကို ရွေးပါ။", "jp": "変換候補を選んでください。", "aliases": []},
-	{"en": "Hover a number to answer · Drag to rotate · Scroll to zoom", "mm": "နံပါတ်ပေါ်ထောက်၍ ဖြေပါ · ဆွဲ၍လှည့် · Scroll ဖြင့်ချဲ့", "jp": "番号にカーソルを合わせて回答・ドラッグで回転・スクロールで拡大", "aliases": []}
+	{"en": "Hover a number to answer · Drag to rotate · Scroll to zoom", "mm": "နံပါတ်ပေါ်ထောက်၍ ဖြေပါ · ဆွဲ၍လှည့် · Scroll ဖြင့်ချဲ့", "jp": "番号にカーソルを合わせて回答・ドラッグで回転・スクロールで拡大", "aliases": []},
+ {"en":"Selected part","mm":"ရွေးထားသော အစိတ်အပိုင်း","jp":"選択したパーツ","aliases":[]},
+ {"en":"%d / %d names correct","mm":"%d / %d ခု အမည်မှန်ပြီ","jp":"%d / %d 個正解","aliases":[]},
+ {"en":"Click a kitchen part and type its name in Japanese.","mm":"မီးဖိုချောင် အစိတ်အပိုင်းကို နှိပ်ပြီး ဂျပန်အမည်ကို ရေးပါ။","jp":"キッチンのパーツをクリックして、日本語の名前を入力してください。","aliases":[]},
+ {"en":"Click a part to answer. Drag to rotate 360°. Scroll to zoom.","mm":"ပစ္စည်းကို နှိပ်၍ ဖြေပါ။ ဆွဲ၍ 360° လှည့်ကြည့်ပါ။ Scroll ဖြင့် ချဲ့ပါ။","jp":"パーツをクリックして回答。ドラッグで360°回転、スクロールで拡大。","aliases":[]},
+ {"en":"Click a part to answer · Drag to rotate 360° · Scroll to zoom","mm":"ပစ္စည်းကို နှိပ်၍ဖြေ · ဆွဲ၍ 360° လှည့် · Scroll ဖြင့်ချဲ့","jp":"パーツをクリックして回答・ドラッグで360°回転・スクロールで拡大","aliases":[]},
+ {"en":"Rotate left","mm":"ဘယ်ဘက်လှည့်","jp":"左に回転","aliases":[]},
+ {"en":"Rotate right","mm":"ညာဘက်လှည့်","jp":"右に回転","aliases":[]}
 ]
