@@ -94,7 +94,9 @@ func _run() -> void:
 	Rating.advance(3,14)
 	current_scene.call("_choose",0)
 	current_scene.call("_choose",2)
+	await create_timer(0.3).timeout
 	current_scene.call("_choose",1)
+	await create_timer(0.3).timeout
 	current_scene.call("_select_part",0)
 	assert(current_scene.get("step")==3)
 	Progress._loaded=false
@@ -142,7 +144,9 @@ func _win(stage: int) -> void:
 		game.call("_check_demo_answer")
 	else:
 		game.call("_choose",2)
+		await create_timer(0.3).timeout
 		game.call("_choose",1)
+		await create_timer(0.3).timeout
 		for i in range(5):game.call("_select_part",i)
 	if stage<3:
 		game.call("_stop_voice")
