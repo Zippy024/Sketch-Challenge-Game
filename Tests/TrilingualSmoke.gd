@@ -525,6 +525,9 @@ func _run() -> void:
 			var candidate=editor.find_child("JapaneseConversionCandidates",true,false).get_child(0)
 			candidate.pressed.emit()
 			editor.find_child("CheckPartAnswer",true,false).pressed.emit()
+		# Five historical answers are not the new 8-part completion.
+		assert(game.get("step")==7 and not Progress.is_completed(3))
+		assert(game.find_child("Stage3CompleteOverlay",true,false)==null)
 		for index in [5,6,7]:
 			game.call("_open_answer",index,true)
 			editor.input.text={5:"水栓",6:"IHクッキングヒーター",7:"引き出し"}[index]

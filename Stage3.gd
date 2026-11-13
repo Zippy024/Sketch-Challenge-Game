@@ -129,11 +129,11 @@ func _clear() -> void:
 
 func _refresh() -> void:
 	_clear()
-	if step >= 7 and not _completion_acknowledged:
+	if step >= 10 and not _completion_acknowledged:
 		UI.background(self,true)
 		_show_completion()
 		return
-	if step >= 7:
+	if step >= 10:
 		var results := preload("res://ResultsScreen.gd").new()
 		results.levels_requested.connect(_go_levels)
 		results.replay_requested.connect(_retry_stage)
