@@ -98,15 +98,7 @@ func _refresh() -> void:
 	if step >= 7:
 		var results := preload("res://ResultsScreen.gd").new()
 		results.levels_requested.connect(_go_levels)
-		results.replay_requested.connect(func():
-			Progress.open_stage(3)
-			step = 0
-			_completion_acknowledged=false
-			last_wrong = false
-			_answer_state="neutral"
-			StageRating.begin(3)
-			_refresh()
-		)
+		results.replay_requested.connect(_retry_stage)
 		results.home_requested.connect(func(): get_tree().change_scene_to_file("res://GameMenu.tscn"))
 		add_child(results)
 		return
@@ -132,7 +124,8 @@ func _refresh() -> void:
 	brief.add_child(UI.label("Select the matching kitchen illustration." if step<2 else "Identify the kitchen components from the diagram.",15))
 	if step < 2:
 		var plan := TextureRect.new()
-		plan.texture = preload("res://reference_sketch.png")
+		plan.name = "Stage3ReferencePlan"
+		plan.texture = preload("res://Refrence image.png")
 		plan.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		plan.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		plan.custom_minimum_size.y = 145
@@ -145,7 +138,17 @@ func _refresh() -> void:
 	var right := UI.card_stack(split,true)
 	right.get_parent().name="Stage3AnswerCard"
 	right.get_parent().size_flags_stretch_ratio = 13
-	right.add_child(UI.label("Kitchen Selection" if step<2 else "Kitchen Parts",25,true))
+	var heading:=HBoxContainer.new()
+	heading.add_theme_constant_override("separation",12)
+	right.add_child(heading)
+	var title:=UI.label("Kitchen Selection" if step<2 else "Kitchen Parts",25,true)
+	title.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+	heading.add_child(title)
+	var retry:=UI.button(_tr("Retry","ပြန်ကစားမည်","もう一度"),_retry_stage,false,110,14)
+	retry.name="Stage3Retry"
+	retry.icon=preload("res://Stage1Assets/reset.svg")
+	retry.tooltip_text=_tr("Restart Stage 3","အဆင့် ၃ ကို အစမှပြန်ကစားမည်","ステージ3を最初からやり直す")
+	heading.add_child(retry)
 	var phase:=mini(step,2)
 	var phases:=HBoxContainer.new()
 	phases.name="Stage3Sections"
@@ -198,19 +201,49 @@ func _phase_name(index: int) -> String:
 		_tr("Components","အစိတ်အပိုင်းများ","部材の選択")
 	][index]
 
+func _retry_stage() -> void:
+	Progress.open_stage(3)
+	step=0
+	_completion_acknowledged=false
+	last_wrong=false
+	_answer_state="neutral"
+	_last_phase=-1
+	_refresh()
+
 func _enter_phase(card: Control) -> void:
-	if OS.has_feature("web") and bool(JavaScriptBridge.eval("window.matchMedia('(prefers-reduced-motion: reduce)').matches",true)):return
+	var reduced_motion:=OS.has_feature("web") and bool(JavaScriptBridge.eval("window.matchMedia('(prefers-reduced-motion: reduce)').matches",true))
 	_transitioning=true
-	card.modulate.a=0.0
-	card.mouse_filter=Control.MOUSE_FILTER_STOP
-	# A transparent input shield prevents a second click selecting the next card.
+	# Block repeat clicks until the next section has visibly arrived.
 	var shield:=Control.new()
 	shield.name="Stage3TransitionShield"
 	shield.mouse_filter=Control.MOUSE_FILTER_STOP
 	add_child(shield)
 	shield.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_transition_tween=create_tween()
-	_transition_tween.tween_property(card,"modulate:a",1.0,0.24).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	if reduced_motion:
+		_transition_tween.tween_interval(0.12)
+	else:
+		card.modulate.a=0.15
+		# Let the panel size a transparent holder, keeping the accent only 3 px tall.
+		var accent:=Control.new()
+		accent.mouse_filter=Control.MOUSE_FILTER_IGNORE
+		card.add_child(accent)
+		var sweep:=ColorRect.new()
+		sweep.name="Stage3PhaseSweep"
+		sweep.color=UI.TEAL
+		sweep.mouse_filter=Control.MOUSE_FILTER_IGNORE
+		accent.add_child(sweep)
+		sweep.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+		sweep.offset_left=2
+		sweep.offset_right=-2
+		sweep.offset_top=1
+		sweep.offset_bottom=4
+		sweep.scale.x=0.0
+		_transition_tween.set_parallel(true)
+		_transition_tween.tween_property(card,"modulate:a",1.0,0.38).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		_transition_tween.tween_property(sweep,"scale:x",1.0,0.36).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		_transition_tween.chain().tween_property(sweep,"modulate:a",0.0,0.1)
+		_transition_tween.chain().tween_callback(accent.queue_free)
 	_transition_tween.finished.connect(func():
 		_transitioning=false
 		if is_instance_valid(shield):shield.queue_free()
@@ -277,7 +310,9 @@ func _draw_choices() -> void:
 		option.custom_minimum_size = Vector2(128, 260 if step==1 else 240)
 		option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		option.add_theme_stylebox_override("normal", _style(Color.WHITE, OUTLINE, 9))
-		option.add_theme_stylebox_override("hover", _style(Color("f9fbfd"), Color("b5c6d9"), 9))
+		var hover_style:=_style(Color("eef9f5"),UI.TEAL,9)
+		hover_style.set_border_width_all(2)
+		option.add_theme_stylebox_override("hover",hover_style)
 		option.add_theme_stylebox_override("pressed", _style(Color("f7faff"), Color("b5c6d9"), 9))
 		option.add_theme_stylebox_override("focus",UI.box(Color.TRANSPARENT,UI.TEAL,12,0))
 		option.focus_mode = Control.FOCUS_ALL
@@ -308,6 +343,7 @@ func _draw_choices() -> void:
 		if step==1:
 			# Keep low-resolution originals at a readable, bounded display size.
 			var slot:=Control.new()
+			slot.mouse_filter=Control.MOUSE_FILTER_IGNORE
 			slot.custom_minimum_size.y=188
 			slot.size_flags_vertical=Control.SIZE_EXPAND_FILL
 			option_col.add_child(slot)
@@ -315,14 +351,26 @@ func _draw_choices() -> void:
 			slot.add_child(pic)
 			var fit:=func():
 				if not is_instance_valid(pic) or not is_instance_valid(slot):return
-				pic.size=Vector2(minf(slot.size.x,220.0),minf(slot.size.y,147.0))
+				var aspect:=float(pic.texture.get_width())/float(pic.texture.get_height())
+				var width:=minf(minf(slot.size.x,220.0),minf(slot.size.y,147.0)*aspect)
+				pic.size=Vector2(width,width/aspect)
 				pic.position=(slot.size-pic.size)*0.5
 			slot.resized.connect(fit)
 			fit.call_deferred()
-			if i!=2:
-				var clarity:=ShaderMaterial.new()
-				clarity.shader=preload("res://UIAssets/diagram-clarity.gdshader")
-				pic.material=clarity
+			var clarity:=ShaderMaterial.new()
+			clarity.shader=preload("res://UIAssets/diagram-clarity.gdshader")
+			if i==2:
+				clarity.set_shader_parameter("strength",0.45)
+				clarity.set_shader_parameter("ink_boost",0.06)
+			pic.material=clarity
+			var frame:=Panel.new()
+			frame.name="DiagramFrame"
+			frame.mouse_filter=Control.MOUSE_FILTER_IGNORE
+			var frame_style:=UI.box(Color.TRANSPARENT,Color("d7dbd9"),0,0)
+			frame_style.shadow_size=0
+			frame.add_theme_stylebox_override("panel",frame_style)
+			pic.add_child(frame)
+			frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		else:
 			option_col.add_child(pic)
 
@@ -360,14 +408,41 @@ func _choose(index: int) -> void:
 func _draw_parts() -> void:
 	var needed: int = step - 2
 	_answer_area.add_child(_label(LocaleManager.text("Select: %s") % LocaleManager.text(NAMES[needed]), 18, BLUE))
-	_answer_area.add_child(_label("Click the corresponding area in the kitchen illustration.", 13, SUBTEXT))
+	var instruction:=_tr("Point to a part, or choose its button below.","ပစ္စည်းပေါ် ထောက်ကြည့်ပါ၊ သို့မဟုတ် အောက်ကခလုတ်ဖြင့် ရွေးပါ။","部材にカーソルを合わせるか、下のボタンで選択してください。")
+	var hover_label:=_label(instruction,13,SUBTEXT)
+	hover_label.name="PartHoverLabel"
+	_answer_area.add_child(hover_label)
 	var diagram := KitchenDiagram.new()
-	diagram.custom_minimum_size = Vector2(450, 260)
+	diagram.custom_minimum_size = Vector2(450, 220)
 	diagram.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	diagram.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	diagram.name = "KitchenPartsDiagram"
 	diagram.item_selected.connect(_select_part)
+	diagram.item_hovered.connect(func(index: int):
+		hover_label.text=(str(index+1)+" · "+LocaleManager.text(NAMES[index])) if index>=0 else instruction
+		hover_label.add_theme_color_override("font_color",UI.TEAL if index>=0 else SUBTEXT)
+	)
 	_answer_area.add_child(diagram)
+	var choices:=GridContainer.new()
+	choices.columns=3 if get_viewport_rect().size.x>=1100 else 2
+	choices.add_theme_constant_override("h_separation",8)
+	choices.add_theme_constant_override("v_separation",8)
+	_answer_area.add_child(choices)
+	for i in range(NAMES.size()):
+		var button:=UI.button(str(i+1)+" · "+LocaleManager.text(NAMES[i]),_select_part.bind(i),false,110,13)
+		button.name="KitchenPartButton%d"%i
+		button.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART
+		button.custom_minimum_size.y=40
+		button.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+		var hover_style:=UI.box(Color("e7f5ef"),UI.TEAL,12,8)
+		hover_style.set_border_width_all(2)
+		hover_style.shadow_size=0
+		button.add_theme_stylebox_override("hover",hover_style)
+		button.mouse_entered.connect(diagram.set_hovered.bind(i))
+		button.focus_entered.connect(diagram.set_hovered.bind(i))
+		button.mouse_exited.connect(diagram.clear_hover.bind(i))
+		button.focus_exited.connect(diagram.clear_hover.bind(i))
+		choices.add_child(button)
 
 
 func _select_part(which: int) -> void:
@@ -460,15 +535,7 @@ func _show_completion() -> void:
 		get_tree().change_scene_to_file("res://GameMenu.tscn")
 	)
 	popup.levels_requested.connect(_go_levels)
-	popup.retry_requested.connect(func():
-		Progress.open_stage(3)
-		step=0
-		_completion_acknowledged=false
-		last_wrong=false
-		_answer_state="neutral"
-		StageRating.begin(3)
-		_refresh()
-	)
+	popup.retry_requested.connect(_retry_stage)
 	add_child(popup)
 
 func _save_session() -> void:
@@ -484,6 +551,8 @@ func _exit_tree() -> void:
 
 class KitchenDiagram extends Control:
 	signal item_selected(which: int)
+	signal item_hovered(which: int)
+	var hovered: int=-1
 	var zones: Array[Rect2] = [Rect2(89,181,445,44),Rect2(205,77,323,94),Rect2(100,70,99,68),Rect2(88,260,488,58),Rect2(531,161,58,150)]
 	var tip_colors: Array[Color] = [Color("72bbdf"), Color("c2d7e7"), Color("8ba6c5"), Color("d4c4b1"), Color("f3d8ab")]
 
@@ -491,6 +560,7 @@ class KitchenDiagram extends Control:
 		mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		mouse_filter = Control.MOUSE_FILTER_STOP
 		resized.connect(queue_redraw)
+		mouse_exited.connect(set_hovered.bind(-1))
 
 	func _draw() -> void:
 		# A deliberately simple schematic, not a substituted 3D model asset.
@@ -532,18 +602,40 @@ class KitchenDiagram extends Control:
 		# clickable outlines identify the five conceptual elements.
 		for r in zones:
 			draw_rect(r,Color(0.58, 0.66, 0.75, 0.25),false,1)
+		if hovered>=0:
+			draw_rect(zones[hovered],Color(0.0,0.56,0.60,0.14),true)
+			draw_rect(zones[hovered],Color("008f98"),false,3)
 		draw_set_transform(Vector2.ZERO)
 		for i in range(zones.size()):
 			var point := (zones[i].position+Vector2(15,15))*Vector2(sx,sy)
-			draw_circle(point,12,Color("008f98"))
+			draw_circle(point,15 if i==hovered else 12,Color("006d75") if i==hovered else Color("008f98"))
 			draw_string(ThemeDB.fallback_font,point+Vector2(-4,5),str(i+1),HORIZONTAL_ALIGNMENT_LEFT,-1,14,Color.WHITE)
 
+	func set_hovered(index: int) -> void:
+		if hovered==index:return
+		hovered=index
+		mouse_default_cursor_shape=Control.CURSOR_POINTING_HAND if index>=0 else Control.CURSOR_ARROW
+		item_hovered.emit(index)
+		queue_redraw()
+
+	func clear_hover(index: int) -> void:
+		if hovered==index:set_hovered(-1)
+
+	func _hit_test(position: Vector2) -> int:
+		var point:=position*Vector2(650.0/maxf(size.x,1.0),390.0/maxf(size.y,1.0))
+		# Match the hover and click target, with small objects taking priority.
+		for i in [2,1,4,3,0]:
+			if zones[i].has_point(point):return i
+		# A few pixels of tolerance help at the edge of thin items.
+		for i in [2,1,4,3,0]:
+			if zones[i].grow(5).has_point(point):return i
+		return -1
+
 	func _gui_input(event: InputEvent) -> void:
-		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-			var point: Vector2 = Vector2(event.position.x * 650.0 / maxf(size.x,1.0), event.position.y * 390.0 / maxf(size.y,1.0))
-			# smaller elements first to avoid overlap
-			for i in [2, 1, 4, 3, 0]:
-				if i < zones.size() and zones[i].has_point(point):
-					accept_event()
-					item_selected.emit(i)
-					return
+		if event is InputEventMouseMotion:
+			set_hovered(_hit_test(event.position))
+		elif event is InputEventMouseButton and event.button_index==MOUSE_BUTTON_LEFT and event.pressed:
+			var index:=_hit_test(event.position)
+			if index>=0:
+				accept_event()
+				item_selected.emit(index)

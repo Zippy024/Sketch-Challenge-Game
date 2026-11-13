@@ -385,6 +385,8 @@ func _run() -> void:
 		_collect(game,"stage3-q1")
 		assert(game.find_child("MintWorkspace",true,false)!=null)
 		assert(game.find_children("KitchenChoice*","Button",true,false).size()==5)
+		assert(game.find_child("Stage3ReferencePlan",true,false).texture.resource_path=="res://Refrence image.png")
+		assert(game.find_child("Stage3Retry",true,false)!=null)
 		game.call("_choose",0)
 		assert(game.get("step")==0)
 		assert(game.find_child("CustomerAnswerLabel",true,false).text==manager.text("Incorrect"))
@@ -397,15 +399,29 @@ func _run() -> void:
 		game.call("_choose",1)
 		assert(game.get("step")==1)
 		assert(game.find_children("KitchenChoice*","Button",true,false).size()==4)
+		assert(game.find_children("DiagramFrame","Panel",true,false).size()==4)
+		assert(game.find_child("Stage3PhaseSweep",true,false)!=null)
 		assert(game.find_child("CustomerAnswerLabel",true,false).text==manager.text("Correct"))
-		await create_timer(0.3).timeout
-		game.call("_choose",3)
-		assert(game.get("step")==1)
+		await create_timer(0.55).timeout
+		# Click the illustration itself, catching child controls that swallow input.
+		var fourth_image=game.find_child("KitchenChoice3",true,false).find_children("*","TextureRect",true,false)[0]
+		var picture_click:=InputEventMouseButton.new()
+		picture_click.button_index=MOUSE_BUTTON_LEFT
+		picture_click.pressed=true
+		picture_click.position=fourth_image.get_global_rect().get_center()
+		root.push_input(picture_click,true)
+		await process_frame
+		picture_click=picture_click.duplicate()
+		picture_click.pressed=false
+		root.push_input(picture_click,true)
+		await _wait()
+		assert(game.get("step")==1 and game.get("last_wrong"))
 		game.call("_choose",1)
 		assert(game.get("_transitioning"))
 		game.call("_select_part",0)
 		assert(game.get("step")==2)
-		await _wait()
+		await create_timer(0.55).timeout
+		assert(game.find_children("KitchenPartButton*","Button",true,false).size()==5)
 		for button in game.find_children("*","Button",true,false): assert(button.text!=manager.text("Hint"))
 		_collect(game,"stage3-parts")
 		for panel in game.find_children("*","PanelContainer",true,false):
@@ -418,7 +434,13 @@ func _run() -> void:
 			click.pressed=true
 			var zone: Rect2 = diagram.zones[i]
 			click.position=(zone.position+zone.size*0.5)*diagram.size/Vector2(650,390)
-			diagram.call("_gui_input",click)
+			var motion:=InputEventMouseMotion.new()
+			motion.position=click.position
+			diagram.call("_gui_input",motion)
+			assert(diagram.get("hovered")==i)
+			assert(game.find_child("PartHoverLabel",true,false).text.begins_with(str(i+1)+" · "))
+			if i%2==0:diagram.call("_gui_input",click)
+			else:game.find_child("KitchenPartButton%d"%i,true,false).pressed.emit()
 		assert(game.get("step")==7)
 		assert(Progress.is_completed(3))
 		await _wait()

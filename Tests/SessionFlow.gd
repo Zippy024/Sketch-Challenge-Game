@@ -94,9 +94,9 @@ func _run() -> void:
 	Rating.advance(3,14)
 	current_scene.call("_choose",0)
 	current_scene.call("_choose",2)
-	await create_timer(0.3).timeout
+	await create_timer(0.55).timeout
 	current_scene.call("_choose",1)
-	await create_timer(0.3).timeout
+	await create_timer(0.55).timeout
 	current_scene.call("_select_part",0)
 	assert(current_scene.get("step")==3)
 	Progress._loaded=false
@@ -144,9 +144,9 @@ func _win(stage: int) -> void:
 		game.call("_check_demo_answer")
 	else:
 		game.call("_choose",2)
-		await create_timer(0.3).timeout
+		await create_timer(0.55).timeout
 		game.call("_choose",1)
-		await create_timer(0.3).timeout
+		await create_timer(0.55).timeout
 		for i in range(5):game.call("_select_part",i)
 	if stage<3:
 		game.call("_stop_voice")
@@ -173,7 +173,21 @@ func _check_retry(stage: int) -> void:
 	assert(int(Rating.best(stage).stars)==3)
 	if stage==1:assert(current_scene.get("canvas").lines.is_empty())
 	if stage==2:assert(current_scene.get("answer_input").text.is_empty())
-	if stage==3:assert(current_scene.get("step")==0)
+	if stage==3:
+		assert(current_scene.get("step")==0)
+		current_scene.call("_choose",2)
+		await create_timer(0.55).timeout
+		Rating.advance(3,60)
+		Rating.mistake(3)
+		current_scene.find_child("Stage3Retry",true,false).pressed.emit()
+		await _wait()
+		assert(current_scene.get("step")==0 and not current_scene.get("_transitioning"))
+		assert(int(Rating.current(3).mistakes)==0 and float(Rating.current(3).elapsed)<2)
+		assert(int(Rating.best(3).stars)==3)
+		var home=await _home()
+		home.find_child("ContinueGame",true,false).pressed.emit()
+		await _wait()
+		assert(current_scene.get("step")==0 and Progress.kitchen_step()==0)
 	for i in range(3):Rating.mistake(stage)
 	await _win(stage)
 	assert(int(Rating.latest[stage].stars)==1 and int(Rating.best(stage).stars)==3)
