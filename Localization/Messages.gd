@@ -1179,7 +1179,7 @@ const MESSAGES = [
 	},
 	{
 		"en": "Load-bearing wall",
-		"mm": "နံရံချန်ထားတဲ့ ပုံစံ",
+		"mm": "အလေးချိန်ခံနံရံ",
 		"jp": "耐力壁",
 		"aliases": []
 	},
@@ -1333,8 +1333,8 @@ const MESSAGES = [
 		]
 	},
 	{
-		"en": "I am thinking about renovating my kitchen.\nI have a floor plan, but I do not understand it clearly.\nCould you neatly draw the area that I need?\nI would like to know the exact living, dining and kitchen layout.",
-		"mm": "မီးဖိုချောင်ကို ပြန်လည်ပြင်ဆင်ဖို့ စဉ်းစားနေပါတယ်။\nပုံစံစာရွက် ရှိပေမယ့် သေချာနားမလည်လို့ပါ။\nလိုအပ်တဲ့ ဧရိယာလေးကို သပ်သပ်ရပ်ရပ် ဆွဲပေးနိုင်မလားရှင်။\nထမင်းစားခန်းနဲ့ မီးဖိုချောင်ရဲ့ အခန်းဖွဲ့စည်းပုံကို အတိအကျ သိချင်ပါတယ်။",
+		"en": "I am thinking about renovating my kitchen.\nI have a floor plan, but I do not understand it clearly.\nCould you neatly draw the area that I need?\nI would like to know the exact layout of the living/dining area and the kitchen.",
+		"mm": "မီးဖိုချောင်ကို ပြန်လည်ပြင်ဆင်ဖို့ စဉ်းစားနေပါတယ်။\nပုံစံစာရွက် ရှိပေမယ့် သေချာနားမလည်လို့ပါ။\nလိုအပ်တဲ့ ဧရိယာလေးကို သပ်သပ်ရပ်ရပ် ဆွဲပေးနိုင်မလားရှင်။\nဧည့်ခန်း၊ ထမင်းစားနေရာနဲ့ မီးဖိုချောင်ရဲ့ အခန်းဖွဲ့စည်းပုံကို အတိအကျ သိချင်ပါတယ်။",
 		"jp": "キッチンのリフォームを考えています。\n図面はあったけど、よくわかりません。\n必要なエリアをきれいに描いてもらえますか？\nリビングダイニングとキッチンの間取りを正確に知りたいです。",
 		"aliases": []
 	},
