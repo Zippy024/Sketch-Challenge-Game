@@ -1,15 +1,17 @@
 extends RefCounted
-# Names are attached to fixed numbered model parts, independent of UI language.
+# Fixed assessed meshes, independent of UI language.
 const NAMES: Array[String]=["カウンター","キッチンボード","フード","腰壁","シンク","水栓","IHクッキングヒーター","引き出し"]
+const COUNT: int=8
+const CHALLENGE_STEPS: int=2+COUNT
 const ACCEPTED: Array=[
  ["カウンター","カウンタートップ","ワークトップ","天板","キッチンカウンター"],
  ["キッチンボード","キッチンパネル","キッチンパネルボード"],
  ["フード","レンジフード","換気扇"],
  ["腰壁","コシカベ","キッチン腰壁"],
  ["シンク","流シ","流シ台","流台"],
- ["水栓","スイセン","蛇口","混合水栓","水栓金具"],
- ["IHクッキングヒーター","IHコンロ","IHヒーター","電磁調理器"],
- ["引き出し","引出し","ヒキダシ","収納引き出し"]
+ ["水栓","水栓金具","蛇口","混合水栓","スイセン","ジャグチ"],
+ ["IH","IHクッキングヒーター","IHコンロ","IHヒーター","電磁調理器"],
+ ["引き出し","引出し","引出","抽斗","ヒキダシ"]
 ]
 static func normalize(value: String) -> String:
  var result:=""
@@ -30,10 +32,11 @@ static func normalize(value: String) -> String:
    continue
   var code:=character.unicode_at(0)
   if code in [9,10,13,32,0x3000]:continue
+  if code>=0xFF01 and code<=0xFF5E:code-=0xFEE0
   if code>=0x3041 and code<=0x3096:code+=0x60 # Hiragana to Katakana.
   if code==0xFF70:code=0x30FC
   result+=String.chr(code)
- return result.replace("－","ー").replace("−","ー")
+ return result.replace("－","ー").replace("−","ー").to_upper()
 
 static func is_correct(index: int, value: String) -> bool:
  if index<0 or index>=NAMES.size():return false
@@ -59,10 +62,10 @@ static func conversion_candidates(reading: String) -> Array[String]:
   "レンジフード":["レンジフード"],"カンキセン":["換気扇"],
   "コシカベ":["腰壁"],"キッチンコシカベ":["キッチン腰壁"],
   "シンク":["シンク","真紅"],"ナガシ":["流し"],"ナガシダイ":["流し台"],"スイセン":["水栓","推薦"],
-  "ジャグチ":["蛇口"],"コンゴウスイセン":["混合水栓"],
-  "IHクッキングヒーター":["IHクッキングヒーター"],"アイエイチクッキングヒーター":["IHクッキングヒーター"],
-  "IHコンロ":["IHコンロ"],"アイエイチコンロ":["IHコンロ"],"デンジチョウリキ":["電磁調理器"],
-  "ヒキダシ":["引き出し","引出し"],"シュウノウヒキダシ":["収納引き出し"]
+  "スイセンカナグ":["水栓金具"],"ジャグチ":["蛇口"],"コンゴウスイセン":["混合水栓"],
+  "アイエイチ":["IH"],"アイエイチクッキングヒーター":["IHクッキングヒーター"],
+  "IHクッキングヒーター":["IHクッキングヒーター"],"IHコンロ":["IHコンロ"],
+  "ヒキダシ":["引き出し","引出し"]
  }
  var result: Array[String]=[]
  var key:=normalize(reading)

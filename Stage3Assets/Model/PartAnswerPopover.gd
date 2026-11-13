@@ -75,7 +75,7 @@ func _ready() -> void:
 func configure(index: int, draft: String, solved: bool) -> void:
  part_index=index
  _notice_revision+=1
- _title.text=UI.text("Number %d")%(index+1)+("  ✓" if solved else "")
+ _title.text=UI.text("Selected part")+("  ✓" if solved else "")
  input.text=draft
  input.editable=not solved
  _clear_candidates()
