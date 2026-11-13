@@ -8,7 +8,7 @@ const StageRating = preload("res://StageRating.gd")
 const UI_THEME: Theme = preload("res://WebBilingualTheme.tres")
 const PORTRAIT: Texture2D = preload("res://customer_portrait_ui.png")
 const IMAGES_Q1: Array[Texture2D] = [preload("res://Stage3Assets/Original/type_0.jpeg"), preload("res://Stage3Assets/Original/type_1.jpeg"), preload("res://Stage3Assets/Original/type_2.jpeg"), preload("res://Stage3Assets/Original/type_3.jpeg"), preload("res://Stage3Assets/Original/type_4.jpeg")]
-const IMAGES_Q2: Array[Texture2D] = [preload("res://Stage3Assets/Original/detail_0.jpeg"), preload("res://Stage3Assets/Original/detail_1.jpeg"), preload("res://Stage3Assets/Original/detail_2.jpeg"), preload("res://Stage3Assets/Original/detail_3.jpeg")]
+const IMAGES_Q2: Array[Texture2D] = [preload("res://Stage3Assets/Original/detail_0.jpeg"), preload("res://Stage3Assets/Original/detail_1.jpeg"), preload("res://Stage3Assets/Clear/float.webp"), preload("res://Stage3Assets/Original/detail_3.jpeg")]
 const BG := Color("e9eef5")
 const PANEL := Color("f1f5f9")
 const TEXT := Color("1f3c56")
@@ -319,9 +319,10 @@ func _draw_choices() -> void:
 				pic.position=(slot.size-pic.size)*0.5
 			slot.resized.connect(fit)
 			fit.call_deferred()
-			var clarity:=ShaderMaterial.new()
-			clarity.shader=preload("res://UIAssets/diagram-clarity.gdshader")
-			pic.material=clarity
+			if i!=2:
+				var clarity:=ShaderMaterial.new()
+				clarity.shader=preload("res://UIAssets/diagram-clarity.gdshader")
+				pic.material=clarity
 		else:
 			option_col.add_child(pic)
 

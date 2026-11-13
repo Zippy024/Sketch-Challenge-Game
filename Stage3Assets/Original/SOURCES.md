@@ -13,4 +13,4 @@ Original Panasonic S-CLASS selection artwork, retrieved 2026-11-13.
 
 Files are stored without redrawing, cropping, or resampling.
 
-The four detail cards have a bounded 220 × 147 display area and a mild runtime edge-contrast filter. Source files are unchanged. The Float source is 149 × 100, so it contains less detail than the other originals.
+The four detail cards have a bounded 220 × 147 display area and a mild runtime edge-contrast filter. Source files are unchanged. The Float source is 149 × 100. The game now uses `../Clear/float.webp`, a high-resolution line-cleanup reconstruction generated from this source at the user’s request. It is a restored illustration, not a higher-resolution manufacturer source. The original file is retained for comparison.
