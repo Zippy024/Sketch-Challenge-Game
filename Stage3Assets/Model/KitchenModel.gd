@@ -6,6 +6,7 @@ signal view_changed
 signal interaction_started
 const UI=preload("res://KitchenUI.gd")
 const Parts=preload("res://Stage3Assets/Model/JapaneseParts.gd")
+const BeveledBox=preload("res://Stage3Assets/Model/BeveledBox.gd")
 var viewport: SubViewport
 var camera: Camera3D
 var scene: Node3D
@@ -136,7 +137,7 @@ func _box(parent: Node3D, dimensions: Vector3, center: Vector3, color: Color, pa
  var instance:=MeshInstance3D.new()
  var mesh:=BoxMesh.new()
  mesh.size=dimensions
- instance.mesh=mesh
+ instance.mesh=BeveledBox.create(dimensions,0.007 if part==2 else 0.003) if part in [2,6,7] else mesh
  instance.position=center
  var material:=_material(color,metallic)
  instance.material_override=material
@@ -171,7 +172,9 @@ func _cylinder(parent: Node3D, center: Vector3, radius: float, height: float, co
 
 func _detail(parent: Node3D, dim: Vector3, pos: Vector3, color: Color, metallic: float=0.0) -> void:
  # Unpickable detail geometry must not block the eight selectable components.
- _box(parent,dim,pos,color,-1,metallic,false)
+ var detail:=_box(parent,dim,pos,color,-1,metallic,false)
+ if dim.z<=0.035 and dim.x>0.15 and dim.y>0.10 and pos.z>0.30 and pos.y<0.85:
+  detail.mesh=BeveledBox.create(dim,0.0025)
 
 func _stone(parent: Node3D, dim: Vector3, pos: Vector3) -> void:
  var tile:=_box(_groups[1],dim,pos,Color("c3bfb8"),1)
@@ -197,14 +200,24 @@ func _build_kitchen() -> void:
  var dark:=Color("313839")
 
  # Natural light-oak parquet on an open, softly lit background.
- var floor:=_box(scene,Vector3(5.0,0.045,3.42),Vector3(0,-0.07,0.59),Color("d7b988"),-1,0.0,false)
+ var floor:=_box(scene,Vector3(5.0,0.045,3.42),Vector3(0,-0.025,0.59),Color("d7b988"),-1,0.0,false)
  floor.name="RoomOakFloor"
  var wood:=ShaderMaterial.new()
  wood.shader=preload("res://Stage3Assets/Model/wood-floor.gdshader")
  floor.material_override=wood
+ var shadow:=MeshInstance3D.new()
+ shadow.name="SoftCabinetContact"
+ var plane:=PlaneMesh.new()
+ plane.size=Vector2(2.95,1.0)
+ shadow.mesh=plane
+ shadow.position=Vector3(0,-0.0005,0.0)
+ var contact:=ShaderMaterial.new()
+ contact.shader=preload("res://Stage3Assets/Model/contact-shadow.gdshader")
+ shadow.material_override=contact
+ scene.add_child(shadow)
  # Cabinet plinth and carcass; three distinct front zones with satin-white
  # drawers and small black horizontal handles like the reference.
- _detail(scene,Vector3(2.58,0.09,0.58),Vector3(0,0.065,0),Color("3d4543"))
+ _detail(scene,Vector3(2.58,0.09,0.58),Vector3(0,0.045,0),Color("3d4543"))
  _detail(scene,Vector3(2.55,0.71,0.59),Vector3(0,0.459,0),cabinet)
  _detail(scene,Vector3(2.56,0.725,0.020),Vector3(0,0.46,-0.300),Color("d5d8d5"))
  for x in [-1.283,1.283]:
@@ -246,6 +259,8 @@ func _build_kitchen() -> void:
  _box(counter,Vector3(0.605,0.043,0.126),Vector3(0.75,0.843,0.270),white,0)
  _detail(scene,Vector3(2.57,0.018,0.022),Vector3(0,0.822,0.323),Color("e4e6e4"))
 
+ var front_edge:=_box(counter,Vector3(2.57,0.018,0.020),Vector3(0,0.846,0.328),white,0,0.0,false)
+ front_edge.mesh=BeveledBox.create(Vector3(2.57,0.018,0.020),0.004)
  # Gray stone backsplash and the tall hood backing, matching the photo.
  _detail(scene,Vector3(0.905,2.41,0.10),Vector3(-0.825,1.205,-0.395),Color("d8d7d2"))
  _stone(scene,Vector3(0.90,1.40,0.016),Vector3(-0.825,1.50,-0.338))
@@ -259,6 +274,10 @@ func _build_kitchen() -> void:
  _detail(hood,Vector3(0.70,0.06,0.075),Vector3(-0.825,2.33,0.055),Color("d7d8d5"))
  _detail(scene,Vector3(0.86,0.020,0.52),Vector3(-0.825,1.715,0.005),Color("60686a"))
 
+ for x in [-0.94,-0.90,-0.86,-0.82,-0.78]:
+  _detail(hood,Vector3(0.016,0.008,0.004),Vector3(x,1.759,0.266),Color("414a49"),0.25)
+ for z in [-0.13,-0.07,-0.01,0.05,0.11]:
+  _detail(hood,Vector3(0.65,0.004,0.012),Vector3(-0.825,1.728,z),Color("929b99"),0.3)
  # Oven controls under a black three-ring IH panel (part 7).
  var hob:=_groups[6]
  _box(hob,Vector3(0.66,0.012,0.49),Vector3(-0.92,0.874,-0.018),Color("171c1e"),6,0.08)
@@ -267,8 +286,8 @@ func _build_kitchen() -> void:
   var ring:=TorusMesh.new()
   ring.inner_radius=0.068
   ring.outer_radius=0.073
-  ring.rings=24
-  ring.ring_segments=10
+  ring.rings=48
+  ring.ring_segments=12
   mesh.mesh=ring
   mesh.position=center
   mesh.material_override=_material(Color("717776"),0.1,0.5)
@@ -287,11 +306,14 @@ func _build_kitchen() -> void:
  var sink:=_groups[4]
  _rounded_sink(sink,steel)
  _cylinder(sink,Vector3(0.75,0.719,0.028),0.03,0.008,Color("656c6d"))
+ for i in range(6):
+  var angle: float=TAU*float(i)/6.0
+  _cylinder(sink,Vector3(0.75+cos(angle)*0.014,0.724,0.028+sin(angle)*0.014),0.0024,0.0015,Color("343c3b"))
  var faucet:=_groups[5]
  _box(faucet,Vector3(0.064,0.105,0.065),Vector3(0.75,0.934,-0.252),steel,5,0.65)
  var previous:=Vector3(0.75,0.924,-0.252)
- for i in range(1,19):
-  var t: float=float(i)/18
+ for i in range(1,37):
+  var t: float=float(i)/36
   var k: float=1.0-t
   var pt:=Vector3(0.75,0.924,-0.252)*k*k*k+Vector3(0.75,1.32,-0.252)*3*k*k*t+Vector3(0.75,1.36,-0.04)*3*k*t*t+Vector3(0.75,1.09,-0.04)*t*t*t
   _pipe(faucet,previous,pt,0.012,steel,5)
@@ -451,7 +473,7 @@ func _pipe(parent: Node3D, a: Vector3, b: Vector3, radius: float, color: Color, 
  mesh.top_radius=radius
  mesh.bottom_radius=radius
  mesh.height=a.distance_to(b)
- mesh.radial_segments=16
+ mesh.radial_segments=24
  instance.mesh=mesh
  instance.material_override=_material(color,0.7,0.25)
  instance.position=(a+b)*0.5

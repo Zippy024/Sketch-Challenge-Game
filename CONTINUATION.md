@@ -40,3 +40,10 @@ In the previous managed environment the checkout was
 /workspace/work/stage3-overlay-flow (branch direct-eight-parts). If absent, use
 GitHub main and check recent PRs/Actions before repeating any work. The user asked
 for this handoff so a new chat can continue without rebuilding completed changes.
+
+Translation policy: Japanese dialogue is the source of truth. Stage 1 Myanmar
+and English subtitles must explicitly include the living/dining area and kitchen.
+The layout label requested by the user is အလေးချိန်ခံနံရံ. Existing uploaded audio
+files have not been regenerated; translation corrections do not replace spoken
+recordings. TTSMaker access from the managed session currently returns HTTP 403;
+do not claim that newly synthesized recordings have been created.

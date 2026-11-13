@@ -172,7 +172,7 @@ var typing_token: int = 0
 const DIALOGUE_TEXTS: Dictionary = {
 	"en": {
 		"speaker": "Ms. Hosokawa",
-		"request": "I am thinking about renovating my kitchen.\nI have a floor plan, but I do not understand it clearly.\nCould you neatly draw the area that I need?\nI would like to know the exact living, dining and kitchen layout.",
+		"request": "I am thinking about renovating my kitchen.\nI have a floor plan, but I do not understand it clearly.\nCould you neatly draw the area that I need?\nI would like to know the exact layout of the living/dining area and the kitchen.",
 		"correct": "I understand now.\nThank you very much.",
 		"wrong": "Something seems a little different.",
 		"try_again": "Try Again",
@@ -188,7 +188,7 @@ const DIALOGUE_TEXTS: Dictionary = {
 	},
 	"mm": {
 		"speaker": "ဟိုဆိုကာဝါစံ",
-		"request": "မီးဖိုချောင်ကို ပြန်လည်ပြင်ဆင်ဖို့ စဉ်းစားနေပါတယ်။\nပုံစံစာရွက် ရှိပေမယ့် သေချာနားမလည်လို့ပါ။\nလိုအပ်တဲ့ ဧရိယာလေးကို သပ်သပ်ရပ်ရပ် ဆွဲပေးနိုင်မလားရှင်။\nထမင်းစားခန်းနဲ့ မီးဖိုချောင်ရဲ့ အခန်းဖွဲ့စည်းပုံကို အတိအကျ သိချင်ပါတယ်။",
+		"request": "မီးဖိုချောင်ကို ပြန်လည်ပြင်ဆင်ဖို့ စဉ်းစားနေပါတယ်။\nပုံစံစာရွက် ရှိပေမယ့် သေချာနားမလည်လို့ပါ။\nလိုအပ်တဲ့ ဧရိယာလေးကို သပ်သပ်ရပ်ရပ် ဆွဲပေးနိုင်မလားရှင်။\nဧည့်ခန်း၊ ထမင်းစားနေရာနဲ့ မီးဖိုချောင်ရဲ့ အခန်းဖွဲ့စည်းပုံကို အတိအကျ သိချင်ပါတယ်။",
 		"correct": "သေချာနားလည်သွားပါပြီ။\nကျေးဇူးအများကြီးတင်ပါတယ်။",
 		"wrong": "နည်းနည်းလေး လွဲနေသလိုပဲနော်、、、",
 		"try_again": "Try Again",
@@ -1270,7 +1270,7 @@ func _play_voice(kind: String) -> void:
 			"မီးဖိုချောင်ကို ပြန်လည်ပြင်ဆင်ဖို့ စဉ်းစားနေပါတယ်။\n",
 			"ပုံစံစာရွက် ရှိပေမယ့် သေချာနားမလည်လို့ပါ။\n",
 			"လိုအပ်တဲ့ ဧရိယာလေးကို သပ်သပ်ရပ်ရပ် ဆွဲပေးနိုင်မလားရှင်။\n",
-			"ထမင်းစားခန်းနဲ့ မီးဖိုချောင်ရဲ့ အခန်းဖွဲ့စည်းပုံကို အတိအကျ သိချင်ပါတယ်။"
+			"ဧည့်ခန်း၊ ထမင်းစားနေရာနဲ့ မီးဖိုချောင်ရဲ့ အခန်းဖွဲ့စည်းပုံကို အတိအကျ သိချင်ပါတယ်။"
 		]
 		voice_segment_times = [0.0, 4.3, 8.1, 12.8, stream.get_length()]
 	elif current_lang == "mm" and kind == "correct":

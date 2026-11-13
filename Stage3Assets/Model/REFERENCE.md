@@ -4,7 +4,11 @@ Real Godot meshes follow the supplied video, elevation, and latest white-kitchen
 reference: 2573 mm worktop, approximately 850 mm finished height, 750/750/1050 mm
 front bays, 900 mm full-height support, stainless sink and curved mixer, white
 cabinet fronts, black IH hob, pale gray back panels/hood and a light wooden floor.
-No person is included in the model scene.
+No person is included in the model scene. Cabinet fronts, the hood and hob have
+small physical chamfers. Faucet curves have finer segments, the hood has control
+and grille details, and the basin includes strainer detail. A faint contact patch
+anchors the cabinet to the oak floor; directional shadows stay disabled. Stone
+uses subtle non-periodic grain rather than visible wave bands.
 
 Eight assessed parts have independent collision and highlight groups: worktop,
 kitchen panel, range hood, waist-height rear wall, sink, faucet, IH hob and drawers.
