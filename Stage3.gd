@@ -168,32 +168,7 @@ func _refresh() -> void:
 	if step>=2: brief.add_theme_constant_override("separation",5)
 	brief.add_child(UI.label("Mission brief",18,true))
 	brief.add_child(UI.label("Select the matching kitchen illustration." if step<2 else "Select a number on the 3D model and type its name in Japanese.",15))
-	if step < 2:
-		var plan := TextureRect.new()
-		plan.name = "Stage3ReferencePlan"
-		plan.texture = preload("res://Refrence image.png")
-		plan.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		plan.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		plan.custom_minimum_size.y = 145
-		plan.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		brief.add_child(plan)
-	else:
-		brief.add_child(UI.label("Parts checklist",16,true))
-		# Two-column checklist preserves space for all eight numbers.
-		var checklist:=GridContainer.new()
-		checklist.name="Stage3EightPartChecklist"
-		checklist.columns=2
-		checklist.add_theme_constant_override("h_separation",8)
-		checklist.add_theme_constant_override("v_separation",3)
-		brief.add_child(checklist)
-		for i in range(Parts.NAMES.size()):
-			var caption:=str(i+1)+" · "+(_parts_answers[i] if _parts_solved[i] else UI.text("Not answered"))
-			var item:=UI.label(caption,12,_parts_solved[i],UI.TEAL if _parts_solved[i] else UI.MUTED)
-			item.custom_minimum_size.x=125
-			item.clip_text=true
-			checklist.add_child(item)
-			_part_checklist.append(item)
-		brief.add_child(UI.label("Drag to rotate. Scroll to zoom. The numbers stay attached to their parts.",13,false,UI.MUTED))
+	brief.add_child(UI.label(_tr("Listen, then complete the current mission.","နားထောင်ပြီးမှ လက်ရှိမစ်ရှင်ကို ဖြေဆိုပါ။","説明を聞いてから課題に取り組みましょう。"),13,false,UI.MUTED))
 	var right := UI.card_stack(split,true)
 	right.get_parent().name="Stage3AnswerCard"
 	right.get_parent().size_flags_stretch_ratio = 13
@@ -208,6 +183,8 @@ func _refresh() -> void:
 	retry.icon=preload("res://Stage1Assets/reset.svg")
 	retry.tooltip_text=_tr("Restart Stage 3","အဆင့် ၃ ကို အစမှပြန်ကစားမည်","ステージ3を最初からやり直す")
 	heading.add_child(retry)
+	if step<2:
+		_reference_tile(right)
 	var phase:=mini(step,2)
 	var phases:=HBoxContainer.new()
 	phases.name="Stage3Sections"
@@ -262,6 +239,27 @@ func _set_speech_ready(ready: bool) -> void:
 		for marker in _parts_model._markers:
 			if is_instance_valid(marker):marker.disabled=not ready
 
+func _reference_tile(parent: VBoxContainer) -> void:
+	# Same customer-supplied plan throughout Stage 3, including all eight parts.
+	var card:=PanelContainer.new()
+	card.name="Stage3ReferenceTile"
+	card.add_theme_stylebox_override("panel",UI.box(Color("f2fafb"),Color("c8e0e8"),12,5))
+	parent.add_child(card)
+	var content:=VBoxContainer.new()
+	content.add_theme_constant_override("separation",3)
+	card.add_child(content)
+	var title:=UI.label(_tr("Reference Plan","ကိုးကားပုံ","参考図面"),12,true,UI.TEAL)
+	title.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+	content.add_child(title)
+	var plan:=TextureRect.new()
+	plan.name="Stage3ReferencePlan"
+	plan.texture=preload("res://Refrence image.png")
+	plan.expand_mode=TextureRect.EXPAND_IGNORE_SIZE
+	plan.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	plan.custom_minimum_size=Vector2(166,110)
+	plan.mouse_filter=Control.MOUSE_FILTER_IGNORE
+	content.add_child(plan)
+
 func _tr(en: String, mm: String, jp: String) -> String:
 	return {"en":en,"mm":mm,"jp":jp}.get(current_lang,en)
 
@@ -288,43 +286,56 @@ func _retry_stage() -> void:
 	_refresh()
 
 func _enter_phase(card: Control) -> void:
-	var reduced_motion:=OS.has_feature("web") and bool(JavaScriptBridge.eval("window.matchMedia('(prefers-reduced-motion: reduce)').matches",true))
+	# A visible centered section announcement, rather than a near-invisible 3px line.
+	var reduced:=OS.has_feature("web") and bool(JavaScriptBridge.eval("window.matchMedia('(prefers-reduced-motion: reduce)').matches",true))
 	_transitioning=true
-	# Block repeat clicks until the next section has visibly arrived.
-	var shield:=Control.new()
-	shield.name="Stage3TransitionShield"
-	shield.mouse_filter=Control.MOUSE_FILTER_STOP
-	add_child(shield)
-	shield.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var veil:=ColorRect.new()
+	veil.name="Stage3TransitionShield"
+	veil.color=Color(0.04,0.16,0.19,0.36)
+	veil.mouse_filter=Control.MOUSE_FILTER_STOP
+	add_child(veil)
+	veil.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var center:=CenterContainer.new()
+	center.name="Stage3PhaseAnnouncement"
+	center.mouse_filter=Control.MOUSE_FILTER_STOP
+	veil.add_child(center)
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var toast:=PanelContainer.new()
+	toast.custom_minimum_size=Vector2(455,148)
+	var frame:=UI.box(Color("f2fbfc"),Color("6ec9c7"),22,14)
+	frame.set_border_width_all(2)
+	frame.shadow_color=Color(0.0,0.16,0.19,0.25)
+	frame.shadow_size=10
+	toast.add_theme_stylebox_override("panel",frame)
+	center.add_child(toast)
+	var content:=VBoxContainer.new()
+	content.add_theme_constant_override("separation",9)
+	toast.add_child(content)
+	var chapter:=UI.label(_tr("SECTION %d OF 3","အပိုင်း %d / ၃","セクション %d / 3")%(_last_phase+2),17,true,UI.TEAL)
+	chapter.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+	content.add_child(chapter)
+	var headline:=UI.label(_phase_name(mini(step,2)),25,true,UI.INK)
+	headline.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+	content.add_child(headline)
+	var hint:=UI.label(_tr("Next challenge ready","နောက်ထပ်မစ်ရှင်သို့ ရောက်ပါပြီ","次の課題です"),13,false,UI.MUTED)
+	hint.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+	content.add_child(hint)
 	_transition_tween=create_tween()
-	if reduced_motion:
+	if reduced:
 		_transition_tween.tween_interval(0.12)
 	else:
-		card.modulate.a=0.15
-		# Let the panel size a transparent holder, keeping the accent only 3 px tall.
-		var accent:=Control.new()
-		accent.mouse_filter=Control.MOUSE_FILTER_IGNORE
-		card.add_child(accent)
-		var sweep:=ColorRect.new()
-		sweep.name="Stage3PhaseSweep"
-		sweep.color=UI.TEAL
-		sweep.mouse_filter=Control.MOUSE_FILTER_IGNORE
-		accent.add_child(sweep)
-		sweep.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
-		sweep.offset_left=2
-		sweep.offset_right=-2
-		sweep.offset_top=1
-		sweep.offset_bottom=4
-		sweep.scale.x=0.0
-		_transition_tween.set_parallel(true)
-		_transition_tween.tween_property(card,"modulate:a",1.0,0.38).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-		_transition_tween.tween_property(sweep,"scale:x",1.0,0.36).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-		_transition_tween.chain().tween_property(sweep,"modulate:a",0.0,0.1)
-		_transition_tween.chain().tween_callback(accent.queue_free)
+		toast.pivot_offset=toast.custom_minimum_size*0.5
+		toast.modulate.a=0.0
+		toast.scale=Vector2(0.92,0.92)
+		_transition_tween.tween_property(toast,"modulate:a",1.0,0.18)
+		_transition_tween.parallel().tween_property(toast,"scale",Vector2.ONE,0.21).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		_transition_tween.tween_interval(0.22)
+		_transition_tween.tween_property(toast,"modulate:a",0.0,0.15)
 	_transition_tween.finished.connect(func():
 		_transitioning=false
-		if is_instance_valid(shield):shield.queue_free()
+		if is_instance_valid(veil):veil.queue_free()
 	)
+
 
 func _question_text() -> String:
 	return QUESTIONS[current_lang][mini(step,2)]
@@ -498,6 +509,12 @@ func _draw_parts() -> void:
 	var toolbar:=HBoxContainer.new()
 	toolbar.add_theme_constant_override("separation",5)
 	_answer_area.add_child(toolbar)
+	var content_row:=HBoxContainer.new()
+	content_row.name="Stage3ModelAndProgress"
+	content_row.add_theme_constant_override("separation",10)
+	content_row.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+	content_row.size_flags_vertical=Control.SIZE_EXPAND_FILL
+	_answer_area.add_child(content_row)
 	var model:=Model.new()
 	model.name="KitchenPartsDiagram"
 	model.custom_minimum_size=Vector2(400,340)
@@ -508,12 +525,36 @@ func _draw_parts() -> void:
 	for direction in [-1,1]:toolbar.add_child(UI.button("+" if direction==-1 else "−",model.zoom_by.bind(float(direction)*0.2),false,30,15))
 	_parts_count_label=UI.label(UI.text("%d / 8 names correct")%_parts_solved.count(true),12,true,UI.TEAL)
 	_parts_count_label.size_flags_horizontal=Control.SIZE_EXPAND_FILL
-	_parts_count_label.horizontal_alignment=HORIZONTAL_ALIGNMENT_RIGHT
-	toolbar.add_child(_parts_count_label)
+	_parts_count_label.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+	var sidebar:=VBoxContainer.new()
+	sidebar.name="Stage3RightProgress"
+	sidebar.custom_minimum_size.x=198
+	sidebar.size_flags_vertical=Control.SIZE_EXPAND_FILL
+	sidebar.add_theme_constant_override("separation",7)
+	content_row.add_child(model)
+	content_row.add_child(sidebar)
+	_reference_tile(sidebar)
+	var tally_card:=PanelContainer.new()
+	tally_card.name="Stage3CorrectCountCard"
+	tally_card.add_theme_stylebox_override("panel",UI.box(Color("e5f8ef"),Color("98cfb4"),12,8))
+	sidebar.add_child(tally_card)
+	tally_card.add_child(_parts_count_label)
+	var list_card:=PanelContainer.new()
+	list_card.add_theme_stylebox_override("panel",UI.box(Color("f9fcfe"),Color("d4e7ee"),12,8))
+	sidebar.add_child(list_card)
+	var list:=VBoxContainer.new()
+	list.name="Stage3EightPartChecklist"
+	list.add_theme_constant_override("separation",6)
+	list_card.add_child(list)
+	for i in range(Parts.NAMES.size()):
+		var verified: bool=_parts_solved[i]
+		var label:=UI.label(("✓  " if verified else "○  ")+str(i+1)+"  "+(UI.text("Correct") if verified else "—"),13,verified,UI.TEAL if verified else UI.MUTED)
+		label.name="Stage3PartProgress%d"%(i+1)
+		list.add_child(label)
+		_part_checklist.append(label)
 	model.part_selected.connect(_select_part)
 	model.number_hovered.connect(_hover_part_number)
 	model.interaction_started.connect(_close_answer)
-	_answer_area.add_child(model)
 	_parts_model=model
 	model.apply_view_state(_model_pose)
 	_set_speech_ready(_speech_ready)
@@ -589,7 +630,7 @@ func _submit_part_answer(value: String) -> void:
 		step=2+_parts_solved.count(true)
 		Progress.save_kitchen_parts(_parts_answers,_parts_solved)
 		_parts_model.set_solved(_parts_solved)
-		_part_checklist[index].text=str(index+1)+" · "+value
+		_part_checklist[index].text="✓  "+str(index+1)+"  "+UI.text("Correct")
 		_part_checklist[index].add_theme_color_override("font_color",UI.TEAL)
 		_answer_popover.show_result("correct")
 		_show_verdict("correct")
