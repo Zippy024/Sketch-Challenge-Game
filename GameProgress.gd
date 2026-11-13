@@ -12,6 +12,8 @@ static var _stage1_zoom: float = 1.0
 static var _stage1_pan := Vector2(72,60)
 static var _stage2_draft: String = ""
 static var _stage3_step: int = 0
+static var _stage3_answers: Array[String]=["","","","",""]
+static var _stage3_solved: Array[bool]=[false,false,false,false,false]
 static var _language: String = "jp"
 static var show_levels_on_open: bool = false
 static var show_home_on_open: bool = false
@@ -37,6 +39,20 @@ static func _ensure_loaded() -> void:
 		_stage1_pan = config.get_value("session","pan",Vector2(72,60))
 		_stage2_draft = str(config.get_value("session","answer",""))
 		_stage3_step = clampi(int(config.get_value("session","step",0)),0,7)
+		_reset_kitchen_parts()
+		if int(config.get_value("session","parts_version",0))==1:
+			var answers: Variant=config.get_value("session","parts_answers",[])
+			var solved: Variant=config.get_value("session","parts_solved",[])
+			if answers is Array and solved is Array and answers.size()==5 and solved.size()==5:
+				for i in range(5):
+					_stage3_answers[i]=str(answers[i])
+					_stage3_solved[i]=bool(solved[i])
+		else:
+			# Preserve progress from the former sequential picture-selection challenge.
+			var names: Array[String]=["カウンター","キッチンボード","フード","腰壁","シンク"]
+			for i in range(clampi(_stage3_step-2,0,5)):
+				_stage3_answers[i]=names[i]
+				_stage3_solved[i]=true
 		# Existing verified saves remain resumable after this update.
 		if _resume_stage==0 and (_stage1_cleared or _stage2_cleared or _stage3_cleared):
 			_resume_stage = next_stage()
@@ -54,6 +70,9 @@ static func _save() -> void:
 	config.set_value("session","pan",_stage1_pan)
 	config.set_value("session","answer",_stage2_draft)
 	config.set_value("session","step",_stage3_step)
+	config.set_value("session","parts_version",1)
+	config.set_value("session","parts_answers",_stage3_answers)
+	config.set_value("session","parts_solved",_stage3_solved)
 	var result := config.save(SAVE_PATH)
 	if result != OK:
 		push_warning("Could not save game progress: " + str(result))
@@ -103,6 +122,7 @@ static func complete(stage: int) -> void:
 	if stage==2:
 		_stage2_draft=""
 		_stage3_step=0
+		_reset_kitchen_parts()
 	if stage==3: _stage3_step=7
 	_save()
 
@@ -128,6 +148,7 @@ static func reset_progress(keep_best_scores: bool=false) -> void:
 	_stage1_pan=Vector2(72,60)
 	_stage2_draft=""
 	_stage3_step=0
+	_reset_kitchen_parts()
 	_save()
 
 static func has_session() -> bool:
@@ -153,7 +174,9 @@ static func open_stage(stage: int, resume: bool = false) -> void:
 			_stage1_zoom=1.0
 			_stage1_pan=Vector2(72,60)
 		if stage==2: _stage2_draft=""
-		if stage==3: _stage3_step=0
+		if stage==3:
+			_stage3_step=0
+			_reset_kitchen_parts()
 	_save()
 
 static func save_drawing(lines: Array, zoom: float, pan: Vector2) -> void:
@@ -192,3 +215,20 @@ static func save_kitchen_step(step: int) -> void:
 static func kitchen_step() -> int:
 	_ensure_loaded()
 	return _stage3_step
+
+static func _reset_kitchen_parts() -> void:
+	_stage3_answers.assign(["","","","",""])
+	_stage3_solved.assign([false,false,false,false,false])
+
+static func kitchen_parts() -> Dictionary:
+	_ensure_loaded()
+	return {"answers":_stage3_answers.duplicate(),"solved":_stage3_solved.duplicate()}
+
+static func save_kitchen_parts(answers: Array[String], solved: Array[bool]) -> void:
+	_ensure_loaded()
+	if answers.size()!=5 or solved.size()!=5:return
+	if _stage3_answers==answers and _stage3_solved==solved:return
+	_stage3_answers=answers.duplicate()
+	_stage3_solved=solved.duplicate()
+	if _stage3_step>=2:_stage3_step=2+_stage3_solved.count(true)
+	_save()

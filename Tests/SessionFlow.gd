@@ -19,6 +19,15 @@ func _home() -> Control:
 	await _wait()
 	return current_scene.find_child("KitchenHomeScreen",true,false)
 func _run() -> void:
+	# A save from the previous sequential selection game keeps verified progress.
+	var legacy:=ConfigFile.new()
+	legacy.set_value("session","stage",3)
+	legacy.set_value("session","step",4)
+	legacy.save(Progress.SAVE_PATH)
+	Progress._loaded=false
+	assert(Progress.kitchen_step()==4)
+	assert(Progress.kitchen_parts().solved==[true,true,false,false,false])
+	assert(Progress.kitchen_parts().answers[0]=="カウンター")
 	Progress.reset_progress()
 	Progress.set_language("en")
 	var home=await _home()
@@ -97,8 +106,11 @@ func _run() -> void:
 	await create_timer(0.55).timeout
 	current_scene.call("_choose",1)
 	await create_timer(0.55).timeout
-	current_scene.call("_select_part",0)
+	current_scene.find_child("PartAnswer1",true,false).text="カウンター"
+	current_scene.call("_submit_parts")
 	assert(current_scene.get("step")==3)
+	current_scene.find_child("PartAnswer2",true,false).text="キッチン"
+	current_scene.find_child("PartAnswer2",true,false).text_changed.emit("キッチン")
 	Progress._loaded=false
 	assert(Progress.kitchen_step()==3)
 	home=await _home()
@@ -106,6 +118,8 @@ func _run() -> void:
 	await _wait()
 	assert(current_scene.get("step")==3 and current_scene.find_child("KitchenPartsDiagram",true,false)!=null)
 	assert(float(Rating.current(3).elapsed)>=14 and int(Rating.current(3).mistakes)==1)
+	assert(not current_scene.find_child("PartAnswer1",true,false).editable)
+	assert(current_scene.find_child("PartAnswer2",true,false).text=="キッチン")
 	Progress.complete(1)
 	Progress.complete(2)
 	home=await _home()
@@ -156,7 +170,8 @@ func _win(stage: int) -> void:
 		await create_timer(0.55).timeout
 		game.call("_choose",1)
 		await create_timer(0.55).timeout
-		for i in range(5):game.call("_select_part",i)
+		for i in range(5):game.find_child("PartAnswer%d"%(i+1),true,false).text=["カウンター","キッチンボード","フード","腰壁","シンク"][i]
+		game.call("_submit_parts")
 	if stage<3:
 		game.call("_stop_voice")
 		game.call("_on_voice_finished")
@@ -184,6 +199,8 @@ func _check_retry(stage: int) -> void:
 	if stage==2:assert(current_scene.get("answer_input").text.is_empty())
 	if stage==3:
 		assert(current_scene.get("step")==0)
+		assert(Progress.kitchen_parts().answers==["","","","",""])
+		assert(Progress.kitchen_parts().solved==[false,false,false,false,false])
 		current_scene.call("_choose",2)
 		await create_timer(0.55).timeout
 		Rating.advance(3,60)

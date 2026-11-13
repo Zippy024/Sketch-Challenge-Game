@@ -1,6 +1,6 @@
 extends Control
 
-# Stage 3 only: two image-choice questions followed by five kitchen-part selections.
+# Stage 3: two image-choice questions, then five Japanese names on a real 3D model.
 # Two layout questions and five components; completion is saved only after all seven checks.
 const UI = preload("res://KitchenUI.gd")
 const Progress = preload("res://GameProgress.gd")
@@ -16,8 +16,9 @@ const SUBTEXT := Color("6b7f98")
 const BLUE := Color("008f98")
 const GREEN := Color("008f98")
 const OUTLINE := Color("d6e2ef")
-const NAMES: Array[String] = ["カウンター", "キッチンボード", "フード", "腰壁", "その他"]
-const EN_PARTS: Array[String] = ["Countertop", "Kitchen board", "Range hood", "Half wall", "Other fixtures"]
+const Parts = preload("res://Stage3Assets/Model/JapaneseParts.gd")
+const Model = preload("res://Stage3Assets/Model/KitchenModel.gd")
+
 
 var current_lang: String = "jp"
 var step: int = 0 # 0 = S-Class type, 1 = wall layout, 2..6 = identify five components, 7 = completed
@@ -35,6 +36,14 @@ var _card_texture_cache: Dictionary = {}
 var _last_phase: int=-1
 var _transitioning: bool=false
 var _transition_tween: Tween
+var _parts_answers: Array[String]=["","","","",""]
+var _parts_solved: Array[bool]=[false,false,false,false,false]
+var _parts_states: Array[String]=["","","","",""]
+var _parts_fields: Array[LineEdit]=[]
+var _parts_model: Control
+var _parts_selected: int=0
+var _model_pose: Dictionary={}
+var _parts_message: String=""
 
 
 func _process(delta: float) -> void:
@@ -47,6 +56,11 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	if Progress.resume_stage()!=3: Progress.open_stage(3)
 	step=Progress.kitchen_step()
+	var saved:=Progress.kitchen_parts()
+	_parts_answers.assign(saved.answers)
+	_parts_solved.assign(saved.solved)
+	for i in range(5):
+		if _parts_solved[i]:_parts_states[i]="correct"
 	if step<7:StageRating.begin(3)
 	_completion_acknowledged=step>=7
 	_refresh()
@@ -82,6 +96,9 @@ func _panel() -> PanelContainer:
 
 
 func _clear() -> void:
+	if is_instance_valid(_parts_model):_model_pose=_parts_model.view_state()
+	_parts_model=null
+	_parts_fields.clear()
 	if _transition_tween and _transition_tween.is_valid():_transition_tween.kill()
 	_transitioning=false
 	for child in get_children():
@@ -121,7 +138,7 @@ func _refresh() -> void:
 	var brief := UI.card_stack(left,true)
 	if step>=2: brief.add_theme_constant_override("separation",5)
 	brief.add_child(UI.label("Mission brief",18,true))
-	brief.add_child(UI.label("Select the matching kitchen illustration." if step<2 else "Identify the kitchen components from the diagram.",15))
+	brief.add_child(UI.label("Select the matching kitchen illustration." if step<2 else "Select a number on the 3D model and type its name in Japanese.",15))
 	if step < 2:
 		var plan := TextureRect.new()
 		plan.name = "Stage3ReferencePlan"
@@ -134,7 +151,9 @@ func _refresh() -> void:
 	else:
 		brief.add_child(UI.label("Parts checklist",16,true))
 		for i in range(5):
-			brief.add_child(UI.label(("✓  " if i<step-2 else "○  ")+UI.text(EN_PARTS[i]),15,i==step-2,UI.TEAL if i<=step-2 else UI.MUTED))
+			var caption:=str(i+1)+" · "+(_parts_answers[i] if _parts_solved[i] else UI.text("Not answered"))
+			brief.add_child(UI.label(caption,15,_parts_solved[i],UI.TEAL if _parts_solved[i] else UI.MUTED))
+		brief.add_child(UI.label("Drag to rotate. Scroll to zoom. The numbers stay attached to their parts.",13,false,UI.MUTED))
 	var right := UI.card_stack(split,true)
 	right.get_parent().name="Stage3AnswerCard"
 	right.get_parent().size_flags_stretch_ratio = 13
@@ -162,14 +181,14 @@ func _refresh() -> void:
 		var caption:=UI.label(str(i+1)+" · "+_phase_name(i),12,i==phase)
 		caption.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
 		chip.add_child(caption)
-	right.add_child(UI.label((_tr("Section %d of 3","အပိုင်း ၃ ပိုင်းမှ %d","全3項目中 %d項目")%(phase+1)) if step<2 else UI.text("Part %d of 5")%(step-1),14,false,UI.MUTED))
+	right.add_child(UI.label((_tr("Section %d of 3","အပိုင်း ၃ ပိုင်းမှ %d","全3項目中 %d項目")%(phase+1)) if step<2 else UI.text("%d / 5 names correct")%_parts_solved.count(true),14,false,UI.MUTED))
 	_answer_area = VBoxContainer.new()
 	_answer_area.add_theme_constant_override("separation",14)
 	_answer_area.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	right.add_child(_answer_area)
 	if step<2: _draw_choices()
 	else: _draw_parts()
-	_feedback = UI.label("Please try another choice." if last_wrong else "",15,false,Color("b32741") if last_wrong else UI.TEAL)
+	_feedback = UI.label(_parts_message if step>=2 else ("Please try another choice." if last_wrong else ""),14,false,Color("b32741") if last_wrong else UI.TEAL)
 	_feedback.custom_minimum_size.y = 28
 	right.add_child(_feedback)
 	var progress := HBoxContainer.new()
@@ -208,6 +227,12 @@ func _retry_stage() -> void:
 	last_wrong=false
 	_answer_state="neutral"
 	_last_phase=-1
+	_parts_answers.assign(["","","","",""])
+	_parts_solved.assign([false,false,false,false,false])
+	_parts_states.assign(["","","","",""])
+	_parts_message=""
+	_parts_model=null
+	_model_pose.clear()
 	_refresh()
 
 func _enter_phase(card: Control) -> void:
@@ -254,7 +279,7 @@ func _question_text() -> String:
 		return LocaleManager.text("現在のキッチンと同じ場所に設置するとすれば、S-classではどのタイプになりますか？" if current_lang == "jp" else "လက်ရှိမီးဖိုချောင်နေရာမှာ S-Class တပ်မယ်ဆို ဘယ်ပုံစံဖြစ်မလဲ။")
 	if step == 1:
 		return LocaleManager.text("現行のキッチンの後ろの壁も残すとすれば、どうなりますか？" if current_lang == "jp" else "မူလ Kitchen နောက်ဘက်နံရံကို ဆက်ထားမယ်ဆို ဘယ်ပုံစံဖြစ်မလဲ။")
-	return LocaleManager.text("それぞれのパーツの名前を教えてもらえますか？" if current_lang == "jp" else "မီးဖိုချောင်အစိတ်အပိုင်းတွေကို ရွေးပြနိုင်မလား။")
+	return LocaleManager.text("Please write the name of each numbered part in Japanese.")
 
 # Card artwork is deliberately prepared at modest native resolution rather than
 # shrinking 1448px line art to ~210px with only one bilinear sample. Generate
@@ -406,63 +431,132 @@ func _choose(index: int) -> void:
 
 
 func _draw_parts() -> void:
-	var needed: int = step - 2
-	_answer_area.add_child(_label(LocaleManager.text("Select: %s") % LocaleManager.text(NAMES[needed]), 18, BLUE))
-	var instruction:=_tr("Point to a part, or choose its button below.","ပစ္စည်းပေါ် ထောက်ကြည့်ပါ၊ သို့မဟုတ် အောက်ကခလုတ်ဖြင့် ရွေးပါ။","部材にカーソルを合わせるか、下のボタンで選択してください。")
-	var hover_label:=_label(instruction,13,SUBTEXT)
-	hover_label.name="PartHoverLabel"
-	_answer_area.add_child(hover_label)
-	var diagram := KitchenDiagram.new()
-	diagram.custom_minimum_size = Vector2(450, 220)
-	diagram.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	diagram.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	diagram.name = "KitchenPartsDiagram"
-	diagram.item_selected.connect(_select_part)
-	diagram.item_hovered.connect(func(index: int):
-		hover_label.text=(str(index+1)+" · "+LocaleManager.text(NAMES[index])) if index>=0 else instruction
-		hover_label.add_theme_color_override("font_color",UI.TEAL if index>=0 else SUBTEXT)
+	_answer_area.add_theme_constant_override("separation",8)
+	_answer_area.add_child(UI.label("Select a number on the 3D model and type its name in Japanese.",14))
+	var content:=HBoxContainer.new()
+	content.add_theme_constant_override("separation",12)
+	content.size_flags_vertical=Control.SIZE_EXPAND_FILL
+	_answer_area.add_child(content)
+	var model_column:=VBoxContainer.new()
+	model_column.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+	model_column.size_flags_stretch_ratio=1.5
+	model_column.add_theme_constant_override("separation",6)
+	content.add_child(model_column)
+	var toolbar:=HBoxContainer.new()
+	toolbar.add_theme_constant_override("separation",4)
+	model_column.add_child(toolbar)
+	var model:=Model.new()
+	model.name="KitchenPartsDiagram"
+	model.custom_minimum_size=Vector2(360,260)
+	model.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+	model.size_flags_vertical=Control.SIZE_EXPAND_FILL
+	for preset in ["perspective","front","rear"]:
+		var button:=UI.button({"perspective":"3D","front":"Front view","rear":"Rear view"}[preset],func():model.set_view(preset),false,54,11)
+		toolbar.add_child(button)
+	for direction in [-1,1]:
+		var button:=UI.button("+" if direction==-1 else "−",func():model.zoom_by(float(direction)*0.2),false,30,15)
+		toolbar.add_child(button)
+	model.part_selected.connect(_select_part)
+	model.part_hovered.connect(func(index: int):
+		if index>=0:model.tooltip_text=UI.text("Number %d")%(index+1)
+		else:model.tooltip_text=""
 	)
-	_answer_area.add_child(diagram)
-	var choices:=GridContainer.new()
-	choices.columns=3 if get_viewport_rect().size.x>=1100 else 2
-	choices.add_theme_constant_override("h_separation",8)
-	choices.add_theme_constant_override("v_separation",8)
-	_answer_area.add_child(choices)
-	for i in range(NAMES.size()):
-		var button:=UI.button(str(i+1)+" · "+LocaleManager.text(NAMES[i]),_select_part.bind(i),false,110,13)
-		button.name="KitchenPartButton%d"%i
-		button.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART
-		button.custom_minimum_size.y=40
-		button.size_flags_horizontal=Control.SIZE_EXPAND_FILL
-		var hover_style:=UI.box(Color("e7f5ef"),UI.TEAL,12,8)
-		hover_style.set_border_width_all(2)
-		hover_style.shadow_size=0
-		button.add_theme_stylebox_override("hover",hover_style)
-		button.mouse_entered.connect(diagram.set_hovered.bind(i))
-		button.focus_entered.connect(diagram.set_hovered.bind(i))
-		button.mouse_exited.connect(diagram.clear_hover.bind(i))
-		button.focus_exited.connect(diagram.clear_hover.bind(i))
-		choices.add_child(button)
+	model_column.add_child(model)
+	_parts_model=model
+	model.apply_view_state(_model_pose)
+	model.set_solved(_parts_solved)
+	model.set_selected(_parts_selected)
+	model_column.add_child(UI.label("Drag to rotate · Scroll to zoom",11,false,UI.MUTED))
+	var form:=UI.card_stack(content,true)
+	form.get_parent().name="JapaneseAnswerForm"
+	form.get_parent().custom_minimum_size.x=255
+	form.get_parent().size_flags_stretch_ratio=1.0
+	form.add_theme_constant_override("separation",8)
+	form.add_child(UI.label("Write in Japanese",16,true))
+	for i in range(5):
+		var row:=HBoxContainer.new()
+		row.add_theme_constant_override("separation",6)
+		form.add_child(row)
+		var number:=UI.button(str(i+1),_select_part.bind(i),false,30,13)
+		number.name="PartNumber%d"%(i+1)
+		row.add_child(number)
+		var field:=LineEdit.new()
+		field.name="PartAnswer%d"%(i+1)
+		field.set_meta("locale_ignore",true)
+		field.placeholder_text="日本語で入力"
+		field.text=_parts_answers[i]
+		field.editable=not _parts_solved[i]
+		field.custom_minimum_size=Vector2(130,38)
+		field.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+		field.add_theme_font_override("font",UI.font(false,"jp"))
+		field.add_theme_font_size_override("font_size",15)
+		field.add_theme_color_override("font_color",UI.INK)
+		field.add_theme_color_override("font_placeholder_color",Color("80949b"))
+		field.add_theme_color_override("font_uneditable_color",UI.INK)
+		field.max_length=80
+		var state:=_parts_states[i]
+		var style:=UI.box(Color("e7f6ee") if state=="correct" else (Color("fff0f2") if state=="incorrect" else Color.WHITE),Color("91c6ac") if state=="correct" else (Color("dda5af") if state=="incorrect" else UI.EDGE),9,6)
+		style.shadow_size=0
+		field.add_theme_stylebox_override("normal",style)
+		field.add_theme_stylebox_override("read_only",style)
+		var focus:=UI.box(Color.TRANSPARENT,UI.TEAL,9,6)
+		focus.shadow_size=0
+		focus.set_border_width_all(2)
+		field.add_theme_stylebox_override("focus",focus)
+		field.text_changed.connect(_part_text_changed.bind(i))
+		field.focus_entered.connect(func():
+			_parts_selected=i
+			if is_instance_valid(_parts_model):_parts_model.set_selected(i)
+		)
+		field.text_submitted.connect(func(_value: String):_submit_parts())
+		row.add_child(field)
+		_parts_fields.append(field)
+		var verdict:=UI.label("✓" if _parts_solved[i] else ("×" if state=="incorrect" else ""),16,true,UI.TEAL if _parts_solved[i] else Color("b32741"))
+		verdict.custom_minimum_size.x=17
+		row.add_child(verdict)
+	var spacer:=Control.new()
+	spacer.size_flags_vertical=Control.SIZE_EXPAND_FILL
+	spacer.mouse_filter=Control.MOUSE_FILTER_IGNORE
+	form.add_child(spacer)
+	var submit:=UI.button("Check answers",_submit_parts,true,140,14)
+	submit.name="CheckJapaneseParts"
+	form.add_child(submit)
 
+func _part_text_changed(value: String, index: int) -> void:
+	_parts_answers[index]=value
+	Progress.save_kitchen_parts(_parts_answers,_parts_solved)
 
 func _select_part(which: int) -> void:
+	if _transitioning or step<2 or step>=7 or which<0 or which>=5:return
+	_parts_selected=which
+	if is_instance_valid(_parts_model):_parts_model.set_selected(which)
+	if which<_parts_fields.size():_parts_fields[which].grab_focus()
+
+func _submit_parts() -> void:
 	if _transitioning or step<2 or step>=7:return
-	if which == step - 2:
-		_answer_state="correct"
-		step += 1
-		Progress.save_kitchen_step(step)
-		if step == 7:
-			StageRating.finish(3)
-			Progress.complete(3)
-		last_wrong = false
-		_refresh()
-	else:
-		StageRating.mistake(3)
-		last_wrong = true
-		_answer_state="incorrect"
-		UI.set_customer_feedback(_customer_bubble,"incorrect")
-		_feedback.text = "ちょっと違うようです。もう一度選んでください。" if current_lang == "jp" else "မမှန်သေးပါ။ ပြန်ရွေးပါ။"
-		_feedback.add_theme_color_override("font_color", Color("c24144"))
+	var errors: int=0
+	var new_correct: int=0
+	for i in range(5):
+		if _parts_solved[i]:continue
+		_parts_answers[i]=_parts_fields[i].text
+		if Parts.normalize(_parts_answers[i]).is_empty():continue
+		if Parts.is_correct(i,_parts_answers[i]):
+			_parts_solved[i]=true
+			_parts_states[i]="correct"
+			new_correct+=1
+		else:
+			_parts_states[i]="incorrect"
+			StageRating.mistake(3)
+			errors+=1
+	step=2+_parts_solved.count(true)
+	Progress.save_kitchen_parts(_parts_answers,_parts_solved)
+	if step==7:
+		StageRating.finish(3)
+		Progress.complete(3)
+	last_wrong=errors>0
+	_answer_state="incorrect" if errors>0 else ("correct" if new_correct>0 else "neutral")
+	_parts_message="Please check the red answers. Use Japanese names." if errors>0 else ("Correct answers are saved. Complete the remaining numbers." if new_correct>0 else "Type the Japanese names beside the matching numbers.")
+	_refresh()
 
 
 func _draw_completed() -> void:
@@ -539,7 +633,11 @@ func _show_completion() -> void:
 	add_child(popup)
 
 func _save_session() -> void:
-	if not _session_save_suspended and Progress.resume_stage()==3: Progress.save_kitchen_step(step)
+	if _session_save_suspended or Progress.resume_stage()!=3:return
+	for i in range(_parts_fields.size()):
+		if is_instance_valid(_parts_fields[i]):_parts_answers[i]=_parts_fields[i].text
+	if step>=2:Progress.save_kitchen_parts(_parts_answers,_parts_solved)
+	Progress.save_kitchen_step(step)
 
 func _suspend_session_save() -> void:
 	_session_save_suspended=true
@@ -547,95 +645,3 @@ func _suspend_session_save() -> void:
 func _exit_tree() -> void:
 	StageRating.checkpoint(true)
 	_save_session()
-
-
-class KitchenDiagram extends Control:
-	signal item_selected(which: int)
-	signal item_hovered(which: int)
-	var hovered: int=-1
-	var zones: Array[Rect2] = [Rect2(89,181,445,44),Rect2(205,77,323,94),Rect2(100,70,99,68),Rect2(88,260,488,58),Rect2(531,161,58,150)]
-	var tip_colors: Array[Color] = [Color("72bbdf"), Color("c2d7e7"), Color("8ba6c5"), Color("d4c4b1"), Color("f3d8ab")]
-
-	func _ready() -> void:
-		mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-		mouse_filter = Control.MOUSE_FILTER_STOP
-		resized.connect(queue_redraw)
-		mouse_exited.connect(set_hovered.bind(-1))
-
-	func _draw() -> void:
-		# A deliberately simple schematic, not a substituted 3D model asset.
-		var w: float = size.x
-		var h: float = size.y
-		draw_rect(Rect2(Vector2.ZERO, size), Color.WHITE, true)
-		var sx: float = w / 650.0
-		var sy: float = h / 390.0
-		draw_set_transform(Vector2.ZERO, 0.0, Vector2(sx,sy))
-		draw_rect(Rect2(0,0,650,390),Color("f7fafc"))
-		draw_rect(Rect2(0,307,650,83),Color("e9d8c3"))
-		# rear wall section
-		draw_rect(Rect2(83,62,480,246),Color("f5f5f4"))
-		draw_rect(Rect2(83,62,480,246),Color("c8cfd8"),false,2)
-		# upper kitchen board
-		draw_rect(Rect2(205,83,316,78),Color("cbdce8"))
-		for x in [280,357,435]:
-			draw_line(Vector2(x,83),Vector2(x,161),Color("8198ac"),2)
-		# hood above hob
-		draw_rect(Rect2(105,76,85,43),Color("8fa6bb"))
-		draw_rect(Rect2(127,119,41,9),Color("758ea8"))
-		# tall side fixture
-		draw_rect(Rect2(532,171,45,134),Color("f0d6a8"))
-		# half wall in front
-		draw_rect(Rect2(90,270,480,42),Color("dbc7b2"))
-		# lower base cabinet
-		draw_rect(Rect2(104,205,432,95),Color("e6f1f8"))
-		for x in [204,303,403]:
-			draw_line(Vector2(x,205),Vector2(x,300),Color("a2b5c9"),2)
-		# countertop slab
-		draw_colored_polygon(PackedVector2Array([Vector2(93,194),Vector2(508,194),Vector2(536,215),Vector2(104,215)]),Color("90d4f0"))
-		draw_line(Vector2(93,194),Vector2(508,194),Color("3a8ba9"),3)
-		# sink and faucet
-		draw_rect(Rect2(325,196,80,17),Color("a0b7c5"))
-		draw_arc(Vector2(362,190),18,PI,TAU,20,Color("627f92"),3)
-		# cooktop
-		for center in [Vector2(156,208),Vector2(186,208)]:
-			draw_arc(center,9,0,TAU,20,Color("64798e"),2)
-		# clickable outlines identify the five conceptual elements.
-		for r in zones:
-			draw_rect(r,Color(0.58, 0.66, 0.75, 0.25),false,1)
-		if hovered>=0:
-			draw_rect(zones[hovered],Color(0.0,0.56,0.60,0.14),true)
-			draw_rect(zones[hovered],Color("008f98"),false,3)
-		draw_set_transform(Vector2.ZERO)
-		for i in range(zones.size()):
-			var point := (zones[i].position+Vector2(15,15))*Vector2(sx,sy)
-			draw_circle(point,15 if i==hovered else 12,Color("006d75") if i==hovered else Color("008f98"))
-			draw_string(ThemeDB.fallback_font,point+Vector2(-4,5),str(i+1),HORIZONTAL_ALIGNMENT_LEFT,-1,14,Color.WHITE)
-
-	func set_hovered(index: int) -> void:
-		if hovered==index:return
-		hovered=index
-		mouse_default_cursor_shape=Control.CURSOR_POINTING_HAND if index>=0 else Control.CURSOR_ARROW
-		item_hovered.emit(index)
-		queue_redraw()
-
-	func clear_hover(index: int) -> void:
-		if hovered==index:set_hovered(-1)
-
-	func _hit_test(position: Vector2) -> int:
-		var point:=position*Vector2(650.0/maxf(size.x,1.0),390.0/maxf(size.y,1.0))
-		# Match the hover and click target, with small objects taking priority.
-		for i in [2,1,4,3,0]:
-			if zones[i].has_point(point):return i
-		# A few pixels of tolerance help at the edge of thin items.
-		for i in [2,1,4,3,0]:
-			if zones[i].grow(5).has_point(point):return i
-		return -1
-
-	func _gui_input(event: InputEvent) -> void:
-		if event is InputEventMouseMotion:
-			set_hovered(_hit_test(event.position))
-		elif event is InputEventMouseButton and event.button_index==MOUSE_BUTTON_LEFT and event.pressed:
-			var index:=_hit_test(event.position)
-			if index>=0:
-				accept_event()
-				item_selected.emit(index)

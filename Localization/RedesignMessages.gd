@@ -455,5 +455,19 @@ const MESSAGES = [
 	{"en": "Your journey", "mm": "သင့်ခရီးစဉ်", "jp": "あなたの進み具合", "aliases": []},
 	{"en": "%d / 3 complete", "mm": "၃ ခုမှ %d ခု ပြီးစီး", "jp": "%d / 3 クリア", "aliases": []},
 	{"en": "Draw the layout", "mm": "အခန်းပုံစံ ဆွဲမည်", "jp": "間取りを描こう", "aliases": []},
-	{"en": "Selected", "mm": "ရွေးထားသည်", "jp": "選択中", "aliases": []}
+	{"en": "Selected", "mm": "ရွေးထားသည်", "jp": "選択中", "aliases": []},
+	{"en": "Select a number on the 3D model and type its name in Japanese.", "mm": "3D ပုံထဲက နံပါတ်ကို ရွေးပြီး အမည်ကို ဂျပန်လို ရေးပါ။", "jp": "3Dモデルの番号を選んで、部材の名前を日本語で入力してください。", "aliases": []},
+	{"en": "Not answered", "mm": "မဖြေရသေး", "jp": "未回答", "aliases": []},
+	{"en": "Drag to rotate. Scroll to zoom. The numbers stay attached to their parts.", "mm": "ဆွဲပြီး လှည့်ကြည့်ပါ။ Scroll ဖြင့် ချဲ့ကြည့်ပါ။ နံပါတ်များက သက်ဆိုင်ရာပစ္စည်းတွေနဲ့ တွဲနေပါမယ်။", "jp": "ドラッグで回転、スクロールで拡大。番号は各部材についています。", "aliases": []},
+	{"en": "%d / 5 names correct", "mm": "၅ ခုမှ %d ခု မှန်ပြီ", "jp": "%d / 5 正解", "aliases": []},
+	{"en": "Front view", "mm": "ရှေ့ဘက်", "jp": "正面", "aliases": []},
+	{"en": "Rear view", "mm": "နောက်ဘက်", "jp": "背面", "aliases": []},
+	{"en": "Number %d", "mm": "နံပါတ် %d", "jp": "番号 %d", "aliases": []},
+	{"en": "Drag to rotate · Scroll to zoom", "mm": "ဆွဲ၍လှည့် · Scroll ဖြင့်ချဲ့", "jp": "ドラッグで回転・スクロールで拡大", "aliases": []},
+	{"en": "Write in Japanese", "mm": "ဂျပန်လို ရေးပါ", "jp": "日本語で入力", "aliases": []},
+	{"en": "Check answers", "mm": "အဖြေများ စစ်မည်", "jp": "回答を確認", "aliases": []},
+	{"en": "Please check the red answers. Use Japanese names.", "mm": "အနီရောင်အဖြေများကို ဂျပန်အမည်ဖြင့် ပြန်စစ်ပါ။", "jp": "赤い回答を確認し、日本語の名前で入力してください。", "aliases": []},
+	{"en": "Correct answers are saved. Complete the remaining numbers.", "mm": "မှန်သောအဖြေတွေ သိမ်းထားပါပြီ။ ကျန်နံပါတ်တွေကို ဆက်ဖြေပါ။", "jp": "正解は保存されました。残りの番号も答えてください。", "aliases": []},
+	{"en": "Type the Japanese names beside the matching numbers.", "mm": "သက်ဆိုင်ရာနံပါတ်ဘေးမှာ ဂျပန်အမည်ကို ရေးပါ။", "jp": "対応する番号の横に日本語の名前を入力してください。", "aliases": []},
+	{"en":"Please write the name of each numbered part in Japanese.","mm":"နံပါတ်တပ်ထားတဲ့ ပစ္စည်းတစ်ခုချင်းစီရဲ့ အမည်ကို ဂျပန်လို ရေးပေးပါ။","jp":"番号を付けた各パーツの名前を日本語で教えてもらえますか？","aliases":[]}
 ]
