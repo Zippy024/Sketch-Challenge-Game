@@ -13,6 +13,15 @@ func _collect(scene: Node, label: String) -> void:
 			if not value.is_empty():values.append(value)
 	report[Progress.get_language()+"/"+label]=values
 func _run() -> void:
+	var parts=preload("res://Stage3Assets/Model/JapaneseParts.gd")
+	assert(parts.is_correct(0," かうんたー　"))
+	assert(parts.is_correct(1,"ｷｯﾁﾝﾎﾞｰﾄﾞ"))
+	assert(parts.is_correct(1,"ｷｯﾁﾝﾊﾟﾈﾙ"))
+	assert(parts.is_correct(0,"ﾜｰｸﾄｯﾌﾟ"))
+	assert(parts.is_correct(2,"ﾚﾝｼﾞﾌｰﾄﾞ"))
+	assert(parts.is_correct(3,"こしかべ"))
+	assert(parts.is_correct(4,"流し台"))
+	assert(not parts.is_correct(0,"countertop") and not parts.is_correct(0,""))
 	assert(StageRating.stars_for(1,150,0)==3)
 	assert(StageRating.stars_for(1,480,2)==2)
 	assert(StageRating.stars_for(1,700,3)==1)
@@ -433,26 +442,60 @@ func _run() -> void:
 		game.call("_select_part",0)
 		assert(game.get("step")==2)
 		await create_timer(0.55).timeout
-		assert(game.find_children("KitchenPartButton*","Button",true,false).size()==5)
-		for button in game.find_children("*","Button",true,false): assert(button.text!=manager.text("Hint"))
+		assert(game.find_children("PartAnswer*","LineEdit",true,false).size()==5)
+		assert(game.find_child("Kitchen3DViewport",true,false)!=null)
+		for button in game.find_children("*","Button",true,false):assert(button.text!=manager.text("Hint"))
 		_collect(game,"stage3-parts")
 		for panel in game.find_children("*","PanelContainer",true,false):
-			if panel.is_visible_in_tree(): assert(game.get_global_rect().encloses(panel.get_global_rect()))
-		for i in range(5):
+			if panel.is_visible_in_tree():assert(game.get_global_rect().encloses(panel.get_global_rect()))
+		var before_errors: int=int(StageRating.current(3).mistakes)
+		game.find_child("PartAnswer1",true,false).text="　 "
+		game.call("_submit_parts")
+		assert(game.get("step")==2 and int(StageRating.current(3).mistakes)==before_errors)
+		# Numbers can be answered out of order, and Latin names do not pass.
+		game.find_child("PartAnswer4",true,false).text="こしかべ"
+		game.find_child("CheckJapaneseParts",true,false).pressed.emit()
+		assert(game.get("step")==3 and game.get("_parts_solved")[3])
+		game.find_child("PartAnswer1",true,false).text="countertop"
+		game.call("_submit_parts")
+		assert(game.get("step")==3 and int(StageRating.current(3).mistakes)==before_errors+1)
+		assert(game.find_child("CustomerAnswerLabel",true,false).text==manager.text("Incorrect"))
+		game.find_child("PartAnswer1",true,false).text="カウンター"
+		game.call("_submit_parts")
+		assert(game.get("step")==4 and not game.find_child("PartAnswer1",true,false).editable)
+		await _wait()
+		var model=game.find_child("KitchenPartsDiagram",true,false)
+		var original_yaw: float=model.yaw
+		var press:=InputEventMouseButton.new()
+		press.button_index=MOUSE_BUTTON_LEFT
+		press.pressed=true
+		press.position=Vector2(180,150)
+		model.call("_gui_input",press)
+		var drag:=InputEventMouseMotion.new()
+		drag.relative=Vector2(30,5)
+		model.call("_gui_input",drag)
+		press.pressed=false
+		model.call("_gui_input",press)
+		assert(not is_equal_approx(model.yaw,original_yaw))
+		model.set_view("perspective")
+		# The actual hood surface can be picked, not only its number marker.
+		var point: Vector2=model.camera.unproject_position(Vector3(-0.84,1.98,0.18))
+		press.position=point
+		press.pressed=true
+		model.call("_gui_input",press)
+		press.pressed=false
+		model.call("_gui_input",press)
+		await create_timer(0.1).timeout
+		assert(model.selected==2)
+		for i in [1,2,4]:
 			await _wait()
-			var diagram=game.find_child("KitchenPartsDiagram",true,false)
-			var click:=InputEventMouseButton.new()
-			click.button_index=MOUSE_BUTTON_LEFT
-			click.pressed=true
-			var zone: Rect2 = diagram.zones[i]
-			click.position=(zone.position+zone.size*0.5)*diagram.size/Vector2(650,390)
-			var motion:=InputEventMouseMotion.new()
-			motion.position=click.position
-			diagram.call("_gui_input",motion)
-			assert(diagram.get("hovered")==i)
-			assert(game.find_child("PartHoverLabel",true,false).text.begins_with(str(i+1)+" · "))
-			if i%2==0:diagram.call("_gui_input",click)
-			else:game.find_child("KitchenPartButton%d"%i,true,false).pressed.emit()
+			game.find_child("PartMarker%d"%(i+1),true,false).pressed.emit()
+			assert(game.find_child("PartAnswer%d"%(i+1),true,false).has_focus())
+			assert(game.find_child("KitchenPartsDiagram",true,false).selected==i)
+			var field=game.find_child("PartAnswer%d"%(i+1),true,false)
+			field.text=["カウンター","ｷｯﾁﾝﾎﾞｰﾄﾞ","レンジフード","腰壁","流し台"][i]
+			field.text_submitted.emit(field.text)
+
 		assert(game.get("step")==7)
 		assert(Progress.is_completed(3))
 		await _wait()
