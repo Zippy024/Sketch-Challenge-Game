@@ -21,7 +21,7 @@ var _pending_hover: Vector2=Vector2(-1,-1)
 var _groups: Array[Node3D]=[]
 var _materials: Array=[]
 var _markers: Array[Button]=[]
-var _solved: Array[bool]=[false,false,false,false,false]
+var _solved: Array[bool]=[false,false,false,false,false,false,false,false]
 var _anchors: Array[Vector3]=[Vector3(0.15,0.87,0.36),Vector3(-0.85,1.28,-0.345),Vector3(-0.84,1.98,0.18),Vector3(1.31,0.56,-0.44),Vector3(0.74,0.84,0.03),Vector3(0.75,1.20,-0.18),Vector3(-0.92,0.87,0.07),Vector3(0.70,0.71,0.34)]
 var _label_offsets: Array[Vector2]=[Vector2(-30,-22),Vector2(32,0),Vector2(-30,-18),Vector2(24,16),Vector2(28,-19),Vector2(42,-37),Vector2(-42,20),Vector2(37,26)]
 
