@@ -8,7 +8,7 @@ const StageRating = preload("res://StageRating.gd")
 const UI_THEME: Theme = preload("res://WebBilingualTheme.tres")
 const PORTRAIT: Texture2D = preload("res://customer_portrait_ui.png")
 const IMAGES_Q1: Array[Texture2D] = [preload("res://Stage3Assets/Original/type_0.jpeg"), preload("res://Stage3Assets/Original/type_1.jpeg"), preload("res://Stage3Assets/Original/type_2.jpeg"), preload("res://Stage3Assets/Original/type_3.jpeg"), preload("res://Stage3Assets/Original/type_4.jpeg")]
-const IMAGES_Q2: Array[Texture2D] = [preload("res://Stage3Assets/Original/detail_0.jpeg"), preload("res://Stage3Assets/Original/detail_1.jpeg"), preload("res://Stage3Assets/Original/detail_2.jpeg")]
+const IMAGES_Q2: Array[Texture2D] = [preload("res://Stage3Assets/Original/detail_0.jpeg"), preload("res://Stage3Assets/Original/detail_1.jpeg"), preload("res://Stage3Assets/Clear/float.webp"), preload("res://Stage3Assets/Original/detail_3.jpeg")]
 const BG := Color("e9eef5")
 const PANEL := Color("f1f5f9")
 const TEXT := Color("1f3c56")
@@ -254,7 +254,7 @@ func _draw_choices() -> void:
 		labels = ["I型", "L型", "対面", "II型", "アイランド"]
 		textures = IMAGES_Q1
 	else:
-		labels = ["フルフラット", "耐力壁", "フロート"]
+		labels = ["フルフラット", "耐力壁", "フロート", "ラウンドアクセス"]
 		textures = IMAGES_Q2
 
 	var surface := PanelContainer.new()
@@ -274,7 +274,7 @@ func _draw_choices() -> void:
 	for i in range(labels.size()):
 		var option := Button.new()
 		option.text = ""
-		option.custom_minimum_size = Vector2(128, 240)
+		option.custom_minimum_size = Vector2(128, 260 if step==1 else 240)
 		option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		option.add_theme_stylebox_override("normal", _style(Color.WHITE, OUTLINE, 9))
 		option.add_theme_stylebox_override("hover", _style(Color("f9fbfd"), Color("b5c6d9"), 9))
@@ -305,9 +305,29 @@ func _draw_choices() -> void:
 		pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		pic.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 		pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		option_col.add_child(pic)
+		if step==1:
+			# Keep low-resolution originals at a readable, bounded display size.
+			var slot:=Control.new()
+			slot.custom_minimum_size.y=188
+			slot.size_flags_vertical=Control.SIZE_EXPAND_FILL
+			option_col.add_child(slot)
+			pic.custom_minimum_size=Vector2.ZERO
+			slot.add_child(pic)
+			var fit:=func():
+				if not is_instance_valid(pic) or not is_instance_valid(slot):return
+				pic.size=Vector2(minf(slot.size.x,220.0),minf(slot.size.y,147.0))
+				pic.position=(slot.size-pic.size)*0.5
+			slot.resized.connect(fit)
+			fit.call_deferred()
+			if i!=2:
+				var clarity:=ShaderMaterial.new()
+				clarity.shader=preload("res://UIAssets/diagram-clarity.gdshader")
+				pic.material=clarity
+		else:
+			option_col.add_child(pic)
 
-		var caption := _label(labels[i], 14, TEXT, false)
+		var caption := _label(labels[i], 14, TEXT, step==1)
+		if step==1:caption.custom_minimum_size.y=44
 		caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		caption.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		caption.mouse_filter = Control.MOUSE_FILTER_IGNORE
