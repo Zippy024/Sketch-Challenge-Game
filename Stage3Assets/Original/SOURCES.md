@@ -9,4 +9,8 @@ Original Panasonic S-CLASS selection artwork, retrieved 2026-11-13.
 - detail_1.jpeg: https://www14.arrow.mew.co.jp/wlp/kt/master/QS_2606/easy/images/PLAN_LAYOUT_DETAIL_PL3_E.jpeg
 - detail_2.jpeg: https://www14.arrow.mew.co.jp/wlp/kt/master/QS_2606/easy/images/PLAN_LAYOUT_DETAIL_PL3_H.jpeg
 
+- detail_3.jpeg: https://www14.arrow.mew.co.jp/wlp/kt/master/QS_2606/easy/images/PLAN_LAYOUT_DETAIL_PL3_A.jpeg
+
 Files are stored without redrawing, cropping, or resampling.
+
+The four detail cards have a bounded 220 × 147 display area and a mild runtime edge-contrast filter. Source files are unchanged. The Float source is 149 × 100, so it contains less detail than the other originals.

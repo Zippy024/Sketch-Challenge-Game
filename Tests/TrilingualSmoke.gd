@@ -396,9 +396,11 @@ func _run() -> void:
 		assert(game.find_child("Stage3TransitionShield",true,false)!=null)
 		game.call("_choose",1)
 		assert(game.get("step")==1)
-		assert(game.find_children("KitchenChoice*","Button",true,false).size()==3)
+		assert(game.find_children("KitchenChoice*","Button",true,false).size()==4)
 		assert(game.find_child("CustomerAnswerLabel",true,false).text==manager.text("Correct"))
 		await create_timer(0.3).timeout
+		game.call("_choose",3)
+		assert(game.get("step")==1)
 		game.call("_choose",1)
 		assert(game.get("_transitioning"))
 		game.call("_select_part",0)
