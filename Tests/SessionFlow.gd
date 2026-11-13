@@ -116,6 +116,15 @@ func _run() -> void:
 	await _wait()
 	assert(Progress.completed_count()==0 and Progress.resume_stage()==1 and current_scene.get("canvas").lines.is_empty())
 	for stage in range(1,4):await _check_retry(stage)
+	# The new mission board reflects earned best stars, independently of retries.
+	home=await _home()
+	home.find_child("SelectLevel",true,false).pressed.emit()
+	await _wait()
+	var mission_board=current_scene.find_child("LevelSelectionScreen",true,false)
+	assert(mission_board.find_child("LevelJourneyBestStars",true,false).get_meta("stars")==9)
+	assert(mission_board.find_child("LevelJourneyCompleted",true,false).get_meta("completed")==3)
+	for stage in range(1,4):
+		assert(mission_board.find_child("StageCard%02d"%stage,true,false).find_child("StageStars",true,false).get_meta("stars")==3)
 	# Replaying an earlier stage must start a fresh attempt in the following stage.
 	Progress.open_stage(2)
 	change_scene_to_file("res://stage_2.tscn")
