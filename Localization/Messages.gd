@@ -1179,7 +1179,7 @@ const MESSAGES = [
 	},
 	{
 		"en": "Load-bearing wall",
-		"mm": "ဝန်ထမ်းနံရံ",
+		"mm": "နံရံချန်ထားတဲ့ ပုံစံ",
 		"jp": "耐力壁",
 		"aliases": []
 	},
