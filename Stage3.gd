@@ -58,6 +58,8 @@ var _parts_selected: int=0
 var _model_pose: Dictionary={}
 var _parts_message: String=""
 var _speech: Control
+var _speech_ready: bool=false
+var _stage_choice_buttons: Array[Button]=[]
 
 
 func _process(delta: float) -> void:
@@ -116,6 +118,8 @@ func _clear() -> void:
 	_parts_model=null
 	_answer_popover=null
 	_part_checklist.clear()
+	_stage_choice_buttons.clear()
+	_speech_ready=false
 	_feedback_revision+=1
 	_popup_revision+=1
 	_answer_state="neutral"
@@ -156,6 +160,8 @@ func _refresh() -> void:
 	customer.bubble.custom_minimum_size.y = 110
 	_speech=Speech.new()
 	customer.voice.add_child(_speech)
+	_speech.dialogue_started.connect(func():_set_speech_ready(false))
+	_speech.dialogue_finished.connect(func():_set_speech_ready(true))
 	_speech.start(customer.question,Speech.voice_path(current_lang,mini(step,2)))
 	UI.set_customer_feedback(_customer_bubble,_answer_state)
 	var brief := UI.card_stack(left,true)
@@ -247,6 +253,14 @@ func _refresh() -> void:
 	progress.add_child(_challenge_count)
 	if _last_phase>=0 and _last_phase!=phase:_enter_phase(right.get_parent())
 	_last_phase=phase
+
+func _set_speech_ready(ready: bool) -> void:
+	_speech_ready=ready
+	for button in _stage_choice_buttons:
+		if is_instance_valid(button):button.disabled=not ready
+	if is_instance_valid(_parts_model):
+		for marker in _parts_model._markers:
+			if is_instance_valid(marker):marker.disabled=not ready
 
 func _tr(en: String, mm: String, jp: String) -> String:
 	return {"en":en,"mm":mm,"jp":jp}.get(current_lang,en)
@@ -439,12 +453,14 @@ func _draw_choices() -> void:
 		caption.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		caption.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		option_col.add_child(caption)
+		option.disabled=not _speech_ready
+		_stage_choice_buttons.append(option)
 		option.pressed.connect(_choose.bind(i))
 
 	_answer_area.add_child(_label("Select an image. A correct choice automatically opens the next question." if current_lang == "jp" else "အဖြေမှန်ရွေးလိုက်တာနဲ့ နောက်မေးခွန်းကို အလိုအလျောက် သွားပါမယ်။", 13, SUBTEXT))
 
 func _choose(index: int) -> void:
-	if _transitioning or step>=2:return
+	if not _speech_ready or _transitioning or step>=2:return
 	var correct_index: int=2 if step==0 else 1
 	if index==correct_index:
 		step+=1
@@ -500,6 +516,7 @@ func _draw_parts() -> void:
 	_answer_area.add_child(model)
 	_parts_model=model
 	model.apply_view_state(_model_pose)
+	_set_speech_ready(_speech_ready)
 	model.set_solved(_parts_solved)
 	model.set_selected(-1)
 	_answer_area.add_child(UI.label("Hover a number to answer · Drag to rotate · Scroll to zoom",12,false,UI.MUTED))
@@ -523,7 +540,7 @@ func _select_part(which: int) -> void:
 	_open_answer(which,true)
 
 func _open_answer(which: int, focus_input: bool=true) -> void:
-	if _transitioning or step<2 or step>=10 or which<0 or which>=8:return
+	if not _speech_ready or _transitioning or step<2 or step>=10 or which<0 or which>=8:return
 	if not is_instance_valid(_answer_popover):return
 	_parts_selected=which
 	_popup_revision+=1
@@ -557,7 +574,7 @@ func _popover_draft_changed(value: String) -> void:
 	Progress.save_kitchen_parts(_parts_answers,_parts_solved)
 
 func _submit_part_answer(value: String) -> void:
-	if _transitioning or step<2 or step>=10:return
+	if not _speech_ready or _transitioning or step<2 or step>=10:return
 	var index: int=_parts_selected
 	if index<0 or index>=8 or _parts_solved[index]:return
 	_parts_answers[index]=value

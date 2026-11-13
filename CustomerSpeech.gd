@@ -1,4 +1,6 @@
 extends HBoxContainer
+signal dialogue_started
+signal dialogue_finished
 # Recorded question, stable-layout subtitle reveal, and a quiet speaking meter.
 const UI=preload("res://KitchenUI.gd")
 var player: AudioStreamPlayer
@@ -58,12 +60,14 @@ func start(target: Label, path: String) -> void:
 	if not ResourceLoader.exists(path):
 		caption.visible_characters=-1
 		_pause.disabled=true
+		dialogue_finished.emit()
 		return
 	player.stream=load(path) as AudioStream
 	replay_question()
 
 func replay_question() -> void:
 	if player.stream==null:return
+	dialogue_started.emit()
 	caption.visible_characters=mini(6,caption.get_total_character_count())
 	player.stream_paused=false
 	player.play()
@@ -99,6 +103,7 @@ func _process(_delta: float) -> void:
 func _finished() -> void:
 	if is_instance_valid(caption):caption.visible_characters=-1
 	_sync()
+	dialogue_finished.emit()
 
 func _sync() -> void:
 	var active: bool=player.playing and not player.stream_paused

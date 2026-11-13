@@ -170,6 +170,7 @@ var _ai_http: HTTPRequest
 var _ai_busy: bool = false
 var _completion_shown: bool = false
 var _completion_voice_finished: bool = false
+var _question_ready: bool = false
 var _dialogue_generation: int = 0
 var _session_save_suspended: bool = false
 var name_label: Label
@@ -445,7 +446,7 @@ func _set_progress_state(state: String,message: String="") -> void:
 	var ready_for_next: bool=state=="completed" and _completion_voice_finished
 	progress_actions.visible=ready_for_next
 	submit_button.visible=not ready_for_next
-	submit_button.disabled=_ai_busy or state in ["checking","completed"]
+	submit_button.disabled=_ai_busy or not _question_ready or state in ["checking","completed"]
 
 func _update_lang_buttons_style() -> void:
 	var active_s := _style("2563eb", "1d4ed8")
@@ -510,6 +511,7 @@ func _reset_answer() -> void:
 	status_label.text = "AI CHECK · 3 MODELS" if _is_ai_configured() else "LOCAL CHECK · OFFLINE"
 	answer_input.clear()
 	_set_progress_state("pending")
+	_set_question_ready(false)
 	question_label.visible = true
 	question_label.text = UI.bullet_text(str(QUESTIONS[current_lang]["question"]))
 	feedback_divider.visible = false
@@ -530,7 +532,7 @@ func _cancel_ai_request() -> void:
 		submit_button.disabled = false
 
 func _check_ai_or_demo_answer() -> void:
-	if _ai_busy or last_eval_state=="good":
+	if not _question_ready or _ai_busy or last_eval_state=="good":
 		return
 	var answer: String = answer_input.text.strip_edges()
 	var d: Dictionary = QUESTIONS[current_lang]
@@ -615,6 +617,7 @@ func _has_any_keyword(text: String, options: Array[String]) -> bool:
 	return false
 
 func _check_demo_answer() -> void:
+	if not _question_ready:return
 	# V15 Local Fallback: CONSERVATIVE keyword approximation, not semantic AI.
 	# THREE PS concepts must ALL be present (same standard as the Gemini grader).
 	# It is safer to request another attempt than to mark a vague answer correct.
@@ -697,6 +700,8 @@ func _voice_path(kind: String) -> String:
 
 func _play_voice(kind: String) -> void:
 	_stop_voice()
+	if kind in ["question","needs"]:
+		_set_question_ready(false)
 	voice_kind = kind
 	var voice_path: String = _voice_path(kind)
 	var target: Label = question_label if kind == "question" else feedback_label
@@ -825,7 +830,16 @@ func _replay_voice() -> void:
 	var kind: String = voice_kind if voice_kind != "" else "question"
 	_play_voice(kind)
 
+func _set_question_ready(ready: bool) -> void:
+	_question_ready=ready
+	if is_instance_valid(answer_input):
+		answer_input.editable=ready and last_eval_state!="good"
+	if is_instance_valid(submit_button):
+		submit_button.disabled=not ready or _ai_busy or last_eval_state=="good"
+
 func _on_voice_finished() -> void:
+	if voice_kind in ["question","needs"] and last_eval_state!="good":
+		_set_question_ready(true)
 	if voice_stop_button != null:
 		_set_voice_icon(voice_stop_button, "play")
 	if voice_caption != null and voice_kind != "":

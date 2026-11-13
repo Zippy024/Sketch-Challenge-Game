@@ -417,6 +417,12 @@ func _run() -> void:
 		assert(game.find_child("GameHeader",true,false).find_child("CurrentStageLabel",true,false).text==manager.text("Stage %d")%3)
 		assert(game.find_child("CustomerAnswerBadge",true,false).get_parent().get_parent()==game.find_child("CustomerConversation",true,false))
 		_collect(game,"stage3-q1")
+		assert(not game.get("_speech_ready"))
+		game.call("_choose",2)
+		assert(game.get("step")==0)
+		game.get("_speech").player.stop()
+		game.get("_speech").call("_finished")
+		assert(game.get("_speech_ready"))
 		assert(game.find_child("MintWorkspace",true,false)!=null)
 		assert(game.find_children("KitchenChoice*","Button",true,false).size()==5)
 		assert(game.find_child("Stage3ReferencePlan",true,false).texture.resource_path=="res://Refrence image.png")
@@ -437,6 +443,8 @@ func _run() -> void:
 		assert(game.find_children("DiagramFrame","Panel",true,false).size()==4)
 		await create_timer(0.6).timeout
 		assert(not game.find_child("CustomerAnswerBadge",true,false).visible)
+		game.get("_speech").player.stop()
+		game.get("_speech").call("_finished")
 		# Click the illustration itself, catching child controls that swallow input.
 		var fourth_image=game.find_child("KitchenChoice3",true,false).find_children("*","TextureRect",true,false)[0]
 		var picture_click:=InputEventMouseButton.new()
@@ -455,6 +463,10 @@ func _run() -> void:
 		game.call("_select_part",0)
 		assert(game.get("step")==2)
 		await create_timer(1.1).timeout
+		assert(not game.get("_speech_ready"))
+		game.get("_speech").player.stop()
+		game.get("_speech").call("_finished")
+		assert(game.get("_speech_ready"))
 		assert(game.find_child("JapaneseAnswerForm",true,false)==null)
 		assert(not game.get("_answer_popover").visible)
 		assert(not game.find_child("CustomerAnswerBadge",true,false).visible)

@@ -164,6 +164,7 @@ var _voice_paused_for_menu: bool = false
 var current_lang: String = "jp" # "jp" သို့မဟုတ် "mm"
 var last_eval_state: String = "none" # "none", "correct", "wrong"
 var conversation_finished: bool = false
+var _stage1_started_once: bool = false
 var is_drawing_started: bool = false
 var is_typing_message: bool = false
 var typing_token: int = 0
@@ -1065,17 +1066,18 @@ func _reveal_reference_after_talk() -> void:
 	fade.tween_property(ref_viewer, "modulate:a", 1.0, 0.65)
 
 func _run_conversation() -> void:
-	StageRating.begin(1)
+	_stage1_started_once=false
 	if ref_viewer != null:
 		ref_viewer.modulate.a = 0.0
 	speaker_name_label.text = DIALOGUE_TEXTS[current_lang]["speaker"]
-	is_drawing_started = true
-	conversation_finished = true
-	canvas.set_drawing_enabled(true)
+	is_drawing_started = false
+	conversation_finished = false
+	canvas.set_drawing_enabled(false)
+	ok_button.disabled=true
 	request_label.visible = true
 	request_label.text = UI.bullet_text(DIALOGUE_TEXTS[current_lang]["request"])
 	request_label.visible_characters = -1
-	_set_status("Draw the requested layout, then click OK.", false)
+	_set_status("Listen to your customer before drawing.", false)
 	_play_voice("talk")
 
 func _set_status(value: String, error: bool, success: bool = false) -> void:
@@ -1115,7 +1117,7 @@ func _clear() -> void:
 		canvas.set_drawing_enabled(true)
 
 func _on_start_pressed() -> void:
-	if is_typing_message:
+	if not conversation_finished or is_typing_message:
 		return
 	is_drawing_started = true
 	canvas.set_drawing_enabled(true)
@@ -1152,8 +1154,8 @@ func _on_again_pressed() -> void:
 	canvas.clear_canvas()
 	canvas.reset_view()
 	Progress.open_stage(1)
-	canvas.set_drawing_enabled(true)
-	is_drawing_started = true
+	canvas.set_drawing_enabled(false)
+	is_drawing_started = false
 	_run_conversation()
 
 func _confirm() -> void:
@@ -1217,6 +1219,11 @@ func _voice_path(kind: String) -> String:
 func _play_voice(kind: String) -> void:
 	_stop_voice()
 	voice_kind = kind
+	if kind=="talk":
+		conversation_finished=false
+		is_drawing_started=false
+		canvas.set_drawing_enabled(false)
+		ok_button.disabled=true
 	var voice_path: String = _voice_path(kind)
 	var target: Control = request_label if kind == "talk" else feedback_label
 	voice_caption = target
@@ -1229,7 +1236,7 @@ func _play_voice(kind: String) -> void:
 		feedback_label.text = DIALOGUE_TEXTS[current_lang][kind]
 	if not ResourceLoader.exists(voice_path):
 		if kind == "talk":
-			_reveal_reference_after_talk()
+			_on_voice_finished()
 		# No matching MP3: show the full text, then allow the user to continue.
 		if target is RichTextLabel:
 			request_label.visible_characters = -1
@@ -1239,7 +1246,7 @@ func _play_voice(kind: String) -> void:
 	var stream: AudioStream = load(voice_path) as AudioStream
 	if stream == null:
 		if kind == "talk":
-			_reveal_reference_after_talk()
+			_on_voice_finished()
 		if kind == "correct" and last_eval_state == "correct":
 			_finish_without_audio(_dialogue_generation)
 		return
@@ -1376,6 +1383,14 @@ func _on_voice_finished() -> void:
 		_set_voice_icon(voice_stop_button, "play")
 	if voice_caption == request_label:
 		request_label.visible_characters = -1
+		if not _stage1_started_once:
+			StageRating.begin(1)
+			_stage1_started_once=true
+		conversation_finished=true
+		is_drawing_started=true
+		canvas.set_drawing_enabled(true)
+		ok_button.disabled=false
+		_set_status("Draw the requested layout, then click OK.", false)
 		_reveal_reference_after_talk()
 	elif voice_caption == feedback_label and voice_kind != "":
 		feedback_label.text = DIALOGUE_TEXTS[current_lang][voice_kind]
