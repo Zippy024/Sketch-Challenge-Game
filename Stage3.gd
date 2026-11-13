@@ -7,8 +7,8 @@ const Progress = preload("res://GameProgress.gd")
 const StageRating = preload("res://StageRating.gd")
 const UI_THEME: Theme = preload("res://WebBilingualTheme.tres")
 const PORTRAIT: Texture2D = preload("res://customer_portrait_ui.png")
-const IMAGES_Q1: Array[Texture2D] = [preload("res://Stage3Assets/q1_1.png"), preload("res://Stage3Assets/q1_2.png"), preload("res://Stage3Assets/q1_3.png"), preload("res://Stage3Assets/q1_4.png"), preload("res://Stage3Assets/q1_5.png")]
-const IMAGES_Q2: Array[Texture2D] = [preload("res://Stage3Assets/q2_1.png"), preload("res://Stage3Assets/q2_2.png"), preload("res://Stage3Assets/q2_3.png"), preload("res://Stage3Assets/q2_4.png")]
+const IMAGES_Q1: Array[Texture2D] = [preload("res://Stage3Assets/Original/type_0.jpeg"), preload("res://Stage3Assets/Original/type_1.jpeg"), preload("res://Stage3Assets/Original/type_2.jpeg"), preload("res://Stage3Assets/Original/type_3.jpeg"), preload("res://Stage3Assets/Original/type_4.jpeg")]
+const IMAGES_Q2: Array[Texture2D] = [preload("res://Stage3Assets/Original/detail_0.jpeg"), preload("res://Stage3Assets/Original/detail_1.jpeg"), preload("res://Stage3Assets/Original/detail_2.jpeg")]
 const BG := Color("e9eef5")
 const PANEL := Color("f1f5f9")
 const TEXT := Color("1f3c56")
@@ -32,6 +32,10 @@ var _feedback: Label
 var _customer_bubble: PanelContainer
 var _answer_state: String="neutral"
 var _card_texture_cache: Dictionary = {}
+var _last_phase: int=-1
+var _transitioning: bool=false
+var _transition_tween: Tween
+
 
 func _process(delta: float) -> void:
 	StageRating.advance(3,delta)
@@ -78,6 +82,8 @@ func _panel() -> PanelContainer:
 
 
 func _clear() -> void:
+	if _transition_tween and _transition_tween.is_valid():_transition_tween.kill()
+	_transitioning=false
 	for child in get_children():
 		remove_child(child)
 		child.queue_free()
@@ -86,7 +92,7 @@ func _clear() -> void:
 func _refresh() -> void:
 	_clear()
 	if step >= 7 and not _completion_acknowledged:
-		UI.background(self)
+		UI.background(self,true)
 		_show_completion()
 		return
 	if step >= 7:
@@ -137,9 +143,23 @@ func _refresh() -> void:
 		for i in range(5):
 			brief.add_child(UI.label(("✓  " if i<step-2 else "○  ")+UI.text(EN_PARTS[i]),15,i==step-2,UI.TEAL if i<=step-2 else UI.MUTED))
 	var right := UI.card_stack(split,true)
+	right.get_parent().name="Stage3AnswerCard"
 	right.get_parent().size_flags_stretch_ratio = 13
 	right.add_child(UI.label("Kitchen Selection" if step<2 else "Kitchen Parts",25,true))
-	right.add_child(UI.label(UI.text("Question %d of 2")%(step+1) if step<2 else UI.text("Part %d of 5")%(step-1),14,false,UI.MUTED))
+	var phase:=mini(step,2)
+	var phases:=HBoxContainer.new()
+	phases.name="Stage3Sections"
+	phases.add_theme_constant_override("separation",8)
+	right.add_child(phases)
+	for i in range(3):
+		var chip:=PanelContainer.new()
+		chip.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+		chip.add_theme_stylebox_override("panel",UI.box(Color("e5f3ed") if i==phase else Color("f7fbf8"),Color("8bbeb2") if i==phase else Color("d7e8e0"),12,6))
+		phases.add_child(chip)
+		var caption:=UI.label(str(i+1)+" · "+_phase_name(i),12,i==phase)
+		caption.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+		chip.add_child(caption)
+	right.add_child(UI.label((_tr("Section %d of 3","အပိုင်း ၃ ပိုင်းမှ %d","全3項目中 %d項目")%(phase+1)) if step<2 else UI.text("Part %d of 5")%(step-1),14,false,UI.MUTED))
 	_answer_area = VBoxContainer.new()
 	_answer_area.add_theme_constant_override("separation",14)
 	_answer_area.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -165,6 +185,36 @@ func _refresh() -> void:
 	progress.add_child(_progress_bar)
 	if _answer_state=="correct":create_tween().tween_property(_progress_bar,"value",step,0.42).set_trans(Tween.TRANS_SINE)
 	progress.add_child(UI.inline_label("%d / 7"%step,14,true))
+	if _last_phase>=0 and _last_phase!=phase:_enter_phase(right.get_parent())
+	_last_phase=phase
+
+func _tr(en: String, mm: String, jp: String) -> String:
+	return {"en":en,"mm":mm,"jp":jp}.get(current_lang,en)
+
+func _phase_name(index: int) -> String:
+	return [
+		_tr("Kitchen type","မီးဖိုချောင်ပုံစံ","キッチンタイプ"),
+		_tr("Layout detail","ပုံစံအသေးစိတ်","レイアウト詳細"),
+		_tr("Components","အစိတ်အပိုင်းများ","部材の選択")
+	][index]
+
+func _enter_phase(card: Control) -> void:
+	if OS.has_feature("web") and bool(JavaScriptBridge.eval("window.matchMedia('(prefers-reduced-motion: reduce)').matches",true)):return
+	_transitioning=true
+	card.modulate.a=0.0
+	card.mouse_filter=Control.MOUSE_FILTER_STOP
+	# A transparent input shield prevents a second click selecting the next card.
+	var shield:=Control.new()
+	shield.name="Stage3TransitionShield"
+	shield.mouse_filter=Control.MOUSE_FILTER_STOP
+	add_child(shield)
+	shield.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_transition_tween=create_tween()
+	_transition_tween.tween_property(card,"modulate:a",1.0,0.24).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_transition_tween.finished.connect(func():
+		_transitioning=false
+		if is_instance_valid(shield):shield.queue_free()
+	)
 
 func _question_text() -> String:
 	if step == 0:
@@ -197,15 +247,14 @@ func _card_texture_for_screen(source: Texture2D) -> Texture2D:
 
 func _draw_choices() -> void:
 	_answer_area.add_child(_label("S-classのキッチンタイプを選んでください。" if step == 0 else "プランレイアウト詳細を選択してください。", 18, TEXT))
-	# Stage 3 image cards use original high-resolution standalone artwork.
-	# NO screenshot crops, NO embedded blue selection lines, NO horizontal scrollbar.
+	# Use the original source illustrations in the supplied reference order.
 	var labels: Array[String] = []
 	var textures: Array[Texture2D] = []
 	if step == 0:
 		labels = ["I型", "L型", "対面", "II型", "アイランド"]
 		textures = IMAGES_Q1
 	else:
-		labels = ["フルフラット", "耐力壁", "フロート", "ラウンドアクセス"]
+		labels = ["フルフラット", "耐力壁", "フロート"]
 		textures = IMAGES_Q2
 
 	var surface := PanelContainer.new()
@@ -268,6 +317,7 @@ func _draw_choices() -> void:
 	_answer_area.add_child(_label("Select an image. A correct choice automatically opens the next question." if current_lang == "jp" else "အဖြေမှန်ရွေးလိုက်တာနဲ့ နောက်မေးခွန်းကို အလိုအလျောက် သွားပါမယ်။", 13, SUBTEXT))
 
 func _choose(index: int) -> void:
+	if _transitioning or step>=2:return
 	var correct_index: int = 2 if step == 0 else 1
 	if index == correct_index:
 		_answer_state="correct"
@@ -301,6 +351,7 @@ func _draw_parts() -> void:
 
 
 func _select_part(which: int) -> void:
+	if _transitioning or step<2 or step>=7:return
 	if which == step - 2:
 		_answer_state="correct"
 		step += 1

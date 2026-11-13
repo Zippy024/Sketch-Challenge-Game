@@ -12,7 +12,7 @@ func _build() -> void:
 	for child in get_children():
 		remove_child(child)
 		child.queue_free()
-	UI.background(self)
+	UI.background(self,true)
 	var center := CenterContainer.new()
 	add_child(center)
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)

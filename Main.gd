@@ -442,7 +442,7 @@ func _stage1_surface(fill: Color, edge: Color, radius: int = 18, pad: int = 9) -
 
 
 func _stage1_glass(variant: String = "panel", pad: int = 12) -> StyleBoxFlat:
-	var fill := Color("fff1f2") if variant == "danger" else (Color("eef9fc") if variant == "speech" else Color(0.94,0.98,1,0.82))
+	var fill := Color("fff1f2") if variant == "danger" else (Color("eef9fc") if variant == "speech" else Color("f8fcfa"))
 	return UI.box(fill,Color("edb8c2") if variant == "danger" else (UI.EDGE if variant == "speech" else Color.WHITE),18,pad)
 
 func _stage1_bold(control: Control) -> void:
@@ -526,7 +526,7 @@ func _stage1_toolbar_button(index: int, caption: String, action: Callable, activ
 
 
 func _build_ui() -> void:
-	UI.background(self)
+	UI.background(self,true)
 	var screen_layout := VBoxContainer.new()
 	add_child(screen_layout)
 	screen_layout.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)

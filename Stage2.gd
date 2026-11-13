@@ -318,7 +318,7 @@ func _build_ui() -> void:
 	right_panel.name="Stage2AnswerCard"
 	right_panel.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	right_panel.size_flags_stretch_ratio=13
-	right_panel.add_theme_stylebox_override("panel",UI.box(Color(0.94,0.98,1.0,0.82),Color.WHITE,24,18))
+	right_panel.add_theme_stylebox_override("panel",UI.box(Color("f8fcfa"),Color("cbe1d9"),24,18))
 	split.add_child(right_panel)
 	var right := VBoxContainer.new()
 	right.add_theme_constant_override("separation",14)

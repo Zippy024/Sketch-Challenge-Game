@@ -127,11 +127,11 @@ static func _backdrop() -> Texture2D:
 	_backdrop_texture = viewport.get_texture()
 	return _backdrop_texture
 
-static func background(parent: Control) -> void:
+static func background(parent: Control, workspace: bool=false) -> void:
 	parent.theme = make_theme()
 	var photo := TextureRect.new()
-	photo.name = "KitchenBackdrop"
-	photo.texture = _backdrop()
+	photo.name = "MintWorkspace" if workspace else "KitchenBackdrop"
+	photo.texture = preload("res://UIAssets/mint-workspace.svg") if workspace else _backdrop()
 	photo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	photo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	photo.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -156,7 +156,7 @@ static func header(stage: int, _title: String, menu_action: Callable, language_a
 	var panel := PanelContainer.new()
 	panel.name = "Stage1Header" if stage == 1 else "GameHeader"
 	panel.custom_minimum_size.y = 58
-	var style := box(Color(0.95,0.99,1,0.14),Color(1,1,1,0.28),0,4)
+	var style := box(Color("f5fbf7"),Color("d7e8e0"),0,4)
 	style.content_margin_left = 18
 	style.content_margin_right = 18
 	style.shadow_size = 0
@@ -213,7 +213,7 @@ static func level_reach(stage: int, in_header: bool=false) -> MarginContainer:
 	return margin
 
 static func page(parent: Control, stage: int, title: String, menu_action: Callable, language_action: Callable) -> VBoxContainer:
-	background(parent)
+	background(parent,true)
 	var root := VBoxContainer.new()
 	root.add_theme_constant_override("separation",12)
 	parent.add_child(root)
@@ -264,7 +264,7 @@ static func card_stack(parent: Control, expand: bool = false) -> VBoxContainer:
 	var panel := PanelContainer.new()
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	if expand: panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	panel.add_theme_stylebox_override("panel",box())
+	panel.add_theme_stylebox_override("panel",box(Color("f8fcfa"),Color("cbe1d9")))
 	parent.add_child(panel)
 	var stack := VBoxContainer.new()
 	stack.add_theme_constant_override("separation",12)
