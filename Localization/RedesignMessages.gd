@@ -469,5 +469,11 @@ const MESSAGES = [
 	{"en": "Please check the red answers. Use Japanese names.", "mm": "အနီရောင်အဖြေများကို ဂျပန်အမည်ဖြင့် ပြန်စစ်ပါ။", "jp": "赤い回答を確認し、日本語の名前で入力してください。", "aliases": []},
 	{"en": "Correct answers are saved. Complete the remaining numbers.", "mm": "မှန်သောအဖြေတွေ သိမ်းထားပါပြီ။ ကျန်နံပါတ်တွေကို ဆက်ဖြေပါ။", "jp": "正解は保存されました。残りの番号も答えてください。", "aliases": []},
 	{"en": "Type the Japanese names beside the matching numbers.", "mm": "သက်ဆိုင်ရာနံပါတ်ဘေးမှာ ဂျပန်အမည်ကို ရေးပါ။", "jp": "対応する番号の横に日本語の名前を入力してください。", "aliases": []},
-	{"en":"Please write the name of each numbered part in Japanese.","mm":"နံပါတ်တပ်ထားတဲ့ ပစ္စည်းတစ်ခုချင်းစီရဲ့ အမည်ကို ဂျပန်လို ရေးပေးပါ။","jp":"番号を付けた各パーツの名前を日本語で教えてもらえますか？","aliases":[]}
+	{"en":"Please write the name of each numbered part in Japanese.","mm":"နံပါတ်တပ်ထားတဲ့ ပစ္စည်းတစ်ခုချင်းစီရဲ့ အမည်ကို ဂျပန်လို ရေးပေးပါ။","jp":"番号を付けた各パーツの名前を日本語で教えてもらえますか？","aliases":[]},
+	{"en": "Convert", "mm": "ပြောင်းမည်", "jp": "変換", "aliases": []},
+	{"en": "Check answer", "mm": "အဖြေစစ်မည်", "jp": "回答を確認", "aliases": []},
+	{"en": "Type in hiragana, then choose a conversion.", "mm": "ဟိရဂနာနဲ့ရေးပြီး ပြောင်းလဲရေးသားပုံကို ရွေးပါ။", "jp": "ひらがなで入力して、候補から選んでください。", "aliases": []},
+	{"en": "No candidates. Check the full hiragana reading.", "mm": "ပြောင်းလဲရေးသားပုံ မတွေ့ပါ။ ဟိရဂနာစာလုံးပေါင်းကို ပြန်စစ်ပါ။", "jp": "候補がありません。ひらがなの読みを確認してください。", "aliases": []},
+	{"en": "Choose a conversion.", "mm": "ပြောင်းလဲရေးသားပုံကို ရွေးပါ။", "jp": "変換候補を選んでください。", "aliases": []},
+	{"en": "Hover a number to answer · Drag to rotate · Scroll to zoom", "mm": "နံပါတ်ပေါ်ထောက်၍ ဖြေပါ · ဆွဲ၍လှည့် · Scroll ဖြင့်ချဲ့", "jp": "番号にカーソルを合わせて回答・ドラッグで回転・スクロールで拡大", "aliases": []}
 ]

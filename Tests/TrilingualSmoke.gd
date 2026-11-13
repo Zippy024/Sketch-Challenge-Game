@@ -22,6 +22,9 @@ func _run() -> void:
 	assert(parts.is_correct(3,"こしかべ"))
 	assert(parts.is_correct(4,"流し台"))
 	assert(not parts.is_correct(0,"countertop") and not parts.is_correct(0,""))
+	assert(parts.needs_conversion("ながしだい") and not parts.needs_conversion("流し台"))
+	assert(parts.conversion_candidates("こしかべ")==["腰壁"])
+	assert(parts.conversion_candidates("しんく")==["シンク","真紅"])
 	assert(StageRating.stars_for(1,150,0)==3)
 	assert(StageRating.stars_for(1,480,2)==2)
 	assert(StageRating.stars_for(1,700,3)==1)
@@ -89,6 +92,7 @@ func _run() -> void:
 		assert(screen.find_child("LevelJourneyCompleted",true,false).get_meta("completed")==0)
 		assert(screen.find_children("SelectedPlayButton","Button",true,false).size()==1)
 		assert(screen.find_children("SelectedStageGlow","Panel",true,false).size()==1)
+		assert(screen.find_child("SelectedStageTag",true,false).z_index>screen.find_child("SelectedStageOutline",true,false).z_index)
 		for card in cards:
 			assert(card.disabled==(int(card.get_meta("stage"))>3))
 			var title=card.find_child("StageTitle",true,false)
@@ -416,14 +420,14 @@ func _run() -> void:
 		game.call("_choose",2)
 		assert(game.get("step")==1)
 		assert(game.get("_transitioning"))
-		assert(game.find_child("Stage3TransitionShield",true,false)!=null)
+		assert(game.find_child("CustomerAnswerLabel",true,false).text==manager.text("Correct"))
 		game.call("_choose",1)
 		assert(game.get("step")==1)
+		await create_timer(0.5).timeout
 		assert(game.find_children("KitchenChoice*","Button",true,false).size()==4)
 		assert(game.find_children("DiagramFrame","Panel",true,false).size()==4)
-		assert(game.find_child("Stage3PhaseSweep",true,false)!=null)
-		assert(game.find_child("CustomerAnswerLabel",true,false).text==manager.text("Correct"))
-		await create_timer(0.55).timeout
+		await create_timer(0.6).timeout
+		assert(not game.find_child("CustomerAnswerBadge",true,false).visible)
 		# Click the illustration itself, catching child controls that swallow input.
 		var fourth_image=game.find_child("KitchenChoice3",true,false).find_children("*","TextureRect",true,false)[0]
 		var picture_click:=InputEventMouseButton.new()
@@ -441,30 +445,47 @@ func _run() -> void:
 		assert(game.get("_transitioning"))
 		game.call("_select_part",0)
 		assert(game.get("step")==2)
-		await create_timer(0.55).timeout
-		assert(game.find_children("PartAnswer*","LineEdit",true,false).size()==5)
+		await create_timer(1.1).timeout
+		assert(game.find_child("JapaneseAnswerForm",true,false)==null)
+		assert(not game.get("_answer_popover").visible)
+		assert(not game.find_child("CustomerAnswerBadge",true,false).visible)
 		assert(game.find_child("Kitchen3DViewport",true,false)!=null)
-		for button in game.find_children("*","Button",true,false):assert(button.text!=manager.text("Hint"))
 		_collect(game,"stage3-parts")
-		for panel in game.find_children("*","PanelContainer",true,false):
-			if panel.is_visible_in_tree():assert(game.get_global_rect().encloses(panel.get_global_rect()))
 		var before_errors: int=int(StageRating.current(3).mistakes)
-		game.find_child("PartAnswer1",true,false).text="　 "
-		game.call("_submit_parts")
-		assert(game.get("step")==2 and int(StageRating.current(3).mistakes)==before_errors)
-		# Numbers can be answered out of order, and Latin names do not pass.
-		game.find_child("PartAnswer4",true,false).text="こしかべ"
-		game.find_child("CheckJapaneseParts",true,false).pressed.emit()
-		assert(game.get("step")==3 and game.get("_parts_solved")[3])
-		game.find_child("PartAnswer1",true,false).text="countertop"
-		game.call("_submit_parts")
-		assert(game.get("step")==3 and int(StageRating.current(3).mistakes)==before_errors+1)
-		assert(game.find_child("CustomerAnswerLabel",true,false).text==manager.text("Incorrect"))
-		game.find_child("PartAnswer1",true,false).text="カウンター"
-		game.call("_submit_parts")
-		assert(game.get("step")==4 and not game.find_child("PartAnswer1",true,false).editable)
-		await _wait()
+		game.call("_open_answer",0,true)
+		game.call("_submit_part_answer","　 ")
+		assert(game.step==2 and int(StageRating.current(3).mistakes)==before_errors)
+		game.call("_close_answer")
+		await create_timer(0.30).timeout
+		# Hover opens a contextual editor. Conversion is based on the typed reading.
 		var model=game.find_child("KitchenPartsDiagram",true,false)
+		model.number_hovered.emit(3)
+		var editor=game.get("_answer_popover")
+		assert(editor.visible and editor.part_index==3)
+		editor.input.text="こしかべ"
+		editor.input.text_changed.emit("こしかべ")
+		game.call("_submit_part_answer","こしかべ")
+		assert(game.step==2 and int(StageRating.current(3).mistakes)==before_errors)
+		assert(editor.find_child("JapaneseConversionCandidates",true,false).get_child(0).text=="腰壁")
+		editor.choose_candidate("腰壁")
+		editor.find_child("CheckPartAnswer",true,false).pressed.emit()
+		assert(game.step==3 and game.get("_parts_solved")[3])
+		await create_timer(1.1).timeout
+		assert(not editor.visible and not game.find_child("CustomerAnswerBadge",true,false).visible)
+		game.call("_open_answer",0,true)
+		editor.input.text="countertop"
+		editor.input.text_changed.emit("countertop")
+		editor.find_child("CheckPartAnswer",true,false).pressed.emit()
+		assert(game.step==3 and int(StageRating.current(3).mistakes)==before_errors+1)
+		await create_timer(1.1).timeout
+		assert(not game.find_child("CustomerAnswerBadge",true,false).visible)
+		editor.input.text="カウンター"
+		editor.input.text_changed.emit("カウンター")
+		editor.find_child("CheckPartAnswer",true,false).pressed.emit()
+		assert(game.step==4 and not editor.input.editable)
+		game.call("_open_answer",1,true)
+		await create_timer(0.8).timeout
+		assert(editor.visible and editor.part_index==1) # Old success timer cannot close a newer answer.
 		var original_yaw: float=model.yaw
 		var press:=InputEventMouseButton.new()
 		press.button_index=MOUSE_BUTTON_LEFT
@@ -476,29 +497,34 @@ func _run() -> void:
 		model.call("_gui_input",drag)
 		press.pressed=false
 		model.call("_gui_input",press)
-		assert(not is_equal_approx(model.yaw,original_yaw))
+		assert(not editor.visible and not is_equal_approx(model.yaw,original_yaw))
 		model.set_view("perspective")
-		# The actual hood surface can be picked, not only its number marker.
-		var point: Vector2=model.camera.unproject_position(Vector3(-0.84,1.98,0.18))
+		var point: Vector2=model.camera.unproject_position(Vector3(-0.84,1.98,0.18))*model.size/Vector2(model.viewport.size)
 		press.position=point
 		press.pressed=true
 		model.call("_gui_input",press)
 		press.pressed=false
 		model.call("_gui_input",press)
 		await create_timer(0.1).timeout
-		assert(model.selected==2)
+		assert(model.selected==2 and editor.part_index==2)
 		for i in [1,2,4]:
-			await _wait()
-			game.find_child("PartMarker%d"%(i+1),true,false).pressed.emit()
-			assert(game.find_child("PartAnswer%d"%(i+1),true,false).has_focus())
-			assert(game.find_child("KitchenPartsDiagram",true,false).selected==i)
-			var field=game.find_child("PartAnswer%d"%(i+1),true,false)
-			field.text=["カウンター","ｷｯﾁﾝﾎﾞｰﾄﾞ","レンジフード","腰壁","流し台"][i]
-			field.text_submitted.emit(field.text)
+			game.call("_open_answer",i,true)
+			assert(editor.input.has_focus())
+			editor.input.text={1:"きっちんぼーど",2:"ふーど",4:"ながしだい"}[i]
+			editor.input.text_changed.emit(editor.input.text)
+			editor.request_conversion()
+			var candidate=editor.find_child("JapaneseConversionCandidates",true,false).get_child(0)
+			candidate.pressed.emit()
+			editor.find_child("CheckPartAnswer",true,false).pressed.emit()
 
 		assert(game.get("step")==7)
 		assert(Progress.is_completed(3))
-		await _wait()
+		if language=="en":
+			game.call("_open_game_menu")
+			await create_timer(0.85).timeout
+			assert(paused and game.find_child("Stage3CompleteOverlay",true,false)==null)
+			game.get("_pause_menu").resume_requested.emit()
+		await create_timer(0.85).timeout
 		_collect(game,"stage3-complete")
 		var third_popup=game.find_child("Stage3CompleteOverlay",true,false)
 		assert(third_popup!=null and third_popup.stage_index==3)

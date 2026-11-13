@@ -18,6 +18,7 @@ const GREEN := Color("008f98")
 const OUTLINE := Color("d6e2ef")
 const Parts = preload("res://Stage3Assets/Model/JapaneseParts.gd")
 const Model = preload("res://Stage3Assets/Model/KitchenModel.gd")
+const AnswerPopover = preload("res://Stage3Assets/Model/PartAnswerPopover.gd")
 
 
 var current_lang: String = "jp"
@@ -39,7 +40,13 @@ var _transition_tween: Tween
 var _parts_answers: Array[String]=["","","","",""]
 var _parts_solved: Array[bool]=[false,false,false,false,false]
 var _parts_states: Array[String]=["","","","",""]
-var _parts_fields: Array[LineEdit]=[]
+var _answer_popover: Control
+var _feedback_revision: int=0
+var _popup_revision: int=0
+var _hover_block_until: int=0
+var _parts_count_label: Label
+var _part_checklist: Array[Label]=[]
+var _challenge_count: Label
 var _parts_model: Control
 var _parts_selected: int=0
 var _model_pose: Dictionary={}
@@ -98,7 +105,12 @@ func _panel() -> PanelContainer:
 func _clear() -> void:
 	if is_instance_valid(_parts_model):_model_pose=_parts_model.view_state()
 	_parts_model=null
-	_parts_fields.clear()
+	_answer_popover=null
+	_part_checklist.clear()
+	_feedback_revision+=1
+	_popup_revision+=1
+	_answer_state="neutral"
+	last_wrong=false
 	if _transition_tween and _transition_tween.is_valid():_transition_tween.kill()
 	_transitioning=false
 	for child in get_children():
@@ -152,7 +164,9 @@ func _refresh() -> void:
 		brief.add_child(UI.label("Parts checklist",16,true))
 		for i in range(5):
 			var caption:=str(i+1)+" · "+(_parts_answers[i] if _parts_solved[i] else UI.text("Not answered"))
-			brief.add_child(UI.label(caption,15,_parts_solved[i],UI.TEAL if _parts_solved[i] else UI.MUTED))
+			var item:=UI.label(caption,15,_parts_solved[i],UI.TEAL if _parts_solved[i] else UI.MUTED)
+			brief.add_child(item)
+			_part_checklist.append(item)
 		brief.add_child(UI.label("Drag to rotate. Scroll to zoom. The numbers stay attached to their parts.",13,false,UI.MUTED))
 	var right := UI.card_stack(split,true)
 	right.get_parent().name="Stage3AnswerCard"
@@ -160,7 +174,7 @@ func _refresh() -> void:
 	var heading:=HBoxContainer.new()
 	heading.add_theme_constant_override("separation",12)
 	right.add_child(heading)
-	var title:=UI.label("Kitchen Selection" if step<2 else "Kitchen Parts",25,true)
+	var title:=UI.label("Kitchen Selection" if step<2 else "Kitchen Parts",25 if step<2 else 21,true)
 	title.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	heading.add_child(title)
 	var retry:=UI.button(_tr("Retry","ပြန်ကစားမည်","もう一度"),_retry_stage,false,110,14)
@@ -181,7 +195,7 @@ func _refresh() -> void:
 		var caption:=UI.label(str(i+1)+" · "+_phase_name(i),12,i==phase)
 		caption.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
 		chip.add_child(caption)
-	right.add_child(UI.label((_tr("Section %d of 3","အပိုင်း ၃ ပိုင်းမှ %d","全3項目中 %d項目")%(phase+1)) if step<2 else UI.text("%d / 5 names correct")%_parts_solved.count(true),14,false,UI.MUTED))
+	if step<2:right.add_child(UI.label(_tr("Section %d of 3","အပိုင်း ၃ ပိုင်းမှ %d","全3項目中 %d項目")%(phase+1),14,false,UI.MUTED))
 	_answer_area = VBoxContainer.new()
 	_answer_area.add_theme_constant_override("separation",14)
 	_answer_area.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -190,7 +204,10 @@ func _refresh() -> void:
 	else: _draw_parts()
 	_feedback = UI.label(_parts_message if step>=2 else ("Please try another choice." if last_wrong else ""),14,false,Color("b32741") if last_wrong else UI.TEAL)
 	_feedback.custom_minimum_size.y = 28
-	right.add_child(_feedback)
+	if step<2:right.add_child(_feedback)
+	else:
+		add_child(_feedback)
+		_feedback.hide()
 	var progress := HBoxContainer.new()
 	progress.add_theme_constant_override("separation",12)
 	right.add_child(progress)
@@ -206,7 +223,8 @@ func _refresh() -> void:
 	_progress_bar.add_theme_stylebox_override("fill",UI.box(UI.TEAL,Color.TRANSPARENT,5,0))
 	progress.add_child(_progress_bar)
 	if _answer_state=="correct":create_tween().tween_property(_progress_bar,"value",step,0.42).set_trans(Tween.TRANS_SINE)
-	progress.add_child(UI.inline_label("%d / 7"%step,14,true))
+	_challenge_count=UI.inline_label("%d / 7"%step,14,true)
+	progress.add_child(_challenge_count)
 	if _last_phase>=0 and _last_phase!=phase:_enter_phase(right.get_parent())
 	_last_phase=phase
 
@@ -411,152 +429,156 @@ func _draw_choices() -> void:
 
 func _choose(index: int) -> void:
 	if _transitioning or step>=2:return
-	var correct_index: int = 2 if step == 0 else 1
-	if index == correct_index:
-		_answer_state="correct"
-		step += 1
+	var correct_index: int=2 if step==0 else 1
+	if index==correct_index:
+		step+=1
 		Progress.save_kitchen_step(step)
-		if step == 7:
-			StageRating.finish(3)
-			Progress.complete(3)
-		last_wrong = false
-		_refresh()
+		_show_verdict("correct")
+		_transitioning=true
+		var revision:=_feedback_revision
+		get_tree().create_timer(0.40,false).timeout.connect(_advance_choice.bind(step,revision))
 	else:
 		StageRating.mistake(3)
-		last_wrong = true
-		_answer_state="incorrect"
-		UI.set_customer_feedback(_customer_bubble,"incorrect")
-		_feedback.text = "ちょっと違うようです。もう一度選んでください。" if current_lang == "jp" else "မမှန်သေးပါ။ ပြန်ရွေးပါ။"
-		_feedback.add_theme_color_override("font_color", Color("c24144"))
+		_show_verdict("incorrect")
 
+func _advance_choice(expected_step: int, revision: int) -> void:
+	if step==expected_step and revision==_feedback_revision:_refresh()
+
+func _show_verdict(state: String) -> void:
+	_feedback_revision+=1
+	_answer_state=state
+	last_wrong=state=="incorrect"
+	UI.set_customer_feedback(_customer_bubble,state)
+	if is_instance_valid(_feedback):
+		_feedback.text=UI.text("Correct" if state=="correct" else "Incorrect")
+		_feedback.add_theme_color_override("font_color",UI.TEAL if state=="correct" else Color("b32741"))
+	get_tree().create_timer(1.0,false).timeout.connect(_expire_verdict.bind(_feedback_revision))
+
+func _expire_verdict(revision: int) -> void:
+	if revision!=_feedback_revision:return
+	_answer_state="neutral"
+	last_wrong=false
+	if is_instance_valid(_customer_bubble):UI.set_customer_feedback(_customer_bubble,"neutral")
+	if is_instance_valid(_feedback):_feedback.text=""
 
 func _draw_parts() -> void:
-	_answer_area.add_theme_constant_override("separation",8)
-	_answer_area.add_child(UI.label("Select a number on the 3D model and type its name in Japanese.",14))
-	var content:=HBoxContainer.new()
-	content.add_theme_constant_override("separation",12)
-	content.size_flags_vertical=Control.SIZE_EXPAND_FILL
-	_answer_area.add_child(content)
-	var model_column:=VBoxContainer.new()
-	model_column.size_flags_horizontal=Control.SIZE_EXPAND_FILL
-	model_column.size_flags_stretch_ratio=1.5
-	model_column.add_theme_constant_override("separation",6)
-	content.add_child(model_column)
+	_answer_area.add_theme_constant_override("separation",6)
 	var toolbar:=HBoxContainer.new()
-	toolbar.add_theme_constant_override("separation",4)
-	model_column.add_child(toolbar)
+	toolbar.add_theme_constant_override("separation",5)
+	_answer_area.add_child(toolbar)
 	var model:=Model.new()
 	model.name="KitchenPartsDiagram"
-	model.custom_minimum_size=Vector2(360,260)
+	model.custom_minimum_size=Vector2(400,340)
 	model.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	model.size_flags_vertical=Control.SIZE_EXPAND_FILL
 	for preset in ["perspective","front","rear"]:
-		var button:=UI.button({"perspective":"3D","front":"Front view","rear":"Rear view"}[preset],func():model.set_view(preset),false,54,11)
-		toolbar.add_child(button)
-	for direction in [-1,1]:
-		var button:=UI.button("+" if direction==-1 else "−",func():model.zoom_by(float(direction)*0.2),false,30,15)
-		toolbar.add_child(button)
+		toolbar.add_child(UI.button({"perspective":"3D","front":"Front view","rear":"Rear view"}[preset],model.set_view.bind(preset),false,54,11))
+	for direction in [-1,1]:toolbar.add_child(UI.button("+" if direction==-1 else "−",model.zoom_by.bind(float(direction)*0.2),false,30,15))
+	_parts_count_label=UI.label(UI.text("%d / 5 names correct")%_parts_solved.count(true),12,true,UI.TEAL)
+	_parts_count_label.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+	_parts_count_label.horizontal_alignment=HORIZONTAL_ALIGNMENT_RIGHT
+	toolbar.add_child(_parts_count_label)
 	model.part_selected.connect(_select_part)
-	model.part_hovered.connect(func(index: int):
-		if index>=0:model.tooltip_text=UI.text("Number %d")%(index+1)
-		else:model.tooltip_text=""
-	)
-	model_column.add_child(model)
+	model.number_hovered.connect(_hover_part_number)
+	model.interaction_started.connect(_close_answer)
+	_answer_area.add_child(model)
 	_parts_model=model
 	model.apply_view_state(_model_pose)
 	model.set_solved(_parts_solved)
-	model.set_selected(_parts_selected)
-	model_column.add_child(UI.label("Drag to rotate · Scroll to zoom",11,false,UI.MUTED))
-	var form:=UI.card_stack(content,true)
-	form.get_parent().name="JapaneseAnswerForm"
-	form.get_parent().custom_minimum_size.x=255
-	form.get_parent().size_flags_stretch_ratio=1.0
-	form.add_theme_constant_override("separation",8)
-	form.add_child(UI.label("Write in Japanese",16,true))
-	for i in range(5):
-		var row:=HBoxContainer.new()
-		row.add_theme_constant_override("separation",6)
-		form.add_child(row)
-		var number:=UI.button(str(i+1),_select_part.bind(i),false,30,13)
-		number.name="PartNumber%d"%(i+1)
-		row.add_child(number)
-		var field:=LineEdit.new()
-		field.name="PartAnswer%d"%(i+1)
-		field.set_meta("locale_ignore",true)
-		field.placeholder_text="日本語で入力"
-		field.text=_parts_answers[i]
-		field.editable=not _parts_solved[i]
-		field.custom_minimum_size=Vector2(130,38)
-		field.size_flags_horizontal=Control.SIZE_EXPAND_FILL
-		field.add_theme_font_override("font",UI.font(false,"jp"))
-		field.add_theme_font_size_override("font_size",15)
-		field.add_theme_color_override("font_color",UI.INK)
-		field.add_theme_color_override("font_placeholder_color",Color("80949b"))
-		field.add_theme_color_override("font_uneditable_color",UI.INK)
-		field.max_length=80
-		var state:=_parts_states[i]
-		var style:=UI.box(Color("e7f6ee") if state=="correct" else (Color("fff0f2") if state=="incorrect" else Color.WHITE),Color("91c6ac") if state=="correct" else (Color("dda5af") if state=="incorrect" else UI.EDGE),9,6)
-		style.shadow_size=0
-		field.add_theme_stylebox_override("normal",style)
-		field.add_theme_stylebox_override("read_only",style)
-		var focus:=UI.box(Color.TRANSPARENT,UI.TEAL,9,6)
-		focus.shadow_size=0
-		focus.set_border_width_all(2)
-		field.add_theme_stylebox_override("focus",focus)
-		field.text_changed.connect(_part_text_changed.bind(i))
-		field.focus_entered.connect(func():
-			_parts_selected=i
-			if is_instance_valid(_parts_model):_parts_model.set_selected(i)
-		)
-		field.text_submitted.connect(func(_value: String):_submit_parts())
-		row.add_child(field)
-		_parts_fields.append(field)
-		var verdict:=UI.label("✓" if _parts_solved[i] else ("×" if state=="incorrect" else ""),16,true,UI.TEAL if _parts_solved[i] else Color("b32741"))
-		verdict.custom_minimum_size.x=17
-		row.add_child(verdict)
-	var spacer:=Control.new()
-	spacer.size_flags_vertical=Control.SIZE_EXPAND_FILL
-	spacer.mouse_filter=Control.MOUSE_FILTER_IGNORE
-	form.add_child(spacer)
-	var submit:=UI.button("Check answers",_submit_parts,true,140,14)
-	submit.name="CheckJapaneseParts"
-	form.add_child(submit)
+	model.set_selected(-1)
+	_answer_area.add_child(UI.label("Hover a number to answer · Drag to rotate · Scroll to zoom",12,false,UI.MUTED))
+	var editor:=AnswerPopover.new()
+	model.add_child(editor)
+	_answer_popover=editor
+	editor.draft_changed.connect(_popover_draft_changed)
+	editor.answer_submitted.connect(_submit_part_answer)
+	editor.close_requested.connect(_close_answer)
+	editor.resized.connect(_position_answer)
+	model.view_changed.connect(_position_answer)
 
-func _part_text_changed(value: String, index: int) -> void:
-	_parts_answers[index]=value
-	Progress.save_kitchen_parts(_parts_answers,_parts_solved)
+func _hover_part_number(which: int) -> void:
+	if Time.get_ticks_msec()<_hover_block_until:return
+	if is_instance_valid(_answer_popover) and _answer_popover.visible:
+		var focus:=get_viewport().gui_get_focus_owner()
+		if focus!=null and _answer_popover.is_ancestor_of(focus):return
+	_open_answer(which,false)
 
 func _select_part(which: int) -> void:
-	if _transitioning or step<2 or step>=7 or which<0 or which>=5:return
-	_parts_selected=which
-	if is_instance_valid(_parts_model):_parts_model.set_selected(which)
-	if which<_parts_fields.size():_parts_fields[which].grab_focus()
+	_open_answer(which,true)
 
-func _submit_parts() -> void:
-	if _transitioning or step<2 or step>=7:return
-	var errors: int=0
-	var new_correct: int=0
-	for i in range(5):
-		if _parts_solved[i]:continue
-		_parts_answers[i]=_parts_fields[i].text
-		if Parts.normalize(_parts_answers[i]).is_empty():continue
-		if Parts.is_correct(i,_parts_answers[i]):
-			_parts_solved[i]=true
-			_parts_states[i]="correct"
-			new_correct+=1
-		else:
-			_parts_states[i]="incorrect"
-			StageRating.mistake(3)
-			errors+=1
-	step=2+_parts_solved.count(true)
+func _open_answer(which: int, focus_input: bool=true) -> void:
+	if _transitioning or step<2 or step>=7 or which<0 or which>=5:return
+	if not is_instance_valid(_answer_popover):return
+	_parts_selected=which
+	_popup_revision+=1
+	_feedback_revision+=1
+	_expire_verdict(_feedback_revision)
+	_parts_model.set_selected(which)
+	if _answer_popover.part_index!=which or not _answer_popover.visible:
+		_answer_popover.configure(which,_parts_answers[which],_parts_solved[which])
+	_answer_popover.show()
+	_position_answer.call_deferred()
+	if focus_input:_answer_popover.input.grab_focus()
+
+func _position_answer() -> void:
+	if not is_instance_valid(_answer_popover) or not is_instance_valid(_parts_model) or not _answer_popover.visible:return
+	var anchor: Vector2=_parts_model.marker_center(_parts_selected)
+	var desired:=anchor+Vector2(24,-110)
+	var limit: Vector2=_parts_model.size-_answer_popover.size-Vector2(10,10)
+	_answer_popover.position=desired.clamp(Vector2(10,10),limit.max(Vector2(10,10)))
+
+func _close_answer() -> void:
+	_popup_revision+=1
+	_hover_block_until=Time.get_ticks_msec()+250
+	if is_instance_valid(_answer_popover):
+		_answer_popover.hide()
+		_answer_popover.input.release_focus()
+	if is_instance_valid(_parts_model):_parts_model.set_selected(-1)
+
+func _popover_draft_changed(value: String) -> void:
+	if _parts_selected<0 or _parts_selected>=5:return
+	_parts_answers[_parts_selected]=value
 	Progress.save_kitchen_parts(_parts_answers,_parts_solved)
-	if step==7:
-		StageRating.finish(3)
-		Progress.complete(3)
-	last_wrong=errors>0
-	_answer_state="incorrect" if errors>0 else ("correct" if new_correct>0 else "neutral")
-	_parts_message="Please check the red answers. Use Japanese names." if errors>0 else ("Correct answers are saved. Complete the remaining numbers." if new_correct>0 else "Type the Japanese names beside the matching numbers.")
-	_refresh()
+
+func _submit_part_answer(value: String) -> void:
+	if _transitioning or step<2 or step>=7:return
+	var index: int=_parts_selected
+	if index<0 or index>=5 or _parts_solved[index]:return
+	_parts_answers[index]=value
+	Progress.save_kitchen_parts(_parts_answers,_parts_solved)
+	if Parts.normalize(value).is_empty():return
+	if Parts.needs_conversion(value):
+		_answer_popover.request_conversion()
+		return
+	if Parts.is_correct(index,value):
+		_parts_solved[index]=true
+		_parts_states[index]="correct"
+		step=2+_parts_solved.count(true)
+		Progress.save_kitchen_parts(_parts_answers,_parts_solved)
+		_parts_model.set_solved(_parts_solved)
+		_part_checklist[index].text=str(index+1)+" · "+value
+		_part_checklist[index].add_theme_color_override("font_color",UI.TEAL)
+		_answer_popover.show_result("correct")
+		_show_verdict("correct")
+		_parts_count_label.text=UI.text("%d / 5 names correct")%_parts_solved.count(true)
+		_progress_bar.value=step
+		_challenge_count.text="%d / 7"%step
+		if step==7:
+			StageRating.finish(3)
+			Progress.complete(3)
+		if step==7:get_tree().create_timer(0.70,false).timeout.connect(_finish_written_parts)
+		else:get_tree().create_timer(0.70,false).timeout.connect(_after_part_correct.bind(_popup_revision))
+	else:
+		_parts_states[index]="incorrect"
+		StageRating.mistake(3)
+		_answer_popover.show_result("incorrect")
+		_show_verdict("incorrect")
+
+func _after_part_correct(revision: int) -> void:
+	if revision==_popup_revision:_close_answer()
+
+func _finish_written_parts() -> void:
+	if step==7:_refresh()
 
 
 func _draw_completed() -> void:
@@ -634,8 +656,8 @@ func _show_completion() -> void:
 
 func _save_session() -> void:
 	if _session_save_suspended or Progress.resume_stage()!=3:return
-	for i in range(_parts_fields.size()):
-		if is_instance_valid(_parts_fields[i]):_parts_answers[i]=_parts_fields[i].text
+	if is_instance_valid(_answer_popover) and _answer_popover.visible and _answer_popover.part_index>=0:
+		_parts_answers[_answer_popover.part_index]=_answer_popover.input.text
 	if step>=2:Progress.save_kitchen_parts(_parts_answers,_parts_solved)
 	Progress.save_kitchen_step(step)
 

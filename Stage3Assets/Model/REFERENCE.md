@@ -18,3 +18,11 @@ accept English names or score a mere click as a correct answer. Empty entries
 do not add mistakes. Correct entries lock; drafts and individual solved flags
 persist in the existing save file. Legacy sequential-selection saves migrate
 without losing already verified progress. Retry resets only the current attempt.
+
+The full model workspace uses a supersampled viewport with on-demand redraws,
+subtle greige cabinet grain, a curved mixer and a rounded stainless basin.
+Hovering or clicking a number opens one contextual answer editor; dragging or
+closing restores the unobstructed view. Students enter a Hiragana reading,
+choose a Kanji/Katakana candidate based only on that reading, then submit.
+Conversions are independent of the assessed part. Correct answers briefly
+confirm and dismiss the editor; each question starts without an old verdict.

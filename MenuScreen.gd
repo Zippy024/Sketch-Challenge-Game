@@ -220,8 +220,16 @@ func _build_level_journey() -> void:
 	surface.shadow_size=5
 	strip.add_theme_stylebox_override("panel",surface)
 	_put(_design,strip,Rect2(220,120,1000,54))
-	var ribbon:=UI.ribbon("Your journey",13)
+	var ribbon:=Control.new()
+	ribbon.name="LevelJourneyRibbon"
+	ribbon.mouse_filter=Control.MOUSE_FILTER_IGNORE
 	_put(strip,ribbon,Rect2(14,10,174,34))
+	var ribbon_art:=TextureRect.new()
+	ribbon_art.texture=preload("res://UIAssets/ribbon.svg")
+	ribbon_art.expand_mode=TextureRect.EXPAND_IGNORE_SIZE
+	ribbon_art.mouse_filter=Control.MOUSE_FILTER_IGNORE
+	_put(ribbon,ribbon_art,Rect2(0,0,174,34))
+	_level_label(ribbon,"Your journey",Rect2(22,-3,130,34),13,Color.WHITE,true,true)
 	var track:=Decor.new()
 	track.kind=Decor.Kind.JOURNEY
 	track.current_stage=Progress.next_stage()
@@ -421,6 +429,7 @@ func _card(stage: int, rect: Rect2) -> void:
 	if selected:
 		var tab:=Panel.new()
 		tab.name="SelectedStageTag"
+		tab.z_index=5
 		tab.mouse_filter=Control.MOUSE_FILTER_IGNORE
 		var tab_style:=UI.box(Color("fff7da"),Color("d8c98e"),7,0)
 		tab_style.shadow_size=2
