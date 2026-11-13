@@ -385,6 +385,12 @@ func _run() -> void:
 		game.call("_check_demo_answer")
 		assert(game.get("last_eval_state")=="needs")
 		assert(game.find_child("CustomerAnswerLabel",true,false).text==manager.text("Incorrect"))
+		# The answer field is intentionally locked until the customer's
+		# "please try again" recording ends.
+		assert(not game.get("_question_ready") and not input.editable)
+		game.call("_stop_voice")
+		game.call("_on_voice_finished")
+		assert(game.get("_question_ready") and input.editable)
 		input.text="PS is a vertical shaft for water supply and drainage pipes and cannot easily be moved during renovation."
 		game.call("_check_demo_answer")
 		assert(game.get("last_eval_state")=="good")
