@@ -188,14 +188,15 @@ func _run() -> void:
 		assert(name_plate.get_global_rect().encloses(game.get("speaker_name_label").get_global_rect()))
 		var request_header=game.find_child("CustomerRequestHeader",true,false)
 		var customer_frame=name_plate.get_theme_stylebox("panel").texture.resource_path
-		assert(customer_frame==request_header.get_theme_stylebox("panel").texture.resource_path)
+		var request_frame=request_header.get_theme_stylebox("panel").texture.resource_path
+		assert(customer_frame!=request_frame and request_frame=="res://UIAssets/request-tab.svg")
 		assert(request_header.visible)
 		var request: RichTextLabel=game.get("request_label")
 		assert(request.text.count("• ")==4)
 		assert(request.get_content_height()<=game.get("dialog_scroll").size.y+2)
 		for line in request.text.split("\n"): assert(line.begins_with("• "))
 		assert(request_header.get_global_rect().end.y<=game.get("dialog_bubble").global_position.y)
-		assert(game.find_child("CustomerAnswerBadge",true,false).get_parent().get_parent()==request_header)
+		assert(game.find_child("CustomerAnswerBadge",true,false).get_parent().get_parent()==game.get("dialog_bubble"))
 		for tool in game.find_child("Stage1SixToolGroup",true,false).get_children():
 			assert(tool.size.y<=40)
 			assert(drawing_card.get_global_rect().encloses(tool.get_global_rect()))
@@ -311,8 +312,8 @@ func _run() -> void:
 		assert(qa_reach.find_child("ReachNode02",true,false).get_global_rect().encloses(qa_reach.find_child("CurrentStageLabel",true,false).get_global_rect()))
 		assert(game.find_child("Stage2QATitle",true,false).text==manager.text("Plan Q&A"))
 		assert(game.find_child("CustomerNamePlate",true,false).get_theme_stylebox("panel").texture.resource_path==customer_frame)
-		assert(game.find_child("CustomerRequestHeader",true,false).get_theme_stylebox("panel").texture.resource_path==customer_frame)
-		assert(game.find_child("CustomerAnswerBadge",true,false).get_parent().get_parent()==game.find_child("CustomerRequestHeader",true,false))
+		assert(game.find_child("CustomerRequestHeader",true,false).get_theme_stylebox("panel").texture.resource_path==request_frame)
+		assert(game.find_child("CustomerAnswerBadge",true,false).get_parent().get_parent()==game.find_child("CustomerConversation",true,false))
 		assert(game.get("answer_input").size.y/qa_card.size.y>0.6)
 		assert(game.get("submit_button").text=="OK")
 		assert(game.get("progress_description").text==manager.text("Type your answer, then press OK."))
@@ -334,7 +335,7 @@ func _run() -> void:
 		assert(game.find_child("GamePauseButton",true,false)==null)
 		var stage_two_avatar: TextureRect = null
 		for portrait in game.find_children("*","TextureRect",true,false):
-			if portrait.texture!=null and portrait.texture.resource_path=="res://customer_portrait_ui.png":
+			if portrait.texture!=null and portrait.texture.resource_path=="res://customer_portrait.png":
 				stage_two_avatar=portrait
 				break
 		assert(stage_two_avatar!=null and stage_two_avatar.size==stage_one_avatar_size)
@@ -378,7 +379,7 @@ func _run() -> void:
 		game=current_scene
 		assert(game.get("current_lang")==language)
 		assert(game.find_child("GameHeader",true,false).find_child("CurrentStageLabel",true,false).text==manager.text("Stage %d")%3)
-		assert(game.find_child("CustomerAnswerBadge",true,false).get_parent().get_parent()==game.find_child("CustomerRequestHeader",true,false))
+		assert(game.find_child("CustomerAnswerBadge",true,false).get_parent().get_parent()==game.find_child("CustomerConversation",true,false))
 		_collect(game,"stage3-q1")
 		game.call("_choose",0)
 		assert(game.get("step")==0)

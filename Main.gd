@@ -118,52 +118,6 @@ class ReferencePlanViewer extends Control:
 
 
 
-class StaticCustomerAvatar extends TextureRect:
-
-	func _init() -> void:
-		custom_minimum_size = Vector2(168, 168)
-		expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
-
-		var avatar_path := "res://customer_portrait_ui.png"
-		if ResourceLoader.exists(avatar_path):
-			texture = load(avatar_path) as Texture2D
-
-		var circle_shader := Shader.new()
-		circle_shader.code = """
-shader_type canvas_item;
-render_mode blend_mix;
-
-uniform vec4 ring_color : source_color = vec4(0.29, 0.60, 0.96, 1.0);
-uniform float ring_width = 0.025;
-
-void fragment() {
-    vec2 p = UV - vec2(0.5);
-    float dist = length(p);
-
-
-vec4 tex = texture(TEXTURE, UV);
-
-
-    float edge = fwidth(dist);
-    float circle_alpha = 1.0 - smoothstep(0.5 - edge, 0.5 + edge, dist);
-
-    float ring = smoothstep(
-        0.5 - ring_width - edge,
-        0.5 - ring_width + edge,
-        dist
-    );
-
-    vec3 final_color = mix(tex.rgb, ring_color.rgb, ring);
-    COLOR = vec4(final_color, tex.a * circle_alpha);
-}
-"""
-
-		var shader_material := ShaderMaterial.new()
-		shader_material.shader = circle_shader
-		material = shader_material
-
 
 var canvas: Control
 var ref_viewer: ReferencePlanViewer
@@ -617,7 +571,7 @@ func _build_ui() -> void:
 	chat_panel.name = "Stage1CustomerCard"
 	chat_panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	chat_panel.size_flags_stretch_ratio = 0.92
-	chat_panel.custom_minimum_size.y = 340
+	chat_panel.custom_minimum_size.y = 384
 	chat_panel.add_theme_stylebox_override("panel", _stage1_glass("customer", 14))
 	left.add_child(chat_panel)
 
@@ -639,10 +593,10 @@ func _build_ui() -> void:
 	customer_row.add_child(avatar_column)
 
 	var avatar_holder := CenterContainer.new()
-	# Match the 110 x 110 customer portrait used in Stage 2.
+	# Share the same light circular frame in all three stages.
 	avatar_holder.custom_minimum_size = Vector2(168, 168)
 	avatar_column.add_child(avatar_holder)
-	var avatar: StaticCustomerAvatar = StaticCustomerAvatar.new()
+	var avatar: TextureRect = UI.portrait()
 	avatar.name = "Stage1CustomerAvatar"
 	avatar.custom_minimum_size = Vector2(168, 168)
 	avatar_holder.add_child(avatar)
@@ -668,7 +622,7 @@ func _build_ui() -> void:
 	var request_header := PanelContainer.new()
 	request_header.name = "CustomerRequestHeader"
 	request_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var heading_box := UI.customer_plate()
+	var heading_box := UI.request_plate()
 	request_header.add_theme_stylebox_override("panel", heading_box)
 	speech_stack.add_child(request_header)
 	var request_heading_row := HBoxContainer.new()
@@ -695,7 +649,7 @@ func _build_ui() -> void:
 	bubble_vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	bubble_vbox.add_theme_constant_override("separation", 8)
 	dialog_bubble.add_child(bubble_vbox)
-	UI.add_customer_feedback(dialog_bubble,request_heading_row)
+	UI.add_customer_feedback(dialog_bubble,bubble_vbox)
 
 	# Preserve recorded voice and UI feedback behavior.
 	voice_replay_button = _button("", _replay_voice, 26)

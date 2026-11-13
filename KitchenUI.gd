@@ -258,17 +258,7 @@ static func update_progress(strip: Control) -> void:
 	strip.find_child("OverallProgressCaption",true,false).text = text("%d of 3 missions complete") % Progress.completed_count()
 
 static func portrait() -> TextureRect:
-	var face := TextureRect.new()
-	face.texture = preload("res://customer_portrait_ui.png")
-	face.custom_minimum_size = Vector2(168,168)
-	face.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	face.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	face.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	face.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	var mat := ShaderMaterial.new()
-	mat.shader = preload("res://UIAssets/avatar.gdshader")
-	face.material = mat
-	return face
+	return preload("res://CustomerPortrait.gd").new()
 
 static func card_stack(parent: Control, expand: bool = false) -> VBoxContainer:
 	var panel := PanelContainer.new()
@@ -306,7 +296,7 @@ static func customer(parent: Control) -> Dictionary:
 	var tag := PanelContainer.new()
 	tag.name="CustomerRequestHeader"
 	tag.size_flags_horizontal=Control.SIZE_EXPAND_FILL
-	tag.add_theme_stylebox_override("panel",customer_plate())
+	tag.add_theme_stylebox_override("panel",request_plate())
 	talk.add_child(tag)
 	var header_row:=HBoxContainer.new()
 	header_row.add_theme_constant_override("separation",7)
@@ -325,7 +315,7 @@ static func customer(parent: Control) -> Dictionary:
 	var dialogue := VBoxContainer.new()
 	dialogue.add_theme_constant_override("separation",9)
 	bubble.add_child(dialogue)
-	add_customer_feedback(bubble,header_row)
+	add_customer_feedback(bubble,dialogue)
 	var question := label("",14)
 	question.set_meta("locale_ignore",true)
 	dialogue.add_child(question)
@@ -347,6 +337,19 @@ static func customer_plate() -> StyleBoxTexture:
 	style.content_margin_bottom=11
 	return style
 
+static func request_plate() -> StyleBoxTexture:
+	var style:=StyleBoxTexture.new()
+	style.texture=preload("res://UIAssets/request-tab.svg")
+	style.texture_margin_left=20
+	style.texture_margin_right=118
+	style.texture_margin_top=30
+	style.texture_margin_bottom=8
+	style.content_margin_left=12
+	style.content_margin_right=28
+	style.content_margin_top=8
+	style.content_margin_bottom=10
+	return style
+
 static func conversation_style(state: String="neutral") -> StyleBoxFlat:
 	var accent:=SUCCESS if state=="correct" else FAILURE
 	var fill:=Color("f5faff")
@@ -358,13 +361,13 @@ static func conversation_style(state: String="neutral") -> StyleBoxFlat:
 	style.shadow_size=4
 	return style
 
-static func add_customer_feedback(bubble: PanelContainer,header_row: HBoxContainer) -> void:
-	# Keep the verdict alongside "Customer Request", never inside customer speech.
+static func add_customer_feedback(bubble: PanelContainer,feedback_parent: VBoxContainer) -> void:
+	# A separate feedback chip below the request tab, above the speech text.
 	var badge:=PanelContainer.new()
 	badge.name="CustomerAnswerBadge"
-	badge.size_flags_horizontal=Control.SIZE_SHRINK_END
+	badge.size_flags_horizontal=Control.SIZE_SHRINK_BEGIN
 	badge.mouse_filter=Control.MOUSE_FILTER_IGNORE
-	header_row.add_child(badge)
+	feedback_parent.add_child(badge)
 	var row:=HBoxContainer.new()
 	row.add_theme_constant_override("separation",7)
 	badge.add_child(row)
@@ -379,7 +382,7 @@ static func add_customer_feedback(bubble: PanelContainer,header_row: HBoxContain
 	caption.add_theme_color_override("font_color",Color.WHITE)
 	row.add_child(caption)
 	badge.hide()
-	# The badge now lives in the sibling request header, not inside the bubble.
+	# Keep the title frame and feedback frame independent.
 	bubble.set_meta("feedback_badge",badge)
 	bubble.set_meta("answer_state","neutral")
 	bubble.set_meta("tint_strength",0.0)
