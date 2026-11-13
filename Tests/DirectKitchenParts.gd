@@ -30,7 +30,8 @@ func _run() -> void:
  model.part_selected.connect(func(i: int):chosen.append(i))
  await _wait()
  assert(model.find_children("PartMarker*","Button",true,false).is_empty())
- assert(model._groups.size()==Parts.COUNT)
+ assert(model._groups.size()==Parts.COUNT and model._pointers.size()==8)
+ for pointer in model._pointers:assert(model.get_rect().encloses(pointer.get_rect()))
  assert(model.find_child("RoomBackWall",true,false)==null and model.find_child("RoomSideWall",true,false)==null)
  var targets=[Vector3(0.0,0.851,0.20),Vector3(0.28,1.08,-0.315),Vector3(-0.84,2.0,0.0),Vector3(0.45,0.5,-0.49),Vector3(0.75,0.855,0.02),Vector3(0.75,1.24,-0.18),Vector3(-1.0,0.862,0.06),Vector3(0.71,0.65,0.34)]
  for i in range(Parts.COUNT):
@@ -57,6 +58,11 @@ func _run() -> void:
   model._gui_input(press)
   await _wait()
   assert(chosen.back()==i and model.selected==i)
+ var previous_center: Vector2=model._pointers[0].position
+ model.rotate_by(PI/4)
+ assert(not model._pointers[0].position.is_equal_approx(previous_center))
+ model._pointers[3].pressed.emit()
+ assert(chosen.back()==3)
  var original: float=model.yaw
  for i in range(8):model.rotate_by(PI/4)
  assert(absf(wrapf(model.yaw-original,-PI,PI))<0.0001)
@@ -79,5 +85,5 @@ func _run() -> void:
  assert(Parts.conversion_candidates("すいせん")==["水栓","推薦"])
  assert(Parts.conversion_candidates("あいえいち")==["IH"])
  assert(Parts.conversion_candidates("ひきだし")==["引き出し","引出し"])
- print("DIRECT_KITCHEN_PARTS_OK: eight mesh hits, visible hover, click selection, no numbered controls, full 360 drag/buttons, aliases and conversion")
+ print("DIRECT_KITCHEN_PARTS_OK: eight mesh hits, visible hover, click selection, eight pointer guides, full 360 drag/buttons, aliases and conversion")
  quit()

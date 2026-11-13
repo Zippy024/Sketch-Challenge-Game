@@ -482,5 +482,6 @@ const MESSAGES = [
  {"en":"Click a part to answer. Drag to rotate 360°. Scroll to zoom.","mm":"ပစ္စည်းကို နှိပ်၍ ဖြေပါ။ ဆွဲ၍ 360° လှည့်ကြည့်ပါ။ Scroll ဖြင့် ချဲ့ပါ။","jp":"パーツをクリックして回答。ドラッグで360°回転、スクロールで拡大。","aliases":[]},
  {"en":"Click a part to answer · Drag to rotate 360° · Scroll to zoom","mm":"ပစ္စည်းကို နှိပ်၍ဖြေ · ဆွဲ၍ 360° လှည့် · Scroll ဖြင့်ချဲ့","jp":"パーツをクリックして回答・ドラッグで360°回転・スクロールで拡大","aliases":[]},
  {"en":"Rotate left","mm":"ဘယ်ဘက်လှည့်","jp":"左に回転","aliases":[]},
- {"en":"Rotate right","mm":"ညာဘက်လှည့်","jp":"右に回転","aliases":[]}
+ {"en":"Rotate right","mm":"ညာဘက်လှည့်","jp":"右に回転","aliases":[]},
+ {"en":"Part %d","mm":"အစိတ်အပိုင်း %d","jp":"パーツ %d","aliases":[]}
 ]

@@ -33,6 +33,12 @@ func _write_part(game: Node, index: int, value: String) -> void:
 	editor.input.text_changed.emit(value)
 	editor.find_child("CheckPartAnswer",true,false).pressed.emit()
 
+func _continue_phase() -> void:
+	var next=current_scene.find_child("Stage3PhaseContinue",true,false)
+	assert(next!=null)
+	next.pressed.emit()
+	await create_timer(0.35).timeout
+
 func _run() -> void:
 	# A save from the previous sequential selection game keeps verified progress.
 	var legacy:=ConfigFile.new()
@@ -125,10 +131,12 @@ func _run() -> void:
 	current_scene.call("_choose",0)
 	current_scene.call("_choose",2)
 	await create_timer(1.1).timeout
+	await _continue_phase()
 	current_scene.get("_speech").player.stop()
 	current_scene.get("_speech").call("_finished")
 	current_scene.call("_choose",1)
 	await create_timer(1.1).timeout
+	await _continue_phase()
 	current_scene.get("_speech").player.stop()
 	current_scene.get("_speech").call("_finished")
 	_write_part(current_scene,0,"カウンター")
@@ -206,10 +214,12 @@ func _win(stage: int) -> void:
 		game.get("_speech").call("_finished")
 		game.call("_choose",2)
 		await create_timer(1.1).timeout
+		await _continue_phase()
 		game.get("_speech").player.stop()
 		game.get("_speech").call("_finished")
 		game.call("_choose",1)
 		await create_timer(1.1).timeout
+		await _continue_phase()
 		game.get("_speech").player.stop()
 		game.get("_speech").call("_finished")
 		for i in range(8):_write_part(game,i,["カウンター","キッチンボード","フード","腰壁","シンク","水栓","IHクッキングヒーター","引き出し"][i])
@@ -246,6 +256,7 @@ func _check_retry(stage: int) -> void:
 		current_scene.get("_speech").call("_finished")
 		current_scene.call("_choose",2)
 		await create_timer(1.1).timeout
+		await _continue_phase()
 		Rating.advance(3,60)
 		Rating.mistake(3)
 		current_scene.find_child("Stage3Retry",true,false).pressed.emit()
