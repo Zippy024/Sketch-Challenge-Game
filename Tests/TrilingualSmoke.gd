@@ -274,7 +274,8 @@ func _run() -> void:
 			assert(drawing_card.get_global_rect().encloses(control.get_global_rect()))
 		assert(drawing_card.get_global_rect().encloses(game.get("again_button").get_global_rect()))
 		game.get("again_button").pressed.emit()
-		assert(game.get("last_eval_state")=="none" and drawing.drawing_enabled)
+		assert(game.get("last_eval_state")=="none" and not drawing.drawing_enabled)
+		assert(not game.get("conversation_finished") and game.get("ok_button").disabled)
 		assert(live_retry.is_visible_in_tree() and drawing.lines.is_empty())
 		# Language changes must not restore the old, hard-coded customer name.
 		var alternate_language="jp" if language!="jp" else "en"

@@ -27,3 +27,9 @@ closing restores the unobstructed view. Students enter a Hiragana reading,
 choose a Kanji/Katakana candidate based only on that reading, then submit.
 Conversions are independent of the assessed part. Correct answers briefly
 confirm and dismiss the editor; each question starts without an old verdict.
+
+## Reference-matching showroom rebuild (13 November 2026)
+
+The procedural kitchen uses a light oak plank floor, off-white corner walls, grey stone back panel and cooking bay, warm white slab counter with recessed metallic sink, curved silver mixer, black IH rings, oven controls, matte-grey range hood and satin off-white black-handled cabinets. The model intentionally contains **no person**. The room walls hide only when viewed from behind, so 360-degree drag/orbit and zoom remain possible; all eight fixed part markers and Japanese answer bindings remain active.
+
+This reconstruction is an approximation of the supplied screenshot, not a photogrammetric scan or a byte-for-byte import of the supplied GLB. The interactive Godot meshes are kept instead of replacing assessable parts with a single opaque GLB.
