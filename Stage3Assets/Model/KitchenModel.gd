@@ -20,6 +20,8 @@ var _pending_pick: Vector2=Vector2(-1,-1)
 var _pending_hover: Vector2=Vector2(-1,-1)
 var _groups: Array[Node3D]=[]
 var _materials: Array=[]
+var _pointers: Array[Button]=[]
+var _pointer_offsets: Array[Vector2]=[Vector2(-38,-26),Vector2(40,-18),Vector2(-38,-20),Vector2(44,14),Vector2(40,-14),Vector2(46,-35),Vector2(-42,-18),Vector2(40,28)]
 var _solved: Array[bool]=[false,false,false,false,false,false,false,false]
 var _anchors: Array[Vector3]=[Vector3(0.15,0.87,0.36),Vector3(0.28,1.08,-0.325),Vector3(-0.84,1.98,0.18),Vector3(0.45,0.5,-0.49),Vector3(0.74,0.84,0.03),Vector3(0.75,1.12,-0.15),Vector3(-0.91,0.86,0),Vector3(0.71,0.65,0.34)]
 
@@ -76,11 +78,52 @@ func _ready() -> void:
   _groups.append(group)
   _materials.append([])
  _build_kitchen()
+ _build_pointers()
  resized.connect(_resize_view)
  mouse_exited.connect(set_hovered.bind(-1))
  _resize_view()
  _update_camera()
  _update_materials()
+
+func _build_pointers() -> void:
+ for i in range(Parts.COUNT):
+  var pointer:=Button.new()
+  pointer.name="PartPointer%d"%(i+1)
+  pointer.custom_minimum_size=Vector2(32,32)
+  pointer.size=Vector2(32,32)
+  pointer.mouse_default_cursor_shape=Control.CURSOR_POINTING_HAND
+  pointer.tooltip_text=UI.text("Part %d")%(i+1)
+  pointer.pressed.connect(_choose.bind(i))
+  pointer.mouse_entered.connect(set_hovered.bind(i))
+  pointer.mouse_exited.connect(set_hovered.bind(-1))
+  pointer.focus_entered.connect(set_hovered.bind(i))
+  add_child(pointer)
+  var number:=UI.label(str(i+1),13,true)
+  number.name="PointerNumber"
+  number.autowrap_mode=TextServer.AUTOWRAP_OFF
+  number.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+  pointer.add_child(number)
+  number.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+  _pointers.append(pointer)
+
+func _position_pointers() -> void:
+ if not is_instance_valid(camera) or not camera.is_inside_tree():return
+ var centers: Array[Vector2]=[]
+ for i in range(_pointers.size()):
+  var center: Vector2=(part_center(i)+_pointer_offsets[i]).clamp(Vector2(20,20),size-Vector2(20,20))
+  for other in centers:
+   if center.distance_to(other)<40:
+    center.y+=42 if center.y>=other.y else -42
+  center=center.clamp(Vector2(20,20),size-Vector2(20,20))
+  centers.append(center)
+  _pointers[i].position=center-Vector2(16,16)
+ queue_redraw()
+
+func _draw() -> void:
+ if not is_instance_valid(camera) or not camera.is_inside_tree():return
+ for i in range(_pointers.size()):
+  draw_line(part_center(i),_pointers[i].position+Vector2(16,16),Color("549d94"),1.3,true)
+  draw_circle(part_center(i),2.3,Color("549d94"))
 
 func _material(color: Color, metallic: float=0.0, roughness: float=0.65) -> StandardMaterial3D:
  var material:=StandardMaterial3D.new()
@@ -268,6 +311,7 @@ func _update_camera() -> void:
  var target:=Vector3(0,1.08,0)
  camera.position=target+Vector3(sin(yaw)*cos(pitch),sin(pitch),cos(yaw)*cos(pitch))*6.0
  camera.look_at(target,Vector3.UP)
+ _position_pointers()
 
  view_changed.emit()
 
@@ -309,6 +353,11 @@ func _update_materials() -> void:
    entry.material.emission_enabled=active
    entry.material.emission=Color("257769")
    entry.material.emission_energy_multiplier=0.24 if active else 0.0
+  if i<_pointers.size():
+   var style:=UI.box(UI.TEAL if active else (Color("e7f5ea") if _solved[i] else Color("fafff8")),Color("86b7ae"),16,0)
+   style.shadow_size=2
+   for state in ["normal","hover","pressed","focus"]:_pointers[i].add_theme_stylebox_override(state,style)
+   _pointers[i].get_node("PointerNumber").add_theme_color_override("font_color",Color.WHITE if active else UI.INK)
 
 func part_center(index: int) -> Vector2:
  if not is_instance_valid(camera) or not camera.is_inside_tree() or index<0 or index>=_anchors.size():return size*0.5

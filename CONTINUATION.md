@@ -8,7 +8,8 @@ avoid repeated confirmation. Keep unrelated changes and user-uploaded recordings
 
 Current Stage 3 design: two image questions, then eight Japanese component names.
 Select the real 3D part directly; hover highlights its mesh, click/tap opens a
-single contextual answer editor. No floating numbered buttons. Full 360° drag,
+single contextual answer editor. Eight small numbered pointer guides with leader lines follow the meshes and
+are clickable as an alternative to direct mesh selection. Full 360° drag,
 orbit buttons, view presets and zoom are available. Eight parts: worktop, kitchen
 panel, hood, waist wall, sink, faucet, IH hob, drawers. Hiragana readings convert
 to Kanji/Katakana candidates before individual grading. Correct feedback expires.
@@ -17,8 +18,10 @@ Latest visual reference: white cabinets/countertop, black IH, stainless recessed
 sink and curved faucet, pale gray back panels/hood, light wooden floor. No person
 inside the 3D model scene. No enclosing room walls, hard shadows, or spot glare.
 The reference plan stays in the LEFT column in all three sections; footer and
-progress fit short/wide screens. Narration starts after the section transition
-and subtitle layout, with a modest readable subtitle lead. Save schema v2 preserves old five-answer drafts and
+progress fit short/wide screens. Reference thumbnails open a zoomable/pannable overlay. Question text is shown
+in full throughout narration/replay; the speaking meter follows playback.
+Part 1/2 completion leads to a section announcement that waits for Continue,
+then starts the next question audio after the announcement closes. Save schema v2 preserves old five-answer drafts and
 completed results; new attempts require all eight names. Preserve best stars,
 Retry, recorded speech, and Start Game → Level Select → Play.
 

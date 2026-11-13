@@ -39,7 +39,7 @@ jobs:
 
       - name: Verify three languages and original stage behavior
         run: |
-          timeout 90s godot --headless --audio-driver Dummy --path . --script res://Tests/TrilingualSmoke.gd --max-fps 120 --quit-after 9000 2>&1 | tee /tmp/trilingual-smoke.log
+          timeout 120s godot --headless --audio-driver Dummy --path . --script res://Tests/TrilingualSmoke.gd --max-fps 120 --quit-after 14400 2>&1 | tee /tmp/trilingual-smoke.log
           grep -q "TRILINGUAL_SMOKE_OK" /tmp/trilingual-smoke.log
           if grep -q "SCRIPT ERROR" /tmp/trilingual-smoke.log; then exit 1; fi
 

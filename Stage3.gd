@@ -20,6 +20,7 @@ const Parts = preload("res://Stage3Assets/Model/JapaneseParts.gd")
 const Model = preload("res://Stage3Assets/Model/KitchenModel.gd")
 const AnswerPopover = preload("res://Stage3Assets/Model/PartAnswerPopover.gd")
 const Speech = preload("res://CustomerSpeech.gd")
+const PlanOverlay=preload("res://Stage3Assets/ReferencePlanOverlay.gd")
 const QUESTIONS := {
 	"jp":["現在のキッチンと同じ場所に設置するとすれば、S-classではどのタイプになりますか？","現行のキッチンの後ろの壁も残すとすれば、どうなりますか？","それぞれのパーツの名前を教えてもらえますか？"],
 	"mm":["ကျွန်တော့်ရဲ့ လက်ရှိမီးဖိုချောင်နဲ့ တစ်နေရာတည်းမှာ တပ်ဆင်မယ်ဆိုရင် ဘယ် S-class မော်ဒယ်က သင့်တော်မလဲ။","လက်ရှိမီးဖိုချောင်ရဲ့နောက်မှာ နံရံကိုဆက်ထားရင် ဘာဖြစ်မလဲ။","အစိတ်အပိုင်းတစ်ခုချင်းစီရဲ့ နာမည်တွေကို ပြောပြပေးနိုင်မလား။"],
@@ -162,7 +163,7 @@ func _refresh() -> void:
 	customer.voice.add_child(_speech)
 	_speech.dialogue_started.connect(func():_set_speech_ready(false))
 	_speech.dialogue_finished.connect(func():_set_speech_ready(true))
-	customer.question.visible_characters=mini(12,customer.question.get_total_character_count())
+	customer.question.visible_characters=-1
 	_begin_question_speech.call_deferred(_speech,customer.question,Speech.voice_path(current_lang,mini(step,2)))
 	UI.set_customer_feedback(_customer_bubble,_answer_state)
 	var brief := UI.card_stack(left,true)
@@ -276,7 +277,23 @@ func _reference_tile(parent: VBoxContainer) -> void:
 	plan.size_flags_vertical=Control.SIZE_EXPAND_FILL
 	plan.custom_minimum_size=Vector2(160,100)
 	plan.mouse_filter=Control.MOUSE_FILTER_IGNORE
-	content.add_child(plan)
+	var open:=UI.button("",_open_reference,false,160,12)
+	open.name="Stage3ReferenceOpen"
+	open.tooltip_text=_tr("Click to enlarge","နှိပ်၍ အကြီးချဲ့ကြည့်ပါ","クリックして拡大")
+	open.custom_minimum_size.y=100
+	for state in ["normal","hover","pressed","focus"]:
+		var frame:=UI.box(Color.WHITE,UI.TEAL if state=="hover" else UI.EDGE,8,1)
+		frame.shadow_size=0
+		open.add_theme_stylebox_override(state,frame)
+	open.size_flags_vertical=Control.SIZE_EXPAND_FILL
+	content.add_child(open)
+	open.add_child(plan)
+	plan.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+func _open_reference() -> void:
+	if find_child("Stage3ReferenceOverlay",true,false)!=null:return
+	var overlay:=PlanOverlay.new()
+	add_child(overlay)
 
 func _tr(en: String, mm: String, jp: String) -> String:
 	return {"en":en,"mm":mm,"jp":jp}.get(current_lang,en)
@@ -336,20 +353,28 @@ func _enter_phase(card: Control) -> void:
 	var headline:=UI.label(_phase_name(mini(step,2)),25,true,UI.INK)
 	headline.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
 	content.add_child(headline)
-	var hint:=UI.label(_tr("Next challenge ready","နောက်ထပ်မစ်ရှင်သို့ ရောက်ပါပြီ","次の課題です"),13,false,UI.MUTED)
+	var hint:=UI.label(_tr("Continue when you are ready","အဆင်သင့်ဖြစ်မှ ဆက်သွားပါ","準備ができたら進んでください"),13,false,UI.MUTED)
 	hint.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
 	content.add_child(hint)
-	_transition_tween=create_tween()
-	if reduced:
-		_transition_tween.tween_interval(0.12)
-	else:
+	var next:=UI.button("Continue",func():_leave_phase(veil,toast,reduced),true,200,16)
+	next.name="Stage3PhaseContinue"
+	content.add_child(next)
+	if not reduced:
 		toast.pivot_offset=toast.custom_minimum_size*0.5
 		toast.modulate.a=0.0
-		toast.scale=Vector2(0.92,0.92)
-		_transition_tween.tween_property(toast,"modulate:a",1.0,0.18)
-		_transition_tween.parallel().tween_property(toast,"scale",Vector2.ONE,0.21).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-		_transition_tween.tween_interval(0.22)
-		_transition_tween.tween_property(toast,"modulate:a",0.0,0.15)
+		toast.scale=Vector2(0.96,0.96)
+		_transition_tween=create_tween()
+		_transition_tween.tween_property(toast,"modulate:a",1.0,0.30)
+		_transition_tween.parallel().tween_property(toast,"scale",Vector2.ONE,0.35).set_trans(Tween.TRANS_SINE)
+	next.grab_focus()
+
+func _leave_phase(veil: Control, toast: Control, reduced: bool) -> void:
+	var next:=veil.find_child("Stage3PhaseContinue",true,false) as Button
+	if next==null or next.disabled:return
+	next.disabled=true
+	if _transition_tween and _transition_tween.is_valid():_transition_tween.kill()
+	_transition_tween=create_tween()
+	_transition_tween.tween_property(toast,"modulate:a",0.0,0.08 if reduced else 0.25)
 	_transition_tween.finished.connect(func():
 		_transitioning=false
 		if is_instance_valid(veil):veil.queue_free()
@@ -487,7 +512,7 @@ func _draw_choices() -> void:
 		_stage_choice_buttons.append(option)
 		option.pressed.connect(_choose.bind(i))
 
-	_answer_area.add_child(_label("Select an image. A correct choice automatically opens the next question." if current_lang == "jp" else "အဖြေမှန်ရွေးလိုက်တာနဲ့ နောက်မေးခွန်းကို အလိုအလျောက် သွားပါမယ်။", 13, SUBTEXT))
+	_answer_area.add_child(_label(_tr("Choose an image, then continue when ready.","ပုံကိုရွေးပြီး အဆင်သင့်ဖြစ်မှ ဆက်သွားပါ။","画像を選び、準備ができたら次へ進んでください。"), 13, SUBTEXT))
 
 func _choose(index: int) -> void:
 	if not _speech_ready or _transitioning or step>=2:return
@@ -498,7 +523,7 @@ func _choose(index: int) -> void:
 		_show_verdict("correct")
 		_transitioning=true
 		var revision:=_feedback_revision
-		get_tree().create_timer(0.40,false).timeout.connect(_advance_choice.bind(step,revision))
+		get_tree().create_timer(0.80,false).timeout.connect(_advance_choice.bind(step,revision))
 	else:
 		StageRating.mistake(3)
 		_show_verdict("incorrect")
@@ -536,7 +561,17 @@ func _draw_parts() -> void:
 	for preset in ["perspective","front","rear"]:
 		toolbar.add_child(UI.button({"perspective":"3D","front":"Front view","rear":"Rear view"}[preset],model.set_view.bind(preset),false,54,11))
 	for direction in [-1,1]:
-		var orbit:=UI.button("↶" if direction==-1 else "↷",model.rotate_by.bind(float(direction)*PI/4),false,34,18)
+		var orbit:=UI.button("",model.rotate_by.bind(float(direction)*PI/4),false,34,18)
+		orbit.icon=UI.icon("undo" if direction==-1 else "redo")
+		orbit.expand_icon=true
+		orbit.add_theme_constant_override("icon_max_width",18)
+		orbit.custom_minimum_size=Vector2(40,40)
+		for state in ["normal","hover","pressed","focus"]:
+			var frame:=orbit.get_theme_stylebox(state).duplicate()
+			frame.content_margin_left=5
+			frame.content_margin_right=5
+			orbit.add_theme_stylebox_override(state,frame)
+		for state in ["icon_normal_color","icon_hover_color","icon_pressed_color","icon_focus_color"]:orbit.add_theme_color_override(state,UI.TEAL)
 		orbit.name="OrbitLeft" if direction==-1 else "OrbitRight"
 		orbit.tooltip_text=UI.text("Rotate left" if direction==-1 else "Rotate right")
 		toolbar.add_child(orbit)
@@ -552,7 +587,7 @@ func _draw_parts() -> void:
 	model.apply_view_state(_model_pose)
 	model.set_solved(_parts_solved)
 	model.set_selected(-1)
-	_answer_area.add_child(UI.label("Click a part to answer · Drag to rotate 360° · Scroll to zoom",12,false,UI.MUTED))
+	_answer_area.add_child(UI.label(_tr("Click a part or pointer · Drag to rotate 360° · Scroll to zoom","ပစ္စည်း သို့မဟုတ် pointer ကို နှိပ်၍ဖြေ · ဆွဲ၍ 360° လှည့် · Scroll ဖြင့်ချဲ့","パーツかポインターをクリックして回答・ドラッグで360°回転・スクロールで拡大"),12,false,UI.MUTED))
 	var editor:=AnswerPopover.new()
 	model.add_child(editor)
 	_answer_popover=editor

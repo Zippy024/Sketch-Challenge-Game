@@ -41,15 +41,26 @@ func _ready() -> void:
 	add_child(_meter)
 	var replay:=UI.button("",replay_question,false,30,12)
 	replay.name="ReplayQuestion"
-	replay.icon=preload("res://Stage1Assets/reset.svg")
+	replay.icon=UI.icon("undo")
 	replay.expand_icon=true
 	replay.add_theme_constant_override("icon_max_width",16)
 	replay.tooltip_text=UI.text("Replay")
 	add_child(replay)
+	_compact(replay)
 	_pause=UI.button("Ⅱ",toggle_pause,false,30,12)
 	_pause.name="PauseQuestion"
 	_pause.tooltip_text=UI.text("Pause")
 	add_child(_pause)
+	_compact(_pause)
+
+func _compact(button: Button) -> void:
+	button.custom_minimum_size=Vector2(36,36)
+	for state in ["normal","hover","pressed","focus"]:
+		var skin:=button.get_theme_stylebox(state).duplicate()
+		skin.content_margin_left=5
+		skin.content_margin_right=5
+		button.add_theme_stylebox_override(state,skin)
+	for state in ["icon_normal_color","icon_hover_color","icon_pressed_color"]:button.add_theme_color_override(state,UI.TEAL)
 
 static func voice_path(language: String, phase: int) -> String:
 	var suffix: String="" if phase==0 else str(phase+1)
@@ -68,7 +79,7 @@ func start(target: Label, path: String) -> void:
 func replay_question() -> void:
 	if player.stream==null:return
 	dialogue_started.emit()
-	caption.visible_characters=mini(12,caption.get_total_character_count())
+	caption.visible_characters=-1
 	player.stream_paused=false
 	player.play()
 	_sync()
@@ -94,12 +105,8 @@ func stop() -> void:
 	if is_instance_valid(caption):caption.visible_characters=-1
 	_sync()
 
-func _process(_delta: float) -> void:
-	if player==null or not player.playing or player.stream_paused or not is_instance_valid(caption):return
-	# Short readable lead offsets audio startup and subtitle font-layout delay.
-	var ratio:=clampf((player.get_playback_position()+0.45)/maxf(player.stream.get_length()*0.82,0.1),0.0,1.0)
-	caption.visible_ratio=ratio
-
+# Keep the entire question readable throughout narration and replay.
+# The speaking meter follows playback; subtitles never trail the recording.
 func _finished() -> void:
 	if is_instance_valid(caption):caption.visible_characters=-1
 	_sync()

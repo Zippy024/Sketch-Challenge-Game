@@ -434,6 +434,25 @@ func _run() -> void:
 		assert(game.find_children("KitchenChoice*","Button",true,false).size()==5)
 		assert(game.find_child("Stage3ReferencePlan",true,false).texture.resource_path=="res://Refrence image.png")
 		assert(game.find_child("Stage3Retry",true,false)!=null)
+		var plan_click:=InputEventMouseButton.new()
+		plan_click.position=game.find_child("Stage3ReferencePlan",true,false).get_global_rect().get_center()
+		plan_click.button_index=MOUSE_BUTTON_LEFT
+		plan_click.pressed=true
+		root.push_input(plan_click,true)
+		await process_frame
+		plan_click=plan_click.duplicate()
+		plan_click.pressed=false
+		root.push_input(plan_click,true)
+		await _wait()
+		var reference=game.find_child("Stage3ReferenceOverlay",true,false)
+		assert(reference!=null)
+		reference.find_child("ReferenceZoomIn",true,false).pressed.emit()
+		assert(reference.viewer.zoom>1.0)
+		reference.find_child("ReferenceReset",true,false).pressed.emit()
+		assert(reference.viewer.zoom==1.0)
+		reference.find_child("CloseReferencePlan",true,false).pressed.emit()
+		await _wait()
+		assert(game.find_child("Stage3ReferenceOverlay",true,false)==null)
 		game.call("_choose",0)
 		assert(game.get("step")==0)
 		assert(game.find_child("CustomerAnswerLabel",true,false).text==manager.text("Incorrect"))
@@ -445,11 +464,14 @@ func _run() -> void:
 		assert(game.find_child("CustomerAnswerLabel",true,false).text==manager.text("Correct"))
 		game.call("_choose",1)
 		assert(game.get("step")==1)
-		await create_timer(0.5).timeout
+		await create_timer(0.9).timeout
 		assert(game.find_children("KitchenChoice*","Button",true,false).size()==4)
 		assert(game.find_children("DiagramFrame","Panel",true,false).size()==4)
 		await create_timer(0.6).timeout
 		assert(not game.find_child("CustomerAnswerBadge",true,false).visible)
+		assert(game.get("_transitioning") and not game.get("_speech").player.playing)
+		game.find_child("Stage3PhaseContinue",true,false).pressed.emit()
+		await create_timer(0.35).timeout
 		game.get("_speech").player.stop()
 		game.get("_speech").call("_finished")
 		# Click the illustration itself, catching child controls that swallow input.
@@ -470,6 +492,8 @@ func _run() -> void:
 		game.call("_select_part",0)
 		assert(game.get("step")==2)
 		await create_timer(1.1).timeout
+		game.find_child("Stage3PhaseContinue",true,false).pressed.emit()
+		await create_timer(0.35).timeout
 		assert(not game.get("_speech_ready"))
 		game.get("_speech").player.stop()
 		game.get("_speech").call("_finished")
@@ -557,7 +581,7 @@ func _run() -> void:
 			editor.input.text_changed.emit(editor.input.text)
 			editor.find_child("CheckPartAnswer",true,false).pressed.emit()
 		assert(model._groups.size()==8)
-		for i in range(8):assert(game.find_child("PartMarker%d"%(i+1),true,false)==null)
+		for i in range(8):assert(game.find_child("PartPointer%d"%(i+1),true,false)!=null)
 		assert(Progress.kitchen_parts().solved.size()==8)
 
 		assert(game.get("step")==10)
