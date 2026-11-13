@@ -38,3 +38,34 @@ static func is_correct(index: int, value: String) -> bool:
  for answer in ACCEPTED[index]:
   if normalized==normalize(answer):return true
  return false
+
+static func has_hiragana(value: String) -> bool:
+ for character in value:
+  var code:=character.unicode_at(0)
+  if code>=0x3041 and code<=0x3096:return true
+ return false
+
+static func conversion_candidates(reading: String) -> Array[String]:
+ # Conversion depends on the reading only, never on the numbered question.
+ var table:={
+  "カウンター":["カウンター"],"カウンタートップ":["カウンタートップ"],
+  "ワークトップ":["ワークトップ"],"テンバン":["天板"],
+  "キッチンカウンター":["キッチンカウンター"],
+  "キッチンボード":["キッチンボード"],"キッチンパネル":["キッチンパネル"],
+  "フード":["フード","風土"],"フウド":["風土","フード"],
+  "レンジフード":["レンジフード"],"カンキセン":["換気扇"],
+  "コシカベ":["腰壁"],"キッチンコシカベ":["キッチン腰壁"],
+  "シンク":["シンク","真紅"],"ナガシ":["流し"],"ナガシダイ":["流し台"],"スイセン":["水栓","推薦"]
+ }
+ var result: Array[String]=[]
+ var key:=normalize(reading)
+ if table.has(key):result.assign(table[key])
+ return result
+
+static func needs_conversion(value: String) -> bool:
+ if not has_hiragana(value):return false
+ # Written Japanese may contain okurigana, e.g. 流し台.
+ for character in value:
+  var code:=character.unicode_at(0)
+  if code>=0x3400 and code<=0x9fff:return false
+ return true

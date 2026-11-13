@@ -18,6 +18,21 @@ func _home() -> Control:
 	current_scene.call("_show_home")
 	await _wait()
 	return current_scene.find_child("KitchenHomeScreen",true,false)
+func _play_selected(menu: Node, stage: int) -> void:
+	var screen=menu.find_child("LevelSelectionScreen",true,false)
+	assert(screen!=null)
+	screen.find_child("StageCard%02d"%stage,true,false).pressed.emit()
+	await _wait()
+	screen.find_child("SelectedPlayButton",true,false).pressed.emit()
+	await _wait()
+
+func _write_part(game: Node, index: int, value: String) -> void:
+	game.call("_open_answer",index,true)
+	var editor=game.get("_answer_popover")
+	editor.input.text=value
+	editor.input.text_changed.emit(value)
+	editor.find_child("CheckPartAnswer",true,false).pressed.emit()
+
 func _run() -> void:
 	# A save from the previous sequential selection game keeps verified progress.
 	var legacy:=ConfigFile.new()
@@ -34,6 +49,8 @@ func _run() -> void:
 	assert(home.find_child("ContinueGame",true,false).disabled)
 	home.find_child("StartGame",true,false).pressed.emit()
 	await _wait()
+	assert(current_scene.find_child("LevelSelectionScreen",true,false)!=null and Progress.resume_stage()==0)
+	await _play_selected(current_scene,1)
 	var game=current_scene
 	assert(Progress.resume_stage()==1 and Progress.completed_count()==0)
 	var canvas=game.get("canvas")
@@ -73,13 +90,15 @@ func _run() -> void:
 	canvas=game.get("canvas")
 	assert(canvas.lines.size()==2 and is_equal_approx(canvas.zoom_level,1.5) and canvas.pan==Vector2(88,97))
 	assert(float(Rating.current(1).elapsed)>=125 and int(Rating.current(1).mistakes)==1)
-	# Start Game from a paused scene discards its draft before the old scene exits.
+	# Start opens level selection; the paused draft survives until Play confirms a new attempt.
 	game.call("_open_game_menu")
 	overlay=game.get("_pause_menu")
 	overlay.call("_show_home")
 	await _wait()
 	overlay.find_child("StartGame",true,false).pressed.emit()
 	await _wait()
+	assert(paused and Progress.drawing().size()==2)
+	await _play_selected(overlay,1)
 	assert(not paused and current_scene.get("canvas").lines.is_empty() and Progress.drawing().is_empty())
 	Progress.open_stage(2)
 	change_scene_to_file("res://stage_2.tscn")
@@ -103,14 +122,14 @@ func _run() -> void:
 	Rating.advance(3,14)
 	current_scene.call("_choose",0)
 	current_scene.call("_choose",2)
-	await create_timer(0.55).timeout
+	await create_timer(1.1).timeout
 	current_scene.call("_choose",1)
-	await create_timer(0.55).timeout
-	current_scene.find_child("PartAnswer1",true,false).text="カウンター"
-	current_scene.call("_submit_parts")
+	await create_timer(1.1).timeout
+	_write_part(current_scene,0,"カウンター")
 	assert(current_scene.get("step")==3)
-	current_scene.find_child("PartAnswer2",true,false).text="キッチン"
-	current_scene.find_child("PartAnswer2",true,false).text_changed.emit("キッチン")
+	current_scene.call("_open_answer",1,true)
+	current_scene.get("_answer_popover").input.text="きっちん"
+	current_scene.get("_answer_popover").input.text_changed.emit("きっちん")
 	Progress._loaded=false
 	assert(Progress.kitchen_step()==3)
 	home=await _home()
@@ -118,17 +137,24 @@ func _run() -> void:
 	await _wait()
 	assert(current_scene.get("step")==3 and current_scene.find_child("KitchenPartsDiagram",true,false)!=null)
 	assert(float(Rating.current(3).elapsed)>=14 and int(Rating.current(3).mistakes)==1)
-	assert(not current_scene.find_child("PartAnswer1",true,false).editable)
-	assert(current_scene.find_child("PartAnswer2",true,false).text=="キッチン")
+	current_scene.call("_open_answer",0,true)
+	assert(not current_scene.get("_answer_popover").input.editable)
+	current_scene.call("_open_answer",1,true)
+	assert(current_scene.get("_answer_popover").input.text=="きっちん")
+	home=await _home()
 	Progress.complete(1)
 	Progress.complete(2)
-	home=await _home()
+	current_scene.call("_show_home")
+	await _wait()
+	home=current_scene.find_child("KitchenHomeScreen",true,false)
 	assert(home.find_child("HomeProgressStage1",true,false).get_meta("completed"))
 	assert(home.find_child("HomeProgressStage2",true,false).get_meta("completed"))
 	assert(not home.find_child("HomeProgressStage3",true,false).get_meta("completed"))
 	home.find_child("StartGame",true,false).pressed.emit()
 	await _wait()
-	assert(Progress.completed_count()==0 and Progress.resume_stage()==1 and current_scene.get("canvas").lines.is_empty())
+	assert(current_scene.find_child("LevelSelectionScreen",true,false)!=null and Progress.completed_count()==2)
+	await _play_selected(current_scene,1)
+	assert(Progress.completed_count()==2 and Progress.resume_stage()==1 and current_scene.get("canvas").lines.is_empty())
 	for stage in range(1,4):await _check_retry(stage)
 	# The new mission board reflects earned best stars, independently of retries.
 	home=await _home()
@@ -167,15 +193,14 @@ func _win(stage: int) -> void:
 		game.call("_check_demo_answer")
 	else:
 		game.call("_choose",2)
-		await create_timer(0.55).timeout
+		await create_timer(1.1).timeout
 		game.call("_choose",1)
-		await create_timer(0.55).timeout
-		for i in range(5):game.find_child("PartAnswer%d"%(i+1),true,false).text=["カウンター","キッチンボード","フード","腰壁","シンク"][i]
-		game.call("_submit_parts")
+		await create_timer(1.1).timeout
+		for i in range(5):_write_part(game,i,["カウンター","キッチンボード","フード","腰壁","シンク"][i])
 	if stage<3:
 		game.call("_stop_voice")
 		game.call("_on_voice_finished")
-	await create_timer(0.5).timeout
+	await create_timer(0.85).timeout
 
 func _check_retry(stage: int) -> void:
 	var scene=["res://main.tscn","res://stage_2.tscn","res://stage_3.tscn"][stage-1]
@@ -202,7 +227,7 @@ func _check_retry(stage: int) -> void:
 		assert(Progress.kitchen_parts().answers==["","","","",""])
 		assert(Progress.kitchen_parts().solved==[false,false,false,false,false])
 		current_scene.call("_choose",2)
-		await create_timer(0.55).timeout
+		await create_timer(1.1).timeout
 		Rating.advance(3,60)
 		Rating.mistake(3)
 		current_scene.find_child("Stage3Retry",true,false).pressed.emit()

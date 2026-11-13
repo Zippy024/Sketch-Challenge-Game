@@ -447,10 +447,8 @@ func _on_volume_changed(value: float) -> void:
 
 
 func _start_new_game() -> void:
-	var current := get_tree().current_scene
-	if current.has_method("_suspend_session_save"): current.call("_suspend_session_save")
-	Progress.start_new_game()
-	_start_level(1)
+	# Choosing a mission is reversible; only Play starts a fresh selected attempt.
+	_show_levels()
 
 func _start_level(level: int, resume: bool = false) -> void:
 	if level > 3 or not Progress.is_level_unlocked(level):

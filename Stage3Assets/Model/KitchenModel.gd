@@ -2,6 +2,9 @@ extends Control
 # Reference-built, real 3D geometry. Distances are metres from the supplied elevation.
 signal part_selected(index: int)
 signal part_hovered(index: int)
+signal number_hovered(index: int)
+signal view_changed
+signal interaction_started
 const UI=preload("res://KitchenUI.gd")
 var viewport: SubViewport
 var camera: Camera3D
@@ -9,8 +12,8 @@ var scene: Node3D
 var selected: int=-1
 var hovered: int=-1
 var yaw: float=0.62
-var pitch: float=0.40
-var zoom: float=3.25
+var pitch: float=0.34
+var zoom: float=3.15
 var _pressed: bool=false
 var _travel: float=0.0
 var _pending_pick: Vector2=Vector2(-1,-1)
@@ -87,7 +90,8 @@ func _ready() -> void:
   marker.size=Vector2(30,30)
   marker.set_meta("part",i)
   marker.pressed.connect(_choose.bind(i))
-  marker.mouse_entered.connect(set_hovered.bind(i))
+  marker.mouse_entered.connect(_number_hover.bind(i))
+  marker.focus_entered.connect(_number_hover.bind(i))
   marker.mouse_exited.connect(set_hovered.bind(-1))
   add_child(marker)
   var number:=UI.label(str(i+1),13,true)
@@ -117,6 +121,8 @@ func _box(parent: Node3D, dimensions: Vector3, center: Vector3, color: Color, pa
  instance.position=center
  var material:=_material(color,metallic)
  instance.material_override=material
+ if part==0:material.roughness=0.32
+ if part in [2,4]:material.roughness=0.38
  parent.add_child(instance)
  if part>=0:
   _materials[part].append({"material":material,"color":color})
@@ -161,7 +167,10 @@ func _build_kitchen() -> void:
   for row in range(3):
    var height: float=[0.20,0.23,0.25][row]
    var y: float=[0.705,0.485,0.24][row]
-   _box(scene,Vector3(width-0.007,height,0.025),Vector3(left+width*0.5,y,0.316),white)
+   var door:=_box(scene,Vector3(width-0.007,height,0.025),Vector3(left+width*0.5,y,0.316),white)
+   var cabinet_wood:=ShaderMaterial.new()
+   cabinet_wood.shader=preload("res://Stage3Assets/Model/cabinet-wood.gdshader")
+   door.material_override=cabinet_wood
    _box(scene,Vector3(width-0.06,0.012,0.018),Vector3(left+width*0.5,y+height*0.5-0.025,0.335),Color("8c9493"),-1,0.4)
   left+=width
  # Cut a genuine opening in the worktop for the recessed sink.
@@ -196,19 +205,20 @@ func _build_kitchen() -> void:
  _box(scene,Vector3(0.63,0.10,0.016),Vector3(-0.90,0.74,0.339),Color("838b8a"),-1,0.4)
  # Stainless basin, rim, drain and a clearly visible mixer faucet.
  var sink:=_groups[4]
- _box(sink,Vector3(0.57,0.012,0.39),Vector3(0.75,0.714,0.02),silver,4,0.65)
- for x in [0.464,1.036]:_box(sink,Vector3(0.012,0.13,0.40),Vector3(x,0.779,0.02),silver,4,0.7)
- for z in [-0.178,0.218]:_box(sink,Vector3(0.58,0.13,0.012),Vector3(0.75,0.779,z),silver,4,0.7)
- for x in [0.443,1.057]:_box(sink,Vector3(0.021,0.012,0.45),Vector3(x,0.856,0.02),silver,4,0.7)
- for z in [-0.205,0.245]:_box(sink,Vector3(0.635,0.012,0.021),Vector3(0.75,0.856,z),silver,4,0.7)
+ _rounded_sink(sink,silver)
  _cylinder(sink,Vector3(0.75,0.722,0.06),0.035,0.006,Color("777f80"))
- _cylinder(scene,Vector3(0.75,0.96,-0.265),0.014,0.22,silver)
- _cylinder(scene,Vector3(0.75,1.07,-0.18),0.014,0.17,silver,PI/2)
- _cylinder(scene,Vector3(0.75,1.03,-0.10),0.014,0.08,silver)
+ var previous:=Vector3(0.75,0.86,-0.265)
+ for i in range(1,17):
+  var t: float=float(i)/16
+  var q: float=1.0-t
+  var point:=Vector3(0.75,0.86,-0.265)*q*q*q+Vector3(0.75,1.28,-0.265)*3*q*q*t+Vector3(0.75,1.28,-0.06)*3*q*t*t+Vector3(0.75,1.04,-0.06)*t*t*t
+  _pipe(scene,previous,point,0.012,silver)
+  previous=point
  _box(scene,Vector3(0.07,0.012,0.018),Vector3(0.80,0.94,-0.265),silver,-1,0.6)
 
 func _resize_view() -> void:
- viewport.size=Vector2i(maxi(1,roundi(size.x)),maxi(1,roundi(size.y)))
+ var scale_factor:=1.75
+ viewport.size=Vector2i(clampi(roundi(size.x*scale_factor),1,2048),clampi(roundi(size.y*scale_factor),1,1280))
  _update_camera()
 
 func _update_camera() -> void:
@@ -220,11 +230,12 @@ func _update_camera() -> void:
  camera.position=target+Vector3(sin(yaw)*cos(pitch),sin(pitch),cos(yaw)*cos(pitch))*6.0
  camera.look_at(target,Vector3.UP)
  _position_markers()
+ view_changed.emit()
 
 func set_view(which: String) -> void:
  yaw={"front":0.0,"rear":PI,"perspective":0.62}.get(which,0.62)
- pitch=0.15 if which=="front" else (0.30 if which=="rear" else 0.40)
- zoom=3.25
+ pitch=0.15 if which=="front" else (0.30 if which=="rear" else 0.34)
+ zoom=3.15
  _update_camera()
 
 func zoom_by(amount: float) -> void:
@@ -303,6 +314,7 @@ func _gui_input(event: InputEvent) -> void:
   elif event.button_index==MOUSE_BUTTON_WHEEL_DOWN and event.pressed:zoom_by(0.15)
   elif event.button_index in [MOUSE_BUTTON_LEFT,MOUSE_BUTTON_RIGHT]:
    if event.pressed:
+    interaction_started.emit()
     _pressed=true
     _travel=0
    else:
@@ -326,3 +338,78 @@ func apply_view_state(state: Dictionary) -> void:
  pitch=clampf(float(state.get("pitch",pitch)),0.08,1.2)
  zoom=clampf(float(state.get("zoom",zoom)),2.55,4.8)
  _update_camera()
+
+func marker_center(index: int) -> Vector2:
+ return _markers[index].position+_markers[index].size*0.5 if index>=0 and index<_markers.size() else size*0.5
+
+func _number_hover(index: int) -> void:
+ set_hovered(index)
+ if not _pressed:number_hovered.emit(index)
+
+func _pipe(parent: Node3D, a: Vector3, b: Vector3, radius: float, color: Color) -> void:
+ var instance:=MeshInstance3D.new()
+ var mesh:=CylinderMesh.new()
+ mesh.top_radius=radius
+ mesh.bottom_radius=radius
+ mesh.height=a.distance_to(b)
+ mesh.radial_segments=16
+ instance.mesh=mesh
+ instance.material_override=_material(color,0.7,0.25)
+ instance.position=(a+b)*0.5
+ instance.quaternion=Quaternion(Vector3.UP,(b-a).normalized())
+ parent.add_child(instance)
+
+func _rounded_ring(width: float, depth: float, radius: float, y: float) -> PackedVector3Array:
+ var points:=PackedVector3Array()
+ var centers: Array[Vector2]=[Vector2(width/2-radius,depth/2-radius),Vector2(-width/2+radius,depth/2-radius),Vector2(-width/2+radius,-depth/2+radius),Vector2(width/2-radius,-depth/2+radius)]
+ for corner in range(4):
+  for i in range(8):
+   var angle: float=float(corner)*PI/2+float(i)*PI/14
+   var p: Vector2=centers[corner]+Vector2(cos(angle),sin(angle))*radius
+   points.append(Vector3(0.75+p.x,y,0.02+p.y))
+ return points
+
+func _rounded_sink(parent: Node3D, color: Color) -> void:
+ var outer:=_rounded_ring(0.64,0.46,0.04,0.858)
+ var inner:=_rounded_ring(0.56,0.38,0.05,0.848)
+ var bottom:=_rounded_ring(0.48,0.30,0.055,0.714)
+ var vertices:=PackedVector3Array()
+ var normals:=PackedVector3Array()
+ var indices:=PackedInt32Array()
+ for ring in [outer,inner,bottom]:
+  for point in ring:
+   vertices.append(point)
+   normals.append(Vector3.UP if ring==outer or ring==bottom else Vector3((0.75-point.x)*3,0.6,(0.02-point.z)*3).normalized())
+ var count: int=outer.size()
+ for row in range(2):
+  for i in range(count):
+   var n: int=(i+1)%count
+   indices.append_array([row*count+i,(row+1)*count+i,row*count+n,row*count+n,(row+1)*count+i,(row+1)*count+n])
+ vertices.append(Vector3(0.75,0.714,0.02))
+ normals.append(Vector3.UP)
+ for i in range(count):indices.append_array([vertices.size()-1,2*count+(i+1)%count,2*count+i])
+ var arrays:=[]
+ arrays.resize(Mesh.ARRAY_MAX)
+ arrays[Mesh.ARRAY_VERTEX]=vertices
+ arrays[Mesh.ARRAY_NORMAL]=normals
+ arrays[Mesh.ARRAY_INDEX]=indices
+ var mesh:=ArrayMesh.new()
+ mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arrays)
+ var instance:=MeshInstance3D.new()
+ instance.mesh=mesh
+ # Upward-facing winding keeps the bowl lit in the compatibility renderer.
+ for triangle in range(0,indices.size(),3):
+  var swap: int=indices[triangle+1]
+  indices[triangle+1]=indices[triangle+2]
+  indices[triangle+2]=swap
+ arrays[Mesh.ARRAY_INDEX]=indices
+ mesh.clear_surfaces()
+ mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arrays)
+ var material:=_material(color,0.28,0.35)
+ material.cull_mode=BaseMaterial3D.CULL_DISABLED
+ instance.material_override=material
+ parent.add_child(instance)
+ _materials[4].append({"material":material,"color":color})
+ instance.create_trimesh_collision()
+ for child in instance.get_children():
+  if child is StaticBody3D:child.set_meta("part",4)
