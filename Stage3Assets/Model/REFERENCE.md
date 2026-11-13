@@ -18,8 +18,11 @@ Hiragana conversion candidates depend only on the typed reading, not the target.
 Japanese synonyms, full-width/half-width forms, IH and proper okurigana are
 accepted. Empty or unconverted readings do not add mistakes. Correct answers lock
 and briefly confirm; drafts and solved flags persist. Reference plans stay on the left and open an enlarged, zoomable/pannable viewer.
-The full question remains readable during narration; the playback meter animates.
-Section announcements wait for Continue before the next recording begins.
+Question text reveals with recorded speech windows and pauses, completes before
+the silent audio tail, freezes with pause, and restarts on Replay. The playback
+meter animates; full text remains readable after narration.
+Section announcements enter smoothly, hold for reading, then fade automatically
+before the next recording begins. No Continue button is required.
 
 Two layout questions plus
 eight names make ten challenge checks. Retry resets only the current attempt.

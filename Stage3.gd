@@ -163,7 +163,8 @@ func _refresh() -> void:
 	customer.voice.add_child(_speech)
 	_speech.dialogue_started.connect(func():_set_speech_ready(false))
 	_speech.dialogue_finished.connect(func():_set_speech_ready(true))
-	customer.question.visible_characters=-1
+	customer.question.visible_characters_behavior=TextServer.VC_CHARS_AFTER_SHAPING
+	customer.question.visible_characters=0
 	_begin_question_speech.call_deferred(_speech,customer.question,Speech.voice_path(current_lang,mini(step,2)))
 	UI.set_customer_feedback(_customer_bubble,_answer_state)
 	var brief := UI.card_stack(left,true)
@@ -353,28 +354,18 @@ func _enter_phase(card: Control) -> void:
 	var headline:=UI.label(_phase_name(mini(step,2)),25,true,UI.INK)
 	headline.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
 	content.add_child(headline)
-	var hint:=UI.label(_tr("Continue when you are ready","အဆင်သင့်ဖြစ်မှ ဆက်သွားပါ","準備ができたら進んでください"),13,false,UI.MUTED)
+	var hint:=UI.label(_tr("Your next challenge is coming up","နောက်မစ်ရှင်ကို ဆက်သွားပါမယ်","次の課題へ進みます"),13,false,UI.MUTED)
 	hint.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
 	content.add_child(hint)
-	var next:=UI.button("Continue",func():_leave_phase(veil,toast,reduced),true,200,16)
-	next.name="Stage3PhaseContinue"
-	content.add_child(next)
-	if not reduced:
-		toast.pivot_offset=toast.custom_minimum_size*0.5
-		toast.modulate.a=0.0
-		toast.scale=Vector2(0.96,0.96)
-		_transition_tween=create_tween()
-		_transition_tween.tween_property(toast,"modulate:a",1.0,0.30)
-		_transition_tween.parallel().tween_property(toast,"scale",Vector2.ONE,0.35).set_trans(Tween.TRANS_SINE)
-	next.grab_focus()
-
-func _leave_phase(veil: Control, toast: Control, reduced: bool) -> void:
-	var next:=veil.find_child("Stage3PhaseContinue",true,false) as Button
-	if next==null or next.disabled:return
-	next.disabled=true
-	if _transition_tween and _transition_tween.is_valid():_transition_tween.kill()
+	toast.pivot_offset=toast.custom_minimum_size*0.5
+	toast.modulate.a=0.0
+	toast.scale=Vector2.ONE if reduced else Vector2(0.96,0.96)
 	_transition_tween=create_tween()
-	_transition_tween.tween_property(toast,"modulate:a",0.0,0.08 if reduced else 0.25)
+	_transition_tween.tween_property(toast,"modulate:a",1.0,0.20 if reduced else 0.35)
+	if not reduced:
+		_transition_tween.parallel().tween_property(toast,"scale",Vector2.ONE,0.40).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_transition_tween.tween_interval(1.25)
+	_transition_tween.tween_property(veil,"modulate:a",0.0,0.20 if reduced else 0.40).set_trans(Tween.TRANS_SINE)
 	_transition_tween.finished.connect(func():
 		_transitioning=false
 		if is_instance_valid(veil):veil.queue_free()
@@ -512,7 +503,7 @@ func _draw_choices() -> void:
 		_stage_choice_buttons.append(option)
 		option.pressed.connect(_choose.bind(i))
 
-	_answer_area.add_child(_label(_tr("Choose an image, then continue when ready.","ပုံကိုရွေးပြီး အဆင်သင့်ဖြစ်မှ ဆက်သွားပါ။","画像を選び、準備ができたら次へ進んでください。"), 13, SUBTEXT))
+	_answer_area.add_child(_label(_tr("Choose an image. A correct answer opens the next section.","ပုံကိုရွေးပါ။ အဖြေမှန်လျှင် နောက်အပိုင်းကို ဆက်သွားပါမယ်။","画像を選ぶと、正解時に次の項目へ進みます。"), 13, SUBTEXT))
 
 func _choose(index: int) -> void:
 	if not _speech_ready or _transitioning or step>=2:return

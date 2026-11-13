@@ -34,10 +34,12 @@ func _write_part(game: Node, index: int, value: String) -> void:
 	editor.find_child("CheckPartAnswer",true,false).pressed.emit()
 
 func _continue_phase() -> void:
-	var next=current_scene.find_child("Stage3PhaseContinue",true,false)
-	assert(next!=null)
-	next.pressed.emit()
-	await create_timer(0.35).timeout
+	assert(current_scene.find_child("Stage3PhaseContinue",true,false)==null)
+	for frame in range(30):
+		if not current_scene.get("_transitioning"):break
+		await create_timer(0.1).timeout
+	assert(not current_scene.get("_transitioning"))
+	await process_frame
 
 func _run() -> void:
 	# A save from the previous sequential selection game keeps verified progress.

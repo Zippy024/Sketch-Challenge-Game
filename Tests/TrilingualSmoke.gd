@@ -470,8 +470,9 @@ func _run() -> void:
 		await create_timer(0.6).timeout
 		assert(not game.find_child("CustomerAnswerBadge",true,false).visible)
 		assert(game.get("_transitioning") and not game.get("_speech").player.playing)
-		game.find_child("Stage3PhaseContinue",true,false).pressed.emit()
-		await create_timer(0.35).timeout
+		assert(game.find_child("Stage3PhaseContinue",true,false)==null)
+		while game.get("_transitioning"):await create_timer(0.1).timeout
+		await create_timer(0.1).timeout
 		game.get("_speech").player.stop()
 		game.get("_speech").call("_finished")
 		# Click the illustration itself, catching child controls that swallow input.
@@ -492,8 +493,9 @@ func _run() -> void:
 		game.call("_select_part",0)
 		assert(game.get("step")==2)
 		await create_timer(1.1).timeout
-		game.find_child("Stage3PhaseContinue",true,false).pressed.emit()
-		await create_timer(0.35).timeout
+		assert(game.find_child("Stage3PhaseContinue",true,false)==null)
+		while game.get("_transitioning"):await create_timer(0.1).timeout
+		await create_timer(0.1).timeout
 		assert(not game.get("_speech_ready"))
 		game.get("_speech").player.stop()
 		game.get("_speech").call("_finished")
