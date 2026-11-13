@@ -18,10 +18,14 @@ Latest visual reference: white cabinets/countertop, black IH, stainless recessed
 sink and curved faucet, pale gray back panels/hood, light wooden floor. No person
 inside the 3D model scene. No enclosing room walls, hard shadows, or spot glare.
 The reference plan stays in the LEFT column in all three sections; footer and
-progress fit short/wide screens. Reference thumbnails open a zoomable/pannable overlay. Question text is shown
-in full throughout narration/replay; the speaking meter follows playback.
-Part 1/2 completion leads to a section announcement that waits for Continue,
-then starts the next question audio after the announcement closes. Save schema v2 preserves old five-answer drafts and
+progress fit short/wide screens. Reference thumbnails open a zoomable/pannable overlay. Question text reveals progressively from the playback clock, using measured
+speech windows and clause pauses in the nine recordings. Silent MP3 tails do
+not delay the final text. Pause freezes text, Replay restarts it, and Myanmar
+text is shaped before character visibility changes to keep layout stable.
+The speaking meter follows playback.
+Part 1/2 completion automatically shows a smooth section announcement, holds
+the title long enough to read (1.25 seconds), then fades into the next question.
+There is no Continue button. Narration starts after the announcement closes. Save schema v2 preserves old five-answer drafts and
 completed results; new attempts require all eight names. Preserve best stars,
 Retry, recorded speech, and Start Game → Level Select → Play.
 
