@@ -6,9 +6,10 @@ The model is constructed from actual Godot 3D meshes using the supplied
 bays, a 900 mm hood/support area and approximately 2400 mm total support height.
 The elevation and video guide the proportions; this is an educational rebuild.
 
-The five fixed assessed parts are counter/worktop, kitchen board (the panel
-between hob and hood), range hood, waist-height rear wall and sink. The hob,
-mixer faucet, drawers and oak floor provide the surrounding visual context.
+The eight fixed assessed parts keep their labels when the 3D model rotates:
+1 counter/worktop, 2 kitchen board, 3 range hood, 4 waist-height rear wall,
+5 sink, 6 faucet, 7 IH cooktop, 8 upper drawer. The oak floor and surrounding
+cabinetry provide the visual context.
 All are meshes rather than a flattened substitute image. Number markers track
 3D positions as the camera rotates. The rear view reveals the waist wall.
 

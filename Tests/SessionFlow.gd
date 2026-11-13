@@ -41,7 +41,7 @@ func _run() -> void:
 	legacy.save(Progress.SAVE_PATH)
 	Progress._loaded=false
 	assert(Progress.kitchen_step()==4)
-	assert(Progress.kitchen_parts().solved==[true,true,false,false,false])
+	assert(Progress.kitchen_parts().solved==[true,true,false,false,false,false,false,false])
 	assert(Progress.kitchen_parts().answers[0]=="カウンター")
 	Progress.reset_progress()
 	Progress.set_language("en")
@@ -196,7 +196,7 @@ func _win(stage: int) -> void:
 		await create_timer(1.1).timeout
 		game.call("_choose",1)
 		await create_timer(1.1).timeout
-		for i in range(5):_write_part(game,i,["カウンター","キッチンボード","フード","腰壁","シンク"][i])
+		for i in range(8):_write_part(game,i,["カウンター","キッチンボード","フード","腰壁","シンク","水栓","IHクッキングヒーター","引き出し"][i])
 	if stage<3:
 		game.call("_stop_voice")
 		game.call("_on_voice_finished")
@@ -224,8 +224,8 @@ func _check_retry(stage: int) -> void:
 	if stage==2:assert(current_scene.get("answer_input").text.is_empty())
 	if stage==3:
 		assert(current_scene.get("step")==0)
-		assert(Progress.kitchen_parts().answers==["","","","",""])
-		assert(Progress.kitchen_parts().solved==[false,false,false,false,false])
+		assert(Progress.kitchen_parts().answers==["","","","","","","",""])
+		assert(Progress.kitchen_parts().solved==[false,false,false,false,false,false,false,false])
 		current_scene.call("_choose",2)
 		await create_timer(1.1).timeout
 		Rating.advance(3,60)

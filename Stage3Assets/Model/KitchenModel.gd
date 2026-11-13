@@ -22,8 +22,8 @@ var _groups: Array[Node3D]=[]
 var _materials: Array=[]
 var _markers: Array[Button]=[]
 var _solved: Array[bool]=[false,false,false,false,false]
-var _anchors: Array[Vector3]=[Vector3(0.15,0.87,0.36),Vector3(-0.85,1.28,-0.345),Vector3(-0.84,1.98,0.18),Vector3(1.31,0.56,-0.44),Vector3(0.74,0.84,0.03)]
-var _label_offsets: Array[Vector2]=[Vector2(-30,-22),Vector2(32,0),Vector2(-30,-18),Vector2(24,16),Vector2(28,-19)]
+var _anchors: Array[Vector3]=[Vector3(0.15,0.87,0.36),Vector3(-0.85,1.28,-0.345),Vector3(-0.84,1.98,0.18),Vector3(1.31,0.56,-0.44),Vector3(0.74,0.84,0.03),Vector3(0.75,1.20,-0.18),Vector3(-0.92,0.87,0.07),Vector3(0.70,0.71,0.34)]
+var _label_offsets: Array[Vector2]=[Vector2(-30,-22),Vector2(32,0),Vector2(-30,-18),Vector2(24,16),Vector2(28,-19),Vector2(42,-37),Vector2(-42,20),Vector2(37,26)]
 
 func _ready() -> void:
  mouse_filter=Control.MOUSE_FILTER_STOP
@@ -70,7 +70,7 @@ func _ready() -> void:
  camera.far=40
  viewport.add_child(camera)
  camera.current=true
- for i in range(5):
+ for i in range(8):
   var group:=Node3D.new()
   group.name="NumberedPart%d"%(i+1)
   group.set_meta("part",i)
@@ -78,7 +78,7 @@ func _ready() -> void:
   _groups.append(group)
   _materials.append([])
  _build_kitchen()
- for i in range(5):
+ for i in range(8):
   var marker:=Button.new()
   marker.text=""
   marker.tooltip_text=UI.text("Number %d")%(i+1)
@@ -167,7 +167,9 @@ func _build_kitchen() -> void:
   for row in range(3):
    var height: float=[0.20,0.23,0.25][row]
    var y: float=[0.705,0.485,0.24][row]
-   var door:=_box(scene,Vector3(width-0.007,height,0.025),Vector3(left+width*0.5,y,0.316),white)
+   # The upper drawer in the right bay is selectable as part 8.
+   var drawer_part: bool=row==0 and left>0
+   var door:=_box(_groups[7] if drawer_part else scene,Vector3(width-0.007,height,0.025),Vector3(left+width*0.5,y,0.316),white,7 if drawer_part else -1)
    var cabinet_wood:=ShaderMaterial.new()
    cabinet_wood.shader=preload("res://Stage3Assets/Model/cabinet-wood.gdshader")
    door.material_override=cabinet_wood
@@ -190,7 +192,8 @@ func _build_kitchen() -> void:
  # Waist-height back panel; orbiting reveals its full rear face.
  _box(_groups[3],Vector3(2.573,0.85,0.075),Vector3(0,0.425,-0.405),white,3)
  # Black hob, simple rings and recessed front controls match the reference.
- _box(scene,Vector3(0.63,0.009,0.48),Vector3(-0.91,0.856,0),Color("202726"),-1,0.15)
+ var hob:=_groups[6]
+ _box(hob,Vector3(0.63,0.009,0.48),Vector3(-0.91,0.856,0),Color("202726"),6,0.15)
  for p in [Vector3(-1.06,0.863,0.09),Vector3(-0.77,0.863,0.08),Vector3(-0.92,0.863,-0.12)]:
   var ring:=MeshInstance3D.new()
   var torus:=TorusMesh.new()
@@ -201,20 +204,22 @@ func _build_kitchen() -> void:
   ring.mesh=torus
   ring.position=p
   ring.material_override=_material(Color("727a77"),0.3)
-  scene.add_child(ring)
+  hob.add_child(ring)
  _box(scene,Vector3(0.63,0.10,0.016),Vector3(-0.90,0.74,0.339),Color("838b8a"),-1,0.4)
  # Stainless basin, rim, drain and a clearly visible mixer faucet.
  var sink:=_groups[4]
  _rounded_sink(sink,silver)
  _cylinder(sink,Vector3(0.75,0.722,0.06),0.035,0.006,Color("777f80"))
+ var faucet:=_groups[5]
+ _box(faucet,Vector3(0.075,0.16,0.075),Vector3(0.75,0.925,-0.265),silver,5,0.7)
  var previous:=Vector3(0.75,0.86,-0.265)
  for i in range(1,17):
   var t: float=float(i)/16
   var q: float=1.0-t
   var point:=Vector3(0.75,0.86,-0.265)*q*q*q+Vector3(0.75,1.28,-0.265)*3*q*q*t+Vector3(0.75,1.28,-0.06)*3*q*t*t+Vector3(0.75,1.04,-0.06)*t*t*t
-  _pipe(scene,previous,point,0.012,silver)
+  _pipe(faucet,previous,point,0.012,silver)
   previous=point
- _box(scene,Vector3(0.07,0.012,0.018),Vector3(0.80,0.94,-0.265),silver,-1,0.6)
+ _box(faucet,Vector3(0.07,0.012,0.018),Vector3(0.80,0.94,-0.265),silver,5,0.6)
 
 func _resize_view() -> void:
  var scale_factor:=1.75

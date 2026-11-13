@@ -1,7 +1,7 @@
 extends Control
 
-# Stage 3: two image-choice questions, then five Japanese names on a real 3D model.
-# Two layout questions and five components; completion is saved only after all seven checks.
+# Stage 3: two image-choice questions, then eight Japanese names on the 3D model.
+# Two layout questions plus eight components; completion requires ten checks.
 const UI = preload("res://KitchenUI.gd")
 const Progress = preload("res://GameProgress.gd")
 const StageRating = preload("res://StageRating.gd")
@@ -28,7 +28,7 @@ const QUESTIONS := {
 
 
 var current_lang: String = "jp"
-var step: int = 0 # 0 = S-Class type, 1 = wall layout, 2..6 = identify five components, 7 = completed
+var step: int = 0 # 0 = kitchen type, 1 = wall layout, 2..9 = eight names, 10 = complete
 var last_wrong: bool = false
 var _completion_acknowledged: bool = false
 var _session_save_suspended: bool = false
@@ -43,9 +43,9 @@ var _card_texture_cache: Dictionary = {}
 var _last_phase: int=-1
 var _transitioning: bool=false
 var _transition_tween: Tween
-var _parts_answers: Array[String]=["","","","",""]
-var _parts_solved: Array[bool]=[false,false,false,false,false]
-var _parts_states: Array[String]=["","","","",""]
+var _parts_answers: Array[String]=["","","","","","","",""]
+var _parts_solved: Array[bool]=[false,false,false,false,false,false,false,false]
+var _parts_states: Array[String]=["","","","","","","",""]
 var _answer_popover: Control
 var _feedback_revision: int=0
 var _popup_revision: int=0
@@ -73,10 +73,10 @@ func _ready() -> void:
 	var saved:=Progress.kitchen_parts()
 	_parts_answers.assign(saved.answers)
 	_parts_solved.assign(saved.solved)
-	for i in range(5):
+	for i in range(Parts.NAMES.size()):
 		if _parts_solved[i]:_parts_states[i]="correct"
-	if step<7:StageRating.begin(3)
-	_completion_acknowledged=step>=7
+	if step<10:StageRating.begin(3)
+	_completion_acknowledged=step>=10
 	_refresh()
 
 
@@ -173,10 +173,19 @@ func _refresh() -> void:
 		brief.add_child(plan)
 	else:
 		brief.add_child(UI.label("Parts checklist",16,true))
-		for i in range(5):
+		# Two-column checklist preserves space for all eight numbers.
+		var checklist:=GridContainer.new()
+		checklist.name="Stage3EightPartChecklist"
+		checklist.columns=2
+		checklist.add_theme_constant_override("h_separation",8)
+		checklist.add_theme_constant_override("v_separation",3)
+		brief.add_child(checklist)
+		for i in range(Parts.NAMES.size()):
 			var caption:=str(i+1)+" · "+(_parts_answers[i] if _parts_solved[i] else UI.text("Not answered"))
-			var item:=UI.label(caption,15,_parts_solved[i],UI.TEAL if _parts_solved[i] else UI.MUTED)
-			brief.add_child(item)
+			var item:=UI.label(caption,12,_parts_solved[i],UI.TEAL if _parts_solved[i] else UI.MUTED)
+			item.custom_minimum_size.x=125
+			item.clip_text=true
+			checklist.add_child(item)
 			_part_checklist.append(item)
 		brief.add_child(UI.label("Drag to rotate. Scroll to zoom. The numbers stay attached to their parts.",13,false,UI.MUTED))
 	var right := UI.card_stack(split,true)
@@ -227,14 +236,14 @@ func _refresh() -> void:
 	_progress_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_progress_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_progress_bar.custom_minimum_size.y = 10
-	_progress_bar.max_value = 7
+	_progress_bar.max_value = 10
 	_progress_bar.value = maxi(0,step-1) if _answer_state=="correct" else step
 	_progress_bar.show_percentage = false
 	_progress_bar.add_theme_stylebox_override("background",UI.box(Color("d7e6ed"),Color.TRANSPARENT,5,0))
 	_progress_bar.add_theme_stylebox_override("fill",UI.box(UI.TEAL,Color.TRANSPARENT,5,0))
 	progress.add_child(_progress_bar)
 	if _answer_state=="correct":create_tween().tween_property(_progress_bar,"value",step,0.42).set_trans(Tween.TRANS_SINE)
-	_challenge_count=UI.inline_label("%d / 7"%step,14,true)
+	_challenge_count=UI.inline_label("%d / 10"%step,14,true)
 	progress.add_child(_challenge_count)
 	if _last_phase>=0 and _last_phase!=phase:_enter_phase(right.get_parent())
 	_last_phase=phase
@@ -256,9 +265,9 @@ func _retry_stage() -> void:
 	last_wrong=false
 	_answer_state="neutral"
 	_last_phase=-1
-	_parts_answers.assign(["","","","",""])
-	_parts_solved.assign([false,false,false,false,false])
-	_parts_states.assign(["","","","",""])
+	_parts_answers.assign(["","","","","","","",""])
+	_parts_solved.assign([false,false,false,false,false,false,false,false])
+	_parts_states.assign(["","","","","","","",""])
 	_parts_message=""
 	_parts_model=null
 	_model_pose.clear()
@@ -481,7 +490,7 @@ func _draw_parts() -> void:
 	for preset in ["perspective","front","rear"]:
 		toolbar.add_child(UI.button({"perspective":"3D","front":"Front view","rear":"Rear view"}[preset],model.set_view.bind(preset),false,54,11))
 	for direction in [-1,1]:toolbar.add_child(UI.button("+" if direction==-1 else "−",model.zoom_by.bind(float(direction)*0.2),false,30,15))
-	_parts_count_label=UI.label(UI.text("%d / 5 names correct")%_parts_solved.count(true),12,true,UI.TEAL)
+	_parts_count_label=UI.label(UI.text("%d / 8 names correct")%_parts_solved.count(true),12,true,UI.TEAL)
 	_parts_count_label.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	_parts_count_label.horizontal_alignment=HORIZONTAL_ALIGNMENT_RIGHT
 	toolbar.add_child(_parts_count_label)
@@ -514,7 +523,7 @@ func _select_part(which: int) -> void:
 	_open_answer(which,true)
 
 func _open_answer(which: int, focus_input: bool=true) -> void:
-	if _transitioning or step<2 or step>=7 or which<0 or which>=5:return
+	if _transitioning or step<2 or step>=10 or which<0 or which>=8:return
 	if not is_instance_valid(_answer_popover):return
 	_parts_selected=which
 	_popup_revision+=1
@@ -543,14 +552,14 @@ func _close_answer() -> void:
 	if is_instance_valid(_parts_model):_parts_model.set_selected(-1)
 
 func _popover_draft_changed(value: String) -> void:
-	if _parts_selected<0 or _parts_selected>=5:return
+	if _parts_selected<0 or _parts_selected>=8:return
 	_parts_answers[_parts_selected]=value
 	Progress.save_kitchen_parts(_parts_answers,_parts_solved)
 
 func _submit_part_answer(value: String) -> void:
-	if _transitioning or step<2 or step>=7:return
+	if _transitioning or step<2 or step>=10:return
 	var index: int=_parts_selected
-	if index<0 or index>=5 or _parts_solved[index]:return
+	if index<0 or index>=8 or _parts_solved[index]:return
 	_parts_answers[index]=value
 	Progress.save_kitchen_parts(_parts_answers,_parts_solved)
 	if Parts.normalize(value).is_empty():return
@@ -567,13 +576,13 @@ func _submit_part_answer(value: String) -> void:
 		_part_checklist[index].add_theme_color_override("font_color",UI.TEAL)
 		_answer_popover.show_result("correct")
 		_show_verdict("correct")
-		_parts_count_label.text=UI.text("%d / 5 names correct")%_parts_solved.count(true)
+		_parts_count_label.text=UI.text("%d / 8 names correct")%_parts_solved.count(true)
 		_progress_bar.value=step
-		_challenge_count.text="%d / 7"%step
-		if step==7:
+		_challenge_count.text="%d / 10"%step
+		if step==10:
 			StageRating.finish(3)
 			Progress.complete(3)
-		if step==7:get_tree().create_timer(0.70,false).timeout.connect(_finish_written_parts)
+		if step==10:get_tree().create_timer(0.70,false).timeout.connect(_finish_written_parts)
 		else:get_tree().create_timer(0.70,false).timeout.connect(_after_part_correct.bind(_popup_revision))
 	else:
 		_parts_states[index]="incorrect"
@@ -585,7 +594,7 @@ func _after_part_correct(revision: int) -> void:
 	if revision==_popup_revision:_close_answer()
 
 func _finish_written_parts() -> void:
-	if step==7:_refresh()
+	if step==10:_refresh()
 
 
 func _draw_completed() -> void:

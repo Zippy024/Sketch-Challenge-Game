@@ -21,6 +21,11 @@ func _run() -> void:
 	assert(parts.is_correct(2,"ﾚﾝｼﾞﾌｰﾄﾞ"))
 	assert(parts.is_correct(3,"こしかべ"))
 	assert(parts.is_correct(4,"流し台"))
+	assert(parts.NAMES.size()==8)
+	assert(parts.is_correct(5,"すいせん") and parts.is_correct(5,"蛇口"))
+	assert(parts.is_correct(6,"IHクッキングヒーター") and parts.is_correct(6,"電磁調理器"))
+	assert(parts.is_correct(7,"ひきだし") and parts.is_correct(7,"引出し"))
+	assert(parts.conversion_candidates("ひきだし")[0]=="引き出し")
 	assert(not parts.is_correct(0,"countertop") and not parts.is_correct(0,""))
 	assert(parts.needs_conversion("ながしだい") and not parts.needs_conversion("流し台"))
 	assert(parts.conversion_candidates("こしかべ")==["腰壁"])
@@ -520,8 +525,16 @@ func _run() -> void:
 			var candidate=editor.find_child("JapaneseConversionCandidates",true,false).get_child(0)
 			candidate.pressed.emit()
 			editor.find_child("CheckPartAnswer",true,false).pressed.emit()
+		for index in [5,6,7]:
+			game.call("_open_answer",index,true)
+			editor.input.text={5:"水栓",6:"IHクッキングヒーター",7:"引き出し"}[index]
+			editor.input.text_changed.emit(editor.input.text)
+			editor.find_child("CheckPartAnswer",true,false).pressed.emit()
+		assert(model._markers.size()==8)
+		for i in range(8):assert(game.find_child("PartMarker%d"%(i+1),true,false)!=null)
+		assert(Progress.kitchen_parts().solved.size()==8)
 
-		assert(game.get("step")==7)
+		assert(game.get("step")==10)
 		assert(Progress.is_completed(3))
 		if language=="en":
 			game.call("_open_game_menu")

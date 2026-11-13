@@ -12,8 +12,8 @@ static var _stage1_zoom: float = 1.0
 static var _stage1_pan := Vector2(72,60)
 static var _stage2_draft: String = ""
 static var _stage3_step: int = 0
-static var _stage3_answers: Array[String]=["","","","",""]
-static var _stage3_solved: Array[bool]=[false,false,false,false,false]
+static var _stage3_answers: Array[String]=["","","","","","","",""]
+static var _stage3_solved: Array[bool]=[false,false,false,false,false,false,false,false]
 static var _language: String = "jp"
 static var show_levels_on_open: bool = false
 static var show_home_on_open: bool = false
@@ -38,25 +38,35 @@ static func _ensure_loaded() -> void:
 		_stage1_zoom = clampf(float(config.get_value("session","zoom",1.0)),0.1,8.0)
 		_stage1_pan = config.get_value("session","pan",Vector2(72,60))
 		_stage2_draft = str(config.get_value("session","answer",""))
-		_stage3_step = clampi(int(config.get_value("session","step",0)),0,7)
+		_stage3_step = clampi(int(config.get_value("session","step",0)),0,10)
 		_reset_kitchen_parts()
-		if int(config.get_value("session","parts_version",0))==1:
+		var parts_version: int=int(config.get_value("session","parts_version",0))
+		if parts_version>=1:
+			# v1 contained five solved names; v2 supports all eight.
 			var answers: Variant=config.get_value("session","parts_answers",[])
 			var solved: Variant=config.get_value("session","parts_solved",[])
-			if answers is Array and solved is Array and answers.size()==5 and solved.size()==5:
-				for i in range(5):
+			if answers is Array and solved is Array:
+				for i in range(mini(8,mini(answers.size(),solved.size()))):
 					_stage3_answers[i]=str(answers[i])
 					_stage3_solved[i]=bool(solved[i])
 		else:
-			# Preserve progress from the former sequential picture-selection challenge.
+			# Keep verified progress from the original sequential challenge.
 			var names: Array[String]=["カウンター","キッチンボード","フード","腰壁","シンク"]
 			for i in range(clampi(_stage3_step-2,0,5)):
 				_stage3_answers[i]=names[i]
 				_stage3_solved[i]=true
-		# Existing verified saves remain resumable after this update.
+		# Do not revoke completion already earned in previous game versions.
+		if _stage3_cleared:
+			var all_names: Array[String]=["カウンター","キッチンボード","フード","腰壁","シンク","水栓","IHクッキングヒーター","引き出し"]
+			for i in range(8):
+				if not _stage3_solved[i]:
+					_stage3_answers[i]=all_names[i]
+					_stage3_solved[i]=true
+			_stage3_step=10
+		elif _stage3_step>=2:
+			_stage3_step=2+_stage3_solved.count(true)
 		if _resume_stage==0 and (_stage1_cleared or _stage2_cleared or _stage3_cleared):
 			_resume_stage = next_stage()
-			if _stage3_cleared and completed_count()==3: _stage3_step=7
 
 static func _save() -> void:
 	var config := ConfigFile.new()
@@ -70,7 +80,7 @@ static func _save() -> void:
 	config.set_value("session","pan",_stage1_pan)
 	config.set_value("session","answer",_stage2_draft)
 	config.set_value("session","step",_stage3_step)
-	config.set_value("session","parts_version",1)
+	config.set_value("session","parts_version",2)
 	config.set_value("session","parts_answers",_stage3_answers)
 	config.set_value("session","parts_solved",_stage3_solved)
 	var result := config.save(SAVE_PATH)
@@ -123,7 +133,7 @@ static func complete(stage: int) -> void:
 		_stage2_draft=""
 		_stage3_step=0
 		_reset_kitchen_parts()
-	if stage==3: _stage3_step=7
+	if stage==3: _stage3_step=10
 	_save()
 
 static func completed_count() -> int:
@@ -209,7 +219,7 @@ static func answer() -> String:
 static func save_kitchen_step(step: int) -> void:
 	_ensure_loaded()
 	if _stage3_step==step: return
-	_stage3_step=clampi(step,0,7)
+	_stage3_step=clampi(step,0,10)
 	_save()
 
 static func kitchen_step() -> int:
@@ -217,8 +227,8 @@ static func kitchen_step() -> int:
 	return _stage3_step
 
 static func _reset_kitchen_parts() -> void:
-	_stage3_answers.assign(["","","","",""])
-	_stage3_solved.assign([false,false,false,false,false])
+	_stage3_answers.assign(["","","","","","","",""])
+	_stage3_solved.assign([false,false,false,false,false,false,false,false])
 
 static func kitchen_parts() -> Dictionary:
 	_ensure_loaded()
@@ -226,7 +236,7 @@ static func kitchen_parts() -> Dictionary:
 
 static func save_kitchen_parts(answers: Array[String], solved: Array[bool]) -> void:
 	_ensure_loaded()
-	if answers.size()!=5 or solved.size()!=5:return
+	if answers.size()!=8 or solved.size()!=8:return
 	if _stage3_answers==answers and _stage3_solved==solved:return
 	_stage3_answers=answers.duplicate()
 	_stage3_solved=solved.duplicate()
