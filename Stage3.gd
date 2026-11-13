@@ -343,6 +343,7 @@ func _draw_choices() -> void:
 		if step==1:
 			# Keep low-resolution originals at a readable, bounded display size.
 			var slot:=Control.new()
+			slot.mouse_filter=Control.MOUSE_FILTER_IGNORE
 			slot.custom_minimum_size.y=188
 			slot.size_flags_vertical=Control.SIZE_EXPAND_FILL
 			option_col.add_child(slot)

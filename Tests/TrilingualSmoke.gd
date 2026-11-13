@@ -403,8 +403,19 @@ func _run() -> void:
 		assert(game.find_child("Stage3PhaseSweep",true,false)!=null)
 		assert(game.find_child("CustomerAnswerLabel",true,false).text==manager.text("Correct"))
 		await create_timer(0.55).timeout
-		game.call("_choose",3)
-		assert(game.get("step")==1)
+		# Click the illustration itself, catching child controls that swallow input.
+		var fourth_image=game.find_child("KitchenChoice3",true,false).find_children("*","TextureRect",true,false)[0]
+		var picture_click:=InputEventMouseButton.new()
+		picture_click.button_index=MOUSE_BUTTON_LEFT
+		picture_click.pressed=true
+		picture_click.position=fourth_image.get_global_rect().get_center()
+		root.push_input(picture_click,true)
+		await process_frame
+		picture_click=picture_click.duplicate()
+		picture_click.pressed=false
+		root.push_input(picture_click,true)
+		await _wait()
+		assert(game.get("step")==1 and game.get("last_wrong"))
 		game.call("_choose",1)
 		assert(game.get("_transitioning"))
 		game.call("_select_part",0)
