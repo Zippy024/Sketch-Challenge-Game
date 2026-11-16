@@ -173,7 +173,7 @@ func _run() -> void:
 		var game=current_scene
 		assert(game.get("current_lang")==language)
 		assert(game.get("canvas")!=null)
-		assert(game.find_child("MintWorkspace",true,false)!=null)
+		assert(game.find_child("Stage1QuestBackground",true,false)!=null)
 		var reach=game.find_child("LevelReachBar",true,false)
 		assert(reach!=null)
 		var active_header=game.find_child("Stage1Header",true,false)
@@ -213,14 +213,14 @@ func _run() -> void:
 		assert(game.find_child("Stage1Header",true,false).size.y<=58)
 		assert(game.find_child("Stage1Logo",true,false).texture.resource_path=="res://LoadingAssets/KitchenLogo.webp")
 		var avatar=game.find_child("Stage1CustomerAvatar",true,false)
-		var stage_one_avatar_size: Vector2 = avatar.size
+		assert(avatar.size==Vector2(108,108))
 		var name_plate=game.find_child("Stage1CustomerIdentity",true,false)
 		assert(name_plate.global_position.y>=avatar.get_global_rect().end.y)
 		assert(name_plate.get_global_rect().encloses(game.get("speaker_name_label").get_global_rect()))
 		var request_header=game.find_child("CustomerRequestHeader",true,false)
 		var customer_frame=name_plate.get_theme_stylebox("panel").texture.resource_path
-		var request_frame=request_header.get_theme_stylebox("panel").texture.resource_path
-		assert(customer_frame!=request_frame and request_frame=="res://UIAssets/request-tab.svg")
+		var quest_request_style=request_header.get_theme_stylebox("panel") as StyleBoxFlat
+		assert(not customer_frame.is_empty() and quest_request_style!=null)
 		assert(request_header.visible)
 		var request: RichTextLabel=game.get("request_label")
 		assert(request.text.count("• ")==4)
@@ -231,7 +231,7 @@ func _run() -> void:
 		for tool in game.find_child("Stage1SixToolGroup",true,false).get_children():
 			assert(tool.size.y<=40)
 			assert(drawing_card.get_global_rect().encloses(tool.get_global_rect()))
-		assert(absf(customer_card.size.x/workspace.size.x-0.35)<0.025)
+		assert(absf(customer_card.size.x/workspace.size.x-0.32)<0.025)
 		assert(not customer_card.get_global_rect().intersects(drawing_card.get_global_rect()))
 		for card_name in ["Stage1CustomerCard","Stage1ReferenceCard","Stage1DrawingCard"]:
 			assert(game.get_global_rect().encloses(game.find_child(card_name,true,false).get_global_rect()))
@@ -348,7 +348,7 @@ func _run() -> void:
 		assert(qa_reach.find_child("ReachNode02",true,false).get_global_rect().encloses(qa_reach.find_child("CurrentStageLabel",true,false).get_global_rect()))
 		assert(game.find_child("Stage2QATitle",true,false).text==manager.text("Plan Q&A"))
 		assert(game.find_child("CustomerNamePlate",true,false).get_theme_stylebox("panel").texture.resource_path==customer_frame)
-		assert(game.find_child("CustomerRequestHeader",true,false).get_theme_stylebox("panel").texture.resource_path==request_frame)
+		assert(game.find_child("CustomerRequestHeader",true,false).get_theme_stylebox("panel").texture.resource_path=="res://UIAssets/request-tab.svg")
 		assert(game.find_child("CustomerAnswerBadge",true,false).get_parent().get_parent()==game.find_child("CustomerConversation",true,false))
 		assert(game.get("answer_input").size.y/qa_card.size.y>0.6)
 		assert(game.get("submit_button").text=="OK")
@@ -375,7 +375,7 @@ func _run() -> void:
 			if portrait.texture!=null and portrait.texture.resource_path=="res://customer_portrait.png":
 				stage_two_avatar=portrait
 				break
-		assert(stage_two_avatar!=null and stage_two_avatar.size==stage_one_avatar_size)
+		assert(stage_two_avatar!=null and stage_two_avatar.size==Vector2(168,168))
 		for button in game.find_children("*","Button",true,false): assert(button.text!=manager.text("Hint"))
 		_collect(game,"stage2")
 		var input=game.get("answer_input")
