@@ -9,6 +9,10 @@ small physical chamfers. Faucet curves have finer segments, the hood has control
 and grille details, and the basin includes strainer detail. A faint contact patch
 anchors the cabinet to the oak floor; directional shadows stay disabled. Stone
 uses subtle non-periodic grain rather than visible wave bands.
+Soft studio reflection cards define the metal without enclosing room geometry.
+The perspective camera fits the hood and kitchen bounds across short/wide/tall
+viewports; render-target limits preserve aspect. All installation dimensions,
+numbered world anchors and pointer offsets remain unchanged by user request.
 
 Eight assessed parts have independent collision and highlight groups: worktop,
 kitchen panel, range hood, waist-height rear wall, sink, faucet, IH hob and drawers.
@@ -21,7 +25,10 @@ presets and zoom remain available. The rear view reveals the waist wall.
 Hiragana conversion candidates depend only on the typed reading, not the target.
 Japanese synonyms, full-width/half-width forms, IH and proper okurigana are
 accepted. Empty or unconverted readings do not add mistakes. Correct answers lock
-and briefly confirm; drafts and solved flags persist. Reference plans stay on the left and open an enlarged, zoomable/pannable viewer.
+and confirm in an object-anchored ivory card for two seconds, with a mint top edge,
+green check/red cross and submitted Japanese name. Correct cards show the matching
+hiragana reading; incorrect cards never reveal the solution and return to editing.
+Drafts and solved flags persist. Reference plans stay on the left and open an enlarged, zoomable/pannable viewer.
 Question text reveals with recorded speech windows and pauses, completes before
 the silent audio tail, freezes with pause, and restarts on Replay. The playback
 meter animates; full text remains readable after narration.

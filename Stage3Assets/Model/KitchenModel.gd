@@ -7,13 +7,17 @@ signal interaction_started
 const UI=preload("res://KitchenUI.gd")
 const Parts=preload("res://Stage3Assets/Model/JapaneseParts.gd")
 const BeveledBox=preload("res://Stage3Assets/Model/BeveledBox.gd")
+const LOOK_TARGET=Vector3(0,1.18,0)
+const DEFAULT_ZOOM=3.15
+const MODEL_BOUNDS=AABB(Vector3(-1.32,0,-0.50),Vector3(2.64,2.43,0.90))
+static var _studio: Sky
 var viewport: SubViewport
 var camera: Camera3D
 var scene: Node3D
 var selected: int=-1
 var hovered: int=-1
-var yaw: float=0.62
-var pitch: float=0.45
+var yaw: float=0.30
+var pitch: float=0.25
 var zoom: float=3.15
 var _pressed: bool=false
 var _travel: float=0.0
@@ -33,7 +37,7 @@ func _ready() -> void:
  viewport.name="Kitchen3DViewport"
  viewport.own_world_3d=true
  viewport.render_target_update_mode=SubViewport.UPDATE_ONCE
- viewport.msaa_3d=Viewport.MSAA_2X
+ viewport.msaa_3d=Viewport.MSAA_4X
  add_child(viewport)
  var image:=TextureRect.new()
  image.texture=viewport.get_texture()
@@ -48,10 +52,12 @@ func _ready() -> void:
  var environment:=WorldEnvironment.new()
  var settings:=Environment.new()
  settings.background_mode=Environment.BG_COLOR
- settings.background_color=Color("eeede7")
+ settings.background_color=Color("f3f1ec")
+ settings.sky=_studio_environment()
+ settings.reflected_light_source=Environment.REFLECTION_SOURCE_SKY
  settings.ambient_light_source=Environment.AMBIENT_SOURCE_COLOR
  settings.ambient_light_color=Color("ffffff")
- settings.ambient_light_energy=0.58
+ settings.ambient_light_energy=0.68
  environment.environment=settings
  scene.add_child(environment)
  var light:=DirectionalLight3D.new()
@@ -66,7 +72,8 @@ func _ready() -> void:
  scene.add_child(fill)
  camera=Camera3D.new()
  camera.name="KitchenOrbitCamera"
- camera.projection=Camera3D.PROJECTION_ORTHOGONAL
+ camera.projection=Camera3D.PROJECTION_PERSPECTIVE
+ camera.keep_aspect=Camera3D.KEEP_HEIGHT
  camera.near=0.05
  camera.far=40
  viewport.add_child(camera)
@@ -133,16 +140,44 @@ func _material(color: Color, metallic: float=0.0, roughness: float=0.65) -> Stan
  material.roughness=roughness
  return material
 
+func _studio_environment() -> Sky:
+ # Broad, diffuse studio cards provide reflections on metal, without adding
+ # visible room walls, spotlights or cast shadows to the teaching model.
+ if _studio!=null:return _studio
+ var image:=Image.create(256,128,false,Image.FORMAT_RGBF)
+ for y in range(128):
+  var latitude: float=PI*float(y)/127.0
+  for x in range(256):
+   var longitude: float=TAU*float(x)/255.0
+   var direction:=Vector3(sin(latitude)*cos(longitude),cos(latitude),sin(latitude)*sin(longitude))
+   var base:=Color("68777f").lerp(Color("e8e9e6"),smoothstep(-0.25,0.8,direction.y))
+   var softbox: float=pow(maxf(0.0,direction.dot(Vector3(-0.6,0.5,0.6).normalized())),18.0)
+   base=base.lerp(Color(1.5,1.5,1.45),softbox*0.75)
+   image.set_pixel(x,y,base)
+ var panorama:=PanoramaSkyMaterial.new()
+ panorama.panorama=ImageTexture.create_from_image(image)
+ _studio=Sky.new()
+ _studio.radiance_size=Sky.RADIANCE_SIZE_128
+ _studio.sky_material=panorama
+ return _studio
+
 func _box(parent: Node3D, dimensions: Vector3, center: Vector3, color: Color, part: int=-1, metallic: float=0.0, collidable: bool=true) -> MeshInstance3D:
  var instance:=MeshInstance3D.new()
  var mesh:=BoxMesh.new()
  mesh.size=dimensions
- instance.mesh=BeveledBox.create(dimensions,0.007 if part==2 else 0.003) if part in [2,6,7] else mesh
+ instance.mesh=BeveledBox.create(dimensions,0.007 if part==2 else 0.003) if part in [0,2,6,7] else mesh
  instance.position=center
  var material:=_material(color,metallic)
  instance.material_override=material
  if part==0:material.roughness=0.32
- if part in [2,4]:material.roughness=0.38
+ if part==2:
+  material.metallic=0.72
+  material.roughness=0.31
+ if part==6:
+  material.roughness=0.28
+  material.metallic=0.0
+  material.metallic_specular=0.20
+ if part==7:material.roughness=0.43
  parent.add_child(instance)
  if part>=0:
   _materials[part].append({"material":material,"color":color})
@@ -266,7 +301,7 @@ func _build_kitchen() -> void:
  _stone(scene,Vector3(0.90,1.40,0.016),Vector3(-0.825,1.50,-0.338))
  _stone(scene,Vector3(1.67,0.48,0.017),Vector3(0.43,1.08,-0.340))
  var kitchen_board:=_groups[1]
- _box(kitchen_board,Vector3(0.95,0.47,0.016),Vector3(0.28,1.08,-0.325),Color("d0cbc4"),1)
+ _stone(kitchen_board,Vector3(0.95,0.47,0.016),Vector3(0.28,1.08,-0.325))
  var hood:=_groups[2]
  _box(hood,Vector3(0.77,0.62,0.45),Vector3(-0.825,2.072,-0.110),Color("d1d3d0"),2,0.12)
  _detail(hood,Vector3(0.79,0.028,0.515),Vector3(-0.825,1.758,0.005),Color("7a8080"),0.3)
@@ -321,26 +356,36 @@ func _build_kitchen() -> void:
  _detail(faucet,Vector3(0.055,0.013,0.019),Vector3(0.796,0.953,-0.252),steel,0.5)
 
 func _resize_view() -> void:
- var scale_factor:=1.75
- viewport.size=Vector2i(clampi(roundi(size.x*scale_factor),1,2048),clampi(roundi(size.y*scale_factor),1,1280))
+ if size.x<=0 or size.y<=0:return
+ # Preserve aspect when either render-target limit is reached.
+ var scale_factor:=minf(1.75,minf(2048.0/size.x,1280.0/size.y))
+ viewport.size=Vector2i(maxi(1,roundi(size.x*scale_factor)),maxi(1,roundi(size.y*scale_factor)))
  _update_camera()
 
 func _update_camera() -> void:
  if not is_instance_valid(camera):return
  # The static model needs a new frame only after interaction or resizing.
  viewport.render_target_update_mode=SubViewport.UPDATE_ONCE
- camera.size=zoom
- var target:=Vector3(0,1.08,0)
+ var target:=LOOK_TARGET
  camera.position=target+Vector3(sin(yaw)*cos(pitch),sin(pitch),cos(yaw)*cos(pitch))*6.0
  camera.look_at(target,Vector3.UP)
+ # Fit the entire installed kitchen, including the top of the hood. The floor
+ # is deliberately excluded; none of the objects or numbered anchors move.
+ var tan_half_fov: float=0.0
+ var aspect:=float(viewport.size.x)/maxf(1.0,float(viewport.size.y))
+ for i in range(8):
+  var point:=camera.to_local(MODEL_BOUNDS.get_endpoint(i))
+  var depth:=maxf(0.1,-point.z)
+  tan_half_fov=maxf(tan_half_fov,maxf(absf(point.y)/depth,absf(point.x)/(depth*aspect)))
+ camera.fov=rad_to_deg(2.0*atan(tan_half_fov*1.12*(zoom/DEFAULT_ZOOM)))
  _position_pointers()
 
  view_changed.emit()
 
 func set_view(which: String) -> void:
  interaction_started.emit()
- yaw={"front":0.0,"rear":PI,"perspective":0.62}.get(which,0.62)
- pitch=0.15 if which=="front" else (0.30 if which=="rear" else 0.45)
+ yaw={"front":0.0,"rear":PI,"perspective":0.30}.get(which,0.30)
+ pitch=0.15 if which=="front" else (0.30 if which=="rear" else 0.25)
  zoom=3.15
  _update_camera()
 
@@ -475,7 +520,7 @@ func _pipe(parent: Node3D, a: Vector3, b: Vector3, radius: float, color: Color, 
  mesh.height=a.distance_to(b)
  mesh.radial_segments=24
  instance.mesh=mesh
- instance.material_override=_material(color,0.7,0.25)
+ instance.material_override=_material(color,0.90,0.18)
  instance.position=(a+b)*0.5
  instance.quaternion=Quaternion(Vector3.UP,(b-a).normalized())
  parent.add_child(instance)
@@ -537,7 +582,7 @@ func _rounded_sink(parent: Node3D, color: Color) -> void:
  arrays[Mesh.ARRAY_INDEX]=indices
  mesh.clear_surfaces()
  mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arrays)
- var material:=_material(color,0.28,0.35)
+ var material:=_material(color,0.78,0.24)
  material.cull_mode=BaseMaterial3D.CULL_DISABLED
  instance.material_override=material
  parent.add_child(instance)

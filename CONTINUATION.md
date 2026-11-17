@@ -12,14 +12,20 @@ single contextual answer editor. Eight small numbered pointer guides with leader
 are clickable as an alternative to direct mesh selection. Full 360° drag,
 orbit buttons, view presets and zoom are available. Eight parts: worktop, kitchen
 panel, hood, waist wall, sink, faucet, IH hob, drawers. Hiragana readings convert
-to Kanji/Katakana candidates before individual grading. Each answer shows a green
-check or red cross with localized Correct/Incorrect text beside the answer-card
-heading, including the 3D section. The contextual editor repeats the verdict in
-larger bold text. Verdicts expire and clear when editing or selecting another part.
+to Kanji/Katakana candidates before individual grading. Layout questions show a
+brief heading verdict. Components use an object-anchored ivory result card with
+a mint top edge, green check/red cross, localized verdict and submitted Japanese
+name. Correct answers include the matching hiragana reading; incorrect answers
+never disclose the solution and return to editing after two seconds. Correct
+cards fade and close after two seconds. Selecting a part cancels stale animations.
 
 Latest visual reference: white cabinets/countertop, black IH, stainless recessed
 sink and curved faucet, pale gray back panels/hood, light wooden floor. No person
 inside the 3D model scene. No enclosing room walls, hard shadows, or spot glare.
+The perspective camera fits the entire installed kitchen and hood to each viewport;
+soft studio reflections, satin metal and continuous stone improve the surfaces.
+The user explicitly wants every installation position, numbered world anchor,
+leader offset and assessed component index preserved. Do not rearrange them.
 The reference plan stays in the LEFT column in all three sections; footer and
 progress fit short/wide screens. Reference thumbnails open a zoomable/pannable overlay. Question text reveals progressively from the playback clock, using measured
 speech windows and clause pauses in the nine recordings. Silent MP3 tails do

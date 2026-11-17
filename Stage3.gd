@@ -534,7 +534,7 @@ func _show_verdict(state: String) -> void:
 	_answer_state=state
 	last_wrong=state=="incorrect"
 	UI.set_customer_feedback(_customer_bubble,state)
-	if is_instance_valid(_feedback):
+	if is_instance_valid(_feedback) and not is_instance_valid(_answer_popover):
 		var correct:=state=="correct"
 		var ink:=Color("167044") if correct else Color("a51f38")
 		_feedback.text=("✓  " if correct else "✕  ")+UI.text("Correct" if correct else "Incorrect")
@@ -614,7 +614,7 @@ func _open_answer(which: int, focus_input: bool=true) -> void:
 	_feedback_revision+=1
 	_expire_verdict(_feedback_revision)
 	_parts_model.set_selected(which)
-	if _answer_popover.part_index!=which or not _answer_popover.visible:
+	if _answer_popover.part_index!=which or not _answer_popover.visible or _answer_popover.is_showing_result():
 		_answer_popover.configure(which,_parts_answers[which],_parts_solved[which])
 	_answer_popover.show()
 	_position_answer.call_deferred()
@@ -626,6 +626,8 @@ func _position_answer() -> void:
 	var desired:=anchor+Vector2(24,-110)
 	var limit: Vector2=_parts_model.size-_answer_popover.size-Vector2(10,10)
 	_answer_popover.position=desired.clamp(Vector2(10,10),limit.max(Vector2(10,10)))
+	_answer_popover.anchor_point=anchor-_answer_popover.position
+	_answer_popover.queue_redraw()
 
 func _close_answer() -> void:
 	_popup_revision+=1
@@ -669,8 +671,8 @@ func _submit_part_answer(value: String) -> void:
 		if step==Parts.CHALLENGE_STEPS:
 			StageRating.finish(3)
 			Progress.complete(3)
-		if step==Parts.CHALLENGE_STEPS:get_tree().create_timer(0.70,false).timeout.connect(_finish_written_parts)
-		else:get_tree().create_timer(0.70,false).timeout.connect(_after_part_correct.bind(_popup_revision))
+		if step==Parts.CHALLENGE_STEPS:get_tree().create_timer(AnswerPopover.RESULT_SECONDS,false).timeout.connect(_finish_written_parts)
+		else:get_tree().create_timer(AnswerPopover.RESULT_SECONDS,false).timeout.connect(_after_part_correct.bind(_popup_revision))
 	else:
 		_parts_states[index]="incorrect"
 		StageRating.mistake(3)
