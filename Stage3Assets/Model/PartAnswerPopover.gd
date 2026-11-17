@@ -17,7 +17,7 @@ var _fit_pending: bool=false
 var _form: VBoxContainer
 var _result: VBoxContainer
 var _result_title: Label
-var _result_icon: Label
+var _result_icon: TextureRect
 var _result_name: Label
 var _result_reading: Label
 var _result_hint: Label
@@ -101,12 +101,13 @@ func _build_result() -> void:
  circle.custom_minimum_size=Vector2(40,40)
  circle.size_flags_vertical=Control.SIZE_SHRINK_CENTER
  heading.add_child(circle)
- _result_icon=UI.label("",24,true,Color.WHITE)
- _result_icon.add_theme_font_override("font",UI.font(true,"jp"))
- _result_icon.add_theme_font_size_override("font_size",20)
- _result_icon.custom_minimum_size=Vector2(40,40)
+ _result_icon=TextureRect.new()
+ _result_icon.texture=UI.icon("check")
+ _result_icon.custom_minimum_size=Vector2(24,24)
+ _result_icon.expand_mode=TextureRect.EXPAND_IGNORE_SIZE
+ _result_icon.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+ _result_icon.mouse_filter=Control.MOUSE_FILTER_IGNORE
  _result_icon.name="PartResultStatusIcon"
- _result_icon.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
  _result_icon.set_meta("locale_ignore",true)
  circle.add_child(_result_icon)
  _result_title=UI.label("",20,true)
@@ -230,11 +231,12 @@ func show_result(state: String) -> void:
  if _result_tween and _result_tween.is_valid():_result_tween.kill()
  var correct:=state=="correct"
  var circle:=_result_icon.get_parent() as PanelContainer
- var circle_style:=UI.box(Color("38b5a7") if correct else Color("d55264"),Color.TRANSPARENT,20,0)
+ var circle_style:=UI.box(Color("38b5a7") if correct else Color("d55264"),Color.TRANSPARENT,20,8)
  circle_style.shadow_size=0
  circle_style.set_border_width_all(0)
  circle.add_theme_stylebox_override("panel",circle_style)
- _result_icon.text="✓" if correct else "✕"
+ _result_icon.texture=UI.icon("check" if correct else "close")
+ _result_icon.set_meta("verdict",state)
  _result_title.text=UI.text("That's correct!" if correct else "That's incorrect.")
  _result_name.text=input.text
  # Incorrect attempts show only the submitted answer, never the solution.

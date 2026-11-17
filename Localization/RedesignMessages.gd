@@ -1,5 +1,15 @@
 extends RefCounted
 const MESSAGES = [
+	{"en":"Create your dream kitchen","mm":"စိတ်ကြိုက်မီးဖိုချောင်ကို ဖန်တီးပါ","jp":"理想のキッチンをつくろう","aliases":[]},
+	{"en":"Your kitchen takes shape as you learn.","mm":"လေ့လာရင်း မီးဖိုချောင်ကို တဖြည်းဖြည်း ပြည့်စုံလာစေပါ။","jp":"学びながら、キッチンを少しずつ完成させましょう。","aliases":[]},
+	{"en":"Your next mission","mm":"သင့်နောက်ထပ်မစ်ရှင်","jp":"次のミッション","aliases":[]},
+	{"en":"Your kitchen","mm":"သင့်မီးဖိုချောင်","jp":"あなたのキッチン","aliases":[]},
+	{"en":"%d / %d stages complete","mm":"အဆင့် %d / %d ပြီးပါပြီ","jp":"%d / %d ステージ完了","aliases":[]},
+	{"en":"%d stages · %d available now","mm":"အဆင့် %d ဆင့်မှ ယခု %d ဆင့် ကစားနိုင်ပါသည်","jp":"全%dステージ・現在%dステージ公開中","aliases":[]},
+	{"en":"Plan your space","mm":"နေရာကို စီစဉ်ပါ","jp":"空間を計画する","aliases":[]},
+	{"en":"Choose equipment","mm":"ပစ္စည်းများ ရွေးချယ်ပါ","jp":"設備を選ぶ","aliases":[]},
+	{"en":"Finishing touches","mm":"အလှဆင် ပြည့်စုံစေပါ","jp":"仕上げを楽しむ","aliases":[]},
+	{"en":"Skip intro","mm":"အဖွင့်ကို ကျော်မည်","jp":"イントロをスキップ","aliases":[]},
 	{"en":"That's correct!","mm":"မှန်ပါတယ်။","jp":"正解です！","aliases":[]},
 	{"en":"That's incorrect.","mm":"မှားနေပါတယ်။","jp":"不正解です","aliases":[]},
 	{"en":"Select the next part.","mm":"နောက်ပစ္စည်းတစ်ခုကို ရွေးပါ။","jp":"次のパーツを選んでください","aliases":[]},

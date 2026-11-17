@@ -2,79 +2,108 @@ extends Control
 signal language_chosen(language: String)
 const Progress = preload("res://GameProgress.gd")
 const UI = preload("res://KitchenUI.gd")
+const LANGUAGES: Array[String]=["jp","mm","en"]
+const CAPTIONS: Array[String]=["日本語","မြန်မာ","English"]
 var _layout: Control
 var _selected: String
-var _choices: Array[Button] = []
+var _dropdown: MenuButton
 var _continue: Button
-var _confirmed: bool = false
+var _confirmed: bool=false
 func _ready() -> void:
-	name = "LanguageSelectionScreen"
-	set_meta("locale_ignore",true)
-	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	UI.background(self)
-	_selected = Progress.get_language()
-	_layout = Control.new()
-	_layout.size = Vector2(1440,810)
-	add_child(_layout)
-	var mark := UI.logo(470,180)
-	_layout.add_child(mark)
-	mark.position = Vector2(485,5)
-	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel",UI.box(Color(0.94,0.98,1,0.74),Color.WHITE,28,30))
-	_layout.add_child(panel)
-	panel.position = Vector2(280,235)
-	panel.size = Vector2(880,440)
-	var stack := VBoxContainer.new()
-	stack.alignment = BoxContainer.ALIGNMENT_CENTER
-	stack.add_theme_constant_override("separation",14)
-	panel.add_child(stack)
-	var heading := UI.label("",36,true)
-	heading.text = "Choose your language"
-	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	stack.add_child(heading)
-	var subtitle := UI.label("",18,false,UI.MUTED)
-	subtitle.text = "You can change this later in Settings."
-	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	stack.add_child(subtitle)
-	var options := HBoxContainer.new()
-	options.add_theme_constant_override("separation",12)
-	stack.add_child(options)
-	for entry in [["jp","日本語"],["mm","မြန်မာ"],["en","English"]]:
-		var choice := UI.button("",_choose.bind(entry[0]),false,250,24)
-		choice.name = "LanguageOption"+entry[0]
-		choice.custom_minimum_size.y = 92
-		choice.size_flags_horizontal=Control.SIZE_EXPAND_FILL
-		choice.alignment = HORIZONTAL_ALIGNMENT_CENTER
-		choice.set_meta("language",entry[0])
-		choice.set_meta("caption",entry[1])
-		options.add_child(choice)
-		_choices.append(choice)
-	_continue = UI.button("",_confirm,true,430,24)
-	_continue.text = "Continue   →"
-	_continue.name = "LanguageContinue"
-	_continue.custom_minimum_size.y = 64
-	_continue.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	stack.add_child(_continue)
-	_choose(_selected)
-	resized.connect(_fit)
-	_fit()
+ name="LanguageSelectionScreen"
+ set_meta("locale_ignore",true)
+ set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+ UI.background(self)
+ _selected=Progress.get_language()
+ _layout=Control.new()
+ _layout.size=Vector2(1440,810)
+ add_child(_layout)
+ var mark:=UI.logo(390,150)
+ _layout.add_child(mark)
+ mark.position=Vector2(525,22)
+ var panel:=PanelContainer.new()
+ panel.name="LanguageSelectionCard"
+ panel.add_theme_stylebox_override("panel",UI.box(Color("fffdf6"),Color("b3d6cb"),25,32))
+ _layout.add_child(panel)
+ panel.position=Vector2(420,214)
+ panel.size=Vector2(600,410)
+ var stack:=VBoxContainer.new()
+ stack.alignment=BoxContainer.ALIGNMENT_CENTER
+ stack.add_theme_constant_override("separation",18)
+ panel.add_child(stack)
+ var globe:=TextureRect.new()
+ globe.texture=UI.icon("globe")
+ globe.modulate=UI.TEAL
+ globe.expand_mode=TextureRect.EXPAND_IGNORE_SIZE
+ globe.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+ globe.custom_minimum_size=Vector2(38,38)
+ globe.size_flags_horizontal=Control.SIZE_SHRINK_CENTER
+ stack.add_child(globe)
+ var heading:=UI.label("",30,true)
+ heading.text="Choose your language"
+ heading.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+ stack.add_child(heading)
+ var subtitle:=UI.label("",15,false,UI.MUTED)
+ subtitle.text="You can change this later in Settings."
+ subtitle.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+ stack.add_child(subtitle)
+ _dropdown=MenuButton.new()
+ _dropdown.name="LanguageDropdown"
+ _dropdown.flat=false
+ _dropdown.custom_minimum_size=Vector2(500,58)
+ _dropdown.alignment=HORIZONTAL_ALIGNMENT_LEFT
+ _dropdown.add_theme_constant_override("h_separation",12)
+ _dropdown.icon=UI.icon("globe")
+ UI.style_button(_dropdown,false,21)
+ for state in ["normal","hover","pressed","focus"]:
+  var surface:=UI.box(Color("f6fcfb"),Color("69bcb3"),14,12)
+  surface.shadow_size=0
+  _dropdown.add_theme_stylebox_override(state,surface)
+ for state in ["icon_normal_color","icon_hover_color","icon_pressed_color"]:_dropdown.add_theme_color_override(state,UI.TEAL)
+ stack.add_child(_dropdown)
+ var chevron:=TextureRect.new()
+ chevron.texture=UI.icon("chevron_down")
+ chevron.modulate=UI.INK
+ chevron.expand_mode=TextureRect.EXPAND_IGNORE_SIZE
+ chevron.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+ chevron.mouse_filter=Control.MOUSE_FILTER_IGNORE
+ _dropdown.add_child(chevron)
+ chevron.set_anchors_and_offsets_preset(Control.PRESET_CENTER_RIGHT)
+ chevron.offset_left=-34
+ chevron.offset_right=-14
+ chevron.offset_top=-10
+ chevron.offset_bottom=10
+ var popup:=_dropdown.get_popup()
+ for i in range(LANGUAGES.size()):popup.add_radio_check_item(CAPTIONS[i],i)
+ UI.style_language_popup(popup)
+ popup.add_theme_font_size_override("font_size",20)
+ popup.about_to_popup.connect(func():_fit_popup.call_deferred())
+ popup.id_pressed.connect(func(id: int):_choose(LANGUAGES[id]))
+ _continue=UI.button("",_confirm,true,500,21)
+ _continue.text="Continue   →"
+ _continue.name="LanguageContinue"
+ _continue.custom_minimum_size.y=58
+ stack.add_child(_continue)
+ _choose(_selected)
+ resized.connect(_fit)
+ _fit()
+func _fit_popup() -> void:
+ var popup:=_dropdown.get_popup()
+ var width:=roundi(_dropdown.get_global_rect().size.x)
+ popup.min_size=Vector2i(width,0)
+ popup.size=Vector2i(width,popup.size.y)
 func _fit() -> void:
-	var factor := minf(size.x/1440.0,size.y/810.0)
-	_layout.scale = Vector2.ONE*factor
-	_layout.position = (size-Vector2(1440,810)*factor)/2
+ var factor:=minf(size.x/1440.0,size.y/810.0)
+ _layout.scale=Vector2.ONE*factor
+ _layout.position=(size-Vector2(1440,810)*factor)/2
 func _choose(language: String) -> void:
-	_selected = language
-	for choice in _choices:
-		var selected: bool = choice.get_meta("language") == language
-		choice.text = ("✓   " if selected else "○   ")+str(choice.get_meta("caption"))
-		UI.style_button(choice,false,24)
-		choice.add_theme_font_override("font",UI.font(selected))
-		var style := UI.box(Color("c1f2f4") if selected else Color(0.97,0.99,1,0.75),Color.WHITE,20,8)
-		style.content_margin_left = 30
-		choice.add_theme_stylebox_override("normal",style)
+ if language not in LANGUAGES:return
+ _selected=language
+ _dropdown.text=CAPTIONS[LANGUAGES.find(language)]
+ for i in range(LANGUAGES.size()):_dropdown.get_popup().set_item_checked(i,LANGUAGES[i]==language)
 func _confirm() -> void:
-	if _confirmed: return
-	_confirmed = true
-	_continue.disabled = true
-	language_chosen.emit(_selected)
-	queue_free()
+ if _confirmed:return
+ _confirmed=true
+ _continue.disabled=true
+ language_chosen.emit(_selected)
+ queue_free()
