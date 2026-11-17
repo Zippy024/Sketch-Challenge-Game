@@ -66,7 +66,9 @@ func _ready() -> void:
  _check=UI.button("Check answer",func():answer_submitted.emit(input.text),true,160,13)
  _check.name="CheckPartAnswer"
  actions.add_child(_check)
- _notice=UI.label("",12,false,UI.MUTED)
+ _notice=UI.label("",16,true,UI.MUTED)
+ _notice.name="PartAnswerResult"
+ _notice.set_meta("locale_ignore",true)
  _notice.custom_minimum_size=Vector2(270,28)
  _notice.size=Vector2(270,48)
  stack.add_child(_notice)
@@ -134,8 +136,8 @@ func show_result(state: String) -> void:
  _notice_revision+=1
  var revision:=_notice_revision
  _set_style(state)
- _notice.text=UI.text("Correct" if state=="correct" else "Incorrect")
- _notice.add_theme_color_override("font_color",UI.TEAL if state=="correct" else Color("b32741"))
+ _notice.text=("✓  " if state=="correct" else "✕  ")+UI.text("Correct" if state=="correct" else "Incorrect")
+ _notice.add_theme_color_override("font_color",Color("167044") if state=="correct" else Color("a51f38"))
  input.editable=state!="correct"
  _sync_buttons()
  get_tree().create_timer(1.0,false).timeout.connect(_expire_notice.bind(revision))
