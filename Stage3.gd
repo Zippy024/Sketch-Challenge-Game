@@ -38,6 +38,7 @@ var _answer_area: VBoxContainer
 var _pause_menu: Control
 var _progress_bar: ProgressBar
 var _feedback: Label
+var _feedback_panel: PanelContainer
 var _customer_bubble: PanelContainer
 var _answer_state: String="neutral"
 var _card_texture_cache: Dictionary = {}
@@ -196,6 +197,18 @@ func _refresh() -> void:
 	var title:=UI.label("Kitchen Selection" if step<2 else "Kitchen Parts",25 if step<2 else 21,true)
 	title.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	heading.add_child(title)
+	_feedback_panel=PanelContainer.new()
+	_feedback_panel.name="Stage3AnswerFeedback"
+	_feedback_panel.mouse_filter=Control.MOUSE_FILTER_IGNORE
+	_feedback_panel.size_flags_vertical=Control.SIZE_SHRINK_CENTER
+	heading.add_child(_feedback_panel)
+	_feedback=UI.label("",16,true)
+	_feedback.name="Stage3AnswerFeedbackText"
+	_feedback.set_meta("locale_ignore",true)
+	_feedback.autowrap_mode=TextServer.AUTOWRAP_OFF
+	_feedback.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+	_feedback_panel.add_child(_feedback)
+	_feedback_panel.hide()
 	var retry:=UI.button(_tr("Retry","ပြန်ကစားမည်","もう一度"),_retry_stage,false,110,14)
 	retry.name="Stage3Retry"
 	retry.icon=preload("res://Stage1Assets/reset.svg")
@@ -221,12 +234,6 @@ func _refresh() -> void:
 	right.add_child(_answer_area)
 	if step<2: _draw_choices()
 	else: _draw_parts()
-	_feedback = UI.label(_parts_message if step>=2 else ("Please try another choice." if last_wrong else ""),14,false,Color("b32741") if last_wrong else UI.TEAL)
-	_feedback.custom_minimum_size.y = 28
-	if step<2:right.add_child(_feedback)
-	else:
-		add_child(_feedback)
-		_feedback.hide()
 	var progress := HBoxContainer.new()
 	progress.add_theme_constant_override("separation",12)
 	right.add_child(progress)
@@ -528,8 +535,15 @@ func _show_verdict(state: String) -> void:
 	last_wrong=state=="incorrect"
 	UI.set_customer_feedback(_customer_bubble,state)
 	if is_instance_valid(_feedback):
-		_feedback.text=UI.text("Correct" if state=="correct" else "Incorrect")
-		_feedback.add_theme_color_override("font_color",UI.TEAL if state=="correct" else Color("b32741"))
+		var correct:=state=="correct"
+		var ink:=Color("167044") if correct else Color("a51f38")
+		_feedback.text=("✓  " if correct else "✕  ")+UI.text("Correct" if correct else "Incorrect")
+		_feedback.add_theme_color_override("font_color",ink)
+		var frame:=UI.box(Color("e7f6ee") if correct else Color("fff0f2"),ink,10,8)
+		frame.set_border_width_all(2)
+		frame.shadow_size=0
+		_feedback_panel.add_theme_stylebox_override("panel",frame)
+		_feedback_panel.show()
 	get_tree().create_timer(1.0,false).timeout.connect(_expire_verdict.bind(_feedback_revision))
 
 func _expire_verdict(revision: int) -> void:
@@ -538,6 +552,7 @@ func _expire_verdict(revision: int) -> void:
 	last_wrong=false
 	if is_instance_valid(_customer_bubble):UI.set_customer_feedback(_customer_bubble,"neutral")
 	if is_instance_valid(_feedback):_feedback.text=""
+	if is_instance_valid(_feedback_panel):_feedback_panel.hide()
 
 func _draw_parts() -> void:
 	_answer_area.add_theme_constant_override("separation",6)
@@ -622,6 +637,9 @@ func _close_answer() -> void:
 
 func _popover_draft_changed(value: String) -> void:
 	if _parts_selected<0 or _parts_selected>=Parts.COUNT:return
+	if _answer_state!="neutral":
+		_feedback_revision+=1
+		_expire_verdict(_feedback_revision)
 	_parts_answers[_parts_selected]=value
 	Progress.save_kitchen_parts(_parts_answers,_parts_solved)
 
