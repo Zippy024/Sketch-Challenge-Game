@@ -228,7 +228,7 @@ func _win(stage: int) -> void:
 	if stage<3:
 		game.call("_stop_voice")
 		game.call("_on_voice_finished")
-	await create_timer(0.85).timeout
+	await create_timer(2.15 if stage==3 else 0.85).timeout
 
 func _check_retry(stage: int) -> void:
 	var scene=["res://main.tscn","res://stage_2.tscn","res://stage_3.tscn"][stage-1]
