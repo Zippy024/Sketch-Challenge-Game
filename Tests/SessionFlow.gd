@@ -168,8 +168,6 @@ func _run() -> void:
 	assert(home.find_child("HomeProgressStage1",true,false).get_meta("completed"))
 	assert(home.find_child("HomeProgressStage2",true,false).get_meta("completed"))
 	assert(not home.find_child("HomeProgressStage3",true,false).get_meta("completed"))
-	assert(home.find_child("HomeKitchenPreview",true,false).get_meta("completed_stages")==2)
-	assert(not home.find_child("HomeProgressStage4",true,false).get_meta("available"))
 	home.find_child("StartGame",true,false).pressed.emit()
 	await _wait()
 	assert(current_scene.find_child("LevelSelectionScreen",true,false)!=null and Progress.completed_count()==2)

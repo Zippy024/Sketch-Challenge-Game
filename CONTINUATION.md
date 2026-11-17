@@ -6,17 +6,11 @@ https://zippy024.github.io/Sketch-Challenge-Game/
 Communicate concisely in Burmese. The user wants work completed and published;
 avoid repeated confirmation. Keep unrelated changes and user-uploaded recordings.
 
-Home uses the user-approved wide welcome design: a ten-stage journey/current
-mission on the left, evolving live kitchen preview on the right, navigation along
-the bottom. HomeJourney reads verified progress; stages 4–10 remain Coming soon
-until implemented. HomeKitchenPreview changes only decorative Home geometry;
-never alter assessed Stage 3 coordinates to implement Home visual rewards.
-Home enters with a skippable, nonblocking two-second fade once per app session.
-The TOP-LEFT Language control is the BACK button to language selection, not the
-in-place language dropdown. Keep the in-place dropdown at top right. Initial
-language selection uses a single dropdown and saves only after Continue.
-Stage 3 result-card check/cross icons are SVG TextureRects, not font glyphs, to
-prevent missing-character boxes in Web exports.
+The user reverted the wide evolving Home/dropdown redesign from PR #60. Keep the
+previous compact Home panel, original three language-choice cards, original
+Language back-button placement and original intro. Do not restore the ten-stage
+Home preview without a new request. Preserve the independent SVG result-card
+check/cross fix: use TextureRects, not missing font glyphs.
 
 Current Stage 3 design: two image questions, then eight Japanese component names.
 Select the real 3D part directly; hover highlights its mesh, click/tap opens a
