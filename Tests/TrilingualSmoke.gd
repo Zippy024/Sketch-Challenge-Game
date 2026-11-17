@@ -532,10 +532,16 @@ func _run() -> void:
 		editor.choose_candidate("腰壁")
 		editor.find_child("CheckPartAnswer",true,false).pressed.emit()
 		assert(game.step==3 and game.get("_parts_solved")[3])
-		assert(game.find_child("Stage3AnswerFeedback",true,false).is_visible_in_tree())
-		assert(game.find_child("Stage3AnswerFeedbackText",true,false).text=="✓  "+manager.text("Correct"))
-		assert(editor.find_child("PartAnswerResult",true,false).text=="✓  "+manager.text("Correct"))
-		await create_timer(1.1).timeout
+		assert(not game.find_child("Stage3AnswerFeedback",true,false).visible)
+		assert(editor.find_child("PartResultCard",true,false).is_visible_in_tree())
+		assert(editor.find_child("PartResultStatusIcon",true,false).text=="✓")
+		assert(editor.find_child("PartResultTitle",true,false).text==manager.text("That's correct!"))
+		assert(editor.find_child("PartResultName",true,false).text=="腰壁")
+		assert(editor.find_child("PartResultReading",true,false).text=="こしかべ")
+		await process_frame
+		await process_frame
+		assert(Rect2(Vector2.ZERO,game.get("_parts_model").size).encloses(editor.get_rect()))
+		await create_timer(2.15).timeout
 		assert(not editor.visible and not game.find_child("CustomerAnswerBadge",true,false).visible)
 		assert(not game.find_child("Stage3AnswerFeedback",true,false).visible)
 		game.call("_open_answer",0,true)
@@ -544,18 +550,24 @@ func _run() -> void:
 		editor.find_child("CheckPartAnswer",true,false).pressed.emit()
 		assert(game.step==3 and int(StageRating.current(3).mistakes)==before_errors+1)
 		assert(editor.visible and editor.input.editable)
-		assert(game.find_child("Stage3AnswerFeedback",true,false).is_visible_in_tree())
-		assert(game.find_child("Stage3AnswerFeedbackText",true,false).text=="✕  "+manager.text("Incorrect"))
-		assert(editor.find_child("PartAnswerResult",true,false).text=="✕  "+manager.text("Incorrect"))
-		await create_timer(1.1).timeout
+		assert(not game.find_child("Stage3AnswerFeedback",true,false).visible)
+		assert(editor.find_child("PartResultCard",true,false).is_visible_in_tree())
+		assert(editor.find_child("PartResultStatusIcon",true,false).text=="✕")
+		assert(editor.find_child("PartResultTitle",true,false).text==manager.text("That's incorrect."))
+		assert(editor.find_child("PartResultName",true,false).text=="countertop")
+		assert(not editor.find_child("PartResultReading",true,false).visible)
+		await create_timer(2.15).timeout
+		assert(editor.visible and editor.input.is_visible_in_tree() and editor.input.has_focus())
 		assert(not game.find_child("CustomerAnswerBadge",true,false).visible)
 		assert(not game.find_child("Stage3AnswerFeedback",true,false).visible)
 		editor.input.text="カウンター"
 		editor.input.text_changed.emit("カウンター")
 		editor.find_child("CheckPartAnswer",true,false).pressed.emit()
 		assert(game.step==4 and not editor.input.editable)
+		game.call("_open_answer",0,true)
+		assert(not editor.is_showing_result() and editor.input.is_visible_in_tree())
 		game.call("_open_answer",1,true)
-		await create_timer(0.8).timeout
+		await create_timer(2.15).timeout
 		assert(editor.visible and editor.part_index==1) # Old success timer cannot close a newer answer.
 		var original_yaw: float=model.yaw
 		var press:=InputEventMouseButton.new()
@@ -606,7 +618,7 @@ func _run() -> void:
 			await create_timer(0.85).timeout
 			assert(paused and game.find_child("Stage3CompleteOverlay",true,false)==null)
 			game.get("_pause_menu").resume_requested.emit()
-		await create_timer(0.85).timeout
+		await create_timer(2.15).timeout
 		_collect(game,"stage3-complete")
 		var third_popup=game.find_child("Stage3CompleteOverlay",true,false)
 		assert(third_popup!=null and third_popup.stage_index==3)

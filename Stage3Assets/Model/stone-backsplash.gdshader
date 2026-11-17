@@ -8,7 +8,9 @@ float stone_noise(vec2 p){
  return mix(mix(grain_hash(cell),grain_hash(cell+vec2(1,0)),f.x),mix(grain_hash(cell+vec2(0,1)),grain_hash(cell+vec2(1,1)),f.x),f.y);
 }
 void fragment(){
- float grain=(stone_noise(surface_point.xy*18.0)-0.5)*0.025+(stone_noise(surface_point.xy*140.0)-0.5)*0.008;
- ALBEDO=mix(vec3(0.67,0.66,0.63)+vec3(grain),vec3(0.33,0.79,0.73),highlighted*0.32);
- ROUGHNESS=0.90;
+ float broad=stone_noise(surface_point.xy*5.0+vec2(2.0,7.0));
+ float grain=(stone_noise(surface_point.xy*35.0)-0.5)*0.035+(stone_noise(surface_point.xy*170.0)-0.5)*0.012;
+ vec3 stone=mix(vec3(0.65,0.64,0.61),vec3(0.77,0.76,0.73),broad)+vec3(grain);
+ ALBEDO=mix(stone,vec3(0.33,0.79,0.73),highlighted*0.32);
+ ROUGHNESS=0.72;
 }

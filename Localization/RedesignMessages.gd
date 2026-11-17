@@ -1,5 +1,9 @@
 extends RefCounted
 const MESSAGES = [
+	{"en":"That's correct!","mm":"မှန်ပါတယ်။","jp":"正解です！","aliases":[]},
+	{"en":"That's incorrect.","mm":"မှားနေပါတယ်။","jp":"不正解です","aliases":[]},
+	{"en":"Select the next part.","mm":"နောက်ပစ္စည်းတစ်ခုကို ရွေးပါ။","jp":"次のパーツを選んでください","aliases":[]},
+	{"en":"Try another name.","mm":"နာမည်ကို ပြန်ပြင်ဖြေကြည့်ပါ။","jp":"別の名前を考えてみましょう","aliases":[]},
 	{
 		"en": "Correct",
 		"mm": "မှန်ပါတယ်",

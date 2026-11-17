@@ -3,6 +3,15 @@ extends RefCounted
 const NAMES: Array[String]=["カウンター","キッチンボード","フード","腰壁","シンク","水栓","IHクッキングヒーター","引き出し"]
 const COUNT: int=8
 const CHALLENGE_STEPS: int=2+COUNT
+static func reading(value: String) -> String:
+ var kanji:={"天板":"てんばん","腰壁":"こしかべ","キッチン腰壁":"きっちんこしかべ","水栓":"すいせん","水栓金具":"すいせんかなぐ","蛇口":"じゃぐち","混合水栓":"こんごうすいせん","換気扇":"かんきせん","電磁調理器":"でんじちょうりき","引き出し":"ひきだし","引出し":"ひきだし","引出":"ひきだし","抽斗":"ひきだし","流し":"ながし","流し台":"ながしだい","流台":"ながしだい"}
+ for written in kanji:
+  if normalize(value)==normalize(written):return kanji[written]
+ var result:=""
+ for character in normalize(value).replace("IH","アイエイチ"):
+  var code:=character.unicode_at(0)
+  result+=String.chr(code-0x60) if code>=0x30a1 and code<=0x30f6 else character
+ return result
 const ACCEPTED: Array=[
  ["カウンター","カウンタートップ","ワークトップ","天板","キッチンカウンター"],
  ["キッチンボード","キッチンパネル","キッチンパネルボード"],

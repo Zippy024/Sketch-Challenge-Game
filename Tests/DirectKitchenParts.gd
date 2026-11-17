@@ -66,7 +66,22 @@ func _run() -> void:
  var original: float=model.yaw
  for i in range(8):model.rotate_by(PI/4)
  assert(absf(wrapf(model.yaw-original,-PI,PI))<0.0001)
- assert(absf(model.camera.position.distance_to(Vector3(0,1.08,0))-6.0)<0.001)
+ assert(absf(model.camera.position.distance_to(Model.LOOK_TARGET)-6.0)<0.001)
+ # Kitchen and hood bounds must fit short, wide and tall viewport shapes at
+ # the normal zoom, across all view presets. Numbered world anchors stay fixed.
+ var anchors: Array=model._anchors.duplicate()
+ for dimensions in [Vector2(1172,512),Vector2(860,450),Vector2(420,620)]:
+  model.size=dimensions
+  for preset in ["perspective","front","rear"]:
+   model.set_view(preset)
+   await _wait()
+   assert(model._anchors==anchors)
+   for i in range(8):
+    var point: Vector2=model.camera.unproject_position(Model.MODEL_BOUNDS.get_endpoint(i))
+    assert(Rect2(Vector2.ZERO,Vector2(model.viewport.size)).has_point(point))
+ model.size=Vector2(860,450)
+ model.set_view("perspective")
+ original=model.yaw
  var before: int=chosen.size()
  var press:=InputEventMouseButton.new()
  press.button_index=MOUSE_BUTTON_LEFT
@@ -85,5 +100,7 @@ func _run() -> void:
  assert(Parts.conversion_candidates("すいせん")==["水栓","推薦"])
  assert(Parts.conversion_candidates("あいえいち")==["IH"])
  assert(Parts.conversion_candidates("ひきだし")==["引き出し","引出し"])
+ assert(Parts.reading("シンク")=="しんく" and Parts.reading("蛇口")=="じゃぐち")
+ assert(Parts.reading("引き出し")=="ひきだし" and Parts.reading("IH")=="あいえいち")
  print("DIRECT_KITCHEN_PARTS_OK: eight mesh hits, visible hover, click selection, eight pointer guides, full 360 drag/buttons, aliases and conversion")
  quit()

@@ -4,6 +4,7 @@ signal draft_changed(value: String)
 signal close_requested
 const UI=preload("res://KitchenUI.gd")
 const Parts=preload("res://Stage3Assets/Model/JapaneseParts.gd")
+const RESULT_SECONDS: float=2.0
 var part_index: int=-1
 var input: LineEdit
 var _title: Label
@@ -13,6 +14,16 @@ var _check: Button
 var _convert: Button
 var _notice_revision: int=0
 var _fit_pending: bool=false
+var _form: VBoxContainer
+var _result: VBoxContainer
+var _result_title: Label
+var _result_icon: Label
+var _result_name: Label
+var _result_reading: Label
+var _result_hint: Label
+var _result_progress: ProgressBar
+var _result_tween: Tween
+var anchor_point:=Vector2.ZERO
 
 func _ready() -> void:
  name="PartAnswerPopover"
@@ -24,6 +35,7 @@ func _ready() -> void:
  surface.shadow_size=8
  add_theme_stylebox_override("panel",surface)
  var stack:=VBoxContainer.new()
+ _form=stack
  stack.add_theme_constant_override("separation",8)
  add_child(stack)
  var heading:=HBoxContainer.new()
@@ -72,11 +84,85 @@ func _ready() -> void:
  _notice.custom_minimum_size=Vector2(270,28)
  _notice.size=Vector2(270,48)
  stack.add_child(_notice)
+ _build_result()
  hide()
+
+func _build_result() -> void:
+ _result=VBoxContainer.new()
+ _result.name="PartResultCard"
+ _result.add_theme_constant_override("separation",12)
+ add_child(_result)
+ var heading:=HBoxContainer.new()
+ heading.alignment=BoxContainer.ALIGNMENT_CENTER
+ heading.add_theme_constant_override("separation",10)
+ _result.add_child(heading)
+ var circle:=PanelContainer.new()
+ circle.name="PartResultStatusCircle"
+ circle.custom_minimum_size=Vector2(40,40)
+ circle.size_flags_vertical=Control.SIZE_SHRINK_CENTER
+ heading.add_child(circle)
+ _result_icon=UI.label("",24,true,Color.WHITE)
+ _result_icon.add_theme_font_override("font",UI.font(true,"jp"))
+ _result_icon.add_theme_font_size_override("font_size",20)
+ _result_icon.custom_minimum_size=Vector2(40,40)
+ _result_icon.name="PartResultStatusIcon"
+ _result_icon.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+ _result_icon.set_meta("locale_ignore",true)
+ circle.add_child(_result_icon)
+ _result_title=UI.label("",20,true)
+ _result_title.name="PartResultTitle"
+ _result_title.autowrap_mode=TextServer.AUTOWRAP_OFF
+ _result_title.set_meta("locale_ignore",true)
+ heading.add_child(_result_title)
+ _result.add_child(HSeparator.new())
+ _result_name=UI.label("",27,true)
+ _result_name.name="PartResultName"
+ _result_name.set_meta("locale_ignore",true)
+ _result_name.add_theme_font_override("font",UI.font(true,"jp"))
+ _result_name.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+ _result.add_child(_result_name)
+ _result_reading=UI.label("",14)
+ _result_reading.name="PartResultReading"
+ _result_reading.set_meta("locale_ignore",true)
+ _result_reading.add_theme_font_override("font",UI.font(false,"jp"))
+ _result_reading.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+ _result.add_child(_result_reading)
+ _result.add_child(HSeparator.new())
+ _result_hint=UI.label("",13)
+ _result_hint.set_meta("locale_ignore",true)
+ _result_hint.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+ _result.add_child(_result_hint)
+ _result_progress=ProgressBar.new()
+ _result_progress.name="PartResultCountdown"
+ _result_progress.custom_minimum_size.y=5
+ _result_progress.show_percentage=false
+ var track:=UI.box(Color("e4e8e7"),Color.TRANSPARENT,3,0)
+ var fill:=UI.box(Color("38b5a7"),Color.TRANSPARENT,3,0)
+ track.shadow_size=0
+ fill.shadow_size=0
+ _result_progress.add_theme_stylebox_override("background",track)
+ _result_progress.add_theme_stylebox_override("fill",fill)
+ _result.add_child(_result_progress)
+ _result.hide()
+
+func _show_form() -> void:
+ if _result_tween and _result_tween.is_valid():_result_tween.kill()
+ modulate.a=1.0
+ _result.hide()
+ _form.show()
+ var surface:=UI.box(Color("f8fcf7"),Color("89bdb3"),16,12)
+ surface.shadow_size=8
+ add_theme_stylebox_override("panel",surface)
+ _request_fit()
+ queue_redraw()
+
+func is_showing_result() -> bool:
+ return _result.visible
 
 func configure(index: int, draft: String, solved: bool) -> void:
  part_index=index
  _notice_revision+=1
+ _show_form()
  _title.text=UI.text("Selected part")+("  ✓" if solved else "")
  input.text=draft
  input.editable=not solved
@@ -140,10 +226,49 @@ func show_result(state: String) -> void:
  _notice.add_theme_color_override("font_color",Color("167044") if state=="correct" else Color("a51f38"))
  input.editable=state!="correct"
  _sync_buttons()
- get_tree().create_timer(1.0,false).timeout.connect(_expire_notice.bind(revision))
+ input.release_focus()
+ if _result_tween and _result_tween.is_valid():_result_tween.kill()
+ var correct:=state=="correct"
+ var circle:=_result_icon.get_parent() as PanelContainer
+ var circle_style:=UI.box(Color("38b5a7") if correct else Color("d55264"),Color.TRANSPARENT,20,0)
+ circle_style.shadow_size=0
+ circle_style.set_border_width_all(0)
+ circle.add_theme_stylebox_override("panel",circle_style)
+ _result_icon.text="✓" if correct else "✕"
+ _result_title.text=UI.text("That's correct!" if correct else "That's incorrect.")
+ _result_name.text=input.text
+ # Incorrect attempts show only the submitted answer, never the solution.
+ _result_reading.text=Parts.reading(input.text) if correct else ""
+ _result_reading.visible=correct
+ _result_hint.text=UI.text("Select the next part." if correct else "Try another name.")
+ var surface:=UI.box(Color("fffefd"),Color("d7e6df"),18,18)
+ surface.border_width_top=5
+ surface.border_color=Color("74cfc2")
+ surface.shadow_size=10
+ add_theme_stylebox_override("panel",surface)
+ _form.hide()
+ _result.show()
+ modulate.a=1.0
+ _result_progress.value=100
+ _request_fit()
+ queue_redraw()
+ _result_tween=create_tween()
+ _result_tween.tween_property(_result_progress,"value",0.0,RESULT_SECONDS-0.16)
+ _result_tween.tween_property(self,"modulate:a",0.0,0.16)
+ get_tree().create_timer(RESULT_SECONDS,false).timeout.connect(_expire_notice.bind(revision))
 
 func _expire_notice(revision: int) -> void:
- if revision==_notice_revision:_notice.text=""
+ if revision!=_notice_revision:return
+ _notice.text=""
+ if input.editable:
+  _show_form()
+  if is_visible_in_tree():input.grab_focus()
+
+func _draw() -> void:
+ if not is_instance_valid(_result) or not _result.visible:return
+ if Rect2(Vector2.ZERO,size).has_point(anchor_point):return
+ var edge:=Vector2(0 if anchor_point.x<0 else size.x,clampf(anchor_point.y,24,size.y-24))
+ draw_line(anchor_point,edge,Color("359e91"),1.5,true)
 
 func _set_style(state: String) -> void:
  var style:=UI.box(Color("e7f6ee") if state=="correct" else (Color("fff0f2") if state=="incorrect" else Color.WHITE),Color("91c6ac") if state=="correct" else (Color("dda5af") if state=="incorrect" else UI.EDGE),8,7)
