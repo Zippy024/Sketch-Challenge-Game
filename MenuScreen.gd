@@ -5,12 +5,6 @@ const Progress = preload("res://GameProgress.gd")
 const UI = preload("res://KitchenUI.gd")
 const Rating = preload("res://StageRating.gd")
 const Decor = preload("res://MenuAssets/MissionDecor.gd")
-const Journey=preload("res://HomeJourney.gd")
-static var _home_intro_played: bool=false
-static var _last_home_completed: int=-1
-var _intro_tween: Tween
-var _intro_hero: Control
-var _intro_skip: Button
 var levels: bool = false
 var paused_game: bool = false
 var selected_stage: int = 1
@@ -68,7 +62,6 @@ func _back_button(message: String, action: String) -> Button:
 	return button
 
 func _build() -> void:
-	_finish_home_intro()
 	for child in get_children():
 		remove_child(child)
 		child.queue_free()
@@ -125,131 +118,64 @@ func _top_controls() -> void:
 	_put(_design,settings,Rect2(1350,22,46,44))
 
 func _build_home() -> void:
-	_add_logo(Rect2(555,6,330,120))
+	_add_logo(Rect2(44,12,240,100))
 	_top_controls()
-	var back:=_back_button("Language","language")
-	back.name="BackToLanguage"
-	_put(self,back,Rect2(44,24,205,44))
-	var hero:=Panel.new()
-	hero.name="HomeHeroPanel"
-	hero.mouse_filter=Control.MOUSE_FILTER_IGNORE
-	hero.add_theme_stylebox_override("panel",UI.box(Color("fffdf6"),Color("b3cfc2"),28,0))
-	_put(_design,hero,Rect2(64,164,1312,590))
-	var title:=_level_label(hero,"Create your dream kitchen",Rect2(38,26,540,112),32 if Progress.get_language()=="mm" else 36,UI.INK,false,true)
+	var panel := Panel.new()
+	panel.name = "HomeHeroPanel"
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var card:=StyleBoxTexture.new()
+	card.texture=preload("res://UIAssets/intro-card.svg")
+	card.texture_margin_left=28
+	card.texture_margin_right=28
+	card.texture_margin_top=28
+	card.texture_margin_bottom=28
+	panel.add_theme_stylebox_override("panel",card)
+	_put(_design,panel,Rect2(100,170,470,470))
+	var title := _level_label(_design,"Welcome",Rect2(128,200,414,86),35 if Progress.get_language()=="mm" else 40,UI.INK,true,true)
+	title.autowrap_mode = TextServer.AUTOWRAP_OFF
 	title.name="HomeWelcomeTitle"
-	_level_label(hero,"Your kitchen takes shape as you learn.",Rect2(40,141,536,58),16,UI.MUTED,false)
-	var mission:=Panel.new()
-	mission.name="HomeCurrentMission"
-	mission.mouse_filter=Control.MOUSE_FILTER_IGNORE
-	var mission_surface:=UI.box(Color("ecf5e9"),Color("d7e6d6"),17,0)
-	mission_surface.shadow_size=0
-	mission.add_theme_stylebox_override("panel",mission_surface)
-	_put(hero,mission,Rect2(38,214,540,101))
-	_level_label(mission,"Your next mission",Rect2(18,9,504,28),13,UI.TEAL,false,true)
-	var current: int=Journey.current_stage()
-	var caption:=UI.text(["Draw the layout","Plan Q&A","Kitchen Selection"][current-1]) if current<=3 else UI.text("Coming soon")
-	var next_label:=_level_label(mission,"",Rect2(18,40,504,47),17,UI.INK,false,true)
-	next_label.name="HomeNextMission"
-	next_label.set_meta("locale_ignore",true)
-	next_label.text=(UI.text("Stage %d")%current)+" · "+caption
-	_level_label(hero,"Your journey",Rect2(42,334,245,29),15,UI.INK,false,true)
-	var count: int=Journey.completed_count()
-	var summary:=_level_label(hero,"",Rect2(295,334,280,29),13,UI.INK,true,true)
-	summary.name="HomeJourneySummary"
-	summary.set_meta("locale_ignore",true)
-	summary.text=UI.text("%d / %d stages complete")%[count,Journey.TOTAL_STAGES]
-	var progress:=preload("res://HomeProgress.gd").new()
-	_put(hero,progress,Rect2(38,374,540,58))
-	var available:=_level_label(hero,"",Rect2(42,428,536,33),12,UI.MUTED,false)
-	available.name="HomeAvailableStages"
-	available.set_meta("locale_ignore",true)
-	available.text=UI.text("%d stages · %d available now")%[Journey.TOTAL_STAGES,Journey.available_count()]
-	var preview_surface:=Panel.new()
-	preview_surface.name="HomeKitchenCard"
-	preview_surface.mouse_filter=Control.MOUSE_FILTER_IGNORE
-	var preview_style:=UI.box(Color("fffdf6"),Color("dbe8dc"),20,0)
-	preview_style.shadow_size=0
-	preview_surface.add_theme_stylebox_override("panel",preview_style)
-	_put(hero,preview_surface,Rect2(610,24,670,434))
-	_level_label(preview_surface,"Your kitchen",Rect2(18,10,410,30),16,UI.INK,false,true)
-	var preview:=preload("res://HomeKitchenPreview.gd").new()
-	preview.name="HomeKitchenPreview"
-	preview.completed_stages=count
-	preview.set_meta("completed_stages",count)
-	_put(preview_surface,preview,Rect2(8,49,654,332))
-	if _last_home_completed>=0 and count>_last_home_completed and _motion_allowed() and not paused_game:
-		preview.modulate.a=0.0
-		preview.create_tween().tween_property(preview,"modulate:a",1.0,0.65).set_trans(Tween.TRANS_SINE)
-	_last_home_completed=count
-	var total_stars:=0
-	for stage in range(1,Journey.TOTAL_STAGES+1):total_stars+=int(Rating.best(stage).get("stars",0))
-	var gold:=Decor.new()
-	gold.kind=Decor.Kind.TOTAL_STAR
-	_put(preview_surface,gold,Rect2(566,12,25,25))
-	var score:=_level_label(preview_surface,"",Rect2(596,8,54,32),16,UI.INK,true,true)
-	score.name="HomeBestStars"
-	score.set_meta("locale_ignore",true)
-	score.text=str(total_stars)
-	var phase: int=0 if count<3 else (1 if count<6 else 2)
-	for i in range(3):
-		var chip:=Panel.new()
-		chip.mouse_filter=Control.MOUSE_FILTER_IGNORE
-		var chip_style:=UI.box(Color("e3f1e6") if i==phase else Color("f6f7ed"),Color("a6cdbc") if i==phase else Color("e4e9db"),10,0)
-		chip_style.shadow_size=0
-		chip.add_theme_stylebox_override("panel",chip_style)
-		_put(preview_surface,chip,Rect2(12+i*218,390,210,32))
-		var phase_label:=_level_label(chip,["Plan your space","Choose equipment","Finishing touches"][i],Rect2(4,0,202,32),11,UI.TEAL if i==phase else UI.MUTED,true,i==phase)
-		phase_label.tooltip_text=["01–03","04–06","07–10"][i]
-	var divider:=HSeparator.new()
-	_put(hero,divider,Rect2(34,478,1244,4))
-	var start:=_button("Start Game",true,18)
+	var start := _button("Start Game",true,19)
 	start.name="StartGame"
 	start.icon=UI.icon("play")
+	start.add_theme_constant_override("icon_max_width",22)
 	start.pressed.connect(func():action_requested.emit("new_game"))
-	_put(hero,start,Rect2(38,506,330,58))
-	var continue_button:=_button("Continue Game",false,17)
+	_put(_design,start,Rect2(140,282,390,54))
+	var continue_button := _button("Continue Game",false,19)
 	continue_button.name="ContinueGame"
 	continue_button.icon=UI.icon("redo")
 	continue_button.add_theme_color_override("icon_normal_color",UI.TEAL)
+	continue_button.add_theme_constant_override("icon_max_width",22)
 	continue_button.disabled=not paused_game and not Progress.has_session()
 	continue_button.tooltip_text=UI.text("Resume your saved game") if not continue_button.disabled else UI.text("Start a game first")
 	continue_button.pressed.connect(func():action_requested.emit("continue"))
-	_put(hero,continue_button,Rect2(380,506,286,58))
+	_put(_design,continue_button,Rect2(140,350,390,54))
 	for i in range(2):
-		var button:=_button("Select Level" if i==0 else "How to Play",false,16)
-		button.name="SelectLevel" if i==0 else "HowToPlay"
-		button.icon=UI.icon("layers" if i==0 else "help")
+		var button := _button("Select Level" if i==0 else "How to Play",false,16)
+		button.name = "SelectLevel" if i==0 else "HowToPlay"
+		button.icon = UI.icon("layers" if i==0 else "help")
 		button.add_theme_color_override("icon_normal_color",UI.INK)
-		button.pressed.connect(func():action_requested.emit("levels" if i==0 else "guide"))
-		_put(hero,button,Rect2(678+i*302,506,290,58))
+		button.add_theme_constant_override("icon_max_width",23)
+		button.pressed.connect(func(): action_requested.emit("levels" if i==0 else "guide"))
+		_put(_design,button,Rect2(140+i*204,420,186,48))
+	var progress_title:=_level_label(_design,"Your progress",Rect2(134,477,230,28),13,UI.INK,false,true)
+	progress_title.name="HomeProgressTitle"
+	var progress:=preload("res://HomeProgress.gd").new()
+	_put(_design,progress,Rect2(126,505,418,112))
+	var total_stars: int=0
+	for stage in range(1,4):total_stars+=int(preload("res://StageRating.gd").best(stage).get("stars",0))
+	var score:=_level_label(_design,"",Rect2(372,477,150,28),14,UI.INK,true,true)
+	score.name="HomeBestStars"
+	score.set_meta("locale_ignore",true)
+	score.text="★ %d / 9"%total_stars
+	var ambience:=preload("res://IntroAmbience.gd").new()
+	_put(_design,ambience,Rect2(0,0,1440,810))
+	var back := _back_button("Language","language")
+	back.name = "BackToLanguage"
+	_put(_design,back,Rect2(1180,740,220,42))
 	if paused_game:
-		var resume:=_button("Back to Game",true,14)
+		var resume := _button("Back to Game",true,16)
 		resume.pressed.connect(func():action_requested.emit("back"))
-		_put(_design,resume,Rect2(1170,766,205,34))
-	_play_home_intro(hero)
-
-func _play_home_intro(hero: Control) -> void:
-	if _home_intro_played or paused_game or not _motion_allowed():return
-	_home_intro_played=true
-	_intro_hero=hero
-	hero.modulate.a=0.0
-	_intro_skip=_button("Skip intro",false,12)
-	_intro_skip.name="SkipHomeIntro"
-	_intro_skip.pressed.connect(_finish_home_intro)
-	_put(_design,_intro_skip,Rect2(1190,112,184,34))
-	_intro_tween=create_tween()
-	_intro_tween.tween_property(hero,"modulate:a",1.0,2.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	_intro_tween.finished.connect(_finish_home_intro)
-
-func _finish_home_intro() -> void:
-	if _intro_tween and _intro_tween.is_valid():_intro_tween.kill()
-	if is_instance_valid(_intro_hero):_intro_hero.modulate.a=1.0
-	if is_instance_valid(_intro_skip):_intro_skip.hide()
-
-func _unhandled_key_input(event: InputEvent) -> void:
-	if is_instance_valid(_intro_skip) and _intro_skip.visible and event is InputEventKey and event.pressed and event.keycode==KEY_ESCAPE:
-		_finish_home_intro()
-		get_viewport().set_input_as_handled()
+		_put(_design,resume,Rect2(1180,678,220,42))
 
 func _build_levels() -> void:
 	_add_logo(Rect2(62,3,250,106))
@@ -531,7 +457,3 @@ func _fit() -> void:
 	var factor := minf(size.x/1440.0,size.y/810.0)
 	_design.scale=Vector2.ONE*factor
 	_design.position=(size-Vector2(1440,810)*factor)*0.5
-	var language_back:=get_node_or_null("BackToLanguage") as Control
-	if language_back!=null:
-		language_back.scale=Vector2.ONE*factor
-		language_back.position=Vector2(44,24)*factor
