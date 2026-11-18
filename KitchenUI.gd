@@ -320,8 +320,10 @@ static func customer(parent: Control) -> Dictionary:
 	question.set_meta("locale_ignore",true)
 	dialogue.add_child(question)
 	var voice := HBoxContainer.new()
+	voice.name="ConversationSpeakingRow"
+	voice.alignment=BoxContainer.ALIGNMENT_END
 	voice.add_theme_constant_override("separation",7)
-	talk.add_child(voice)
+	dialogue.add_child(voice)
 	return {"name":customer_name,"bubble":bubble,"question":question,"dialogue":dialogue,"voice":voice}
 
 static func customer_plate() -> StyleBoxTexture:

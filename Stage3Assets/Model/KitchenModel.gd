@@ -366,6 +366,8 @@ func _update_camera() -> void:
  if not is_instance_valid(camera):return
  # The static model needs a new frame only after interaction or resizing.
  viewport.render_target_update_mode=SubViewport.UPDATE_ONCE
+ camera.h_offset=0.0
+ camera.v_offset=0.0
  var target:=LOOK_TARGET
  camera.position=target+Vector3(sin(yaw)*cos(pitch),sin(pitch),cos(yaw)*cos(pitch))*6.0
  camera.look_at(target,Vector3.UP)
@@ -378,9 +380,24 @@ func _update_camera() -> void:
   var depth:=maxf(0.1,-point.z)
   tan_half_fov=maxf(tan_half_fov,maxf(absf(point.y)/depth,absf(point.x)/(depth*aspect)))
  camera.fov=rad_to_deg(2.0*atan(tan_half_fov*1.12*(zoom/DEFAULT_ZOOM)))
+ _align_top_left()
  _position_pointers()
 
  view_changed.emit()
+
+func _align_top_left() -> void:
+ if size.x<=0 or size.y<=0:return
+ var margin:=Vector2(minf(28.0,size.x*0.06),minf(28.0,size.y*0.06))
+ var units_per_pixel: float=2.0*tan(deg_to_rad(camera.fov)*0.5)*6.0/size.y
+ # Reframe the camera only. Every mesh, world anchor and numbered offset stays
+ # unchanged, and ray picking continues to use this same camera transform.
+ for attempt in range(5):
+  var top_left:=Vector2(INF,INF)
+  for i in range(8):
+   var point:=camera.unproject_position(MODEL_BOUNDS.get_endpoint(i))*size/Vector2(viewport.size)
+   top_left=top_left.min(point)
+  camera.h_offset+=(top_left.x-margin.x)*units_per_pixel
+  camera.v_offset+=(margin.y-top_left.y)*units_per_pixel
 
 func set_view(which: String) -> void:
  interaction_started.emit()

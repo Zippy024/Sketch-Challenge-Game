@@ -3,6 +3,7 @@ extends Control
 const CanvasScript = preload("res://DrawingCanvas.gd")
 const UI = preload("res://KitchenUI.gd")
 const Progress = preload("res://GameProgress.gd")
+const Meter=preload("res://SpeakingMeter.gd")
 
 # Reference ပုံအမှန်ကို မူရင်းအတိုင်း ပြသပေးပြီး နှိပ်လိုက်ပါက ပုံအကြီး ချဲ့ကြည့်နိုင်သည့် Viewer
 class ReferencePlanViewer extends Control:
@@ -151,8 +152,6 @@ var _stage1_language_picker: Control
 
 # Recorded voice files. Place the three MP3 files in res:// (the project root).
 var voice_player: AudioStreamPlayer
-var voice_stop_button: Button
-var voice_replay_button: Button
 var voice_kind: String = ""
 var voice_caption: Control
 var voice_segment_times: Array[float] = []
@@ -573,7 +572,7 @@ func _build_ui() -> void:
 	chat_panel.name = "Stage1CustomerCard"
 	chat_panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	chat_panel.size_flags_stretch_ratio = 0.92
-	chat_panel.custom_minimum_size.y = 384
+	chat_panel.custom_minimum_size.y = 412
 	chat_panel.add_theme_stylebox_override("panel", _stage1_glass("customer", 14))
 	left.add_child(chat_panel)
 
@@ -653,23 +652,6 @@ func _build_ui() -> void:
 	dialog_bubble.add_child(bubble_vbox)
 	UI.add_customer_feedback(dialog_bubble,bubble_vbox)
 
-	# Preserve recorded voice and UI feedback behavior.
-	voice_replay_button = _button("", _replay_voice, 26)
-	voice_stop_button = _button("", _toggle_voice_pause, 26)
-	_set_voice_icon(voice_replay_button, "replay")
-	_set_voice_icon(voice_stop_button, "pause")
-	voice_replay_button.tooltip_text = "Replay from beginning"
-	voice_stop_button.tooltip_text = "Pause / Resume"
-	var voice_controls := HBoxContainer.new()
-	voice_controls.name="CustomerVoiceControls"
-	voice_controls.hide()
-	voice_controls.add_theme_constant_override("separation",7)
-	speech_stack.add_child(voice_controls)
-	voice_controls.add_child(voice_replay_button)
-	voice_controls.add_child(UI.inline_label("Replay",12))
-	voice_controls.add_child(voice_stop_button)
-	voice_controls.add_child(UI.inline_label("Pause",12))
-
 	dialog_scroll = ScrollContainer.new()
 	dialog_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	dialog_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -700,6 +682,14 @@ func _build_ui() -> void:
 	feedback_label = _label("", 14, "99534c")
 	feedback_label.visible = false
 	text_container.add_child(feedback_label)
+
+	var meter_row:=HBoxContainer.new()
+	meter_row.name="ConversationSpeakingRow"
+	meter_row.alignment=BoxContainer.ALIGNMENT_END
+	bubble_vbox.add_child(meter_row)
+	var meter:=Meter.new()
+	meter.audio_player=voice_player
+	meter_row.add_child(meter)
 
 	again_button_row = HBoxContainer.new()
 	again_button_row.alignment = BoxContainer.ALIGNMENT_END
@@ -1289,7 +1279,6 @@ func _play_voice(kind: String) -> void:
 	else:
 		feedback_label.text = voice_segment_texts[0].substr(0,mini(6,voice_segment_texts[0].length()))
 	voice_player.play()
-	_set_voice_icon(voice_stop_button, "pause")
 
 func _process(_delta: float) -> void:
 	if conversation_finished and last_eval_state=="none":StageRating.advance(1,_delta)
@@ -1319,57 +1308,20 @@ func _process(_delta: float) -> void:
 	else:
 		feedback_label.text = displayed
 
-func _set_voice_icon(button: Button, icon_name: String) -> void:
-	if button == null:
-		return
-	# Generate crisp vector artwork at runtime; no UI_Icons PNG files needed.
-	var symbol: String = ""
-	match icon_name:
-		"replay":
-			symbol = '<path d="M20 11a8 8 0 1 1-2.4-5.7"/><path d="M20 3v6h-6"/>'
-		"play":
-			symbol = '<path d="M9 5l11 7-11 7z" fill="#2563eb" stroke-linejoin="round"/>'
-		"pause":
-			symbol = '<path d="M9 5v14M15 5v14"/>'
-		_:
-			return
-	var svg: String = '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 24 24"><g fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + symbol + '</g></svg>'
-	var img := Image.new()
-	var err: Error = img.load_svg_from_buffer(svg.to_utf8_buffer(), 1.0)
-	if err != OK:
-		push_warning("Unable to render voice icon: " + icon_name)
-		return
-	var tex := ImageTexture.create_from_image(img)
-	button.text = ""
-	button.icon = tex
-	button.expand_icon = true
-	button.custom_minimum_size = Vector2(30,30)
-	button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	button.add_theme_constant_override("icon_max_width",18)
-	for state in ["normal","hover","pressed"]:
-		var compact := UI.box(Color("eff8ff"),UI.EDGE,15,4)
-		compact.shadow_size = 0
-		button.add_theme_stylebox_override(state,compact)
-	button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
-
 func _stop_voice() -> void:
 	_dialogue_generation += 1
 	_completion_voice_finished=false
 	if voice_player != null:
 		voice_player.stop()
 		voice_player.stream_paused = false
-	if voice_stop_button != null:
-		_set_voice_icon(voice_stop_button, "play")
 
 func _toggle_voice_pause() -> void:
 	if voice_player == null:
 		return
 	if voice_player.playing and not voice_player.stream_paused:
 		voice_player.stream_paused = true
-		_set_voice_icon(voice_stop_button, "play")
 	elif voice_player.stream_paused:
 		voice_player.stream_paused = false
-		_set_voice_icon(voice_stop_button, "pause")
 	else:
 		_replay_voice()
 
@@ -1380,8 +1332,6 @@ func _replay_voice() -> void:
 	_play_voice(kind)
 
 func _on_voice_finished() -> void:
-	if voice_stop_button != null:
-		_set_voice_icon(voice_stop_button, "play")
 	if voice_caption == request_label:
 		request_label.visible_characters = -1
 		if not _stage1_started_once:

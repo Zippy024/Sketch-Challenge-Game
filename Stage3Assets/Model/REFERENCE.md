@@ -11,7 +11,7 @@ anchors the cabinet to the oak floor; directional shadows stay disabled. Stone
 uses subtle non-periodic grain rather than visible wave bands.
 Soft studio reflection cards define the metal without enclosing room geometry.
 The perspective camera fits the hood and kitchen bounds across short/wide/tall
-viewports; render-target limits preserve aspect. All installation dimensions,
+viewports, with a small top-left inset; render-target limits preserve aspect. All installation dimensions,
 numbered world anchors and pointer offsets remain unchanged by user request.
 
 Eight assessed parts have independent collision and highlight groups: worktop,
@@ -19,6 +19,8 @@ kitchen panel, range hood, waist-height rear wall, sink, faucet, IH hob and draw
 Hover highlights the actual mesh. Clicking/tapping a visible part opens one
 contextual Japanese answer editor. Eight compact numbered pointer guides and thin leader lines help locate every
 part, follow camera movement and accept clicks alongside direct mesh selection.
+The left numbered checklist also opens the same part editor, with the same saved
+draft, selected highlight, conversion and grading.
 Dragging or the orbit buttons supports a full 360° rotation; front/rear/perspective
 presets and zoom remain available. The rear view reveals the waist wall.
 
@@ -30,8 +32,10 @@ green check/red cross and submitted Japanese name. Correct cards show the matchi
 hiragana reading; incorrect cards never reveal the solution and return to editing.
 Drafts and solved flags persist. Reference plans stay on the left and open an enlarged, zoomable/pannable viewer.
 Question text reveals with recorded speech windows and pauses, completes before
-the silent audio tail, freezes with pause, and restarts on Replay. The playback
-meter animates; full text remains readable after narration.
+the silent audio tail. Internal pause/replay APIs remain for session/menu control
+and checks, while narration buttons are removed from the stage interface. The
+playback meter animates inside the conversation bubble in Stages 1–3; full text
+remains readable after narration.
 Section announcements enter smoothly, hold for reading, then fade automatically
 before the next recording begins. No Continue button is required.
 
