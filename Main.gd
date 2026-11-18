@@ -18,6 +18,39 @@ class ReferencePlanViewer extends Control:
 	var last_mouse_pos: Vector2 = Vector2.ZERO
 	var is_popup_view: bool = false
 
+	# The user's blue LDK outline on the original 1231 × 673 reference.
+	# These normalized points share the image's zoom/pan transform.
+	const LDK_OUTLINE: Array[Vector2] = [
+		Vector2(263.0/1231.0,323.0/673.0),
+		Vector2(752.0/1231.0,323.0/673.0),
+		Vector2(752.0/1231.0,480.0/673.0),
+		Vector2(772.0/1231.0,480.0/673.0),
+		Vector2(772.0/1231.0,547.0/673.0),
+		Vector2(263.0/1231.0,547.0/673.0)
+	]
+	const HINT_DURATION: float = 2.5
+	var _hint_elapsed: float = 0.0
+	var _hint_active: bool = false
+
+	func _ready() -> void:
+		set_process(false)
+
+	func play_boundary_hint() -> void:
+		_hint_elapsed = 0.0
+		_hint_active = true
+		set_process(true)
+		queue_redraw()
+
+	func _process(delta: float) -> void:
+		# Wait until the reference is revealed; hidden popups do not consume it.
+		if not _hint_active or not is_visible_in_tree() or modulate.a < 0.99:
+			return
+		_hint_elapsed += delta
+		if _hint_elapsed >= HINT_DURATION:
+			_hint_active = false
+			set_process(false)
+		queue_redraw()
+
 	func _init(tex: Texture2D, popup_mode: bool = false) -> void:
 		plan_texture = tex
 		is_popup_view = popup_mode
@@ -115,6 +148,14 @@ class ReferencePlanViewer extends Control:
 		var final_size: Vector2 = base_size * ref_zoom
 		var final_pos: Vector2 = base_offset * ref_zoom + ref_pan
 		draw_texture_rect(plan_texture, Rect2(final_pos, final_size), false)
+
+		if _hint_active:
+			var cycle: float = fposmod(_hint_elapsed,0.82)/0.82
+			var alpha: float = maxf(0.0,sin(cycle*PI))*(1.0-_hint_elapsed/HINT_DURATION)
+			var outline:=PackedVector2Array()
+			for uv in LDK_OUTLINE:outline.append(final_pos+uv*final_size)
+			outline.append(outline[0])
+			draw_polyline(outline,Color(0.06,0.36,1.0,0.95*alpha),1.2,true)
 
 
 
@@ -1011,6 +1052,7 @@ func _open_reference_popup() -> void:
 		return
 	if popup_overlay:
 		popup_overlay.visible = true
+		popup_viewer.play_boundary_hint()
 
 # Keep the conversation at the beginning instead of jumping down while typing.
 func _scroll_dialog_to_bottom() -> void:
@@ -1054,6 +1096,7 @@ func _reveal_reference_after_talk() -> void:
 		return
 	var fade := create_tween()
 	fade.tween_property(ref_viewer, "modulate:a", 1.0, 0.65)
+	fade.tween_callback(ref_viewer.play_boundary_hint)
 
 func _run_conversation() -> void:
 	_stage1_started_once=false

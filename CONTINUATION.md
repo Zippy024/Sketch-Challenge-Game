@@ -70,3 +70,17 @@ The layout label requested by the user is အလေးချိန်ခံန�
 files have not been regenerated; translation corrections do not replace spoken
 recordings. TTSMaker access from the managed session currently returns HTTP 403;
 do not claim that newly synthesized recordings have been created.
+
+Stage 1 reference hint: after the question finishes and the reference fades in,
+briefly pulse the user's blue LDK boundary (not the red furniture rectangle).
+Replay this 2.5-second hint whenever its enlarged reference popup opens. The
+normalized polygon uses the same image transform for zoom/pan and resizing;
+only a thin 1.2 px blue outline blinks, with no fill or glow. The original
+marked image remains unchanged after the pulse. Keep Stage 2's
+PS highlight behavior and all drawing/answer validation unchanged.
+
+Stage 3 reference hints use the original plan and the user's marked kitchen
+counter footprint, not the whole kitchen room. A thin 1.2 px rectangle pulses
+for 2.5 seconds on thumbnails in all three parts and each enlarged opening; a
+quiet thin outline remains after the pulse. No color fill or glow. Thumbnails
+ignore input so clicks still reach ReferenceOpen; enlarged zoom/pan is retained.

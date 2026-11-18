@@ -2,14 +2,35 @@ extends Control
 const UI=preload("res://KitchenUI.gd")
 class PlanView extends Control:
  var texture: Texture2D=preload("res://Refrence image.png")
+ # Counter footprint marked by the user on the original 1231 × 673 plan.
+ const KITCHEN_OUTLINE: Array[Vector2]=[
+  Vector2(600.0/1231.0,382.0/673.0),Vector2(669.0/1231.0,382.0/673.0),
+  Vector2(669.0/1231.0,541.0/673.0),Vector2(600.0/1231.0,541.0/673.0)
+ ]
+ const HINT_DURATION: float=2.5
+ var passive: bool=false
+ var _hint_active: bool=false
+ var _hint_elapsed: float=0.0
  var zoom: float=1.0
  var pan: Vector2=Vector2.ZERO
  var dragging: bool=false
  func _ready() -> void:
-  mouse_filter=Control.MOUSE_FILTER_STOP
-  mouse_default_cursor_shape=Control.CURSOR_DRAG
+  mouse_filter=Control.MOUSE_FILTER_IGNORE if passive else Control.MOUSE_FILTER_STOP
+  mouse_default_cursor_shape=Control.CURSOR_ARROW if passive else Control.CURSOR_DRAG
   clip_contents=true
   resized.connect(queue_redraw)
+  play_boundary_hint()
+ func play_boundary_hint() -> void:
+  _hint_elapsed=0.0
+  _hint_active=true
+  set_process(true)
+  queue_redraw()
+ func _process(delta: float) -> void:
+  _hint_elapsed+=delta
+  if _hint_elapsed>=HINT_DURATION:
+   _hint_active=false
+   set_process(false)
+  queue_redraw()
  func reset_view() -> void:
   zoom=1.0
   pan=Vector2.ZERO
@@ -22,6 +43,7 @@ class PlanView extends Control:
   if is_equal_approx(zoom,1.0):pan=Vector2.ZERO
   queue_redraw()
  func _gui_input(event: InputEvent) -> void:
+  if passive:return
   if event is InputEventMouseButton:
    if event.pressed and event.button_index==MOUSE_BUTTON_WHEEL_UP:zoom_by(1.2,event.position)
    elif event.pressed and event.button_index==MOUSE_BUTTON_WHEEL_DOWN:zoom_by(1.0/1.2,event.position)
@@ -44,7 +66,15 @@ class PlanView extends Control:
   draw_rect(Rect2(Vector2.ZERO,size),Color.WHITE)
   var fit: float=minf(size.x/texture.get_width(),size.y/texture.get_height())
   var drawn: Vector2=texture.get_size()*fit*zoom
-  draw_texture_rect(texture,Rect2((size-drawn)*0.5+pan,drawn),false)
+  var pos: Vector2=(size-drawn)*0.5+pan
+  draw_texture_rect(texture,Rect2(pos,drawn),false)
+  # Only a thin line is overlaid. Preserve the supplied reference image.
+  var alpha: float=0.75
+  if _hint_active:alpha=0.15+0.85*maxf(0.0,sin(fposmod(_hint_elapsed,0.82)/0.82*PI))
+  var outline:=PackedVector2Array()
+  for uv in KITCHEN_OUTLINE:outline.append(pos+uv*drawn)
+  outline.append(outline[0])
+  draw_polyline(outline,Color(0.06,0.36,1.0,alpha),1.2,true)
 var viewer: PlanView
 func _ready() -> void:
  name="Stage3ReferenceOverlay"
