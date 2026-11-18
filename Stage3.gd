@@ -296,11 +296,10 @@ func _reference_tile(parent: VBoxContainer) -> void:
 	card.add_child(content)
 	var title:=UI.label("Reference Plan",13,true,UI.TEAL)
 	content.add_child(title)
-	var plan:=TextureRect.new()
+	var plan:=PlanOverlay.PlanView.new()
+	plan.passive=true
 	plan.name="Stage3ReferencePlan"
 	plan.texture=preload("res://Refrence image.png")
-	plan.expand_mode=TextureRect.EXPAND_IGNORE_SIZE
-	plan.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	plan.size_flags_vertical=Control.SIZE_EXPAND_FILL
 	plan.custom_minimum_size=Vector2(160,100)
 	plan.mouse_filter=Control.MOUSE_FILTER_IGNORE
