@@ -76,9 +76,13 @@ func _run() -> void:
    model.set_view(preset)
    await _wait()
    assert(model._anchors==anchors)
+   var top_left:=Vector2(INF,INF)
    for i in range(8):
     var point: Vector2=model.camera.unproject_position(Model.MODEL_BOUNDS.get_endpoint(i))
     assert(Rect2(Vector2.ZERO,Vector2(model.viewport.size)).has_point(point))
+    top_left=top_left.min(point*model.size/Vector2(model.viewport.size))
+   var expected:=Vector2(minf(28.0,model.size.x*0.06),minf(28.0,model.size.y*0.06))
+   assert(top_left.distance_to(expected)<1.0)
  model.size=Vector2(860,450)
  model.set_view("perspective")
  original=model.yaw

@@ -200,7 +200,10 @@ func _run() -> void:
 			assert(point.get_meta("locked")== (not Progress.is_level_unlocked(n)))
 			assert(point.get_meta("current")== (n==1))
 		assert(game.find_child("Stage1Hint",true,false)==null)
-		assert(not game.find_child("CustomerVoiceControls",true,false).is_visible_in_tree())
+		assert(game.find_child("CustomerVoiceControls",true,false)==null)
+		var stage_one_meter=game.find_child("SpeakingMeter",true,false)
+		assert(stage_one_meter!=null and stage_one_meter.is_visible_in_tree())
+		assert(game.get("dialog_bubble").is_ancestor_of(stage_one_meter))
 		assert(game.find_child("Stage1PauseButton",true,false)==null)
 		game.call("_stop_voice")
 		game.call("_on_voice_finished")
@@ -368,7 +371,10 @@ func _run() -> void:
 			assert(game.find_child(removed,true,false)==null)
 		assert(game.get("question_label").text.begins_with("• "))
 		assert(game.find_child("LevelReachBar",true,false).find_child("ReachNode02",true,false).get_meta("current"))
-		assert(not game.find_child("CustomerVoiceControls",true,false).is_visible_in_tree())
+		assert(game.find_child("CustomerVoiceControls",true,false)==null)
+		var stage_two_meter=game.find_child("SpeakingMeter",true,false)
+		assert(stage_two_meter!=null and stage_two_meter.is_visible_in_tree())
+		assert(game.get("bubble").is_ancestor_of(stage_two_meter))
 		assert(game.find_child("GamePauseButton",true,false)==null)
 		var stage_two_avatar: TextureRect = null
 		for portrait in game.find_children("*","TextureRect",true,false):
@@ -511,7 +517,18 @@ func _run() -> void:
 		assert(game.find_child("Stage3ReferencePlan",true,false)!=null)
 		assert(game.find_child("Stage3RightProgress",true,false)==null)
 		assert(game.find_child("Stage3ReferencePlan",true,false).global_position.x<game.size.x*0.4)
-		assert(game.find_children("Stage3PartProgress*","Label",true,false).size()==8)
+		assert(game.find_children("Stage3PartProgress*","Button",true,false).size()==8)
+		assert(game.find_child("ReplayQuestion",true,false)==null and game.find_child("PauseQuestion",true,false)==null)
+		assert(game.get("_customer_bubble").is_ancestor_of(game.find_child("SpeakingMeter",true,false)))
+		for index in range(8):
+			var entry=game.find_child("Stage3PartProgress%d"%(index+1),true,false)
+			assert(not entry.disabled)
+			entry.pressed.emit()
+			assert(game.get("_answer_popover").visible and game.get("_answer_popover").part_index==index)
+			assert(game.get("_parts_model").selected==index and entry.button_pressed)
+			assert(game.get("_answer_popover").input.has_focus())
+			game.call("_close_answer")
+			assert(not entry.button_pressed)
 		_collect(game,"stage3-parts")
 		var before_errors: int=int(StageRating.current(3).mistakes)
 		game.call("_open_answer",0,true)
@@ -521,7 +538,7 @@ func _run() -> void:
 		await create_timer(0.30).timeout
 		# Hover opens a contextual editor. Conversion is based on the typed reading.
 		var model=game.find_child("KitchenPartsDiagram",true,false)
-		game.call("_select_part",3)
+		game.find_child("Stage3PartProgress4",true,false).pressed.emit()
 		var editor=game.get("_answer_popover")
 		assert(editor.visible and editor.part_index==3)
 		editor.input.text="こしかべ"

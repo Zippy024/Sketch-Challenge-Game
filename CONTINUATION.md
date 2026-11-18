@@ -15,7 +15,9 @@ check/cross fix: use TextureRects, not missing font glyphs.
 Current Stage 3 design: two image questions, then eight Japanese component names.
 Select the real 3D part directly; hover highlights its mesh, click/tap opens a
 single contextual answer editor. Eight small numbered pointer guides with leader lines follow the meshes and
-are clickable as an alternative to direct mesh selection. Full 360° drag,
+are clickable as an alternative to direct mesh selection. The numbered LEFT
+checklist buttons open that same contextual editor, preserve drafts, and mirror
+selection/highlighting. Full 360° drag,
 orbit buttons, view presets and zoom are available. Eight parts: worktop, kitchen
 panel, hood, waist wall, sink, faucet, IH hob, drawers. Hiragana readings convert
 to Kanji/Katakana candidates before individual grading. Layout questions show a
@@ -28,7 +30,8 @@ cards fade and close after two seconds. Selecting a part cancels stale animation
 Latest visual reference: white cabinets/countertop, black IH, stainless recessed
 sink and curved faucet, pale gray back panels/hood, light wooden floor. No person
 inside the 3D model scene. No enclosing room walls, hard shadows, or spot glare.
-The perspective camera fits the entire installed kitchen and hood to each viewport;
+The perspective camera fits the entire installed kitchen and hood to each viewport
+and frames those bounds near its top-left with a small safe inset;
 soft studio reflections, satin metal and continuous stone improve the surfaces.
 The user explicitly wants every installation position, numbered world anchor,
 leader offset and assessed component index preserved. Do not rearrange them.
@@ -37,7 +40,9 @@ progress fit short/wide screens. Reference thumbnails open a zoomable/pannable o
 speech windows and clause pauses in the nine recordings. Silent MP3 tails do
 not delay the final text. Pause freezes text, Replay restarts it, and Myanmar
 text is shaped before character visibility changes to keep layout stable.
-The speaking meter follows playback.
+The speaking meter follows playback inside the conversation bubble in all
+implemented stages. There are no narration replay/pause buttons. Internal audio
+pause/resume remains available for the game menu; keep header Home/menu controls.
 Part 1/2 completion automatically shows a smooth section announcement, holds
 the title long enough to read (1.25 seconds), then fades into the next question.
 There is no Continue button. Narration starts after the announcement closes. Save schema v2 preserves old five-answer drafts and

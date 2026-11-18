@@ -15,6 +15,8 @@ func _run() -> void:
 		for phase in range(3):
 			var speech=game.find_child("CustomerSpeech",true,false)
 			assert(speech!=null and speech.player.playing)
+			assert(speech.find_child("ReplayQuestion",true,false)==null and speech.find_child("PauseQuestion",true,false)==null)
+			assert(game.get("_customer_bubble").is_ancestor_of(speech.find_child("SpeakingMeter",true,false)))
 			assert(speech.player.stream.resource_path==Speech.voice_path(language,phase))
 			assert(speech.player.stream.get_length()>2.0)
 			assert(speech.caption.text.contains(game.get_script().get_script_constant_map()["QUESTIONS"][language][phase]))

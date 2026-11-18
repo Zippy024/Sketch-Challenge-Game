@@ -53,7 +53,7 @@ var _feedback_revision: int=0
 var _popup_revision: int=0
 var _hover_block_until: int=0
 var _parts_count_label: Label
-var _part_checklist: Array[Label]=[]
+var _part_checklist: Array[Button]=[]
 var _challenge_count: Label
 var _parts_model: Control
 var _parts_selected: int=0
@@ -182,7 +182,17 @@ func _refresh() -> void:
 		brief.add_child(checklist)
 		for i in range(Parts.COUNT):
 			var caption:=str(i+1)+" · "+(_parts_answers[i] if _parts_solved[i] else UI.text("Not answered"))
-			var item:=UI.label(caption,12,_parts_solved[i],UI.TEAL if _parts_solved[i] else UI.MUTED)
+			var item:=UI.button("",_select_part.bind(i),false,0,12)
+			item.text=caption
+			item.custom_minimum_size=Vector2(0,30)
+			item.alignment=HORIZONTAL_ALIGNMENT_LEFT
+			item.clip_text=true
+			item.toggle_mode=true
+			item.disabled=not _speech_ready
+			item.tooltip_text=UI.text("Part %d")%(i+1)
+			item.add_theme_color_override("font_color",UI.TEAL if _parts_solved[i] else UI.MUTED)
+			item.mouse_entered.connect(_hover_checklist_part.bind(i))
+			item.mouse_exited.connect(_hover_checklist_part.bind(-1))
 			item.name="Stage3PartProgress%d"%(i+1)
 			item.set_meta("locale_ignore",true)
 			item.size_flags_horizontal=Control.SIZE_EXPAND_FILL
@@ -258,6 +268,15 @@ func _set_speech_ready(ready: bool) -> void:
 	_speech_ready=ready
 	for button in _stage_choice_buttons:
 		if is_instance_valid(button):button.disabled=not ready
+	for button in _part_checklist:
+		if is_instance_valid(button):button.disabled=not ready
+
+func _hover_checklist_part(which: int) -> void:
+	if is_instance_valid(_parts_model) and _speech_ready:_parts_model.set_hovered(which)
+
+func _sync_checklist_selection(which: int) -> void:
+	for i in range(_part_checklist.size()):
+		_part_checklist[i].set_pressed_no_signal(i==which)
 
 func _begin_question_speech(speech: Control, caption: Label, path: String) -> void:
 	await get_tree().process_frame
@@ -614,6 +633,7 @@ func _open_answer(which: int, focus_input: bool=true) -> void:
 	_feedback_revision+=1
 	_expire_verdict(_feedback_revision)
 	_parts_model.set_selected(which)
+	_sync_checklist_selection(which)
 	if _answer_popover.part_index!=which or not _answer_popover.visible or _answer_popover.is_showing_result():
 		_answer_popover.configure(which,_parts_answers[which],_parts_solved[which])
 	_answer_popover.show()
@@ -636,6 +656,7 @@ func _close_answer() -> void:
 		_answer_popover.hide()
 		_answer_popover.input.release_focus()
 	if is_instance_valid(_parts_model):_parts_model.set_selected(-1)
+	_sync_checklist_selection(-1)
 
 func _popover_draft_changed(value: String) -> void:
 	if _parts_selected<0 or _parts_selected>=Parts.COUNT:return

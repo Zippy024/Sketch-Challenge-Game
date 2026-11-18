@@ -2,6 +2,7 @@ extends Control
 
 const UI = preload("res://KitchenUI.gd")
 const Progress = preload("res://GameProgress.gd")
+const Meter=preload("res://SpeakingMeter.gd")
 const AIConfig = preload("res://AIConfig.gd")
 const StageRating = preload("res://StageRating.gd")
 
@@ -196,8 +197,6 @@ var _voice_paused_for_menu: bool = false
 
 # အသံနှင့် စာသား တစ်ပြိုင်တည်းပြသရန် Variables
 var voice_player: AudioStreamPlayer
-var voice_stop_button: Button
-var voice_replay_button: Button
 var voice_kind: String = ""
 var voice_caption: Label
 var voice_segment_times: Array[float] = []
@@ -294,16 +293,10 @@ func _build_ui() -> void:
 	dialogue.add_child(feedback_divider)
 	feedback_label = UI.label("",14)
 	dialogue.add_child(feedback_label)
-	voice_replay_button = UI.button("",_replay_voice,false,30,12)
-	voice_stop_button = UI.button("",_toggle_voice_pause,false,30,12)
-	_set_voice_icon(voice_replay_button,"replay")
-	_set_voice_icon(voice_stop_button,"pause")
-	customer.voice.name="CustomerVoiceControls"
-	customer.voice.hide()
-	customer.voice.add_child(voice_replay_button)
-	customer.voice.add_child(UI.inline_label("Replay",12))
-	customer.voice.add_child(voice_stop_button)
-	customer.voice.add_child(UI.inline_label("Pause",12))
+	var meter:=Meter.new()
+	meter.audio_player=voice_player
+	customer.voice.add_child(meter)
+	dialogue.move_child(customer.voice,dialogue.get_child_count()-1)
 	var reference := UI.card_stack(left,true)
 	var ref_title := UI.button("Reference Plan  ↗",_open_reference_popup,false,160,16)
 	ref_title.alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -722,7 +715,6 @@ func _play_voice(kind: String) -> void:
 			voice_segment_times = [0.0, maxf(stream.get_length(), 0.1)]
 			target.text = full_text.substr(0,mini(6,full_text.length()))
 			voice_player.play()
-			voice_stop_button.text = ""
 			return
 
 	# ၂။ MP3 ဖိုင်မရှိပါက စာသားတစ်လုံးချင်း အလိုအလျောက် ပေါ်လာစေရန် Animation (Typing Effect)
@@ -731,7 +723,6 @@ func _play_voice(kind: String) -> void:
 	voice_segment_times = [0.0, fallback_duration]
 	fallback_elapsed = 0.0
 	fallback_typing_active = true
-	voice_stop_button.text = ""
 
 func _process(delta: float) -> void:
 	if _question_ready and last_eval_state!="good":StageRating.advance(2,delta)
@@ -769,39 +760,6 @@ func _process(delta: float) -> void:
 			break
 	voice_caption.text = displayed
 
-func _set_voice_icon(button: Button, icon_name: String) -> void:
-	if button == null:
-		return
-	# Generate crisp vector artwork at runtime; no UI_Icons PNG files needed.
-	var symbol: String = ""
-	match icon_name:
-		"replay":
-			symbol = '<path d="M20 11a8 8 0 1 1-2.4-5.7"/><path d="M20 3v6h-6"/>'
-		"play":
-			symbol = '<path d="M9 5l11 7-11 7z" fill="#2563eb" stroke-linejoin="round"/>'
-		"pause":
-			symbol = '<path d="M9 5v14M15 5v14"/>'
-		_:
-			return
-	var svg: String = '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 24 24"><g fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + symbol + '</g></svg>'
-	var img := Image.new()
-	var err: Error = img.load_svg_from_buffer(svg.to_utf8_buffer(), 1.0)
-	if err != OK:
-		push_warning("Unable to render voice icon: " + icon_name)
-		return
-	var tex := ImageTexture.create_from_image(img)
-	button.text = ""
-	button.icon = tex
-	button.expand_icon = true
-	button.custom_minimum_size = Vector2(30,30)
-	button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	button.add_theme_constant_override("icon_max_width",18)
-	for state in ["normal","hover","pressed"]:
-		var compact := UI.box(Color("eff8ff"),UI.EDGE,15,4)
-		compact.shadow_size = 0
-		button.add_theme_stylebox_override(state,compact)
-	button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
-
 func _stop_voice() -> void:
 	_dialogue_generation += 1
 	_completion_voice_finished=false
@@ -809,20 +767,15 @@ func _stop_voice() -> void:
 	if voice_player != null:
 		voice_player.stop()
 		voice_player.stream_paused = false
-	if voice_stop_button != null:
-		_set_voice_icon(voice_stop_button, "play")
 
 func _toggle_voice_pause() -> void:
 	if voice_player != null and voice_player.playing:
 		if not voice_player.stream_paused:
 			voice_player.stream_paused = true
-			_set_voice_icon(voice_stop_button, "play")
 		else:
 			voice_player.stream_paused = false
-			voice_stop_button.text = ""
 	elif fallback_typing_active:
 		fallback_typing_active = false
-		_set_voice_icon(voice_stop_button, "play")
 	else:
 		_replay_voice()
 
@@ -840,8 +793,6 @@ func _set_question_ready(ready: bool) -> void:
 func _on_voice_finished() -> void:
 	if voice_kind in ["question","needs"] and last_eval_state!="good":
 		_set_question_ready(true)
-	if voice_stop_button != null:
-		_set_voice_icon(voice_stop_button, "play")
 	if voice_caption != null and voice_kind != "":
 		voice_caption.text = UI.bullet_text(str(QUESTIONS[current_lang][voice_kind])) if voice_kind=="question" else str(QUESTIONS[current_lang][voice_kind])
 		if voice_kind=="good" and last_eval_state=="good":
