@@ -602,7 +602,7 @@ func _run() -> void:
 		model.call("_gui_input",press)
 		assert(not editor.visible and not is_equal_approx(model.yaw,original_yaw))
 		model.set_view("perspective")
-		var point: Vector2=model.camera.unproject_position(Vector3(-0.84,1.98,0.18))*model.size/Vector2(model.viewport.size)
+		var point: Vector2=model.camera.unproject_position(model.installation.to_global(Vector3(-0.84,1.98,0.18)))*model.size/Vector2(model.viewport.size)
 		press.position=point
 		press.pressed=true
 		model.call("_gui_input",press)

@@ -30,11 +30,14 @@ cards fade and close after two seconds. Selecting a part cancels stale animation
 Latest visual reference: white cabinets/countertop, black IH, stainless recessed
 sink and curved faucet, pale gray back panels/hood, light wooden floor. No person
 inside the 3D model scene. No enclosing room walls, hard shadows, or spot glare.
-The perspective camera fits the entire installed kitchen and hood to each viewport
-and frames those bounds near its top-left with a small safe inset;
+The perspective camera centers and fits the complete floor and kitchen to each viewport;
 soft studio reflections, satin metal and continuous stone improve the surfaces.
-The user explicitly wants every installation position, numbered world anchor,
-leader offset and assessed component index preserved. Do not rearrange them.
+The user clarified that the KITCHEN belongs at the rear-left corner of the
+original 5.0 × 3.42 m floor, while the whole 3D view remains centered. A single
+KitchenInstallation transform moves all parts/details/contact shadow together;
+anchors remain in kitchen-local coordinates and are transformed for projection.
+Keep each part, anchor, leader offset and assessed index connected as before.
+Do not shift the whole viewport to the top-left.
 The reference plan stays in the LEFT column in all three sections; footer and
 progress fit short/wide screens. Reference thumbnails open a zoomable/pannable overlay. Question text reveals progressively from the playback clock, using measured
 speech windows and clause pauses in the nine recordings. Silent MP3 tails do

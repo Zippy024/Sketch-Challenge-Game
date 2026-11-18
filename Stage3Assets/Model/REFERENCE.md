@@ -10,9 +10,13 @@ and grille details, and the basin includes strainer detail. A faint contact patc
 anchors the cabinet to the oak floor; directional shadows stay disabled. Stone
 uses subtle non-periodic grain rather than visible wave bands.
 Soft studio reflection cards define the metal without enclosing room geometry.
-The perspective camera fits the hood and kitchen bounds across short/wide/tall
-viewports, with a small top-left inset; render-target limits preserve aspect. All installation dimensions,
-numbered world anchors and pointer offsets remain unchanged by user request.
+The original 5.0 × 3.42 m floor retains its position and material. The complete
+kitchen is installed near the floor’s rear-left corner using a single parent
+transform, including unpickable details and its contact shadow. Numbered anchors
+retain their kitchen-local coordinates and pointer offsets, and are transformed
+with the installation for projection. The perspective camera centers and fits
+the actual floor and kitchen bounds across short/wide/tall viewports;
+render-target limits preserve aspect.
 
 Eight assessed parts have independent collision and highlight groups: worktop,
 kitchen panel, range hood, waist-height rear wall, sink, faucet, IH hob and drawers.

@@ -7,13 +7,16 @@ signal interaction_started
 const UI=preload("res://KitchenUI.gd")
 const Parts=preload("res://Stage3Assets/Model/JapaneseParts.gd")
 const BeveledBox=preload("res://Stage3Assets/Model/BeveledBox.gd")
-const LOOK_TARGET=Vector3(0,1.18,0)
+const LOOK_TARGET=Vector3(0,1.18,0.59)
+const INSTALLATION_ORIGIN=Vector3(-1.0,0,-0.5)
 const DEFAULT_ZOOM=3.15
-const MODEL_BOUNDS=AABB(Vector3(-1.32,0,-0.50),Vector3(2.64,2.43,0.90))
+const KITCHEN_BOUNDS=AABB(Vector3(-1.32,0,-0.50),Vector3(2.64,2.43,0.90))
+const FLOOR_BOUNDS=AABB(Vector3(-2.5,-0.0475,-1.12),Vector3(5.0,0.045,3.42))
 static var _studio: Sky
 var viewport: SubViewport
 var camera: Camera3D
 var scene: Node3D
+var installation: Node3D
 var selected: int=-1
 var hovered: int=-1
 var yaw: float=0.30
@@ -78,11 +81,15 @@ func _ready() -> void:
  camera.far=40
  viewport.add_child(camera)
  camera.current=true
+ installation=Node3D.new()
+ installation.name="KitchenInstallation"
+ installation.position=INSTALLATION_ORIGIN
+ scene.add_child(installation)
  for i in range(Parts.COUNT):
   var group:=Node3D.new()
   group.name="KitchenPart%d"%(i+1)
   group.set_meta("part",i)
-  scene.add_child(group)
+  installation.add_child(group)
   _groups.append(group)
   _materials.append([])
  _build_kitchen()
@@ -249,14 +256,14 @@ func _build_kitchen() -> void:
  var contact:=ShaderMaterial.new()
  contact.shader=preload("res://Stage3Assets/Model/contact-shadow.gdshader")
  shadow.material_override=contact
- scene.add_child(shadow)
+ installation.add_child(shadow)
  # Cabinet plinth and carcass; three distinct front zones with satin-white
  # drawers and small black horizontal handles like the reference.
- _detail(scene,Vector3(2.58,0.09,0.58),Vector3(0,0.045,0),Color("3d4543"))
- _detail(scene,Vector3(2.55,0.71,0.59),Vector3(0,0.459,0),cabinet)
- _detail(scene,Vector3(2.56,0.725,0.020),Vector3(0,0.46,-0.300),Color("d5d8d5"))
+ _detail(installation,Vector3(2.58,0.09,0.58),Vector3(0,0.045,0),Color("3d4543"))
+ _detail(installation,Vector3(2.55,0.71,0.59),Vector3(0,0.459,0),cabinet)
+ _detail(installation,Vector3(2.56,0.725,0.020),Vector3(0,0.46,-0.300),Color("d5d8d5"))
  for x in [-1.283,1.283]:
-  _detail(scene,Vector3(0.023,0.71,0.64),Vector3(x,0.47,0),white)
+  _detail(installation,Vector3(0.023,0.71,0.64),Vector3(x,0.47,0),white)
  var bays: Array[Dictionary]=[
   {"left":-1.276,"width":0.71},
   {"left":-0.566,"width":0.55},
@@ -272,18 +279,18 @@ func _build_kitchen() -> void:
    # Part 8 is the large sink-side pullout drawer.
    _box(_groups[7],Vector3(width-0.01,0.31,0.027),Vector3(center_x,0.65,0.319),white,7)
    _box(_groups[7],Vector3(width-0.01,0.33,0.028),Vector3(center_x,0.323,0.317),white,7)
-   _handle(scene,center_x,0.734,0.25)
-   _handle(scene,center_x,0.456,0.27)
+   _handle(installation,center_x,0.734,0.25)
+   _handle(installation,center_x,0.456,0.27)
   elif center_x < -0.60:
-   _detail(scene,Vector3(width-0.014,0.17,0.03),Vector3(center_x,0.71,0.318),Color("c1c8c8"))
-   _detail(scene,Vector3(width-0.014,0.38,0.03),Vector3(center_x,0.35,0.318),white)
-   _handle(scene,center_x,0.519,0.19)
+   _detail(installation,Vector3(width-0.014,0.17,0.03),Vector3(center_x,0.71,0.318),Color("c1c8c8"))
+   _detail(installation,Vector3(width-0.014,0.38,0.03),Vector3(center_x,0.35,0.318),white)
+   _handle(installation,center_x,0.519,0.19)
   else:
    _box(_groups[7],Vector3(width-0.012,0.27,0.028),Vector3(center_x,0.685,0.317),white,7)
    _box(_groups[7],Vector3(width-0.012,0.31,0.028),Vector3(center_x,0.383,0.317),white,7)
-   _handle(scene,center_x,0.745,0.16)
-   _handle(scene,center_x,0.47,0.17)
-  _detail(scene,Vector3(0.006,0.62,0.011),Vector3(left+width,0.47,0.334),Color("c8cbc7"))
+   _handle(installation,center_x,0.745,0.16)
+   _handle(installation,center_x,0.47,0.17)
+  _detail(installation,Vector3(0.006,0.62,0.011),Vector3(left+width,0.47,0.334),Color("c8cbc7"))
 
  # Countertop has an actual sink opening, not a sink painted onto a solid slab.
  # The four surrounding worktop pieces are part 1.
@@ -292,14 +299,14 @@ func _build_kitchen() -> void:
  _box(counter,Vector3(0.235,0.043,0.67),Vector3(1.1675,0.843,0),white,0)
  _box(counter,Vector3(0.605,0.043,0.157),Vector3(0.75,0.843,-0.258),white,0)
  _box(counter,Vector3(0.605,0.043,0.126),Vector3(0.75,0.843,0.270),white,0)
- _detail(scene,Vector3(2.57,0.018,0.022),Vector3(0,0.822,0.323),Color("e4e6e4"))
+ _detail(installation,Vector3(2.57,0.018,0.022),Vector3(0,0.822,0.323),Color("e4e6e4"))
 
  var front_edge:=_box(counter,Vector3(2.57,0.018,0.020),Vector3(0,0.846,0.328),white,0,0.0,false)
  front_edge.mesh=BeveledBox.create(Vector3(2.57,0.018,0.020),0.004)
  # Gray stone backsplash and the tall hood backing, matching the photo.
- _detail(scene,Vector3(0.905,2.41,0.10),Vector3(-0.825,1.205,-0.395),Color("d8d7d2"))
- _stone(scene,Vector3(0.90,1.40,0.016),Vector3(-0.825,1.50,-0.338))
- _stone(scene,Vector3(1.67,0.48,0.017),Vector3(0.43,1.08,-0.340))
+ _detail(installation,Vector3(0.905,2.41,0.10),Vector3(-0.825,1.205,-0.395),Color("d8d7d2"))
+ _stone(installation,Vector3(0.90,1.40,0.016),Vector3(-0.825,1.50,-0.338))
+ _stone(installation,Vector3(1.67,0.48,0.017),Vector3(0.43,1.08,-0.340))
  var kitchen_board:=_groups[1]
  _stone(kitchen_board,Vector3(0.95,0.47,0.016),Vector3(0.28,1.08,-0.325))
  var hood:=_groups[2]
@@ -307,7 +314,7 @@ func _build_kitchen() -> void:
  _detail(hood,Vector3(0.79,0.028,0.515),Vector3(-0.825,1.758,0.005),Color("7a8080"),0.3)
  _detail(hood,Vector3(0.72,0.012,0.39),Vector3(-0.825,1.732,0.004),Color("3b4242"),0.3)
  _detail(hood,Vector3(0.70,0.06,0.075),Vector3(-0.825,2.33,0.055),Color("d7d8d5"))
- _detail(scene,Vector3(0.86,0.020,0.52),Vector3(-0.825,1.715,0.005),Color("60686a"))
+ _detail(installation,Vector3(0.86,0.020,0.52),Vector3(-0.825,1.715,0.005),Color("60686a"))
 
  for x in [-0.94,-0.90,-0.86,-0.82,-0.78]:
   _detail(hood,Vector3(0.016,0.008,0.004),Vector3(x,1.759,0.266),Color("414a49"),0.25)
@@ -327,10 +334,10 @@ func _build_kitchen() -> void:
   mesh.position=center
   mesh.material_override=_material(Color("717776"),0.1,0.5)
   hob.add_child(mesh)
- _detail(scene,Vector3(0.56,0.10,0.037),Vector3(-0.92,0.705,0.363),Color("60696b"),0.4)
- _detail(scene,Vector3(0.34,0.038,0.037),Vector3(-1.02,0.71,0.386),Color("232a2b"))
+ _detail(installation,Vector3(0.56,0.10,0.037),Vector3(-0.92,0.705,0.363),Color("60696b"),0.4)
+ _detail(installation,Vector3(0.34,0.038,0.037),Vector3(-1.02,0.71,0.386),Color("232a2b"))
  for x in [-0.82,-0.745,-0.67]:
-  _detail(scene,Vector3(0.027,0.024,0.018),Vector3(x,0.71,0.392),Color("252b2d"))
+  _detail(installation,Vector3(0.027,0.024,0.018),Vector3(x,0.71,0.392),Color("252b2d"))
 
  # Half wall at rear of counter, preserved as clickable part 4.
  var half_wall:=_groups[3]
@@ -371,33 +378,38 @@ func _update_camera() -> void:
  var target:=LOOK_TARGET
  camera.position=target+Vector3(sin(yaw)*cos(pitch),sin(pitch),cos(yaw)*cos(pitch))*6.0
  camera.look_at(target,Vector3.UP)
- # Fit the entire installed kitchen, including the top of the hood. The floor
- # is deliberately excluded; none of the objects or numbered anchors move.
- var tan_half_fov: float=0.0
- var aspect:=float(viewport.size.x)/maxf(1.0,float(viewport.size.y))
- for i in range(8):
-  var point:=camera.to_local(MODEL_BOUNDS.get_endpoint(i))
-  var depth:=maxf(0.1,-point.z)
-  tan_half_fov=maxf(tan_half_fov,maxf(absf(point.y)/depth,absf(point.x)/(depth*aspect)))
- camera.fov=rad_to_deg(2.0*atan(tan_half_fov*1.12*(zoom/DEFAULT_ZOOM)))
- _align_top_left()
+ # Fit the actual installation and floor, excluding the empty space above
+ # the floor's opposite corner. Then center their projected silhouette.
+ camera.fov=60.0
+ var points:=_framing_points()
+ var coverage:=0.88*DEFAULT_ZOOM/zoom
+ for attempt in range(6):
+  _center_frame(points)
+  var bounds:=_projected_bounds(points)
+  var ratio:=maxf(bounds.size.x/viewport.size.x,bounds.size.y/viewport.size.y)/coverage
+  camera.fov=rad_to_deg(2.0*atan(tan(deg_to_rad(camera.fov)*0.5)*ratio))
+ _center_frame(points)
  _position_pointers()
-
  view_changed.emit()
 
-func _align_top_left() -> void:
- if size.x<=0 or size.y<=0:return
- var margin:=Vector2(minf(28.0,size.x*0.06),minf(28.0,size.y*0.06))
- var units_per_pixel: float=2.0*tan(deg_to_rad(camera.fov)*0.5)*6.0/size.y
- # Reframe the camera only. Every mesh, world anchor and numbered offset stays
- # unchanged, and ray picking continues to use this same camera transform.
+func _framing_points() -> PackedVector3Array:
+ var points:=PackedVector3Array()
+ for i in range(8):
+  points.append(installation.to_global(KITCHEN_BOUNDS.get_endpoint(i)))
+  points.append(FLOOR_BOUNDS.get_endpoint(i))
+ return points
+
+func _projected_bounds(points: PackedVector3Array) -> Rect2:
+ var bounds:=Rect2(camera.unproject_position(points[0]),Vector2.ZERO)
+ for point in points:bounds=bounds.expand(camera.unproject_position(point))
+ return bounds
+
+func _center_frame(points: PackedVector3Array) -> void:
+ var units_per_pixel:=2.0*tan(deg_to_rad(camera.fov)*0.5)*6.0/viewport.size.y
  for attempt in range(5):
-  var top_left:=Vector2(INF,INF)
-  for i in range(8):
-   var point:=camera.unproject_position(MODEL_BOUNDS.get_endpoint(i))*size/Vector2(viewport.size)
-   top_left=top_left.min(point)
-  camera.h_offset+=(top_left.x-margin.x)*units_per_pixel
-  camera.v_offset+=(margin.y-top_left.y)*units_per_pixel
+  var offset:=_projected_bounds(points).get_center()-Vector2(viewport.size)*0.5
+  camera.h_offset+=offset.x*units_per_pixel
+  camera.v_offset-=offset.y*units_per_pixel
 
 func set_view(which: String) -> void:
  interaction_started.emit()
@@ -445,7 +457,7 @@ func _update_materials() -> void:
 
 func part_center(index: int) -> Vector2:
  if not is_instance_valid(camera) or not camera.is_inside_tree() or index<0 or index>=_anchors.size():return size*0.5
- return (camera.unproject_position(_anchors[index])*size/Vector2(viewport.size)).clamp(Vector2(18,18),size-Vector2(18,18))
+ return (camera.unproject_position(installation.to_global(_anchors[index]))*size/Vector2(viewport.size)).clamp(Vector2(18,18),size-Vector2(18,18))
 
 func rotate_by(amount: float) -> void:
  interaction_started.emit()
