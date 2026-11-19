@@ -97,3 +97,11 @@ headings. Assessment #4 is now drawer handles (取っ手／とって), replacing
 removed half-height rear wall. Keep #1 counter, #2 kitchen panel, #3 hood,
 #5 sink, #6 faucet, #7 IH and #8 drawer. Handles are real independently
 pickable/highlightable geometry; all eight names are required.
+
+Stage 3 close-up zoom: range 0.45–4.8 (default 3.15), about seven times the
+normal view. Scroll zoom follows the point under the cursor; toolbar +/−
+centers the selected part or kitchen worktop. Right/middle drag pans; left drag
+still orbits 360°. Off-screen numbered guides are hidden rather than piled at
+the viewport edges, and selecting an off-screen part from the left checklist
+pans it into view. Presets restore the centered overview and clear pan; pose
+restoration includes pan. Keep all physical mesh/anchor coordinates unchanged.

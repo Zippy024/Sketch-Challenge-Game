@@ -60,3 +60,9 @@ The left sidebar contains the conversation and one Reference Plan card only.
 Part 3 adds eight numbered answer buttons below the plan; Mission brief, its
 paragraph and Parts checklist headings are removed. Reference highlights,
 click-to-enlarge and enlarged zoom/pan remain.
+
+Close-up zoom extends to 0.45 (default 3.15), with wheel zoom anchored under
+the cursor and toolbar zoom centered on the selected part/worktop. Right or
+middle drag pans without changing orbit; left drag keeps 360° rotation. Presets
+reset pan/zoom. Off-screen guides hide, and checklist selection brings an
+off-screen part into view. Meshes and numbered anchors never move.
