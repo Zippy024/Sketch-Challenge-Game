@@ -73,9 +73,13 @@ do not claim that newly synthesized recordings have been created.
 
 Stage 1 reference hint: after the question finishes and the reference fades in,
 briefly pulse the user's blue LDK boundary (not the red furniture rectangle).
-Replay this 2.5-second hint whenever its enlarged reference popup opens. The
+Replay this five-cycle (4.2-second) hint whenever its enlarged reference popup opens. The
 normalized polygon uses the same image transform for zoom/pan and resizing;
-only a thin 1.2 px blue outline blinks, with no fill or glow. The original
+only a thin 1.2 px blue outline blinks at full strength, with no fill or glow.
+Stage1Assets/reference-outline.gdshader temporarily hides the blue ink baked
+into the source during each off phase, using nearby non-blue image samples;
+otherwise the original static blue line makes a fading overlay imperceptible.
+At rest the shader displays the original image unchanged. The original
 marked image remains unchanged after the pulse. Keep Stage 2's
 PS highlight behavior and all drawing/answer validation unchanged.
 
