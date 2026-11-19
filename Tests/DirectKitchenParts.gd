@@ -14,13 +14,36 @@ func _run() -> void:
  old.set_value("session","parts_solved",[true,false,false,true,false])
  old.save(Progress.SAVE_PATH)
  Progress._loaded=false
- assert(Progress.kitchen_step()==4 and Progress.kitchen_parts().solved.size()==8)
- assert(Progress.kitchen_parts().answers[3]=="腰壁")
+ assert(Progress.kitchen_step()==3 and Progress.kitchen_parts().solved.size()==8)
+ assert(Progress.kitchen_parts().answers[0]=="カウンター")
+ assert(Progress.kitchen_parts().answers[3]=="" and not Progress.kitchen_parts().solved[3])
  old.set_value("progress","stage3_cleared",true)
  old.set_value("session","step",7)
  old.save(Progress.SAVE_PATH)
  Progress._loaded=false
  assert(Progress.kitchen_step()==10 and Progress.is_completed(3))
+ # Version 2's fully answered but unfinished attempt still needs the new handle.
+ old.set_value("progress","stage3_cleared",false)
+ old.set_value("session","step",10)
+ old.set_value("session","parts_version",2)
+ old.set_value("session","parts_answers",["カウンター","キッチンボード","フード","腰壁","シンク","水栓","IH","引き出し"])
+ old.set_value("session","parts_solved",[true,true,true,true,true,true,true,true])
+ old.save(Progress.SAVE_PATH)
+ Progress._loaded=false
+ assert(Progress.kitchen_step()==9 and Progress.kitchen_parts().solved.count(true)==7)
+ assert(Progress.kitchen_parts().answers[3]=="" and not Progress.kitchen_parts().solved[3])
+ for i in [0,1,2,4,5,6,7]:assert(Progress.kitchen_parts().solved[i] and not Progress.kitchen_parts().answers[i].is_empty())
+ # Newly verified handle answers persist through the version 3 round trip.
+ var answers: Array[String]=Progress.kitchen_parts().answers
+ var solved: Array[bool]=Progress.kitchen_parts().solved
+ answers[3]="取っ手"
+ solved[3]=true
+ Progress.save_kitchen_parts(answers,solved)
+ Progress._loaded=false
+ assert(Progress.kitchen_step()==10 and Progress.kitchen_parts().answers[3]=="取っ手" and Progress.kitchen_parts().solved[3])
+ var current:=ConfigFile.new()
+ current.load(Progress.SAVE_PATH)
+ assert(current.get_value("session","parts_version")==3)
  Progress.open_stage(3)
  Progress._loaded=false
  assert(Progress.kitchen_step()==0 and Progress.kitchen_parts().solved.count(true)==0)
@@ -31,11 +54,17 @@ func _run() -> void:
  await _wait()
  assert(model.find_children("PartMarker*","Button",true,false).is_empty())
  assert(model._groups.size()==Parts.COUNT and model._pointers.size()==8)
+ assert(model._groups[3].find_child("DrawerHandle",true,false)!=null)
+ for handle in model._groups[3].get_children():
+  assert(handle is MeshInstance3D and handle.mesh.get_aabb().size.y<0.05 and handle.mesh.get_aabb().size.z<0.05)
+ assert(Parts.is_correct(3,"取っ手") and Parts.is_correct(3,"取手") and Parts.is_correct(3,"はんどる"))
+ assert(not Parts.is_correct(3,"腰壁") and Parts.reading("取っ手")=="とって")
+ assert(Parts.conversion_candidates("とって")==["取っ手","取手"])
  for pointer in model._pointers:assert(model.get_rect().encloses(pointer.get_rect()))
  assert(model.find_child("RoomBackWall",true,false)==null and model.find_child("RoomSideWall",true,false)==null)
- var targets=[Vector3(0.0,0.851,0.20),Vector3(0.28,1.08,-0.315),Vector3(-0.84,2.0,0.0),Vector3(0.45,0.5,-0.49),Vector3(0.75,0.855,0.02),Vector3(0.75,1.24,-0.18),Vector3(-1.0,0.862,0.06),Vector3(0.71,0.65,0.34)]
+ var targets=[Vector3(0.0,0.851,0.20),Vector3(0.28,1.08,-0.315),Vector3(-0.84,2.0,0.0),Vector3(0.7935,0.734,0.386),Vector3(0.75,0.855,0.02),Vector3(0.75,1.24,-0.18),Vector3(-1.0,0.862,0.06),Vector3(0.71,0.65,0.34)]
  for i in range(Parts.COUNT):
-  model.set_view("rear" if i==3 else "perspective")
+  model.set_view("perspective")
   await _wait()
   var point: Vector2=model.camera.unproject_position(model.installation.to_global(targets[i]))*model.size/Vector2(model.viewport.size)
   var hit: int=model._ray_part(point)

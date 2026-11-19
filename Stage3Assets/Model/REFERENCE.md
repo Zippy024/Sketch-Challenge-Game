@@ -19,14 +19,18 @@ the actual floor and kitchen bounds across short/wide/tall viewports;
 render-target limits preserve aspect.
 
 Eight assessed parts have independent collision and highlight groups: worktop,
-kitchen panel, range hood, waist-height rear wall, sink, faucet, IH hob and drawers.
+kitchen panel, range hood, drawer handles, sink, faucet, IH hob and drawers.
+The former assessed half-height rear wall is removed. Part 4 now groups all
+actual drawer handles, with a pointer anchored to the large sink-side handle
+and slightly forgiving hitboxes kept clear of the drawer faces.
 Hover highlights the actual mesh. Clicking/tapping a visible part opens one
 contextual Japanese answer editor. Eight compact numbered pointer guides and thin leader lines help locate every
 part, follow camera movement and accept clicks alongside direct mesh selection.
 The left numbered checklist also opens the same part editor, with the same saved
 draft, selected highlight, conversion and grading.
 Dragging or the orbit buttons supports a full 360° rotation; front/rear/perspective
-presets and zoom remain available. The rear view reveals the waist wall.
+presets and zoom remain available. The rear view shows the cabinet backing
+without a separate waist wall.
 
 Hiragana conversion candidates depend only on the typed reading, not the target.
 Japanese synonyms, full-width/half-width forms, IH and proper okurigana are
@@ -46,7 +50,13 @@ before the next recording begins. No Continue button is required.
 Two layout questions plus
 eight names make ten challenge checks. Retry resets only the current attempt.
 
-Version 2 extends old five-answer saves without losing drafts or verified names.
+Version 3 extends old five-answer saves and keeps other drafts/verified names,
+but clears the former wall answer/solved flag at slot 4 before asking for handles.
 Previously completed attempts retain completion and best scores; a fresh attempt
 requires all eight names. Supersampling and on-demand viewport redraws keep the
 model clear without continuously rendering a static scene.
+
+The left sidebar contains the conversation and one Reference Plan card only.
+Part 3 adds eight numbered answer buttons below the plan; Mission brief, its
+paragraph and Parts checklist headings are removed. Reference highlights,
+click-to-enlarge and enlarged zoom/pan remain.

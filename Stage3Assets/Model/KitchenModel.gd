@@ -31,7 +31,7 @@ var _materials: Array=[]
 var _pointers: Array[Button]=[]
 var _pointer_offsets: Array[Vector2]=[Vector2(-38,-26),Vector2(40,-18),Vector2(-38,-20),Vector2(44,14),Vector2(40,-14),Vector2(46,-35),Vector2(-42,-18),Vector2(40,28)]
 var _solved: Array[bool]=[false,false,false,false,false,false,false,false]
-var _anchors: Array[Vector3]=[Vector3(0.15,0.87,0.36),Vector3(0.28,1.08,-0.325),Vector3(-0.84,1.98,0.18),Vector3(0.45,0.5,-0.49),Vector3(0.74,0.84,0.03),Vector3(0.75,1.12,-0.15),Vector3(-0.91,0.86,0),Vector3(0.71,0.65,0.34)]
+var _anchors: Array[Vector3]=[Vector3(0.15,0.87,0.36),Vector3(0.28,1.08,-0.325),Vector3(-0.84,1.98,0.18),Vector3(0.7935,0.734,0.378),Vector3(0.74,0.84,0.03),Vector3(0.75,1.12,-0.15),Vector3(-0.91,0.86,0),Vector3(0.71,0.65,0.34)]
 
 func _ready() -> void:
  mouse_filter=Control.MOUSE_FILTER_STOP
@@ -172,7 +172,7 @@ func _box(parent: Node3D, dimensions: Vector3, center: Vector3, color: Color, pa
  var instance:=MeshInstance3D.new()
  var mesh:=BoxMesh.new()
  mesh.size=dimensions
- instance.mesh=BeveledBox.create(dimensions,0.007 if part==2 else 0.003) if part in [0,2,6,7] else mesh
+ instance.mesh=BeveledBox.create(dimensions,0.007 if part==2 else 0.003) if part in [0,2,3,6,7] else mesh
  instance.position=center
  var material:=_material(color,metallic)
  instance.material_override=material
@@ -193,7 +193,7 @@ func _box(parent: Node3D, dimensions: Vector3, center: Vector3, color: Color, pa
   body.set_meta("part",part)
   var collision:=CollisionShape3D.new()
   var shape:=BoxShape3D.new()
-  shape.size=dimensions
+  shape.size=Vector3(dimensions.x,maxf(dimensions.y,0.045),maxf(dimensions.z,0.035)) if part==3 else dimensions
   collision.shape=shape
   body.add_child(collision)
   instance.add_child(body)
@@ -228,9 +228,10 @@ func _stone(parent: Node3D, dim: Vector3, pos: Vector3) -> void:
 
 func _handle(parent: Node3D, x: float, y: float, width: float=0.17) -> void:
  var ink:=Color("303536")
- _detail(parent,Vector3(width,0.013,0.016),Vector3(x,y,0.378),ink,0.35)
- _detail(parent,Vector3(0.013,0.025,0.034),Vector3(x-width*0.43,y,0.365),ink,0.35)
- _detail(parent,Vector3(0.013,0.025,0.034),Vector3(x+width*0.43,y,0.365),ink,0.35)
+ var bar:=_box(parent,Vector3(width,0.013,0.016),Vector3(x,y,0.378),ink,3,0.35)
+ bar.name="DrawerHandle"
+ _box(parent,Vector3(0.013,0.025,0.034),Vector3(x-width*0.43,y,0.365),ink,3,0.35)
+ _box(parent,Vector3(0.013,0.025,0.034),Vector3(x+width*0.43,y,0.365),ink,3,0.35)
 
 func _build_kitchen() -> void:
  # Panasonic-inspired straight kitchen reconstructed from the supplied photo.
@@ -279,17 +280,17 @@ func _build_kitchen() -> void:
    # Part 8 is the large sink-side pullout drawer.
    _box(_groups[7],Vector3(width-0.01,0.31,0.027),Vector3(center_x,0.65,0.319),white,7)
    _box(_groups[7],Vector3(width-0.01,0.33,0.028),Vector3(center_x,0.323,0.317),white,7)
-   _handle(installation,center_x,0.734,0.25)
-   _handle(installation,center_x,0.456,0.27)
+   _handle(_groups[3],center_x,0.734,0.25)
+   _handle(_groups[3],center_x,0.456,0.27)
   elif center_x < -0.60:
    _detail(installation,Vector3(width-0.014,0.17,0.03),Vector3(center_x,0.71,0.318),Color("c1c8c8"))
    _detail(installation,Vector3(width-0.014,0.38,0.03),Vector3(center_x,0.35,0.318),white)
-   _handle(installation,center_x,0.519,0.19)
+   _handle(_groups[3],center_x,0.519,0.19)
   else:
    _box(_groups[7],Vector3(width-0.012,0.27,0.028),Vector3(center_x,0.685,0.317),white,7)
    _box(_groups[7],Vector3(width-0.012,0.31,0.028),Vector3(center_x,0.383,0.317),white,7)
-   _handle(installation,center_x,0.745,0.16)
-   _handle(installation,center_x,0.47,0.17)
+   _handle(_groups[3],center_x,0.745,0.16)
+   _handle(_groups[3],center_x,0.47,0.17)
   _detail(installation,Vector3(0.006,0.62,0.011),Vector3(left+width,0.47,0.334),Color("c8cbc7"))
 
  # Countertop has an actual sink opening, not a sink painted onto a solid slab.
@@ -338,11 +339,6 @@ func _build_kitchen() -> void:
  _detail(installation,Vector3(0.34,0.038,0.037),Vector3(-1.02,0.71,0.386),Color("232a2b"))
  for x in [-0.82,-0.745,-0.67]:
   _detail(installation,Vector3(0.027,0.024,0.018),Vector3(x,0.71,0.392),Color("252b2d"))
-
- # Half wall at rear of counter, preserved as clickable part 4.
- var half_wall:=_groups[3]
- _box(half_wall,Vector3(1.65,0.90,0.078),Vector3(0.45,0.45,-0.449),Color("e7e6e1"),3)
- _detail(half_wall,Vector3(1.65,0.025,0.103),Vector3(0.45,0.899,-0.449),white)
 
  # Stainless recessed basin, strainer and curved single-lever faucet (5, 6).
  var sink:=_groups[4]
