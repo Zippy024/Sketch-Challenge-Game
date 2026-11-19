@@ -130,7 +130,8 @@ func _position_pointers() -> void:
  var centers: Array[Vector2]=[]
  for i in range(_pointers.size()):
   var projected:=_project_part(i)
-  _pointers[i].visible=Rect2(Vector2.ZERO,size).has_point(projected)
+  _pointers[i].visible=not _solved[i] and Rect2(Vector2.ZERO,size).has_point(projected)
+  _pointers[i].disabled=_solved[i]
   if not _pointers[i].visible:continue
   var center: Vector2=(projected+_pointer_offsets[i]).clamp(Vector2(20,20),size-Vector2(20,20))
   for other in centers:
@@ -470,12 +471,14 @@ func zoom_by(amount: float, at: Vector2=Vector2(-1,-1)) -> void:
  _reframe_world_point(point,desired)
 
 func set_selected(index: int) -> void:
+ if index>=0 and _solved[index]:return
  selected=index
  _update_materials()
  if index>=0 and zoom<DEFAULT_ZOOM and not Rect2(Vector2(32,32),size-Vector2(64,64)).has_point(_project_part(index)):
   _reframe_world_point(installation.to_global(_anchors[index]),size*0.5)
 
 func set_hovered(index: int) -> void:
+ if index>=0 and _solved[index]:index=-1
  if hovered==index:return
  hovered=index
  mouse_default_cursor_shape=Control.CURSOR_POINTING_HAND if index>=0 else Control.CURSOR_DRAG
@@ -484,6 +487,9 @@ func set_hovered(index: int) -> void:
 
 func set_solved(values: Array[bool]) -> void:
  _solved=values.duplicate()
+ if selected>=0 and _solved[selected]:selected=-1
+ if hovered>=0 and _solved[hovered]:set_hovered(-1)
+ _position_pointers()
  _update_materials()
 
 func _update_materials() -> void:
@@ -518,12 +524,14 @@ func rotate_by(amount: float) -> void:
  _update_camera()
 
 func _choose(index: int) -> void:
+ if index<0 or index>=Parts.COUNT or _solved[index]:return
  set_selected(index)
  part_selected.emit(index)
 
 func _ray_part(position: Vector2) -> int:
  var hit:=_ray_hit(position)
- return int(hit.collider.get_meta("part",-1)) if not hit.is_empty() else -1
+ var index: int=int(hit.collider.get_meta("part",-1)) if not hit.is_empty() else -1
+ return index if index>=0 and not _solved[index] else -1
 
 func _ray_hit(position: Vector2) -> Dictionary:
  if size.x<=0 or size.y<=0:return {}

@@ -66,3 +66,9 @@ the cursor and toolbar zoom centered on the selected part/worktop. Right or
 middle drag pans without changing orbit; left drag keeps 360° rotation. Presets
 reset pan/zoom. Off-screen guides hide, and checklist selection brings an
 off-screen part into view. Meshes and numbered anchors never move.
+
+A correct answer removes that part's numbered guide/leader and disables further
+answer interaction via its mesh, pointer or checklist entry. The verified name
+remains visible in the left checklist. Its current correct-result card still
+finishes normally. Solved flags persist across reload and camera changes; a
+fresh Retry restores all eight guides and writable answers.

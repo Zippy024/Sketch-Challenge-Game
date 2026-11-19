@@ -186,9 +186,10 @@ func _refresh() -> void:
 			item.alignment=HORIZONTAL_ALIGNMENT_LEFT
 			item.clip_text=true
 			item.toggle_mode=true
-			item.disabled=not _speech_ready
+			item.disabled=not _speech_ready or _parts_solved[i]
 			item.tooltip_text=UI.text("Part %d")%(i+1)
 			item.add_theme_color_override("font_color",UI.TEAL if _parts_solved[i] else UI.MUTED)
+			item.add_theme_color_override("font_disabled_color",UI.TEAL if _parts_solved[i] else UI.MUTED)
 			item.mouse_entered.connect(_hover_checklist_part.bind(i))
 			item.mouse_exited.connect(_hover_checklist_part.bind(-1))
 			item.name="Stage3PartProgress%d"%(i+1)
@@ -266,8 +267,9 @@ func _set_speech_ready(ready: bool) -> void:
 	_speech_ready=ready
 	for button in _stage_choice_buttons:
 		if is_instance_valid(button):button.disabled=not ready
-	for button in _part_checklist:
-		if is_instance_valid(button):button.disabled=not ready
+	for i in range(_part_checklist.size()):
+		var button:=_part_checklist[i]
+		if is_instance_valid(button):button.disabled=not ready or _parts_solved[i]
 
 func _hover_checklist_part(which: int) -> void:
 	if is_instance_valid(_parts_model) and _speech_ready:_parts_model.set_hovered(which)
@@ -616,7 +618,7 @@ func _select_part(which: int) -> void:
 
 func _open_answer(which: int, focus_input: bool=true) -> void:
 	if not _speech_ready or _transitioning or step<2 or step>=Parts.CHALLENGE_STEPS or which<0 or which>=Parts.COUNT:return
-	if not is_instance_valid(_answer_popover):return
+	if _parts_solved[which] or not is_instance_valid(_answer_popover):return
 	_parts_selected=which
 	_popup_revision+=1
 	_feedback_revision+=1
@@ -648,7 +650,7 @@ func _close_answer() -> void:
 	_sync_checklist_selection(-1)
 
 func _popover_draft_changed(value: String) -> void:
-	if _parts_selected<0 or _parts_selected>=Parts.COUNT:return
+	if _parts_selected<0 or _parts_selected>=Parts.COUNT or _parts_solved[_parts_selected]:return
 	if _answer_state!="neutral":
 		_feedback_revision+=1
 		_expire_verdict(_feedback_revision)
@@ -673,6 +675,9 @@ func _submit_part_answer(value: String) -> void:
 		_parts_model.set_solved(_parts_solved)
 		_part_checklist[index].text=str(index+1)+" · "+value
 		_part_checklist[index].add_theme_color_override("font_color",UI.TEAL)
+		_part_checklist[index].add_theme_color_override("font_disabled_color",UI.TEAL)
+		_part_checklist[index].disabled=true
+		_part_checklist[index].set_pressed_no_signal(false)
 		_answer_popover.show_result("correct")
 		_show_verdict("correct")
 		_parts_count_label.text=UI.text("%d / %d names correct")%[_parts_solved.count(true),Parts.COUNT]
