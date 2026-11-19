@@ -168,18 +168,16 @@ func _refresh() -> void:
 	customer.question.visible_characters=0
 	_begin_question_speech.call_deferred(_speech,customer.question,Speech.voice_path(current_lang,mini(step,2)))
 	UI.set_customer_feedback(_customer_bubble,_answer_state)
-	var brief := UI.card_stack(left,true)
-	if step>=2: brief.add_theme_constant_override("separation",5)
-	brief.add_child(UI.label("Mission brief",18,true))
-	brief.add_child(UI.label("Select the matching kitchen illustration." if step<2 else "Click a kitchen part and type its name in Japanese.",15))
-	_reference_tile(brief)
+	var reference := UI.card_stack(left,true)
+	reference.get_parent().name="Stage3ReferenceCard"
+	if step>=2: reference.add_theme_constant_override("separation",5)
+	_reference_tile(reference)
 	if step>=2:
-		brief.add_child(UI.label("Parts checklist",14,true))
 		var checklist:=GridContainer.new()
 		checklist.columns=2
 		checklist.add_theme_constant_override("h_separation",12)
 		checklist.add_theme_constant_override("v_separation",2)
-		brief.add_child(checklist)
+		reference.add_child(checklist)
 		for i in range(Parts.COUNT):
 			var caption:=str(i+1)+" · "+(_parts_answers[i] if _parts_solved[i] else UI.text("Not answered"))
 			var item:=UI.button("",_select_part.bind(i),false,0,12)
@@ -286,16 +284,8 @@ func _begin_question_speech(speech: Control, caption: Label, path: String) -> vo
 	speech.start(caption,path)
 
 func _reference_tile(parent: VBoxContainer) -> void:
-	var card:=PanelContainer.new()
-	card.name="Stage3ReferenceTile"
-	card.size_flags_vertical=Control.SIZE_EXPAND_FILL
-	card.add_theme_stylebox_override("panel",UI.box(Color("f2fafb"),Color("c8e0e8"),12,6))
-	parent.add_child(card)
-	var content:=VBoxContainer.new()
-	content.add_theme_constant_override("separation",3)
-	card.add_child(content)
-	var title:=UI.label("Reference Plan",13,true,UI.TEAL)
-	content.add_child(title)
+	var title:=UI.label("Reference Plan",18,true)
+	parent.add_child(title)
 	var plan:=PlanOverlay.PlanView.new()
 	plan.passive=true
 	plan.name="Stage3ReferencePlan"
@@ -312,7 +302,7 @@ func _reference_tile(parent: VBoxContainer) -> void:
 		frame.shadow_size=0
 		open.add_theme_stylebox_override(state,frame)
 	open.size_flags_vertical=Control.SIZE_EXPAND_FILL
-	content.add_child(open)
+	parent.add_child(open)
 	open.add_child(plan)
 	plan.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 

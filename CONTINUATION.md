@@ -19,7 +19,7 @@ are clickable as an alternative to direct mesh selection. The numbered LEFT
 checklist buttons open that same contextual editor, preserve drafts, and mirror
 selection/highlighting. Full 360° drag,
 orbit buttons, view presets and zoom are available. Eight parts: worktop, kitchen
-panel, hood, waist wall, sink, faucet, IH hob, drawers. Hiragana readings convert
+panel, hood, drawer handles, sink, faucet, IH hob, drawers. Hiragana readings convert
 to Kanji/Katakana candidates before individual grading. Layout questions show a
 brief heading verdict. Components use an object-anchored ivory result card with
 a mint top edge, green check/red cross, localized verdict and submitted Japanese
@@ -48,8 +48,9 @@ implemented stages. There are no narration replay/pause buttons. Internal audio
 pause/resume remains available for the game menu; keep header Home/menu controls.
 Part 1/2 completion automatically shows a smooth section announcement, holds
 the title long enough to read (1.25 seconds), then fades into the next question.
-There is no Continue button. Narration starts after the announcement closes. Save schema v2 preserves old five-answer drafts and
-completed results; new attempts require all eight names. Preserve best stars,
+There is no Continue button. Narration starts after the announcement closes. Save schema v3 preserves other old answers and completed results, while
+clearing the former waist-wall slot when migrating to the new handle question;
+new attempts require all eight names. Preserve best stars,
 Retry, recorded speech, and Start Game → Level Select → Play.
 
 Read Stage3Assets/Model/REFERENCE.md, Stage3.gd, GameProgress.gd, KitchenModel.gd,
@@ -88,3 +89,11 @@ counter footprint, not the whole kitchen room. A thin 1.2 px rectangle pulses
 for 2.5 seconds on thumbnails in all three parts and each enlarged opening; a
 quiet thin outline remains after the pulse. No color fill or glow. Thumbnails
 ignore input so clicks still reach ReferenceOpen; enlarged zoom/pan is retained.
+
+Stage 3 sidebar is now conversation + a single Reference Plan card in all
+parts. Part 3 places the eight clickable numbered entries beneath its image.
+Do not restore Mission brief, its instruction paragraph, or Parts checklist
+headings. Assessment #4 is now drawer handles (取っ手／とって), replacing the
+removed half-height rear wall. Keep #1 counter, #2 kitchen panel, #3 hood,
+#5 sink, #6 faucet, #7 IH and #8 drawer. Handles are real independently
+pickable/highlightable geometry; all eight names are required.

@@ -224,7 +224,7 @@ func _win(stage: int) -> void:
 		await _continue_phase()
 		game.get("_speech").player.stop()
 		game.get("_speech").call("_finished")
-		for i in range(8):_write_part(game,i,["カウンター","キッチンボード","フード","腰壁","シンク","水栓","IHクッキングヒーター","引き出し"][i])
+		for i in range(8):_write_part(game,i,["カウンター","キッチンボード","フード","取っ手","シンク","水栓","IHクッキングヒーター","引き出し"][i])
 	if stage<3:
 		game.call("_stop_voice")
 		game.call("_on_voice_finished")

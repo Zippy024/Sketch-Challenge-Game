@@ -42,7 +42,7 @@ static func _ensure_loaded() -> void:
 		_stage3_step = clampi(int(config.get_value("session","step",0)),0,Parts.CHALLENGE_STEPS)
 		_reset_kitchen_parts()
 		var version: int=int(config.get_value("session","parts_version",0))
-		if version in [1,2]:
+		if version in [1,2,3]:
 			var answers: Variant=config.get_value("session","parts_answers",[])
 			var solved: Variant=config.get_value("session","parts_solved",[])
 			if answers is Array and solved is Array and answers.size()==solved.size() and answers.size() in [5,Parts.COUNT]:
@@ -55,10 +55,15 @@ static func _ensure_loaded() -> void:
 			for i in range(clampi(_stage3_step-2,0,5)):
 				_stage3_answers[i]=names[i]
 				_stage3_solved[i]=true
+		# Slot 4 changed from waist wall to drawer handle. Never reuse its old
+		# answer or solved flag; keep the other seven slots and best results.
+		if version<3:
+			_stage3_answers[3]=""
+			_stage3_solved[3]=false
 		# Completed old attempts retain their results; partial attempts keep verified answers.
 		if version<2 and _stage3_cleared and _stage3_step==7:
 			_stage3_step=Parts.CHALLENGE_STEPS
-		elif _stage3_step>=2 and _stage3_step<Parts.CHALLENGE_STEPS:
+		elif _stage3_step>=2 and (_stage3_step<Parts.CHALLENGE_STEPS or (version<3 and not _stage3_cleared)):
 			_stage3_step=2+_stage3_solved.count(true)
 		# Existing verified saves remain resumable after this update.
 		if _resume_stage==0 and (_stage1_cleared or _stage2_cleared or _stage3_cleared):
@@ -77,7 +82,7 @@ static func _save() -> void:
 	config.set_value("session","pan",_stage1_pan)
 	config.set_value("session","answer",_stage2_draft)
 	config.set_value("session","step",_stage3_step)
-	config.set_value("session","parts_version",2)
+	config.set_value("session","parts_version",3)
 	config.set_value("session","parts_answers",_stage3_answers)
 	config.set_value("session","parts_solved",_stage3_solved)
 	var result := config.save(SAVE_PATH)
