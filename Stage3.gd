@@ -601,7 +601,7 @@ func _draw_parts() -> void:
 	model.apply_view_state(_model_pose)
 	model.set_solved(_parts_solved)
 	model.set_selected(-1)
-	_answer_area.add_child(UI.label(_tr("Click a part or pointer · Drag to rotate 360° · Scroll to zoom","ပစ္စည်း သို့မဟုတ် pointer ကို နှိပ်၍ဖြေ · ဆွဲ၍ 360° လှည့် · Scroll ဖြင့်ချဲ့","パーツかポインターをクリックして回答・ドラッグで360°回転・スクロールで拡大"),12,false,UI.MUTED))
+	_answer_area.add_child(UI.label(_tr("Click a part · Drag to rotate · Right-drag to move · Scroll to zoom","ပစ္စည်းကို နှိပ်၍ဖြေ · ဆွဲ၍လှည့် · ညာမောက်ဖိဆွဲ၍ရွှေ့ · Scroll ဖြင့်ချဲ့","パーツをクリックして回答・ドラッグで回転・右ドラッグで移動・スクロールで拡大"),12,false,UI.MUTED))
 	var editor:=AnswerPopover.new()
 	model.add_child(editor)
 	_answer_popover=editor

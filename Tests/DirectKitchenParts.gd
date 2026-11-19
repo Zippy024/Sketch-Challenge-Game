@@ -141,6 +141,59 @@ func _run() -> void:
  model._gui_input(press)
  await _wait()
  assert(chosen.size()==before and absf(wrapf(model.yaw-original,-PI,PI))<0.0001)
+ # Close-up reaches well beyond the old 2.55 limit and keeps parts reachable.
+ model.set_view("perspective")
+ model.set_selected(4)
+ model.zoom_by(2.55-Model.DEFAULT_ZOOM)
+ var rim_a: Vector3=model.installation.to_global(Vector3(0.44,0.85,0.03))
+ var rim_b: Vector3=model.installation.to_global(Vector3(1.05,0.85,0.03))
+ var old_width: float=model.camera.unproject_position(rim_a).distance_to(model.camera.unproject_position(rim_b))
+ model.zoom_by(-100)
+ assert(is_equal_approx(model.zoom,Model.MIN_ZOOM))
+ assert(model.camera.unproject_position(rim_a).distance_to(model.camera.unproject_position(rim_b))>old_width*4)
+ assert(model._project_part(4).distance_to(model.size*0.5)<1)
+ assert(model._pointers.filter(func(pointer):return pointer.visible).size()<8)
+ # Wheel zoom preserves the actual point beneath the cursor.
+ var cursor: Vector2=model.part_center(4)
+ var hit: Dictionary=model._ray_hit(cursor)
+ assert(not hit.is_empty())
+ var surface_point: Vector3=hit.position
+ model.zoom_by(0.1,cursor)
+ assert((model.camera.unproject_position(surface_point)*model.size/Vector2(model.viewport.size)).distance_to(cursor)<1)
+ # Selecting an off-screen part at close zoom pans it into view, with real picking.
+ model.zoom_by(-100)
+ for i in range(Parts.COUNT):
+  model.set_selected(i)
+  await _wait()
+  assert(Rect2(Vector2(31,31),model.size-Vector2(62,62)).has_point(model._project_part(i)))
+  var close_point: Vector2=model.camera.unproject_position(model.installation.to_global(targets[i]))*model.size/Vector2(model.viewport.size)
+  assert(model._ray_part(close_point)==i)
+ # Right/middle drag pan without rotating or accidentally selecting a part.
+ for button in [MOUSE_BUTTON_RIGHT,MOUSE_BUTTON_MIDDLE]:
+  var pan_target: Vector3=model.installation.to_global(Vector3(0,0.9,0))
+  var before_pan: Vector2=model.camera.unproject_position(pan_target)*model.size/Vector2(model.viewport.size)
+  var previous_yaw: float=model.yaw
+  var previous_pitch: float=model.pitch
+  before=chosen.size()
+  press.button_index=button
+  press.pressed=true
+  model._gui_input(press)
+  drag.relative=Vector2(80,-40)
+  model._gui_input(drag)
+  press.pressed=false
+  model._gui_input(press)
+  await _wait()
+  var after_pan: Vector2=model.camera.unproject_position(pan_target)*model.size/Vector2(model.viewport.size)
+  assert((after_pan-before_pan).distance_to(drag.relative)<1)
+  assert(model.yaw==previous_yaw and model.pitch==previous_pitch and chosen.size()==before)
+ var pose: Dictionary=model.view_state()
+ var saved_projection: Vector2=model._project_part(7)
+ model.set_view("perspective")
+ assert(model.zoom==Model.DEFAULT_ZOOM and model.pan_offset==Vector2.ZERO)
+ model.apply_view_state(pose)
+ assert(model.pan_offset==pose.pan and model._project_part(7).distance_to(saved_projection)<1)
+ model.zoom_by(100)
+ assert(model.zoom==Model.MAX_ZOOM)
  model.apply_view_state({"yaw":2.6,"pitch":0.5,"zoom":3.8})
  assert(is_equal_approx(model.view_state().yaw,2.6))
  assert(Parts.is_correct(5,"蛇口") and Parts.is_correct(6,"ｉｈ") and Parts.is_correct(7,"引き出し"))

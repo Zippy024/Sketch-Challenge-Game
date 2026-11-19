@@ -10,6 +10,8 @@ const BeveledBox=preload("res://Stage3Assets/Model/BeveledBox.gd")
 const LOOK_TARGET=Vector3(0,1.18,0.59)
 const INSTALLATION_ORIGIN=Vector3(-1.0,0,-0.5)
 const DEFAULT_ZOOM=3.15
+const MIN_ZOOM=0.45
+const MAX_ZOOM=4.8
 const KITCHEN_BOUNDS=AABB(Vector3(-1.32,0,-0.50),Vector3(2.64,2.43,0.90))
 const FLOOR_BOUNDS=AABB(Vector3(-2.5,-0.0475,-1.12),Vector3(5.0,0.045,3.42))
 static var _studio: Sky
@@ -22,6 +24,8 @@ var hovered: int=-1
 var yaw: float=0.30
 var pitch: float=0.25
 var zoom: float=3.15
+var pan_offset:=Vector2.ZERO
+var _drag_pan: bool=false
 var _pressed: bool=false
 var _travel: float=0.0
 var _pending_pick: Vector2=Vector2(-1,-1)
@@ -125,7 +129,10 @@ func _position_pointers() -> void:
  if not is_instance_valid(camera) or not camera.is_inside_tree():return
  var centers: Array[Vector2]=[]
  for i in range(_pointers.size()):
-  var center: Vector2=(part_center(i)+_pointer_offsets[i]).clamp(Vector2(20,20),size-Vector2(20,20))
+  var projected:=_project_part(i)
+  _pointers[i].visible=Rect2(Vector2.ZERO,size).has_point(projected)
+  if not _pointers[i].visible:continue
+  var center: Vector2=(projected+_pointer_offsets[i]).clamp(Vector2(20,20),size-Vector2(20,20))
   for other in centers:
    if center.distance_to(other)<40:
     center.y+=42 if center.y>=other.y else -42
@@ -137,6 +144,7 @@ func _position_pointers() -> void:
 func _draw() -> void:
  if not is_instance_valid(camera) or not camera.is_inside_tree():return
  for i in range(_pointers.size()):
+  if not _pointers[i].visible:continue
   draw_line(part_center(i),_pointers[i].position+Vector2(16,16),Color("549d94"),1.3,true)
   draw_circle(part_center(i),2.3,Color("549d94"))
 
@@ -385,8 +393,35 @@ func _update_camera() -> void:
   var ratio:=maxf(bounds.size.x/viewport.size.x,bounds.size.y/viewport.size.y)/coverage
   camera.fov=rad_to_deg(2.0*atan(tan(deg_to_rad(camera.fov)*0.5)*ratio))
  _center_frame(points)
+ camera.h_offset+=pan_offset.x
+ camera.v_offset+=pan_offset.y
+ _redraw_view()
+
+func _redraw_view() -> void:
+ viewport.render_target_update_mode=SubViewport.UPDATE_ONCE
  _position_pointers()
  view_changed.emit()
+
+func _reframe_world_point(point: Vector3, desired: Vector2) -> void:
+ var depth:=maxf(0.1,-camera.to_local(point).z)
+ var units_per_pixel:=2.0*tan(deg_to_rad(camera.fov)*0.5)*depth/maxf(1.0,size.y)
+ for attempt in range(4):
+  var offset:=camera.unproject_position(point)*size/Vector2(viewport.size)-desired
+  var shift:=Vector2(offset.x,-offset.y)*units_per_pixel
+  pan_offset+=shift
+  camera.h_offset+=shift.x
+  camera.v_offset+=shift.y
+ _redraw_view()
+
+func _pan_by_pixels(delta: Vector2) -> void:
+ var center:=installation.to_global(Vector3(0,0.9,0))
+ var depth:=maxf(0.1,-camera.to_local(center).z)
+ var units_per_pixel:=2.0*tan(deg_to_rad(camera.fov)*0.5)*depth/maxf(1.0,size.y)
+ var shift:=Vector2(-delta.x,delta.y)*units_per_pixel
+ pan_offset+=shift
+ camera.h_offset+=shift.x
+ camera.v_offset+=shift.y
+ _redraw_view()
 
 func _framing_points() -> PackedVector3Array:
  var points:=PackedVector3Array()
@@ -411,16 +446,34 @@ func set_view(which: String) -> void:
  interaction_started.emit()
  yaw={"front":0.0,"rear":PI,"perspective":0.30}.get(which,0.30)
  pitch=0.15 if which=="front" else (0.30 if which=="rear" else 0.25)
- zoom=3.15
+ zoom=DEFAULT_ZOOM
+ pan_offset=Vector2.ZERO
  _update_camera()
 
-func zoom_by(amount: float) -> void:
- zoom=clampf(zoom+amount,2.55,4.8)
+func zoom_by(amount: float, at: Vector2=Vector2(-1,-1)) -> void:
+ var next:=clampf(zoom+amount,MIN_ZOOM,MAX_ZOOM)
+ if is_equal_approx(next,zoom):return
+ var point:=installation.to_global(_anchors[selected] if selected>=0 else Vector3(0,0.9,0))
+ var desired:=size*0.5
+ if at.x>=0:
+  desired=at
+  var hit:=_ray_hit(at)
+  if not hit.is_empty():point=hit.position
+  else:
+   # Zoom toward the cursor even when it is between selectable meshes.
+   var origin:=camera.project_ray_origin(at*Vector2(viewport.size)/size)
+   var direction:=camera.project_ray_normal(at*Vector2(viewport.size)/size)
+   var normal: Vector3=camera.global_basis.z
+   point=origin+direction*(normal.dot(point-origin)/normal.dot(direction))
+ zoom=next
  _update_camera()
+ _reframe_world_point(point,desired)
 
 func set_selected(index: int) -> void:
  selected=index
  _update_materials()
+ if index>=0 and zoom<DEFAULT_ZOOM and not Rect2(Vector2(32,32),size-Vector2(64,64)).has_point(_project_part(index)):
+  _reframe_world_point(installation.to_global(_anchors[index]),size*0.5)
 
 func set_hovered(index: int) -> void:
  if hovered==index:return
@@ -451,9 +504,12 @@ func _update_materials() -> void:
    for state in ["normal","hover","pressed","focus"]:_pointers[i].add_theme_stylebox_override(state,style)
    _pointers[i].get_node("PointerNumber").add_theme_color_override("font_color",Color.WHITE if active else UI.INK)
 
-func part_center(index: int) -> Vector2:
+func _project_part(index: int) -> Vector2:
  if not is_instance_valid(camera) or not camera.is_inside_tree() or index<0 or index>=_anchors.size():return size*0.5
- return (camera.unproject_position(installation.to_global(_anchors[index]))*size/Vector2(viewport.size)).clamp(Vector2(18,18),size-Vector2(18,18))
+ return camera.unproject_position(installation.to_global(_anchors[index]))*size/Vector2(viewport.size)
+
+func part_center(index: int) -> Vector2:
+ return _project_part(index).clamp(Vector2(18,18),size-Vector2(18,18))
 
 func rotate_by(amount: float) -> void:
  interaction_started.emit()
@@ -466,15 +522,18 @@ func _choose(index: int) -> void:
  part_selected.emit(index)
 
 func _ray_part(position: Vector2) -> int:
- if size.x<=0 or size.y<=0:return -1
+ var hit:=_ray_hit(position)
+ return int(hit.collider.get_meta("part",-1)) if not hit.is_empty() else -1
+
+func _ray_hit(position: Vector2) -> Dictionary:
+ if size.x<=0 or size.y<=0:return {}
  var point:=position*Vector2(viewport.size)/size
  var origin:=camera.project_ray_origin(point)
  var end:=origin+camera.project_ray_normal(point)*30.0
  var query:=PhysicsRayQueryParameters3D.create(origin,end)
  var world:=viewport.find_world_3d()
- if world==null:return -1
- var hit:=world.direct_space_state.intersect_ray(query)
- return int(hit.collider.get_meta("part",-1)) if not hit.is_empty() else -1
+ if world==null:return {}
+ return world.direct_space_state.intersect_ray(query)
 
 func _physics_process(_delta: float) -> void:
  if _pending_hover.x>=0:
@@ -491,6 +550,7 @@ func _gui_input(event: InputEvent) -> void:
   if event.pressed:
    interaction_started.emit()
    _pressed=true
+   _drag_pan=false
    _travel=0
   else:
    if _pressed and _travel<6:_pending_pick=event.position
@@ -503,22 +563,27 @@ func _gui_input(event: InputEvent) -> void:
   _update_camera()
   accept_event()
  elif event is InputEventMouseButton:
-  if event.button_index==MOUSE_BUTTON_WHEEL_UP and event.pressed:zoom_by(-0.15)
-  elif event.button_index==MOUSE_BUTTON_WHEEL_DOWN and event.pressed:zoom_by(0.15)
-  elif event.button_index in [MOUSE_BUTTON_LEFT,MOUSE_BUTTON_RIGHT]:
+  if event.button_index==MOUSE_BUTTON_WHEEL_UP and event.pressed:zoom_by(-0.15,event.position)
+  elif event.button_index==MOUSE_BUTTON_WHEEL_DOWN and event.pressed:zoom_by(0.15,event.position)
+  elif event.button_index in [MOUSE_BUTTON_LEFT,MOUSE_BUTTON_RIGHT,MOUSE_BUTTON_MIDDLE]:
    if event.pressed:
     interaction_started.emit()
     _pressed=true
+    _drag_pan=event.button_index!=MOUSE_BUTTON_LEFT
+    _pending_hover=Vector2(-1,-1)
+    set_hovered(-1)
     _travel=0
    else:
-    if _pressed and _travel<6 and event.button_index==MOUSE_BUTTON_LEFT:_pending_pick=event.position
+    if _pressed and not _drag_pan and _travel<6 and event.button_index==MOUSE_BUTTON_LEFT:_pending_pick=event.position
     _pressed=false
   accept_event()
  elif event is InputEventMouseMotion and _pressed:
   _travel+=event.relative.length()
-  yaw=wrapf(yaw-event.relative.x*0.009,-PI,PI)
-  pitch=clampf(pitch+event.relative.y*0.007,0.08,1.20)
-  _update_camera()
+  if _drag_pan:_pan_by_pixels(event.relative)
+  else:
+   yaw=wrapf(yaw-event.relative.x*0.009,-PI,PI)
+   pitch=clampf(pitch+event.relative.y*0.007,0.08,1.20)
+   _update_camera()
   accept_event()
  elif event is InputEventMouseMotion:
   _pending_hover=event.position
@@ -529,12 +594,13 @@ func _unhandled_input(event: InputEvent) -> void:
   _pressed=false
 
 func view_state() -> Dictionary:
- return {"yaw":yaw,"pitch":pitch,"zoom":zoom}
+ return {"yaw":yaw,"pitch":pitch,"zoom":zoom,"pan":pan_offset}
 
 func apply_view_state(state: Dictionary) -> void:
  yaw=float(state.get("yaw",yaw))
  pitch=clampf(float(state.get("pitch",pitch)),0.08,1.2)
- zoom=clampf(float(state.get("zoom",zoom)),2.55,4.8)
+ zoom=clampf(float(state.get("zoom",zoom)),MIN_ZOOM,MAX_ZOOM)
+ pan_offset=state.get("pan",Vector2.ZERO) if state.get("pan",Vector2.ZERO) is Vector2 else Vector2.ZERO
  _update_camera()
 
 func _pipe(parent: Node3D, a: Vector3, b: Vector3, radius: float, color: Color, part: int=-1) -> void:
