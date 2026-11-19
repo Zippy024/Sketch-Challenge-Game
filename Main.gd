@@ -28,16 +28,22 @@ class ReferencePlanViewer extends Control:
 		Vector2(772.0/1231.0,547.0/673.0),
 		Vector2(263.0/1231.0,547.0/673.0)
 	]
-	const HINT_DURATION: float = 2.5
+	const HINT_PERIOD: float = 0.84
+	const HINT_DURATION: float = HINT_PERIOD * 5.0
 	var _hint_elapsed: float = 0.0
 	var _hint_active: bool = false
+	var _outline_material: ShaderMaterial
 
 	func _ready() -> void:
+		_outline_material = ShaderMaterial.new()
+		_outline_material.shader = preload("res://Stage1Assets/reference-outline.gdshader")
+		material = _outline_material
 		set_process(false)
 
 	func play_boundary_hint() -> void:
 		_hint_elapsed = 0.0
 		_hint_active = true
+		_sync_outline_visibility()
 		set_process(true)
 		queue_redraw()
 
@@ -49,7 +55,15 @@ class ReferencePlanViewer extends Control:
 		if _hint_elapsed >= HINT_DURATION:
 			_hint_active = false
 			set_process(false)
+		_sync_outline_visibility()
 		queue_redraw()
+
+	func _hint_line_visible() -> bool:
+		return not _hint_active or fposmod(_hint_elapsed,HINT_PERIOD) < 0.48
+
+	func _sync_outline_visibility() -> void:
+		if is_instance_valid(_outline_material):
+			_outline_material.set_shader_parameter("outline_visibility",1.0 if _hint_line_visible() else 0.0)
 
 	func _init(tex: Texture2D, popup_mode: bool = false) -> void:
 		plan_texture = tex
@@ -149,13 +163,11 @@ class ReferencePlanViewer extends Control:
 		var final_pos: Vector2 = base_offset * ref_zoom + ref_pan
 		draw_texture_rect(plan_texture, Rect2(final_pos, final_size), false)
 
-		if _hint_active:
-			var cycle: float = fposmod(_hint_elapsed,0.82)/0.82
-			var alpha: float = maxf(0.0,sin(cycle*PI))*(1.0-_hint_elapsed/HINT_DURATION)
+		if _hint_active and _hint_line_visible():
 			var outline:=PackedVector2Array()
 			for uv in LDK_OUTLINE:outline.append(final_pos+uv*final_size)
 			outline.append(outline[0])
-			draw_polyline(outline,Color(0.06,0.36,1.0,0.95*alpha),1.2,true)
+			draw_polyline(outline,Color(0.02,0.20,1.0,1.0),1.2,true)
 
 
 
