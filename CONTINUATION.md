@@ -105,3 +105,11 @@ still orbits 360°. Off-screen numbered guides are hidden rather than piled at
 the viewport edges, and selecting an off-screen part from the left checklist
 pans it into view. Presets restore the centered overview and clear pan; pose
 restoration includes pan. Keep all physical mesh/anchor coordinates unchanged.
+
+Solved Stage 3 parts: immediately hide their 3D numbered guide and leader line,
+remove hover/selection, ignore mesh/pointer selection and disable the matching
+left checklist button. Keep the verified Japanese answer visible in the left
+list in teal. Solved entries cannot reopen an editor or change their saved
+answer. Preserve the current two-second correct-result card before it closes.
+Loaded solved flags hide/lock the same entries after reload, camera changes and
+narration readiness changes; Retry restores fresh guides.
