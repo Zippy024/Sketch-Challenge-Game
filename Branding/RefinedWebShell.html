@@ -6,59 +6,53 @@ $GODOT_HEAD_INCLUDE
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#075479;font-family:system-ui,sans-serif;color:white}
 #canvas{width:100%;height:100%;display:block;outline:none;touch-action:none}
-#sketch-loading{position:fixed;inset:0;z-index:10000;overflow:hidden;background:linear-gradient(#00bfff1a,#006fa820),url("assets/loading-kitchen.webp?v=$GODOT_URL") center/cover;transition:opacity .35s,visibility .35s;border:1px solid #bfefff}
+#sketch-loading{position:fixed;inset:0;z-index:10000;overflow:hidden;background:#00bfff;transition:opacity .35s,visibility .35s;border:1px solid #bfefff}
+.loading-art{position:absolute;inset:0;background:url("assets/loading-kitchen.webp?v=$GODOT_URL") center/cover;filter:url(#deep-sky-grade)}
+.loading-wash{position:absolute;inset:0;background:#00bfff29}
 #sketch-loading.hide{opacity:0;visibility:hidden;pointer-events:none}
 .loading-logo{position:absolute;top:1.8%;left:50%;transform:translateX(-50%);width:min(39vw,480px);height:28%;object-fit:contain;filter:drop-shadow(0 6px 10px #083e4840);animation:logo-float 6s ease-in-out infinite}
 .loading-ring{position:absolute;left:50%;top:78%;transform:translate(-50%,0);width:72%;height:18%;border:2px solid #d3fff0;border-radius:50%;box-shadow:0 0 10px 4px #43d7b74d,inset 0 0 12px #8cf4d9;mask-image:linear-gradient(to bottom,transparent 42%,black 56%);margin-top:-9vh;animation:ring-glow 3.6s ease-in-out infinite}
 .loading-sparks{position:absolute;inset:0;pointer-events:none}.loading-sparks i{position:absolute;width:4px;height:4px;border-radius:50%;background:#edfff5;box-shadow:0 0 8px #d4fff1;animation:spark-rise 6s ease-in-out infinite;animation-delay:calc(var(--n)*-.7s);left:calc(14% + var(--n)*7.2%);top:calc(30% + var(--n)*3.7%)}
-.loading-footer{position:absolute;top:86.5%;left:50%;transform:translateX(-50%);width:min(50vw,310px);min-height:58px;padding:8px 16px;text-align:center;border-radius:32px;border:2px solid #60c7ee;background:linear-gradient(#fff,#e1f4ff 50%,#b1e3fa);box-shadow:0 3px 0 #126e9c66,inset 0 0 0 3px #fff,0 5px 15px #126e9c33}
-.loading-footer:before,.loading-footer:after{content:"";position:absolute;top:50%;width:min(10vw,120px);height:3px;border-radius:4px;background:#f2c43b;box-shadow:0 0 4px #fff2b0}.loading-footer:before{right:calc(100% + 14px)}.loading-footer:after{left:calc(100% + 14px)}
-.progress-track{display:none}
-#status-pct{display:block;color:#082b53;font-size:clamp(16px,1.8vw,24px);font-weight:800;line-height:34px;white-space:nowrap}
-.loading-ring,.loading-tagline,.loading-tip,#status-text{display:none}#sketch-loading.failed .loading-footer{flex-wrap:wrap}#sketch-loading.failed #status-text{display:block;width:100%;color:#a22942}
+.loading-footer{position:absolute;bottom:max(12px,5.3vh);left:50%;transform:translateX(-50%);width:min(50vw,310px);min-height:66px;padding:4px 16px 20px;text-align:center;border-radius:32px;border:2px solid #8cddff;background:linear-gradient(#58d8ff,#00bfff 48%,#0087bd);box-shadow:0 4px 0 #126e9c66,inset 0 0 0 2px #e4faff,0 5px 15px #126e9c33}
+.loading-line{position:absolute;left:24px;right:24px;bottom:15px;height:2px;background:#d1f5ff80;border-radius:3px;overflow:hidden}
+.loading-line:after{content:"";display:block;width:25%;height:3px;border-radius:3px;background:white;box-shadow:0 0 5px #c7f3ff;animation:line-sweep 1.35s ease-in-out infinite alternate}
+@keyframes line-sweep{from{transform:translateX(0)}to{transform:translateX(300%)}}
+#sketch-loading.failed .loading-line:after{animation:none;background:#a22942}
+#status-pct{display:block;color:#082b53;font-size:clamp(16px,1.8vw,24px);font-weight:800;line-height:36px;white-space:nowrap}
+.loading-ring,.loading-tagline,.loading-tip,#status-text{display:none}#sketch-loading.failed .loading-footer{min-height:90px}#sketch-loading.failed #status-text{display:block;width:100%;color:#a22942}
 @media(max-width:600px){.loading-logo{width:75vw;height:29%}.loading-footer{width:60vw;padding:8px}}
 @keyframes logo-float{50%{transform:translate(-50%,-5px)}}@keyframes ring-glow{50%{opacity:.65;filter:brightness(1.15)}}@keyframes spark-rise{0%,100%{opacity:0;transform:translateY(8px)}45%{opacity:.55}90%{opacity:0;transform:translateY(-30px)}}
-@media(prefers-reduced-motion:reduce){#sketch-loading,.progress-bar{transition:none}.loading-logo,.loading-ring,.loading-sparks i{animation:none}.loading-sparks{display:none}}
+@media(prefers-reduced-motion:reduce){#sketch-loading,.progress-bar{transition:none}.loading-logo,.loading-ring,.loading-sparks i,.loading-line:after{animation:none}.loading-sparks{display:none}}
 </style></head><body>
 <canvas id="canvas" tabindex="0">A browser with WebGL is required.</canvas>
 <div id="sketch-loading" role="status" aria-live="polite" aria-label="Loading Kitchen Decoration Game">
+<svg width="0" height="0" aria-hidden="true" style="position:absolute"><defs><filter id="deep-sky-grade" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="1.3 -.3 0 0 0 .12 .88 0 0 0 -.16 .16 1 0 0 0 0 0 1 0"/></filter></defs></svg>
+<div class="loading-art" aria-hidden="true"></div>
+<div class="loading-wash" aria-hidden="true"></div>
 <img class="loading-logo" src="assets/game-logo.webp?v=$GODOT_URL" alt="Kitchen Decoration Game">
 <div class="loading-sparks" aria-hidden="true"><i style="--n:0"></i><i style="--n:1"></i><i style="--n:2"></i><i style="--n:3"></i><i style="--n:4"></i><i style="--n:5"></i><i style="--n:6"></i><i style="--n:7"></i><i style="--n:8"></i><i style="--n:9"></i></div>
 <div class="loading-ring" aria-hidden="true"></div><p class="loading-tagline">Design a kitchen. Build your confidence.</p>
-<div class="loading-footer"><div class="progress-track"><div class="progress-bar" id="sketch-bar"></div></div><span id="status-pct">Loading... 0%</span><span id="status-text"></span><p class="loading-tip">Read the plan. Understand the space. Make it yours.</p></div>
+<div class="loading-footer"><div class="loading-line" aria-hidden="true"></div><span id="status-pct">Loading.....</span><span id="status-text"></span><p class="loading-tip">Read the plan. Understand the space. Make it yours.</p></div>
 </div><noscript>Enable JavaScript to play.</noscript>
   <script src="$GODOT_URL"></script>
   <script>
     'use strict';
     (function () {
       const splash = document.getElementById('sketch-loading');
-      const bar = document.getElementById('sketch-bar');
-      const percent = document.getElementById('status-pct');
+      const caption = document.getElementById('status-pct');
       const status = document.getElementById('status-text');
-      let lastProgress = 0;
-      const loadingPrefix = 'Loading... ';
-      percent.textContent = loadingPrefix + '0%';
+      caption.textContent = 'Loading.....';
       const engine = new Engine($GODOT_CONFIG);
       function setProgress(current, total) {
-        if (total > 0) {
-          const value = Math.min(100, Math.max(lastProgress, Math.round(current * 100 / total)));
-          lastProgress = value;
-          bar.style.width = value + '%';
-          percent.textContent = loadingPrefix + value + '%';
-          status.textContent = value < 98 ? 'Loading game files...' : 'Starting the game...';
-        } else {
-          // Godot may report unknown length during WebAssembly initialization.
-          status.textContent = 'Preparing your kitchen...';
-          percent.textContent = loadingPrefix;
-        }
+        // Progress remains indeterminate on screen, including unknown-size loads.
+        status.textContent = total > 0 && current >= total * .98
+          ? 'Starting the game...' : 'Loading game files...';
       }
       function showError(error) {
         splash.classList.add('failed');
         console.error('Sketch Challenge failed to load:', error);
         status.textContent = 'Unable to start. Refresh the page or open the browser console.';
-        percent.textContent = 'Error';
-        bar.style.width = '100%';
-        bar.style.background = '#b34e4e';
+        caption.textContent = 'Unable to load';
       }
       window.__kitchenMenuReady = false;
       const startedAt = Date.now();
@@ -69,8 +63,6 @@ $GODOT_HEAD_INCLUDE
           return;
         }
         requestAnimationFrame(() => requestAnimationFrame(() => {
-          bar.style.width = '100%';
-          percent.textContent = loadingPrefix + '100%';
           splash.classList.add('hide');
           setTimeout(() => splash.remove(), 450);
         }));

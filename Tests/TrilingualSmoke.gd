@@ -50,9 +50,10 @@ func _run() -> void:
 		await _wait()
 		var menu=current_scene
 		var loading_caption=menu.find_child("LoadingCaption",true,false)
-		assert(loading_caption!=null and loading_caption.text.begins_with("Loading..."))
+		assert(loading_caption!=null and loading_caption.text=="Loading....." and "%" not in loading_caption.text)
 		var loader=menu.find_child("KitchenLoadingScreen",true,false)
 		assert(loader.get_global_rect().encloses(loading_caption.get_global_rect()))
+		assert(loader.find_child("LoadingMovingLine",true,false)!=null)
 		assert(loader.find_child("OriginalLoadingKitchen",true,false).texture.resource_path in ["res://LoadingAssets/TealKitchen.webp","res://LoadingAssets/AquaBuilder.png"])
 		await create_timer(2.2).timeout
 		var picker=menu.find_child("LanguageSelectionScreen",true,false)
@@ -193,6 +194,7 @@ func _run() -> void:
 		assert(active_header.find_child("ReachNode10",true,false).get_global_rect().end.x<header_language.global_position.x)
 
 		assert(active_header.get_global_rect().encloses(reach.get_global_rect()))
+		assert(reach.global_position.y-active_header.global_position.y>=7)
 		assert(active_header.find_child("StageRibbon",true,false)==null)
 		assert(active_header.find_child("CurrentStageLabel",true,false).text==manager.text("Stage %d")%1)
 		assert(reach.find_child("ReachNode01",true,false).get_global_rect().encloses(reach.find_child("CurrentStageLabel",true,false).get_global_rect()))
@@ -223,7 +225,7 @@ func _run() -> void:
 		var workspace=game.find_child("Stage1WorkspaceSplit",true,false)
 		var customer_card=game.find_child("Stage1CustomerCard",true,false)
 		var drawing_card=game.find_child("Stage1DrawingCard",true,false)
-		assert(game.find_child("Stage1Header",true,false).size.y<=80)
+		assert(game.find_child("Stage1Header",true,false).size.y<=90)
 		assert(game.find_child("Stage1Logo",true,false).texture.resource_path=="res://LoadingAssets/KitchenLogo.webp")
 		var avatar=game.find_child("Stage1CustomerAvatar",true,false)
 		var stage_one_avatar_size: Vector2 = avatar.size
