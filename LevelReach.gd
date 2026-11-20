@@ -43,38 +43,29 @@ func _rebuild() -> void:
 		point.set_meta("completed",point.done)
 		point.set_meta("current",point.current)
 		point.set_meta("locked",point.locked)
-		point.custom_minimum_size=Vector2(116,68) if point.current else Vector2(54,56)
+		point.custom_minimum_size=Vector2(92,68) if point.current else Vector2(54,60)
 		point.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 		point.size_flags_vertical=Control.SIZE_SHRINK_CENTER
-		point.size_flags_stretch_ratio=1.15 if point.current else 1.0
+		point.size_flags_stretch_ratio=1.12 if point.current else 1.0
 		point.tooltip_text=UI.text("Stage %d")%n+"\n"+UI.text("Coming soon" if point.locked else ("Completed" if point.done else "Ready"))
 		route.add_child(point)
 		point.resized.connect(route.queue_redraw)
 		point.item_rect_changed.connect(route.queue_redraw)
-		var number:=UI.inline_label("%02d"%n,22 if point.current else 20,true)
-		number.name="ReachStageLabel"
+		var number:=UI.inline_label("%02d"%n,22 if point.current else 18,true)
+		number.name="CurrentStageLabel" if point.current else "ReachStageLabel"
 		number.set_meta("locale_ignore",true)
 		number.add_theme_font_override("font",UI.font(true,"en"))
+		number.add_theme_color_override("font_color",Color.WHITE if point.current else UI.INK)
 		number.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
 		point.add_child(number)
 		number.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
-		number.offset_top=23 if point.current else 3
-		number.offset_bottom=57 if point.current else 39
-		if point.current:
-			var flag:=UI.inline_label(UI.text("Stage %d")%n,12,true)
-			flag.name="CurrentStageLabel"
-			flag.add_theme_color_override("font_color",Color.WHITE)
-			flag.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
-			point.add_child(flag)
-			flag.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-			flag.offset_left=-13
-			flag.offset_right=57
-			flag.offset_top=0
-			flag.offset_bottom=24
-		elif point.locked:
+		number.offset_top=6 if point.current else 5
+		number.offset_bottom=49 if point.current else 39
+		if point.locked:
 			var lock:=TextureRect.new()
 			lock.name="CheckpointLock"
 			lock.texture=UI.icon("lock")
+			lock.modulate=Color("4e7c99")
 			lock.expand_mode=TextureRect.EXPAND_IGNORE_SIZE
 			lock.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 			lock.mouse_filter=Control.MOUSE_FILTER_IGNORE
@@ -82,8 +73,8 @@ func _rebuild() -> void:
 			lock.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 			lock.offset_left=-6
 			lock.offset_right=6
-			lock.offset_top=-17
-			lock.offset_bottom=-5
+			lock.offset_top=-26
+			lock.offset_bottom=-14
 
 class Checkpoint extends Control:
 	var current: bool=false
@@ -93,33 +84,28 @@ class Checkpoint extends Control:
 		mouse_filter=Control.MOUSE_FILTER_PASS
 		resized.connect(queue_redraw)
 	func centre() -> Vector2:
-		return Vector2(size.x/2,42 if current else size.y/2-2)
+		return Vector2(size.x/2,34 if current else size.y/2)
 	func _draw() -> void:
 		var center:=centre()
-		var diameter:=54.0 if current else 50.0
+		var diameter:=54.0 if current else 46.0
 		if current:
-			var base:=Rect2(center+Vector2(-29,17),Vector2(58,11))
-			draw_style_box(UI.box(Color("eebd36"),Color("ffe9a2"),8,0),base)
-			draw_line(center+Vector2(-22,20),center+Vector2(22,20),Color("fff3a3"),2,true)
+			draw_circle(center,32,Color(0.15,0.87,0.91,0.13))
+			draw_arc(center,30,0,TAU,64,Color("91f2f4"),1.5,true)
 		draw_texture_rect(Aqua.badge(current,done,locked),Rect2(center-Vector2.ONE*diameter/2,Vector2.ONE*diameter),false)
 		if current:
-			var pole:=Vector2(center.x-20,1)
-			draw_line(pole,Vector2(pole.x+7,58),Color("d49a21"),3,true)
-			var flag:=PackedVector2Array([pole+Vector2(2,1),pole+Vector2(80,3),pole+Vector2(72,12),pole+Vector2(80,22),pole+Vector2(5,20)])
-			draw_colored_polygon(flag,Color("009d9f"))
-			flag.append(flag[0])
-			draw_polyline(flag,Color("b8ffff"),1,true)
-			for d in [Vector2(-10,-4),Vector2(-15,3),Vector2(-9,11)]:
-				draw_line(pole+d,pole+d+Vector2(-3,-3),Color("f0bd32"),3,true)
+			var marker:=PackedVector2Array([center+Vector2(-6,-33),center+Vector2(6,-33),center+Vector2(0,-26)])
+			draw_colored_polygon(marker,Color("009fac"))
+			marker.append(marker[0])
+			draw_polyline(marker,Color.WHITE,1,true)
 		elif done:
-			var tick:=center+Vector2(13,17)
-			draw_circle(tick,10,Color("36b86b"))
-			draw_arc(tick,10,0,TAU,28,Color.WHITE,1.5,true)
-			draw_polyline(PackedVector2Array([tick+Vector2(-4,0),tick+Vector2(-1,3),tick+Vector2(5,-4)]),Color.WHITE,2,true)
-		elif locked:
-			var lock:=Vector2(center.x,size.y-11)
-			draw_circle(lock,10,Color("42aabe"))
-			draw_arc(lock,10,0,TAU,28,Color.WHITE,1.5,true)
+			var tick:=center+Vector2(0,10)
+			draw_polyline(PackedVector2Array([tick+Vector2(-6,0),tick+Vector2(-1,5),tick+Vector2(8,-5)]),Color("00a68d"),2.5,true)
+			var star:=PackedVector2Array()
+			var top:=center+Vector2(0,-24)
+			for n in range(10):
+				var a: float=-PI/2+float(n)*PI/5
+				star.append(top+Vector2(cos(a),sin(a))*(4.5 if n%2==0 else 2.1))
+			draw_colored_polygon(star,Color("e6b548"))
 
 class Route extends HBoxContainer:
 	func _ready() -> void:
@@ -136,8 +122,12 @@ class Route extends HBoxContainer:
 			for n in range(33):
 				var t:=float(n)/32
 				curve.append(a.lerp(b,t)+Vector2(0,sin(t*TAU)*5.0))
-			# Draw the entire link behind medals, including unused slot space.
-			draw_polyline(curve,Color("b4e9ed"),8,true)
-			draw_polyline(curve,Color("26b5bd"),5,true)
-			for n in range(0,30,4):
-				draw_polyline(PackedVector2Array([curve[n],curve[n+1],curve[n+2]]),Color("edffff"),2,true)
+			# One continuous aqua ribbon runs behind the glass bubbles.
+			draw_polyline(curve,Color("b1eaf0"),9,true)
+			draw_polyline(curve,Color("66cddc"),5,true)
+			draw_polyline(curve,Color("dcffff"),1.5,true)
+		for side in [0,1]:
+			var x:=5.0 if side==0 else size.x-5.0
+			for y in [15.0,43.0]:
+				draw_circle(Vector2(x,y),3,Color(0.8,0.97,1,0.65))
+				draw_arc(Vector2(x,y),3,0,TAU,20,Color("a1d9e7"),0.8,true)

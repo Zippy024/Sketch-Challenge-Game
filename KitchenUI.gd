@@ -179,6 +179,8 @@ static func header(stage: int, _title: String, menu_action: Callable, language_a
 	home.name = "GameHomeButton"
 	home.icon = icon("home")
 	home.tooltip_text = text("Go to Main Menu")
+	home.custom_minimum_size=Vector2(46,46)
+	home.add_theme_constant_override("icon_max_width",24)
 	home.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	for state in ["icon_normal_color","icon_hover_color","icon_pressed_color"]:home.add_theme_color_override(state,TEAL)
 	preload("res://AquaStyle.gd").button(home)
@@ -190,6 +192,8 @@ static func header(stage: int, _title: String, menu_action: Callable, language_a
 	menu.add_theme_color_override("icon_pressed_color",TEAL)
 	menu.tooltip_text = text("Menu")
 	menu.name = "Stage1MenuButton" if stage == 1 else "GameMenuButton"
+	menu.custom_minimum_size=Vector2(46,46)
+	menu.add_theme_constant_override("icon_max_width",24)
 	menu.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	preload("res://AquaStyle.gd").button(menu)
 	row.add_child(menu)
@@ -567,7 +571,7 @@ static func language_switcher(action: Callable, size: int = 12) -> HBoxContainer
 	picker.name="LanguageMenu"
 	picker.flat=false
 	picker.set_meta("locale_ignore",true)
-	picker.custom_minimum_size=Vector2(138,36)
+	picker.custom_minimum_size=Vector2(138,40)
 	picker.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	picker.size_flags_vertical=Control.SIZE_SHRINK_CENTER
 	picker.icon=icon("globe")
@@ -598,6 +602,7 @@ static func language_switcher(action: Callable, size: int = 12) -> HBoxContainer
 		if is_instance_valid(row):update_language_switcher(row,Progress.get_language())
 	)
 	update_language_switcher(row,Progress.get_language())
+	preload("res://AquaStyle.gd").button(picker)
 	return row
 
 static func update_language_switcher(row: Control, language: String) -> void:
