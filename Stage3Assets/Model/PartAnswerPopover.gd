@@ -31,7 +31,7 @@ func _ready() -> void:
  minimum_size_changed.connect(_request_fit)
  custom_minimum_size.x=300
  mouse_filter=Control.MOUSE_FILTER_STOP
- var surface:=UI.box(Color("f8fcf7"),Color("89bdb3"),16,12)
+ var surface:=UI.box(UI.INPUT,UI.EDGE,16,12)
  surface.shadow_size=8
  add_theme_stylebox_override("panel",surface)
  var stack:=VBoxContainer.new()
@@ -151,7 +151,7 @@ func _show_form() -> void:
  modulate.a=1.0
  _result.hide()
  _form.show()
- var surface:=UI.box(Color("f8fcf7"),Color("89bdb3"),16,12)
+ var surface:=UI.box(UI.INPUT,UI.EDGE,16,12)
  surface.shadow_size=8
  add_theme_stylebox_override("panel",surface)
  _request_fit()

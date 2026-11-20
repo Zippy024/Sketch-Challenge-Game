@@ -13,8 +13,8 @@ const BG := Color("e9eef5")
 const PANEL := Color("f1f5f9")
 const TEXT := Color("1f3c56")
 const SUBTEXT := Color("6b7f98")
-const BLUE := Color("008f98")
-const GREEN := Color("008f98")
+const BLUE := Color("00bfff")
+const GREEN := Color("00bfff")
 const OUTLINE := Color("d6e2ef")
 const Parts = preload("res://Stage3Assets/Model/JapaneseParts.gd")
 const Model = preload("res://Stage3Assets/Model/KitchenModel.gd")
@@ -222,7 +222,7 @@ func _refresh() -> void:
 	for i in range(3):
 		var chip:=PanelContainer.new()
 		chip.size_flags_horizontal=Control.SIZE_EXPAND_FILL
-		chip.add_theme_stylebox_override("panel",UI.box(Color("a4d1df") if i==phase else Color("c5e1e9"),Color("74c7d9") if i==phase else Color("b8dfe9"),12,6))
+		chip.add_theme_stylebox_override("panel",UI.box(Color("8dd8f7") if i==phase else UI.SPEECH,UI.TEAL if i==phase else UI.EDGE,12,6))
 		phases.add_child(chip)
 		var caption:=UI.label(str(i+1)+" · "+_phase_name(i),12,i==phase)
 		caption.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
@@ -245,7 +245,7 @@ func _refresh() -> void:
 	_progress_bar.max_value = Parts.CHALLENGE_STEPS
 	_progress_bar.value = maxi(0,step-1) if _answer_state=="correct" else step
 	_progress_bar.show_percentage = false
-	_progress_bar.add_theme_stylebox_override("background",UI.box(Color("d7e6ed"),Color.TRANSPARENT,5,0))
+	_progress_bar.add_theme_stylebox_override("background",UI.box(Color("aeddf1"),Color.TRANSPARENT,5,0))
 	_progress_bar.add_theme_stylebox_override("fill",UI.box(UI.TEAL,Color.TRANSPARENT,5,0))
 	progress.add_child(_progress_bar)
 	if _answer_state=="correct":create_tween().tween_property(_progress_bar,"value",step,0.42).set_trans(Tween.TRANS_SINE)

@@ -15,13 +15,13 @@ static func _svg(key: String, source: String) -> Texture2D:
 
 static func surface(primary: bool = false, card: bool = false, button_height: int = 80, gold: bool = false) -> StyleBoxTexture:
 	var key := ("primary" if primary else ("card" if card else "pearl"))+str(button_height)+str(gold)
-	var top := "#42f1ef" if primary else "#ffffff"
-	var middle := "#00b6c5" if primary else "#edfafd"
-	var bottom := "#007f96" if primary else "#bcecf1"
+	var top := "#00bfff" if primary else "#ffffff"
+	var middle := "#009fd6" if primary else "#e1f4ff"
+	var bottom := "#006fa8" if primary else "#b1e3fa"
 	var height := 160 if card else maxi(38,button_height)
-	var edge := "#efbd43" if gold else "#5bc8d4"
+	var edge := "#efbd43" if gold else "#60c7ee"
 	var radius := 30 if card else (height-8)/2
-	var source := '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="%d"><defs><linearGradient id="g" x2="0" y2="1"><stop stop-color="%s"/><stop offset=".48" stop-color="%s"/><stop offset="1" stop-color="%s"/></linearGradient></defs><rect x="3" y="7" width="314" height="%d" rx="%d" fill="#157d8c" opacity=".22"/><rect x="2" y="2" width="316" height="%d" rx="%d" fill="url(#g)" stroke="%s" stroke-width="2"/><rect x="6" y="5" width="308" height="%d" rx="%d" fill="none" stroke="#ffffff" stroke-width="2" opacity=".92"/></svg>' % [height,top,middle,bottom,height-10,radius,height-10,radius,edge,height-16,radius-3]
+	var source := '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="%d"><defs><linearGradient id="g" x2="0" y2="1"><stop stop-color="%s"/><stop offset=".48" stop-color="%s"/><stop offset="1" stop-color="%s"/></linearGradient></defs><rect x="3" y="7" width="314" height="%d" rx="%d" fill="#126e9c" opacity=".22"/><rect x="2" y="2" width="316" height="%d" rx="%d" fill="url(#g)" stroke="%s" stroke-width="2"/><rect x="6" y="5" width="308" height="%d" rx="%d" fill="none" stroke="#ffffff" stroke-width="2" opacity=".92"/></svg>' % [height,top,middle,bottom,height-10,radius,height-10,radius,edge,height-16,radius-3]
 	var style := StyleBoxTexture.new()
 	style.texture = _svg(key,source)
 	style.texture_margin_left = radius+2

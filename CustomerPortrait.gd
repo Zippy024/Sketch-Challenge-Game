@@ -4,7 +4,7 @@ class PortraitArcs extends Control:
 		var center:=size*0.5
 		var radius:=minf(size.x,size.y)*0.491
 		for start in [102.0,282.0]:
-			draw_arc(center,radius,deg_to_rad(start),deg_to_rad(start+73.0),40,Color("9ec6cb"),1.5,true)
+			draw_arc(center,radius,deg_to_rad(start),deg_to_rad(start+73.0),40,Color("67c8ec"),1.5,true)
 	func _ready() -> void:resized.connect(queue_redraw)
 
 # One quiet portrait frame shared by all three stages.

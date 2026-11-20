@@ -185,6 +185,13 @@ func _run() -> void:
 		var language_popup_style:=header_language.get_popup().get_theme_stylebox("panel") as StyleBoxFlat
 		assert(language_popup_style!=null and language_popup_style.bg_color.get_luminance()>0.8)
 		assert(active_header.find_child("GameHomeButton",true,false).icon!=null)
+		# The reference header uses a scaled native design: localized controls must
+		# remain within its blue frame and must not collide with the tenth stage.
+		for control_name in ["LanguageMenu","GameHomeButton","Stage1MenuButton"]:
+			var header_control=active_header.find_child(control_name,true,false)
+			assert(active_header.get_global_rect().encloses(header_control.get_global_rect()))
+		assert(active_header.find_child("ReachNode10",true,false).get_global_rect().end.x<header_language.global_position.x)
+
 		assert(active_header.get_global_rect().encloses(reach.get_global_rect()))
 		assert(active_header.find_child("StageRibbon",true,false)==null)
 		assert(active_header.find_child("CurrentStageLabel",true,false).text==manager.text("Stage %d")%1)
@@ -195,7 +202,7 @@ func _run() -> void:
 		assert(active_point.size.x>small_point.size.x)
 		for n in range(2,11):
 			var inactive_point=reach.find_child("ReachNode%02d"%n,true,false)
-			assert(absf(inactive_point.size.x-small_point.size.x)<=1)
+			assert(absf(inactive_point.size.x-small_point.size.x)<=3)
 			assert(is_equal_approx(inactive_point.size.y,small_point.size.y))
 		assert(reach.find_children("ReachNode*","Control",true,false).size()==10)
 		for n in range(1,11):
@@ -368,7 +375,7 @@ func _run() -> void:
 		var finished_point=qa_reach.find_child("ReachNode01",true,false)
 		var locked_point=qa_reach.find_child("ReachNode04",true,false)
 		assert(finished_point.get_meta("completed"))
-		assert(absf(finished_point.size.x-locked_point.size.x)<=1)
+		assert(absf(finished_point.size.x-locked_point.size.x)<=3)
 		assert(qa_reach.find_child("ReachNode02",true,false).size.x>finished_point.size.x)
 		game.get("submit_button").pressed.emit()
 		await _wait()

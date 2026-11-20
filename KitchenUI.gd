@@ -2,8 +2,12 @@ extends RefCounted
 const Progress = preload("res://GameProgress.gd")
 const INK := Color("082744")
 const MUTED := Color("284f68")
-const TEAL := Color("009eaf")
-const EDGE := Color("9ed7e4")
+const TEAL := Color("00bfff")
+const PANEL := Color("c6eafb")
+const SPEECH := Color("b8e4f8")
+const INPUT := Color("e4f5ff")
+const CANVAS := Color("d6f0ff")
+const EDGE := Color("67c8ec")
 const SUCCESS := Color("2da36b")
 const FAILURE := Color("cd4c5e")
 const FEEDBACK_TINT := 0.055
@@ -42,7 +46,7 @@ static func make_theme() -> Theme:
 	result.default_font_size = 15
 	return result
 
-static func box(fill: Color = Color(0.94,0.98,1.0,0.82), edge: Color = Color(1,1,1,0.9), radius: int = 20, pad: int = 16) -> StyleBoxFlat:
+static func box(fill: Color = Color(0.80,0.93,1.0,0.95), edge: Color = Color(1,1,1,0.9), radius: int = 20, pad: int = 16) -> StyleBoxFlat:
 	var s := StyleBoxFlat.new()
 	s.bg_color = fill
 	s.border_color = edge
@@ -70,11 +74,11 @@ static func style_button(b: Button, primary: bool = false, size: int = 14, warni
 	b.add_theme_font_size_override("font_size",size)
 	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	for state in ["normal","hover","pressed","disabled"]:
-		var fill := TEAL if primary else (Color("fff0f1") if warning else Color("f3faff"))
+		var fill := TEAL if primary else (Color("fff0f1") if warning else INPUT)
 		if state == "hover": fill = fill.darkened(0.05)
 		if state == "pressed": fill = fill.darkened(0.11)
 		if state == "disabled": fill = Color("dce8ed")
-		var style := box(fill,Color("65c9d1") if primary else Color("c3dce9"),1000,4)
+		var style := box(fill,Color("50c9f4") if primary else Color("88cce9"),1000,4)
 		style.content_margin_left = 14
 		style.content_margin_right = 14
 		style.shadow_size = 2 if primary else 0
@@ -138,7 +142,7 @@ static func background(parent: Control, workspace: bool=false) -> void:
 	parent.add_child(photo)
 	photo.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var wash := ColorRect.new()
-	wash.color = Color(0.90,0.98,1.0,0.06)
+	wash.color = Color(0.0,0.749,1.0,0.10 if not workspace else 0.0)
 	wash.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(wash)
 	wash.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -152,52 +156,12 @@ static func logo(width: int = 150, height: int = 54) -> TextureRect:
 	mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return mark
 
-static func header(stage: int, _title: String, menu_action: Callable, language_action: Callable) -> PanelContainer:
-	var panel := PanelContainer.new()
-	panel.name = "Stage1Header" if stage == 1 else "GameHeader"
-	panel.custom_minimum_size.y = 64
-	var style := box(Color("bfdee7"),Color("87b6c6"),0,4)
-	style.content_margin_left = 18
-	style.content_margin_right = 18
-	style.shadow_size = 0
-	panel.add_theme_stylebox_override("panel",style)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation",14)
-	panel.add_child(row)
-	var mark := logo(150,48)
-	mark.name = "Stage1Logo" if stage == 1 else "GameLogo"
-	row.add_child(mark)
-	var reach := level_reach(stage,true)
-	reach.size_flags_horizontal=Control.SIZE_EXPAND_FILL
-	reach.size_flags_vertical=Control.SIZE_SHRINK_CENTER
-	row.add_child(reach)
-	var picker := language_switcher(language_action)
-	picker.name = "Stage1LanguagePicker" if stage==1 else "GameLanguagePicker"
-	picker.size_flags_vertical=Control.SIZE_SHRINK_CENTER
-	row.add_child(picker)
-	var home := button("",func(): go_home(menu_action.get_object()),false,38,14)
-	home.name = "GameHomeButton"
-	home.icon = icon("home")
-	home.tooltip_text = text("Go to Main Menu")
-	home.custom_minimum_size=Vector2(38,38)
-	home.add_theme_constant_override("icon_max_width",24)
-	home.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	for state in ["icon_normal_color","icon_hover_color","icon_pressed_color"]:home.add_theme_color_override(state,TEAL)
-	preload("res://AquaStyle.gd").button(home)
-	row.add_child(home)
-	var menu := button("",menu_action,false,38,15)
-	menu.icon = preload("res://Stage1Assets/menu-lines.svg")
-	menu.add_theme_color_override("icon_normal_color",TEAL)
-	menu.add_theme_color_override("icon_hover_color",TEAL)
-	menu.add_theme_color_override("icon_pressed_color",TEAL)
-	menu.tooltip_text = text("Menu")
-	menu.name = "Stage1MenuButton" if stage == 1 else "GameMenuButton"
-	menu.custom_minimum_size=Vector2(38,38)
-	menu.add_theme_constant_override("icon_max_width",24)
-	menu.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	preload("res://AquaStyle.gd").button(menu)
-	row.add_child(menu)
-	return panel
+static func header(stage: int, _title: String, menu_action: Callable, language_action: Callable) -> Control:
+	var header=load("res://ModernHeader.gd").new()
+	header.stage=stage
+	header.menu_action=menu_action
+	header.language_action=language_action
+	return header
 
 static func bullet_text(value: String) -> String:
 	var lines:=PackedStringArray()
@@ -270,7 +234,7 @@ static func card_stack(parent: Control, expand: bool = false) -> VBoxContainer:
 	var panel := PanelContainer.new()
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	if expand: panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	panel.add_theme_stylebox_override("panel",box(Color("cbe3eb"),Color("8bb9c8")))
+	panel.add_theme_stylebox_override("panel",box(PANEL,EDGE))
 	parent.add_child(panel)
 	var stack := VBoxContainer.new()
 	stack.add_theme_constant_override("separation",12)
@@ -360,7 +324,7 @@ static func request_plate() -> StyleBoxTexture:
 
 static func conversation_style(state: String="neutral") -> StyleBoxFlat:
 	var accent:=SUCCESS if state=="correct" else FAILURE
-	var fill:=Color("c5e1e9")
+	var fill:=SPEECH
 	if state=="incorrect":fill=Color("eed5db")
 	elif state=="correct":fill=Color("c4e5d9")
 	var edge:=EDGE
@@ -485,7 +449,7 @@ static func _refresh_primary(button: Button) -> void:
 	var height := maxi(38,roundi(button.size.y))
 	if not _pill_textures.has(height):
 		var radius := float(height)/2
-		var svg := '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="%d"><defs><linearGradient id="a" x2="0" y2="1"><stop stop-color="#39bac0"/><stop offset=".45" stop-color="#00959c"/><stop offset="1" stop-color="#006c77"/></linearGradient></defs><rect x="1" y="1" width="318" height="%d" rx="%s" fill="url(#a)" stroke="#e6ffff" stroke-width="1.5"/></svg>'%[height,height-2,str(radius-1)]
+		var svg := '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="%d"><defs><linearGradient id="a" x2="0" y2="1"><stop stop-color="#00bfff"/><stop offset=".45" stop-color="#009fd6"/><stop offset="1" stop-color="#006fa8"/></linearGradient></defs><rect x="1" y="1" width="318" height="%d" rx="%s" fill="url(#a)" stroke="#e6ffff" stroke-width="1.5"/></svg>'%[height,height-2,str(radius-1)]
 		var img := Image.new()
 		img.load_svg_from_buffer(svg.to_utf8_buffer())
 		_pill_textures[height] = ImageTexture.create_from_image(img)
@@ -498,7 +462,7 @@ static func _refresh_primary(button: Button) -> void:
 		box.content_margin_right = 14
 		box.content_margin_top = 4
 		box.content_margin_bottom = 4
-		box.modulate_color = Color("dfffff") if state=="hover" else (Color("acdce0") if state=="pressed" else Color.WHITE)
+		box.modulate_color = Color("e0f5ff") if state=="hover" else (Color("a6d8ef") if state=="pressed" else Color.WHITE)
 		button.add_theme_stylebox_override(state,box)
 	var sheen:=button.get_node_or_null("ButtonSheen") as ColorRect
 	if sheen==null:
@@ -532,8 +496,8 @@ static func ribbon(value: String, size: int = 15) -> PanelContainer:
 	return panel
 
 static func _language_radio_icon(selected: bool) -> Texture2D:
-	var fill:="#008f98" if selected else "#ffffff"
-	var svg:='<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" fill="#ffffff" stroke="#72aeb5" stroke-width="1.8"/><circle cx="10" cy="10" r="3.5" fill="'+fill+'"/></svg>'
+	var fill:="#008bc4" if selected else "#ffffff"
+	var svg:='<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" fill="#ffffff" stroke="#67c8ec" stroke-width="1.8"/><circle cx="10" cy="10" r="3.5" fill="'+fill+'"/></svg>'
 	var image:=Image.new()
 	image.load_svg_from_buffer(svg.to_utf8_buffer())
 	return ImageTexture.create_from_image(image)
@@ -541,7 +505,7 @@ static func _language_radio_icon(selected: bool) -> Texture2D:
 static func style_language_popup(popup: PopupMenu) -> void:
 	# PopupMenu is a Window: it does not inherit the surrounding Control's local theme.
 	# Style the popup directly so it stays light in the game and in Settings.
-	var panel:=box(Color("f7fcfd"),Color("9fcdd4"),13,8)
+	var panel:=box(Color("edf9ff"),EDGE,13,8)
 	panel.content_margin_left=10
 	panel.content_margin_right=10
 	panel.content_margin_top=8
@@ -549,14 +513,14 @@ static func style_language_popup(popup: PopupMenu) -> void:
 	panel.shadow_size=5
 	panel.shadow_color=Color(0.02,0.22,0.27,0.16)
 	popup.add_theme_stylebox_override("panel",panel)
-	var hover:=box(Color("e6f5f6"),Color.TRANSPARENT,9,4)
+	var hover:=box(Color("d5f1ff"),Color.TRANSPARENT,9,4)
 	hover.set_border_width_all(0)
 	hover.shadow_size=0
 	popup.add_theme_stylebox_override("hover",hover)
 	popup.add_theme_font_override("font",font())
 	popup.add_theme_font_size_override("font_size",15)
 	popup.add_theme_color_override("font_color",INK)
-	popup.add_theme_color_override("font_hover_color",Color("006d76"))
+	popup.add_theme_color_override("font_hover_color",Color("00658f"))
 	popup.add_theme_color_override("font_disabled_color",MUTED)
 	popup.add_theme_color_override("font_outline_color",Color.TRANSPARENT)
 	popup.add_theme_constant_override("v_separation",10)

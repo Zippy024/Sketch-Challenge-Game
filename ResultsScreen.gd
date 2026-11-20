@@ -19,7 +19,7 @@ func _build() -> void:
 	var card := PanelContainer.new()
 	card.name = "ResultsCard"
 	card.custom_minimum_size = Vector2(1000,650)
-	card.add_theme_stylebox_override("panel",UI.box(Color(0.96,0.99,1,0.94),Color.WHITE,24,26))
+	card.add_theme_stylebox_override("panel",UI.box(UI.PANEL,Color.WHITE,24,26))
 	center.add_child(card)
 	var stack := VBoxContainer.new()
 	stack.add_theme_constant_override("separation",18)

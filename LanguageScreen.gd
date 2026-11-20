@@ -20,7 +20,7 @@ func _ready() -> void:
 	_layout.add_child(mark)
 	mark.position = Vector2(485,5)
 	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel",UI.box(Color(0.94,0.98,1,0.74),Color.WHITE,28,30))
+	panel.add_theme_stylebox_override("panel",UI.box(Color(0.77,0.92,1,0.92),Color.WHITE,28,30))
 	_layout.add_child(panel)
 	panel.position = Vector2(280,235)
 	panel.size = Vector2(880,440)
@@ -69,7 +69,7 @@ func _choose(language: String) -> void:
 		choice.text = ("✓   " if selected else "○   ")+str(choice.get_meta("caption"))
 		UI.style_button(choice,false,24)
 		choice.add_theme_font_override("font",UI.font(selected))
-		var style := UI.box(Color("c1f2f4") if selected else Color(0.97,0.99,1,0.75),Color.WHITE,20,8)
+		var style := UI.box(Color("92dfff") if selected else Color(0.88,0.96,1,0.94),Color.WHITE,20,8)
 		style.content_margin_left = 30
 		choice.add_theme_stylebox_override("normal",style)
 func _confirm() -> void:

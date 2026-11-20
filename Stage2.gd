@@ -104,7 +104,7 @@ class PlanViewer extends Control:
 		custom_minimum_size = Vector2(300, 200)
 
 	func _draw() -> void:
-		draw_rect(Rect2(Vector2.ZERO, size), Color("d2e6ed"), true)
+		draw_rect(Rect2(Vector2.ZERO, size), UI.CANVAS, true)
 		if plan_texture == null:
 			return
 		var img_size := plan_texture.get_size()
@@ -312,7 +312,7 @@ func _build_ui() -> void:
 	right_panel.name="Stage2AnswerCard"
 	right_panel.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	right_panel.size_flags_stretch_ratio=13
-	right_panel.add_theme_stylebox_override("panel",UI.box(Color("cbe3eb"),Color("8bb9c8"),24,18))
+	right_panel.add_theme_stylebox_override("panel",UI.box(UI.PANEL,UI.EDGE,24,18))
 	split.add_child(right_panel)
 	var right := VBoxContainer.new()
 	right.add_theme_constant_override("separation",14)
@@ -345,7 +345,7 @@ func _build_ui() -> void:
 	var input_frame:=PanelContainer.new()
 	input_frame.name="Stage2AnswerFrame"
 	input_frame.size_flags_vertical=Control.SIZE_EXPAND_FILL
-	input_frame.add_theme_stylebox_override("panel",UI.box(Color("f3faff"),UI.EDGE,12,10))
+	input_frame.add_theme_stylebox_override("panel",UI.box(UI.INPUT,UI.EDGE,12,10))
 	right.add_child(input_frame)
 	answer_input=TextEdit.new()
 	answer_input.name="Stage2AnswerInput"
@@ -354,10 +354,11 @@ func _build_ui() -> void:
 	answer_input.add_theme_font_size_override("font_size",18)
 	answer_input.wrap_mode=TextEdit.LINE_WRAPPING_BOUNDARY
 	answer_input.add_theme_color_override("font_color",UI.INK)
-	answer_input.add_theme_color_override("font_placeholder_color",Color("99a6ba"))
+	answer_input.add_theme_color_override("font_placeholder_color",Color("587b97"))
+	answer_input.add_theme_color_override("selection_color",Color("83d9fb"))
 	answer_input.add_theme_color_override("caret_color",UI.TEAL)
 	for state in ["normal","focus","read_only"]:
-		var border:=UI.box(Color.WHITE,UI.TEAL if state=="focus" else UI.EDGE,14,16)
+		var border:=UI.box(UI.INPUT,UI.TEAL if state=="focus" else UI.EDGE,14,16)
 		border.set_border_width_all(2 if state=="focus" else 1)
 		border.shadow_size=0
 		answer_input.add_theme_stylebox_override(state,border)
@@ -407,7 +408,7 @@ func _replay_stage_two() -> void:
 func _set_progress_state(state: String,message: String="") -> void:
 	if progress_card==null:return
 	var text: String="Type your answer, then press OK."
-	var fill:=Color("f0fafc")
+	var fill:=UI.INPUT
 	var edge:=UI.EDGE
 	var ink:=UI.MUTED
 	match state:

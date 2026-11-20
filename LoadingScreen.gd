@@ -19,6 +19,12 @@ func _ready() -> void:
 	photo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	add_child(photo)
 	photo.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var glaze:=ColorRect.new()
+	glaze.name="DeepSkyArtworkWash"
+	glaze.color=Color(0,0.749,1,.10)
+	glaze.mouse_filter=Control.MOUSE_FILTER_IGNORE
+	add_child(glaze)
+	glaze.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_logo = UI.logo(0,0)
 	add_child(_logo)
 	_accents=LoadingAccents.new()

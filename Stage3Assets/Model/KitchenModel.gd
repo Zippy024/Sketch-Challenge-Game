@@ -59,7 +59,7 @@ func _ready() -> void:
  var environment:=WorldEnvironment.new()
  var settings:=Environment.new()
  settings.background_mode=Environment.BG_COLOR
- settings.background_color=Color("f3f1ec")
+ settings.background_color=UI.INPUT
  settings.sky=_studio_environment()
  settings.reflected_light_source=Environment.REFLECTION_SOURCE_SKY
  settings.ambient_light_source=Environment.AMBIENT_SOURCE_COLOR
@@ -146,8 +146,8 @@ func _draw() -> void:
  if not is_instance_valid(camera) or not camera.is_inside_tree():return
  for i in range(_pointers.size()):
   if not _pointers[i].visible:continue
-  draw_line(part_center(i),_pointers[i].position+Vector2(16,16),Color("549d94"),1.3,true)
-  draw_circle(part_center(i),2.3,Color("549d94"))
+  draw_line(part_center(i),_pointers[i].position+Vector2(16,16),Color("2199cb"),1.3,true)
+  draw_circle(part_center(i),2.3,Color("2199cb"))
 
 func _material(color: Color, metallic: float=0.0, roughness: float=0.65) -> StandardMaterial3D:
  var material:=StandardMaterial3D.new()
@@ -500,12 +500,12 @@ func _update_materials() -> void:
    if entry.material is ShaderMaterial:
     entry.material.set_shader_parameter("highlighted",1.0 if active else 0.0)
     continue
-   entry.material.albedo_color=entry.color.lerp(Color("55cabb"),0.32) if active else entry.color
+   entry.material.albedo_color=entry.color.lerp(UI.TEAL,0.32) if active else entry.color
    entry.material.emission_enabled=active
-   entry.material.emission=Color("257769")
+   entry.material.emission=Color("137da4")
    entry.material.emission_energy_multiplier=0.24 if active else 0.0
   if i<_pointers.size():
-   var style:=UI.box(UI.TEAL if active else (Color("e7f5ea") if _solved[i] else Color("fafff8")),Color("86b7ae"),16,0)
+   var style:=UI.box(UI.TEAL if active else (Color("e7f5ea") if _solved[i] else Color("e9f7ff")),UI.EDGE,16,0)
    style.shadow_size=2
    for state in ["normal","hover","pressed","focus"]:_pointers[i].add_theme_stylebox_override(state,style)
    _pointers[i].get_node("PointerNumber").add_theme_color_override("font_color",Color.WHITE if active else UI.INK)

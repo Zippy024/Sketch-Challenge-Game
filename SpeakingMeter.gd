@@ -18,7 +18,7 @@ func _process(delta: float) -> void:
   queue_redraw()
 func _draw() -> void:
  var style:=StyleBoxFlat.new()
- style.bg_color=Color("2a9897") if speaking else Color("aec9c4")
+ style.bg_color=Color("00bfff") if speaking else Color("9ec9dc")
  style.set_corner_radius_all(1)
  for i in range(5):
   var height: float=3.0+absf(sin(elapsed*9.0+float(i)*1.15))*11.0 if speaking else 3.0
