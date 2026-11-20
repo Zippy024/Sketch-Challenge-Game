@@ -155,8 +155,8 @@ static func logo(width: int = 150, height: int = 54) -> TextureRect:
 static func header(stage: int, _title: String, menu_action: Callable, language_action: Callable) -> PanelContainer:
 	var panel := PanelContainer.new()
 	panel.name = "Stage1Header" if stage == 1 else "GameHeader"
-	panel.custom_minimum_size.y = 58
-	var style := box(Color("f5fbf7"),Color("d7e8e0"),0,4)
+	panel.custom_minimum_size.y = 80
+	var style := box(Color("e4f8fb"),Color("8dd6e1"),0,4)
 	style.content_margin_left = 18
 	style.content_margin_right = 18
 	style.shadow_size = 0
@@ -181,6 +181,7 @@ static func header(stage: int, _title: String, menu_action: Callable, language_a
 	home.tooltip_text = text("Go to Main Menu")
 	home.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	for state in ["icon_normal_color","icon_hover_color","icon_pressed_color"]:home.add_theme_color_override(state,TEAL)
+	preload("res://AquaStyle.gd").button(home)
 	row.add_child(home)
 	var menu := button("",menu_action,false,34,15)
 	menu.icon = preload("res://Stage1Assets/menu-lines.svg")
@@ -190,6 +191,7 @@ static func header(stage: int, _title: String, menu_action: Callable, language_a
 	menu.tooltip_text = text("Menu")
 	menu.name = "Stage1MenuButton" if stage == 1 else "GameMenuButton"
 	menu.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	preload("res://AquaStyle.gd").button(menu)
 	row.add_child(menu)
 	return panel
 
@@ -444,6 +446,8 @@ static func inline_label(value: String, size: int = 14, bold: bool = false) -> L
 
 static func icon(kind: String) -> Texture2D:
 	var shapes := {
+		"star":'<path d="M12 2l3 6.5 7 1-5 5 .9 7-5.9-3.5L6 21.5l1-7-5-5 7-1z" fill="#ffffff"/>',
+		"cabinet":'<path d="M3 4h18v17H3zM2 2h20v3H2zM3 11h18M12 11v10M7 8h3M7 15v3M16 15v3"/>',
 		"chevron_down":'<path d="M6 9l6 6 6-6"/>',
 		"globe":'<circle cx="12" cy="12" r="10"/><ellipse cx="12" cy="12" rx="4.5" ry="10"/><path d="M2 12h20M4 6h16M4 18h16"/>',
 		"home":'<path d="M2 11L12 3l10 8M5 9v12h5v-7h4v7h5V9"/>',

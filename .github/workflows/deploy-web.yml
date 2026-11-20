@@ -75,6 +75,11 @@ jobs:
           mv "Web Game/${build_name}.html" "Web Game/index.html"
           mkdir -p "Web Game/assets"
           cp "LoadingAssets/TealKitchen.webp" "Web Game/assets/loading-kitchen.webp"
+          # The owner can upload the two paintings after the code change.
+          if [ -s "LoadingAssets/AquaBuilder.png" ]; then
+            cp "LoadingAssets/AquaBuilder.png" "Web Game/assets/loading-kitchen.png"
+            sed -i 's/loading-kitchen.webp/loading-kitchen.png/g' "Web Game/index.html"
+          fi
           cp "LoadingAssets/KitchenLogo.webp" "Web Game/assets/game-logo.webp"
           test -s "Web Game/assets/loading-kitchen.webp"
           test -s "Web Game/assets/game-logo.webp"

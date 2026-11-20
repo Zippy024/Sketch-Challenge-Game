@@ -1,5 +1,6 @@
 extends PanelContainer
 const UI=preload("res://KitchenUI.gd")
+const Aqua=preload("res://AquaStyle.gd")
 const Progress=preload("res://GameProgress.gd")
 var current_stage: int=1
 var compact: bool=false
@@ -9,11 +10,11 @@ var _elapsed: float=0.0
 
 func _ready() -> void:
 	name="LevelReachTrack"
-	custom_minimum_size.y=42
+	custom_minimum_size.y=68
 	mouse_filter=Control.MOUSE_FILTER_IGNORE
-	var style:=UI.box(Color(0.94,0.99,1,0.94) if not compact else Color(0.86,0.96,0.99,0.7),Color("bbdee9") if not compact else Color.TRANSPARENT,14,5)
-	style.content_margin_left=8 if in_header else 12
-	style.content_margin_right=8 if in_header else 12
+	var style:=UI.box(Color(0.91,0.99,1,0.65),Color("b8e5ec"),22,2)
+	style.content_margin_left=5
+	style.content_margin_right=5
 	style.shadow_size=0
 	add_theme_stylebox_override("panel",style)
 	_rebuild()
@@ -31,53 +32,63 @@ func _rebuild() -> void:
 		remove_child(child)
 		child.queue_free()
 	var route:=HBoxContainer.new()
-	route.add_theme_constant_override("separation",3 if in_header else 5)
+	route.add_theme_constant_override("separation",0)
 	add_child(route)
-	if not compact and not in_header:
-		var title:=UI.inline_label("Level reach",12,true)
-		title.custom_minimum_size.x=110
-		route.add_child(title)
 	for n in range(1,4 if compact else 11):
 		if n>1:
 			var bridge:=Bridge.new()
 			bridge.active=Progress.is_completed(n-1)
-			bridge.custom_minimum_size.x=8 if in_header else 13
+			bridge.custom_minimum_size.x=5 if in_header else 9
 			route.add_child(bridge)
 		var point:=Checkpoint.new()
 		point.name="ReachNode%02d"%n
 		point.done=Progress.is_completed(n)
 		point.current=n==current_stage
-		point.locked=n>3
+		point.locked=not Progress.is_level_unlocked(n)
 		point.set_meta("stage",n)
 		point.set_meta("completed",point.done)
 		point.set_meta("current",point.current)
 		point.set_meta("locked",point.locked)
-		point.custom_minimum_size=Vector2(116,34) if point.current else Vector2(54,28)
+		point.custom_minimum_size=Vector2(104,68) if point.current else Vector2(44,50)
 		point.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 		point.size_flags_vertical=Control.SIZE_SHRINK_CENTER
-		point.size_flags_stretch_ratio=1.6 if point.current else 1.0
-		point.tooltip_text=UI.text("Stage %d")%n+"\n"+UI.text("Coming soon" if n>3 else ("Completed" if point.done else "Ready"))
+		point.size_flags_stretch_ratio=1.7 if point.current else 1.0
+		point.tooltip_text=UI.text("Stage %d")%n+"\n"+UI.text("Coming soon" if point.locked else ("Completed" if point.done else "Ready"))
 		route.add_child(point)
-		var row:=HBoxContainer.new()
-		row.alignment=BoxContainer.ALIGNMENT_CENTER
-		row.add_theme_constant_override("separation",6)
-		point.add_child(row)
-		row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		row.offset_left=8
-		row.offset_right=-8
+		var number:=UI.inline_label(UI.text("Stage %d")%n if point.current else "%02d"%n,12 if point.current else 17,true)
+		number.name="CurrentStageLabel" if point.current else "ReachStageLabel"
+		number.set_meta("locale_ignore",not point.current)
+		number.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+		number.add_theme_color_override("font_color",Color.WHITE if point.current or point.done else UI.INK)
+		point.add_child(number)
+		number.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		number.offset_left=3
+		number.offset_right=-3
+		number.offset_top=25 if point.current else -6
+		number.offset_bottom=-16 if point.current else -9
 		var icon:=TextureRect.new()
-		icon.texture=preload("res://MenuAssets/level-lock.svg") if n>3 else UI.icon("check" if point.done else ["plan","chat","cube"][n-1])
-		icon.modulate=Color.WHITE if point.current else (UI.TEAL if point.done else UI.MUTED)
-		icon.custom_minimum_size=Vector2(18,18) if point.current else Vector2(15,15)
+		icon.texture=UI.icon(["plan","chat","cabinet"][n-1]) if point.current else (UI.icon("check") if point.done else preload("res://MenuAssets/level-lock.svg"))
+		icon.modulate=Color.WHITE if point.current or point.done else UI.TEAL
 		icon.expand_mode=TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon.mouse_filter=Control.MOUSE_FILTER_IGNORE
-		row.add_child(icon)
-		var number:=UI.inline_label(UI.text("Stage %d")%n if point.current else "%02d"%n,14 if point.current else 11,true)
-		number.name="CurrentStageLabel" if point.current else "ReachStageLabel"
-		number.set_meta("locale_ignore",not point.current)
-		number.add_theme_color_override("font_color",Color.WHITE if point.current else (UI.MUTED if point.locked else UI.INK))
-		row.add_child(number)
+		point.add_child(icon)
+		icon.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP if point.current else Control.PRESET_CENTER_BOTTOM)
+		icon.position=Vector2(point.size.x/2-10,6 if point.current else point.size.y-21)
+		icon.size=Vector2(20,20) if point.current else Vector2(13,13)
+		# Icons follow container allocation without changing any stage state.
+		point.resized.connect(func():
+			icon.position=Vector2(point.size.x/2-icon.size.x/2,6 if point.current else point.size.y-21)
+		)
+		if point.current:
+			var index:=UI.inline_label("%02d"%n,12,true)
+			index.add_theme_color_override("font_color",Color.WHITE)
+			index.set_meta("locale_ignore",true)
+			index.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+			point.add_child(index)
+			index.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+			index.offset_top=-25
+			index.offset_bottom=-7
 
 class Checkpoint extends Control:
 	var current: bool=false
@@ -92,16 +103,18 @@ class Checkpoint extends Control:
 		_pulse+=delta
 		queue_redraw()
 	func _draw() -> void:
-		var cut:=7.0
-		var shape:=PackedVector2Array([Vector2(cut,1),Vector2(size.x-cut,1),Vector2(size.x-1,size.y*0.5),Vector2(size.x-cut,size.y-1),Vector2(cut,size.y-1),Vector2(1,size.y*0.5)])
-		var fill:=Color("008c9c") if current else (Color("d9f5f2") if done else (Color("e9eff4") if locked else Color("f8fdff")))
-		var edge:=Color("34d8dc") if current else (Color("70c9c9") if done else Color("c4dbe6"))
-		draw_colored_polygon(shape,fill)
-		var outline:=shape.duplicate()
-		outline.append(shape[0])
-		if current:draw_polyline(outline,Color(0.2,0.85,0.86,0.13+0.08*sin(_pulse*1.8)),5.0,true)
-		draw_polyline(outline,edge,2.0 if current else 1.0,true)
-		if current:draw_line(Vector2(11,4),Vector2(size.x-11,4),Color("8df4f2"),1.0,true)
+		var width:=minf(size.x-2,size.y*(1.1 if current else 1.0))
+		var rect:=Rect2((size.x-width)/2,0,width,size.y)
+		if current:
+			draw_circle(size/2,25+sin(_pulse*1.8),Color(0.19,0.89,0.89,0.08))
+			# A broad shield holds translated stage names without clipping.
+			rect=Rect2((size.x-width)/2,0,width,size.y)
+		draw_texture_rect(Aqua.badge(current,done,locked),rect,false)
+		if done and not current:
+			var center:=Vector2(size.x/2+width*.26,size.y*.79)
+			draw_circle(center,9,Color("35b86a"))
+			draw_arc(center,9,0,TAU,28,Color.WHITE,1,true)
+			draw_polyline(PackedVector2Array([center+Vector2(-4,0),center+Vector2(-1,3),center+Vector2(5,-4)]),Color.WHITE,1.8,true)
 
 class Bridge extends Control:
 	var active: bool=false
@@ -109,5 +122,7 @@ class Bridge extends Control:
 		mouse_filter=Control.MOUSE_FILTER_IGNORE
 		resized.connect(queue_redraw)
 	func _draw() -> void:
-		var ink:=Color("24b9ba") if active else Color("b9d4df")
-		for i in range(3):draw_circle(Vector2(1+i*(size.x-2)/2.0,size.y*0.5),1.1,ink)
+		var y:=size.y*.5
+		draw_line(Vector2(-3,y+2),Vector2(size.x+3,y+2),Color("9cced8"),6,true)
+		draw_line(Vector2(-3,y),Vector2(size.x+3,y),Color("44d4d7") if active else Color("b3e4eb"),4,true)
+		draw_line(Vector2(-3,y-1),Vector2(size.x+3,y-1),Color("e9ffff"),1,true)
