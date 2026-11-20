@@ -10,9 +10,12 @@ var _signature: String=""
 var _stage_nodes: Array[Control]=[]
 
 static func svg(source: String) -> Texture2D:
-	var im:=Image.new()
-	im.load_svg_from_buffer(source.to_utf8_buffer())
-	return ImageTexture.create_from_image(im)
+	# Retain SVG data so Godot rasterizes at the actual canvas/display scale.
+	# A fixed 1070px/36px ImageTexture becomes soft when this header is enlarged.
+	var texture:=DPITexture.create_from_string(source,2.0)
+	# Cover the header's own scaled design as well as the viewport's DPI scale.
+	texture.set_size_override(Vector2i(texture.get_size()/2.0))
+	return texture
 
 static func pill(active: bool,done: bool=false,round_button: bool=false,state: String="normal") -> StyleBoxTexture:
 	# Match the nameplate: a raised base, a pale top rim and a shaded lower lip.
@@ -141,7 +144,7 @@ func _build_controls() -> void:
 		if not home:action=menu_action
 		var button=UI.button("",action,false,31,14)
 		button.name="GameHomeButton" if home else ("Stage1MenuButton" if stage==1 else "GameMenuButton")
-		button.icon=UI.icon("home") if home else preload("res://Stage1Assets/menu-lines.svg")
+		button.icon=UI.icon("home" if home else "menu")
 		button.tooltip_text=UI.text("Go to Main Menu" if home else "Menu")
 		design.add_child(button)
 		button.custom_minimum_size=Vector2(31,31)

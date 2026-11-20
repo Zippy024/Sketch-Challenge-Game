@@ -50,10 +50,10 @@ func _run() -> void:
 		await _wait()
 		var menu=current_scene
 		var loading_caption=menu.find_child("LoadingCaption",true,false)
-		assert(loading_caption!=null and loading_caption.text=="Loading....." and "%" not in loading_caption.text)
+		assert(loading_caption!=null and loading_caption.text.begins_with("Loading... ") and loading_caption.text.ends_with("%"))
 		var loader=menu.find_child("KitchenLoadingScreen",true,false)
 		assert(loader.get_global_rect().encloses(loading_caption.get_global_rect()))
-		assert(loader.find_child("LoadingMovingLine",true,false)!=null)
+		assert(loader.find_child("LoadingSideRules",true,false)!=null)
 		var footer=loading_caption.get_parent()
 		# The SVG's visible white face is 3px above its shadow-inclusive center.
 		var face_center: Vector2=footer.get_global_rect().get_center()-Vector2(0,3)
