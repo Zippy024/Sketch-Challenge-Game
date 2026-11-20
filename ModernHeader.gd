@@ -14,35 +14,36 @@ static func svg(source: String) -> Texture2D:
 	im.load_svg_from_buffer(source.to_utf8_buffer())
 	return ImageTexture.create_from_image(im)
 
-static func pill(active: bool,done: bool=false) -> StyleBoxTexture:
-	var source: String
-	if active:
-		source='<svg xmlns="http://www.w3.org/2000/svg" width="120" height="36"><defs><linearGradient id="g" x2="0" y2="1"><stop stop-color="#00bfff"/><stop offset=".45" stop-color="#009fd6"/><stop offset="1" stop-color="#006fa8"/></linearGradient></defs><rect x="1" y="4" width="118" height="31" rx="15" fill="#07598c" opacity=".25"/><rect x="1" y="1" width="118" height="31" rx="15" fill="url(#g)" stroke="#b7faff" stroke-width="1.2"/></svg>'
-	else:
-		var fill: String="#ffffff" if done else "#86c9ed"
-		source='<svg xmlns="http://www.w3.org/2000/svg" width="120" height="36"><rect x="1" y="4" width="118" height="29" rx="14" fill="#366b91" opacity=".17"/><rect x="1" y="1" width="118" height="29" rx="14" fill="'+fill+'" fill-opacity="'+('1' if done else '.63')+'" stroke="#caeffb" stroke-width="1.2"/></svg>'
-	var s:=StyleBoxTexture.new()
-	s.texture=svg(source)
-	s.texture_margin_left=18
-	s.texture_margin_right=18
-	s.set_content_margin_all(2)
-	s.content_margin_top=0
-	s.content_margin_bottom=4
-	return s
+static func pill(active: bool,done: bool=false,round_button: bool=false,state: String="normal") -> StyleBoxTexture:
+	# Match the nameplate: a raised base, a pale top rim and a shaded lower lip.
+	var w:=36 if round_button else 120
+	var top:="#71dfff" if active else ("#ffffff" if done else "#d8f2ff")
+	var middle:="#00bfff" if active else ("#e3f5ff" if done else "#a9dcf3")
+	var bottom:="#007fb4" if active else ("#a9dcf3" if done else "#74b7da")
+	var source:='<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="36"><defs><linearGradient id="g" x2="0" y2="1"><stop stop-color="%s"/><stop offset=".48" stop-color="%s"/><stop offset="1" stop-color="%s"/></linearGradient></defs><rect x="1" y="6" width="%d" height="29" rx="15" fill="#14688e" opacity=".28"/><rect x="1" y="3" width="%d" height="29" rx="15" fill="#4ca5ce"/><rect x="1" y="1" width="%d" height="29" rx="15" fill="url(#g)" stroke="#8fdcff" stroke-width="1.3"/><rect x="3" y="2.8" width="%d" height="24" rx="12" fill="none" stroke="#ffffff" stroke-width="1.4" opacity=".88"/><path d="M10 28H%d" stroke="#267ea6" stroke-opacity=".35" stroke-width="1.5" stroke-linecap="round"/></svg>'%[w,top,middle,bottom,w-2,w-2,w-2,w-6,w-10]
+	var style:=StyleBoxTexture.new()
+	style.texture=svg(source)
+	style.texture_margin_left=10 if round_button else 18
+	style.texture_margin_right=10 if round_button else 18
+	style.set_content_margin_all(3 if round_button else 2)
+	style.content_margin_top=0 if not round_button else 2
+	style.content_margin_bottom=5
+	style.modulate_color=Color("b7def0") if state=="pressed" else (Color("eefbff") if state=="hover" else Color.WHITE)
+	return style
 
 func _ready() -> void:
 	name="Stage1Header" if stage==1 else "GameHeader"
-	custom_minimum_size.y=76
+	custom_minimum_size.y=84
 	mouse_filter=Control.MOUSE_FILTER_IGNORE
 	design=Control.new()
 	design.name="LevelReachBar"
-	design.size=Vector2(1070,56)
+	design.size=Vector2(1070,52)
 	design.mouse_filter=Control.MOUSE_FILTER_IGNORE
 	add_child(design)
 	frame=TextureRect.new()
-	frame.texture=svg('<svg xmlns="http://www.w3.org/2000/svg" width="1070" height="56"><defs><linearGradient id="g"><stop stop-color="#00bfff"/><stop offset=".52" stop-color="#59cfff"/><stop offset="1" stop-color="#368fdf"/></linearGradient><linearGradient id="v" x2="0" y2="1"><stop stop-color="#ffffff" stop-opacity=".26"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></linearGradient></defs><rect x=".5" y=".5" width="1069" height="55" rx="18" fill="url(#g)" stroke="#c9f7ff"/><rect x="1" y="1" width="1068" height="54" rx="18" fill="url(#v)"/><path d="M155 1L132 55M159 1L136 55M879 1L857 55" stroke="#e9fcff" opacity=".48" fill="none"/><path d="M156 29Q330 19 511 29T859 29" stroke="#edffff" stroke-width="2" opacity=".8" fill="none"/><rect x="173" y="48" width="255" height="5" rx="3" fill="#00bfff" opacity=".7"/><path d="M161 44Q374 32 582 45T1050 43" stroke="#c9f2ff" stroke-width="1" opacity=".25" fill="none"/></svg>')
+	frame.texture=svg('<svg xmlns="http://www.w3.org/2000/svg" width="1070" height="52"><defs><linearGradient id="g"><stop stop-color="#00bfff"/><stop offset=".52" stop-color="#57cfff"/><stop offset="1" stop-color="#219fdf"/></linearGradient><linearGradient id="v" x2="0" y2="1"><stop stop-color="#ffffff" stop-opacity=".46"/><stop offset=".46" stop-color="#ffffff" stop-opacity=".10"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></linearGradient></defs><rect x="1" y="6" width="1068" height="45" rx="17" fill="#14688e" opacity=".28"/><rect x="1" y="3" width="1068" height="45" rx="17" fill="#2195c4"/><rect x=".7" y=".7" width="1068.6" height="44" rx="17" fill="url(#g)" stroke="#89dcfb" stroke-width="1.4"/><rect x="3.5" y="2.5" width="1063" height="39" rx="14" fill="url(#v)" stroke="#f1fdff" stroke-width="1.4"/><path d="M22 4H1048" stroke="#fff" stroke-width="1.5" opacity=".85"/><path d="M21 43H1049" stroke="#007da8" stroke-width="2" opacity=".35"/><path d="M155 2L136 43M159 2L140 43M879 2L861 43" stroke="#e9fcff" opacity=".48" fill="none"/><path d="M156 25Q330 15 511 25T859 25" stroke="#edffff" stroke-width="2" opacity=".8" fill="none"/></svg>')
 	frame.expand_mode=TextureRect.EXPAND_IGNORE_SIZE
-	frame.size=Vector2(1070,56)
+	frame.size=Vector2(1070,52)
 	frame.mouse_filter=Control.MOUSE_FILTER_IGNORE
 	design.add_child(frame)
 	resized.connect(_fit)
@@ -52,9 +53,10 @@ func _ready() -> void:
 
 func _fit() -> void:
 	if design==null:return
-	var factor:=size.x/1070.0
+	var factor:=maxf(1.0,size.x-24.0)/1070.0
 	design.scale=Vector2.ONE*factor
-	var height:=56*factor
+	design.position=Vector2(12,8)
+	var height:=52*factor+13
 	if not is_equal_approx(custom_minimum_size.y,height):custom_minimum_size.y=height
 
 func _process(_delta: float) -> void:
@@ -80,7 +82,7 @@ func _refresh() -> void:
 		point.set_meta("locked",not P.is_level_unlocked(i))
 		point.tooltip_text=UI.text("Stage %d")%i+"\n"+UI.text("Coming soon" if not P.is_level_unlocked(i) else ("Completed" if done else "Ready"))
 		var width:=92.0 if active else (54.0 if i<=3 else 52.0)
-		point.position=Vector2(x,11 if active else 12)
+		point.position=Vector2(x,8 if active else 9)
 		point.size=Vector2(width,34)
 		point.add_theme_stylebox_override("panel",pill(active,done))
 		design.add_child(point)
@@ -111,11 +113,11 @@ func _build_controls() -> void:
 	mark.name="Stage1Logo" if stage==1 else "GameLogo"
 	design.add_child(mark)
 	mark.position=Vector2(12,2)
-	mark.size=Vector2(122,52)
+	mark.size=Vector2(122,44)
 	var language=UI.language_switcher(language_action,10)
 	language.name="Stage1LanguagePicker" if stage==1 else "GameLanguagePicker"
 	design.add_child(language)
-	language.position=Vector2(881,12)
+	language.position=Vector2(881,8)
 	var picker=language.find_child("LanguageMenu",true,false)
 	# Header is uniformly scaled from the accepted native reference geometry.
 	# Remove only the classic alignment callback; native popup/action signals stay.
@@ -124,8 +126,7 @@ func _build_controls() -> void:
 	picker.add_theme_constant_override("icon_max_width",15)
 	picker.add_theme_constant_override("h_separation",4)
 	for state in ["normal","hover","pressed","disabled"]:
-		var style=UI.box(Color("edf9ff"),Color("b9eaff"),18,2)
-		style.shadow_size=2
+		var style=pill(false,true,false,state)
 		style.content_margin_left=5
 		style.content_margin_right=14
 		picker.add_theme_stylebox_override(state,style)
@@ -144,13 +145,11 @@ func _build_controls() -> void:
 		button.tooltip_text=UI.text("Go to Main Menu" if home else "Menu")
 		design.add_child(button)
 		button.custom_minimum_size=Vector2(31,31)
-		button.position=Vector2(979 if home else 1020,12)
+		button.position=Vector2(979 if home else 1020,8)
 		button.icon_alignment=HORIZONTAL_ALIGNMENT_CENTER
 		button.alignment=HORIZONTAL_ALIGNMENT_CENTER
 		button.add_theme_constant_override("icon_max_width",19)
 		for state in ["normal","hover","pressed","disabled"]:
-			var style=UI.box(Color("edf9ff").darkened(.06 if state=="pressed" else (.03 if state=="hover" else 0)),Color("d2f2ff"),16,3)
-			style.shadow_size=1
-			button.add_theme_stylebox_override(state,style)
+			button.add_theme_stylebox_override(state,pill(false,true,true,state))
 		for state in ["icon_normal_color","icon_hover_color","icon_pressed_color"]:button.add_theme_color_override(state,Color("007db3"))
 		button.size=Vector2(31,31)
