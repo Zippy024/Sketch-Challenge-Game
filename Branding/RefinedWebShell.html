@@ -13,16 +13,17 @@ $GODOT_HEAD_INCLUDE
 .loading-logo{position:absolute;top:1.8%;left:50%;transform:translateX(-50%);width:min(39vw,480px);height:28%;object-fit:contain;filter:drop-shadow(0 6px 10px #083e4840);animation:logo-float 6s ease-in-out infinite}
 .loading-ring{position:absolute;left:50%;top:78%;transform:translate(-50%,0);width:72%;height:18%;border:2px solid #d3fff0;border-radius:50%;box-shadow:0 0 10px 4px #43d7b74d,inset 0 0 12px #8cf4d9;mask-image:linear-gradient(to bottom,transparent 42%,black 56%);margin-top:-9vh;animation:ring-glow 3.6s ease-in-out infinite}
 .loading-sparks{position:absolute;inset:0;pointer-events:none}.loading-sparks i{position:absolute;width:4px;height:4px;border-radius:50%;background:#edfff5;box-shadow:0 0 8px #d4fff1;animation:spark-rise 6s ease-in-out infinite;animation-delay:calc(var(--n)*-.7s);left:calc(14% + var(--n)*7.2%);top:calc(30% + var(--n)*3.7%)}
-.loading-footer{position:absolute;bottom:max(12px,5.3vh);left:50%;transform:translateX(-50%);width:min(50vw,310px);min-height:66px;padding:4px 16px 20px;text-align:center;border-radius:32px;border:2px solid #8cddff;background:linear-gradient(#58d8ff,#00bfff 48%,#0087bd);box-shadow:0 4px 0 #126e9c66,inset 0 0 0 2px #e4faff,0 5px 15px #126e9c33}
-.loading-line{position:absolute;left:24px;right:24px;bottom:15px;height:2px;background:#d1f5ff80;border-radius:3px;overflow:hidden}
-.loading-line:after{content:"";display:block;width:25%;height:3px;border-radius:3px;background:white;box-shadow:0 0 5px #c7f3ff;animation:line-sweep 1.35s ease-in-out infinite alternate}
-@keyframes line-sweep{from{transform:translateX(0)}to{transform:translateX(300%)}}
-#sketch-loading.failed .loading-line:after{animation:none;background:#a22942}
-#status-pct{display:block;color:#082b53;font-size:clamp(16px,1.8vw,24px);font-weight:800;line-height:36px;white-space:nowrap}
-.loading-ring,.loading-tagline,.loading-tip,#status-text{display:none}#sketch-loading.failed .loading-footer{min-height:90px}#sketch-loading.failed #status-text{display:block;width:100%;color:#a22942}
-@media(max-width:600px){.loading-logo{width:75vw;height:29%}.loading-footer{width:60vw;padding:8px}}
+.loading-footer{position:absolute;bottom:max(12px,5.3vh);left:50%;transform:translateX(-50%);display:flex;align-items:center;justify-content:center;width:min(50vw,310px);height:52px;padding:0;text-align:center;border-radius:32px;border:2px solid #60c7ee;background:linear-gradient(#fff,#e1f4ff 50%,#b1e3fa);box-shadow:0 3px 0 #126e9c66,inset 0 0 0 2px #fff,0 5px 15px #126e9c33}
+.loading-line{position:absolute;inset:0;pointer-events:none}
+.loading-line:before,.loading-line:after{content:"";position:absolute;top:calc(50% - 1.5px);width:min(10vw,120px);height:3px;border-radius:3px;background:linear-gradient(90deg,#f2c43b 25%,#fffbe0 50%,#f2c43b 75%);background-size:250% 100%;box-shadow:0 0 4px #fff2b0;animation:line-sweep 1.35s linear infinite}
+.loading-line:before{right:calc(100% + 14px)}.loading-line:after{left:calc(100% + 14px)}
+@keyframes line-sweep{from{background-position:100% 0}to{background-position:-100% 0}}
+#sketch-loading.failed .loading-line:before,#sketch-loading.failed .loading-line:after{animation:none;background:#a22942}
+#status-pct{display:block;color:#082b53;font-size:clamp(16px,1.8vw,24px);font-weight:800;line-height:1.2;margin:0;white-space:nowrap}
+.loading-ring,.loading-tagline,.loading-tip,#status-text{display:none}#sketch-loading.failed .loading-footer{height:auto;min-height:90px;flex-wrap:wrap;padding:8px 16px}#sketch-loading.failed #status-text{display:block;width:100%;color:#a22942}
+@media(max-width:600px){.loading-logo{width:75vw;height:29%}.loading-footer{width:60vw}}
 @keyframes logo-float{50%{transform:translate(-50%,-5px)}}@keyframes ring-glow{50%{opacity:.65;filter:brightness(1.15)}}@keyframes spark-rise{0%,100%{opacity:0;transform:translateY(8px)}45%{opacity:.55}90%{opacity:0;transform:translateY(-30px)}}
-@media(prefers-reduced-motion:reduce){#sketch-loading,.progress-bar{transition:none}.loading-logo,.loading-ring,.loading-sparks i,.loading-line:after{animation:none}.loading-sparks{display:none}}
+@media(prefers-reduced-motion:reduce){#sketch-loading,.progress-bar{transition:none}.loading-logo,.loading-ring,.loading-sparks i,.loading-line:before,.loading-line:after{animation:none}.loading-sparks{display:none}}
 </style></head><body>
 <canvas id="canvas" tabindex="0">A browser with WebGL is required.</canvas>
 <div id="sketch-loading" role="status" aria-live="polite" aria-label="Loading Kitchen Decoration Game">

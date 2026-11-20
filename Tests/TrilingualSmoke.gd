@@ -54,6 +54,11 @@ func _run() -> void:
 		var loader=menu.find_child("KitchenLoadingScreen",true,false)
 		assert(loader.get_global_rect().encloses(loading_caption.get_global_rect()))
 		assert(loader.find_child("LoadingMovingLine",true,false)!=null)
+		var footer=loading_caption.get_parent()
+		# The SVG's visible white face is 3px above its shadow-inclusive center.
+		var face_center: Vector2=footer.get_global_rect().get_center()-Vector2(0,3)
+		assert(loading_caption.get_global_rect().get_center().distance_to(face_center)<1)
+
 		assert(loader.find_child("OriginalLoadingKitchen",true,false).texture.resource_path in ["res://LoadingAssets/TealKitchen.webp","res://LoadingAssets/AquaBuilder.png"])
 		await create_timer(2.2).timeout
 		var picker=menu.find_child("LanguageSelectionScreen",true,false)
