@@ -113,3 +113,8 @@ list in teal. Solved entries cannot reopen an editor or change their saved
 answer. Preserve the current two-second correct-result card before it closes.
 Loaded solved flags hide/lock the same entries after reload, camera changes and
 narration readiness changes; Retry restores fresh guides.
+
+## Aqua Builder Home/loading/header (2026-11-20)
+The user selected the centered Home menu with two progress tiles (best stars and saved session stage), plus the Aqua Builder loading/header mockup. Home is centered, original logo stays above it, Language back is upper left, all four menu actions remain. HomeProgress now renders the two tiles from real saved values. Welcome/subtitle/last-played labels have en/mm/jp translations. Original three-card language selection and level-selection structure are preserved.
+AquaStyle supplies cached SVG pearl/turquoise surfaces and stage badge artwork. LevelReach keeps its original state/metadata and ten stage positions, now circular with a larger active shield and actual completion checks/locks. Header height is 80px. LoadingScreen and the exported browser shell use segmented progress, original logo, and matching aqua surfaces; browser file progress and startup/error handling remain unchanged.
+The owner will upload two separately delivered PNG paintings: UIAssets/AquaHome.png and LoadingAssets/AquaBuilder.png. See AQUA_ASSETS.md. Optional ResourceLoader lookup falls back to the original images until upload, and CI selects the new browser loading picture when present. Do not bake mockup labels/UI into the paintings or replace the original logo.

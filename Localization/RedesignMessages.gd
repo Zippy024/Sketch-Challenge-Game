@@ -1,5 +1,10 @@
 extends RefCounted
 const MESSAGES = [
+	{"en":"Welcome, Designer!","mm":"ဒီဇိုင်နာရေ၊ ကြိုဆိုပါတယ်။","jp":"ようこそ、デザイナー！","aliases":[]},
+	{"en":"Your dream kitchen starts here.","mm":"သင့်စိတ်ကူးထဲက မီးဖိုချောင်ကို ဒီမှာစတင်ပါ။","jp":"理想のキッチンづくりを、ここから。","aliases":[]},
+	{"en":"Last played:","mm":"နောက်ဆုံးကစားခဲ့သည်မှာ","jp":"前回プレイ：","aliases":[]},
+	{"en":"Not started","mm":"မစတင်ရသေးပါ","jp":"未プレイ","aliases":[]},
+	{"en":"%d / 9 stars","mm":"ကြယ် %d / 9","jp":"スター %d / 9","aliases":[]},
 	{"en":"That's correct!","mm":"မှန်ပါတယ်။","jp":"正解です！","aliases":[]},
 	{"en":"That's incorrect.","mm":"မှားနေပါတယ်။","jp":"不正解です","aliases":[]},
 	{"en":"Select the next part.","mm":"နောက်ပစ္စည်းတစ်ခုကို ရွေးပါ။","jp":"次のパーツを選んでください","aliases":[]},
