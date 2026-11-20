@@ -27,8 +27,8 @@ func _draw() -> void:
 			for i in range(1,8):
 				var angle: float=PI+float(i)*PI/16
 				points.append(Vector2(16,16)+Vector2(cos(angle),sin(angle))*16)
-			var light:=Color("34b8b4") if available else Color("a1bbb0")
-			var dark:=Color("007c80") if available else Color("668b80")
+			var light:=Color("00bfff") if available else Color("aacbdd")
+			var dark:=Color("0079ac") if available else Color("6d8da5")
 			var colors:=PackedColorArray()
 			for point in points:colors.append(light.lerp(dark,point.y/42.0))
 			draw_polygon(points,colors)
@@ -40,14 +40,14 @@ func _draw() -> void:
 		Kind.JOURNEY:
 			var points: Array[Vector2]=[]
 			for i in range(3):points.append(Vector2(size.x*(0.15+i*0.35),size.y*0.5))
-			draw_line(Vector2(0,size.y*0.5),Vector2(size.x,size.y*0.5),Color("b7ccc3"),6,true)
+			draw_line(Vector2(0,size.y*0.5),Vector2(size.x,size.y*0.5),Color("a4d8ed"),6,true)
 			for i in range(2):
-				if completed[i]:draw_line(points[i],points[i+1],Color("369f95"),6,true)
+				if completed[i]:draw_line(points[i],points[i+1],Color("00bfff"),6,true)
 			for i in range(3):
 				var point: Vector2=points[i]
 				draw_circle(point+Vector2(0,2),15,Color(0.19,0.32,0.26,0.12))
 				draw_circle(point,14,Color("fffdf0"))
-				draw_arc(point,14,0,TAU,48,Color("9abaad") if i+1==current_stage else Color("d2d9c2"),1.2,true)
+				draw_arc(point,14,0,TAU,48,Color("67c8ec") if i+1==current_stage else Color("b3d9e9"),1.2,true)
 				_star(point,8.5,completed[i])
 		Kind.SPARKLES:
 			for point in [Vector2(3,4),Vector2(size.x-3,7),Vector2(3,size.y-4),Vector2(size.x-3,size.y-5)]:

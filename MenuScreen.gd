@@ -79,6 +79,12 @@ func _build() -> void:
 		art.mouse_filter=Control.MOUSE_FILTER_IGNORE
 		add_child(art)
 		art.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		var glaze:=ColorRect.new()
+		glaze.name="DeepSkyArtworkWash"
+		glaze.color=Color(0,0.749,1,.10)
+		glaze.mouse_filter=Control.MOUSE_FILTER_IGNORE
+		add_child(glaze)
+		glaze.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_design=Control.new()
 	_design.size=Vector2(1440,810)
 	add_child(_design)
@@ -176,7 +182,7 @@ func _build_home() -> void:
 func _build_levels() -> void:
 	_add_logo(Rect2(62,3,250,106))
 	_top_controls()
-	var eyebrow:=_level_label(_design,"Your kitchen design journey",Rect2(367,10,750,26),12,Color("247c73"),false,true)
+	var eyebrow:=_level_label(_design,"Your kitchen design journey",Rect2(367,10,750,26),12,Color("126b99"),false,true)
 	eyebrow.name="LevelJourneyEyebrow"
 	_level_label(_design,"Choose your mission",Rect2(365,34,755,52),35 if Progress.get_language()=="mm" else 38,UI.INK,false,true)
 	_level_label(_design,"Complete kitchen design missions to build your skills.",Rect2(369,88,750,28),15,UI.INK,false)
@@ -184,7 +190,7 @@ func _build_levels() -> void:
 	var board:=Panel.new()
 	board.name="MissionBoard"
 	board.mouse_filter=Control.MOUSE_FILTER_IGNORE
-	var board_style:=UI.box(Color(0.83,0.96,0.99,0.76),Color("e8fcff"),28,0)
+	var board_style:=UI.box(Color(0.68,0.88,1,0.90),Color("e8fcff"),28,0)
 	board_style.shadow_size=12
 	board.add_theme_stylebox_override("panel",board_style)
 	_put(_design,board,Rect2(46,182,1348,546))
@@ -212,7 +218,7 @@ func _build_level_journey() -> void:
 	var strip:=Panel.new()
 	strip.name="LevelJourneyProgress"
 	strip.mouse_filter=Control.MOUSE_FILTER_IGNORE
-	var surface:=UI.box(Color(0.94,0.99,1.0,0.95),Color("dcfaff"),24,0)
+	var surface:=UI.box(Color(0.82,0.94,1.0,0.97),Color("a9e5ff"),24,0)
 	surface.shadow_size=5
 	strip.add_theme_stylebox_override("panel",surface)
 	_put(_design,strip,Rect2(220,120,1000,54))
@@ -298,7 +304,7 @@ func _card(stage: int, rect: Rect2) -> void:
 	card.disabled=not available
 	card.text=""
 	card.mouse_default_cursor_shape=Control.CURSOR_POINTING_HAND if available else Control.CURSOR_ARROW
-	card.add_theme_stylebox_override("normal",_level_card_style(Color("f0fbff"),Color("dcfaff"),selected))
+	card.add_theme_stylebox_override("normal",_level_card_style(Color("d6f1ff"),Color("a9e5ff"),selected))
 	card.add_theme_stylebox_override("hover",_level_card_style(Color("e5faff"),UI.TEAL,true))
 	card.add_theme_stylebox_override("pressed",_level_card_style(Color("d6f0f7"),UI.TEAL,true))
 	card.add_theme_stylebox_override("disabled",_level_card_style(Color(0.88,0.95,0.98,0.94),Color("e6f5fb")))
@@ -326,7 +332,7 @@ func _card(stage: int, rect: Rect2) -> void:
 		glow.name="SelectedStageGlow"
 		glow.show_behind_parent=true
 		glow.mouse_filter=Control.MOUSE_FILTER_IGNORE
-		var outline:=UI.box(Color.TRANSPARENT,Color("56c6d7"),23,0)
+		var outline:=UI.box(Color.TRANSPARENT,UI.TEAL,23,0)
 		outline.set_border_width_all(3)
 		outline.shadow_color=Color(0,0.68,0.78,0.23)
 		outline.shadow_size=10
@@ -442,7 +448,7 @@ func _card(stage: int, rect: Rect2) -> void:
 		var badge:=Panel.new()
 		badge.name="StageStatusBadge"
 		badge.mouse_filter=Control.MOUSE_FILTER_IGNORE
-		var badge_style:=UI.box(Color("effbff") if available else Color("e5f2f7"),Color("62b6c9") if available else Color("bbdce6"),18,0)
+		var badge_style:=UI.box(Color("effbff") if available else Color("e5f2f7"),UI.EDGE if available else Color("bbdce6"),18,0)
 		badge_style.shadow_size=2
 		badge.add_theme_stylebox_override("panel",badge_style)
 		_put(card,badge,Rect2(28,200,188,32))

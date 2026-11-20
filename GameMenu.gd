@@ -10,12 +10,12 @@ const UI = preload("res://KitchenUI.gd")
 const Extras = preload("res://MenuExtras.gd")
 
 const BG := Color("f5f5f1")
-const WHITE := Color("ffffff")
+const WHITE := Color("e4f5ff")
 const INK := Color("152f32")
 const MUTED := Color("647780")
-const GREEN := Color("008f98")
-const GREEN_DARK := Color("007d87")
-const GREEN_PALE := Color("e2f2ea")
+const GREEN := UI.TEAL
+const GREEN_DARK := Color("0079ac")
+const GREEN_PALE := Color("ceefff")
 const BORDER := Color("d6e0e0")
 const GOLD := Color("d5ac72")
 const LOCKED := Color("a3afb4")
@@ -276,15 +276,15 @@ func _home_menu_button(caption_text: String, primary: bool) -> Button:
 	button.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	button.add_theme_font_size_override("font_size", 19)
-	var text_color := Color("ffffff") if primary else Color("113b54")
-	var hover_text := Color("ffffff") if primary else Color("04527a")
+	var text_color := Color("e4f5ff") if primary else Color("113b54")
+	var hover_text := Color("e4f5ff") if primary else Color("04527a")
 	for state in ["font_color", "font_pressed_color", "font_focus_color"]:
 		button.add_theme_color_override(state, text_color)
 	button.add_theme_color_override("font_hover_color", hover_text)
 	button.add_theme_color_override("font_hover_pressed_color", hover_text)
 
 	var normal := _style(Color("008c9f") if primary else Color(0.94, 0.98, 1.0, 0.96), Color("6de5ef") if primary else Color("aed5eb"), 27, 8)
-	var hover := _style(Color("007d94") if primary else Color("ffffff"), Color("bdffff") if primary else Color("72bfe9"), 27, 8)
+	var hover := _style(Color("007d94") if primary else Color("e4f5ff"), Color("bdffff") if primary else Color("72bfe9"), 27, 8)
 	var pressed := _style(Color("006b80") if primary else Color("d9f2ff"), Color("8be0ed") if primary else Color("72bfe9"), 27, 8)
 	for style in [normal, hover, pressed]:
 		style.set_border_width_all(2)

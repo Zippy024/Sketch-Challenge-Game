@@ -72,7 +72,7 @@ func _action(name: String, caption: String, icon: String, rect: Rect2, primary: 
 	var button := UI.button(caption, callback, primary, 0, 16)
 	button.name = name
 	button.icon = UI.icon(icon)
-	var color := Color.WHITE if primary else Color("008f98")
+	var color := Color.WHITE if primary else UI.TEAL
 	for state in ["icon_normal_color", "icon_hover_color", "icon_pressed_color"]:
 		button.add_theme_color_override(state, color)
 	_put(_design, button, rect)
@@ -99,17 +99,17 @@ func _ready() -> void:
 	_design.name = "ResultPopupContent"
 	_design.size = POPUP_SIZE
 	add_child(_design)
-	var card := _panel("MissionCompleteCard", Rect2(0, 0, 880, 560), Color("f3fcff"), Color("9cdae2"), 27)
+	var card := _panel("MissionCompleteCard", Rect2(0, 0, 880, 560), UI.PANEL, UI.EDGE, 27)
 	var border := card.get_theme_stylebox("panel") as StyleBoxFlat
 	border.set_border_width_all(2)
 	border.shadow_size = 16
 	border.shadow_offset = Vector2(0, 7)
 	border.shadow_color = Color(0.02, 0.14, 0.2, 0.23)
-	_svg("ResultHeaderBackground", '<svg xmlns="http://www.w3.org/2000/svg" width="880" height="111"><defs><linearGradient id="g"><stop stop-color="#006779"/><stop offset=".5" stop-color="#009da6"/><stop offset="1" stop-color="#087988"/></linearGradient></defs><path d="M27 0H853Q880 0 880 27V111H0V27Q0 0 27 0Z" fill="url(#g)"/><path d="M35 7H844" stroke="#a5f8f8" stroke-width="2"/><path d="M760 0L861 107M798 0L879 82" stroke="#b3f8f4" stroke-opacity=".18" stroke-width="23"/></svg>', Rect2(1, 1, 878, 110))
+	_svg("ResultHeaderBackground", '<svg xmlns="http://www.w3.org/2000/svg" width="880" height="111"><defs><linearGradient id="g"><stop stop-color="#006b9d"/><stop offset=".5" stop-color="#00bfff"/><stop offset="1" stop-color="#007dae"/></linearGradient></defs><path d="M27 0H853Q880 0 880 27V111H0V27Q0 0 27 0Z" fill="url(#g)"/><path d="M35 7H844" stroke="#a5f8f8" stroke-width="2"/><path d="M760 0L861 107M798 0L879 82" stroke="#b3f8f4" stroke-opacity=".18" stroke-width="23"/></svg>', Rect2(1, 1, 878, 110))
 	_svg("CompletionGoldMedal", '<svg xmlns="http://www.w3.org/2000/svg" width="90" height="90"><defs><linearGradient id="g" x2="0.2" y2="1"><stop stop-color="#fff3af"/><stop offset="1" stop-color="#eaa724"/></linearGradient></defs><circle cx="45" cy="45" r="39" fill="url(#g)" stroke="#fff6cc" stroke-width="4"/><path d="M25 45L40 60L66 32" stroke="white" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>', Rect2(400, -28, 80, 80))
 	var title := _caption(UI.text("Stage %d complete!") % stage_index, Rect2(42, 42, 796, 56), 27, true, Color.WHITE)
 	title.name = "CompletionTitle"
-	_panel("CompletionPlanCard", Rect2(46, 141, 276, 238), Color("e9f7fb"), Color("b5e0e9"), 20)
+	_panel("CompletionPlanCard", Rect2(46, 141, 276, 238), UI.INPUT, UI.EDGE, 20)
 	var blueprint := preload("res://CompletionBlueprint.gd").new()
 	blueprint.name = "CompletionBlueprintGraphic"
 	blueprint.stage_index = stage_index

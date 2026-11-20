@@ -1,17 +1,17 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#c7e2e9"><title>$GODOT_PROJECT_NAME</title>
+<meta name="theme-color" content="#00bfff"><title>$GODOT_PROJECT_NAME</title>
 $GODOT_HEAD_INCLUDE
 <style>
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#154c50;font-family:system-ui,sans-serif;color:white}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#075479;font-family:system-ui,sans-serif;color:white}
 #canvas{width:100%;height:100%;display:block;outline:none;touch-action:none}
-#sketch-loading{position:fixed;inset:0;z-index:10000;overflow:hidden;background:linear-gradient(#073d3d08,#164c4020),url("assets/loading-kitchen.webp?v=$GODOT_URL") center/cover;transition:opacity .35s,visibility .35s;border:1px solid #d6fff1}
+#sketch-loading{position:fixed;inset:0;z-index:10000;overflow:hidden;background:linear-gradient(#00bfff1a,#006fa820),url("assets/loading-kitchen.webp?v=$GODOT_URL") center/cover;transition:opacity .35s,visibility .35s;border:1px solid #bfefff}
 #sketch-loading.hide{opacity:0;visibility:hidden;pointer-events:none}
 .loading-logo{position:absolute;top:1.8%;left:50%;transform:translateX(-50%);width:min(39vw,480px);height:28%;object-fit:contain;filter:drop-shadow(0 6px 10px #083e4840);animation:logo-float 6s ease-in-out infinite}
 .loading-ring{position:absolute;left:50%;top:78%;transform:translate(-50%,0);width:72%;height:18%;border:2px solid #d3fff0;border-radius:50%;box-shadow:0 0 10px 4px #43d7b74d,inset 0 0 12px #8cf4d9;mask-image:linear-gradient(to bottom,transparent 42%,black 56%);margin-top:-9vh;animation:ring-glow 3.6s ease-in-out infinite}
 .loading-sparks{position:absolute;inset:0;pointer-events:none}.loading-sparks i{position:absolute;width:4px;height:4px;border-radius:50%;background:#edfff5;box-shadow:0 0 8px #d4fff1;animation:spark-rise 6s ease-in-out infinite;animation-delay:calc(var(--n)*-.7s);left:calc(14% + var(--n)*7.2%);top:calc(30% + var(--n)*3.7%)}
-.loading-footer{position:absolute;top:86.5%;left:50%;transform:translateX(-50%);width:min(50vw,310px);min-height:58px;padding:8px 16px;text-align:center;border-radius:32px;border:2px solid #53c7d2;background:linear-gradient(#fff,#e8fafd 50%,#b5e8ef);box-shadow:0 3px 0 #16798b66,inset 0 0 0 3px #fff,0 5px 15px #16798b33}
+.loading-footer{position:absolute;top:86.5%;left:50%;transform:translateX(-50%);width:min(50vw,310px);min-height:58px;padding:8px 16px;text-align:center;border-radius:32px;border:2px solid #60c7ee;background:linear-gradient(#fff,#e1f4ff 50%,#b1e3fa);box-shadow:0 3px 0 #126e9c66,inset 0 0 0 3px #fff,0 5px 15px #126e9c33}
 .loading-footer:before,.loading-footer:after{content:"";position:absolute;top:50%;width:min(10vw,120px);height:3px;border-radius:4px;background:#f2c43b;box-shadow:0 0 4px #fff2b0}.loading-footer:before{right:calc(100% + 14px)}.loading-footer:after{left:calc(100% + 14px)}
 .progress-track{display:none}
 #status-pct{display:block;color:#082b53;font-size:clamp(16px,1.8vw,24px);font-weight:800;line-height:34px;white-space:nowrap}

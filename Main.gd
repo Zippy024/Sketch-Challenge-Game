@@ -148,7 +148,7 @@ class ReferencePlanViewer extends Control:
 			accept_event()
 
 	func _draw() -> void:
-		draw_rect(Rect2(Vector2.ZERO, size), Color("d2e6ed"), true)
+		draw_rect(Rect2(Vector2.ZERO, size), UI.CANVAS, true)
 		if not plan_texture:
 			return
 		var tex_size: Vector2 = plan_texture.get_size()
@@ -301,7 +301,7 @@ func _show_intro_screen() -> void:
 	request_label.visible_characters = -1
 	intro_overlay = ColorRect.new()
 	intro_overlay.name = "GameIntroOverlay"
-	intro_overlay.color = Color("101d35")
+	intro_overlay.color = UI.CANVAS
 	intro_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(intro_overlay)
 	intro_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -318,21 +318,21 @@ func _show_intro_screen() -> void:
 	heading.text = "LEVEL 01  /  CUSTOMER REQUEST"
 	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	heading.add_theme_font_size_override("font_size", 31)
-	heading.add_theme_color_override("font_color", Color.WHITE)
+	heading.add_theme_color_override("font_color", UI.INK)
 	stack.add_child(heading)
 
 	var subtitle := Label.new()
 	subtitle.text = "Kitchen Layout Design Game"
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	subtitle.add_theme_font_size_override("font_size", 19)
-	subtitle.add_theme_color_override("font_color", Color("cbd5e1"))
+	subtitle.add_theme_color_override("font_color", UI.MUTED)
 	stack.add_child(subtitle)
 
 	var languages := Label.new()
 	languages.text = "日本語  /  မြန်မာ  /  English"
 	languages.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	languages.add_theme_font_size_override("font_size", 17)
-	languages.add_theme_color_override("font_color", Color("bfdbfe"))
+	languages.add_theme_color_override("font_color", UI.MUTED)
 	stack.add_child(languages)
 
 	var start := Button.new()
@@ -343,10 +343,10 @@ func _show_intro_screen() -> void:
 	start.add_theme_color_override("font_color", Color.WHITE)
 	start.add_theme_color_override("font_hover_color", Color.WHITE)
 	var normal := StyleBoxFlat.new()
-	normal.bg_color = Color("2563eb")
+	normal.bg_color = Color("009fd6")
 	normal.set_corner_radius_all(12)
 	var hover := normal.duplicate() as StyleBoxFlat
-	hover.bg_color = Color("1d4ed8")
+	hover.bg_color = Color("0079ac")
 	start.add_theme_stylebox_override("normal", normal)
 	start.add_theme_stylebox_override("hover", hover)
 	start.add_theme_stylebox_override("pressed", hover)
@@ -357,7 +357,7 @@ func _show_intro_screen() -> void:
 	hint.text = "Press START LEVEL 1 to hear your customer."
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hint.add_theme_font_size_override("font_size", 13)
-	hint.add_theme_color_override("font_color", Color("94a3b8"))
+	hint.add_theme_color_override("font_color", UI.MUTED)
 	stack.add_child(hint)
 
 func _on_intro_start_pressed() -> void:
@@ -419,12 +419,12 @@ func _modern_button_style(button: Button, kind: String = "secondary") -> void:
 	UI.style_button(button,kind=="primary",14,kind=="warning")
 
 func _compact_button_style(button: Button, warning: bool = false, primary: bool = false) -> void:
-	var fill := "e8f1f8" if not warning else "ffe6e8"
-	var edge := "cbdce9" if not warning else "ffbfc8"
+	var fill := "e4f5ff" if not warning else "ffe6e8"
+	var edge := "88cce9" if not warning else "ffbfc8"
 	var ink := "254563" if not warning else "b2213d"
 	if primary:
-		fill = "087f9b"
-		edge = "55cddd"
+		fill = "009fd6"
+		edge = "67c8ec"
 		ink = "ffffff"
 	for state in ["normal", "hover", "pressed", "disabled"]:
 		var box := _stage1_surface(Color(fill), Color(edge), 17, 4)
@@ -496,7 +496,7 @@ func _stage1_surface(fill: Color, edge: Color, radius: int = 18, pad: int = 9) -
 
 
 func _stage1_glass(variant: String = "panel", pad: int = 12) -> StyleBoxFlat:
-	var fill := Color("fff1f2") if variant == "danger" else (Color("c5e1e9") if variant == "speech" else Color("cbe3eb"))
+	var fill := Color("fff1f2") if variant == "danger" else (UI.SPEECH if variant == "speech" else UI.PANEL)
 	return UI.box(fill,Color("edb8c2") if variant == "danger" else (UI.EDGE if variant == "speech" else Color.WHITE),18,pad)
 
 func _stage1_bold(control: Control) -> void:
@@ -799,7 +799,7 @@ func _build_ui() -> void:
 	image_frame.size_flags_stretch_ratio = 1.0
 	image_frame.custom_minimum_size.y = 200
 
-	image_frame.add_theme_stylebox_override("panel", _stage1_surface(Color("c5e0e9"), Color("8bb9c8"), 18, 7))
+	image_frame.add_theme_stylebox_override("panel", _stage1_surface(UI.SPEECH, UI.EDGE, 18, 7))
 	var reference_card := PanelContainer.new()
 	reference_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	reference_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -893,7 +893,7 @@ func _build_ui() -> void:
 	var drawing_frame := PanelContainer.new()
 	drawing_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	drawing_frame.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	drawing_frame.add_theme_stylebox_override("panel", _stage1_surface(Color("f2fbff"), Color("b4efff"), 17, 6))
+	drawing_frame.add_theme_stylebox_override("panel", _stage1_surface(UI.CANVAS, Color("b4efff"), 17, 6))
 	right.add_child(drawing_frame)
 	canvas = CanvasScript.new()
 	canvas.custom_minimum_size = Vector2(450, 350)

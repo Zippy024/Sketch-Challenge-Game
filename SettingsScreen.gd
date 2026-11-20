@@ -37,7 +37,7 @@ func _build() -> void:
 	_put(_design,title,Rect2(320,82,800,62))
 	var panel := PanelContainer.new()
 	panel.name="SettingsCard"
-	panel.add_theme_stylebox_override("panel",UI.box(Color(0.96,0.99,1,0.95),Color.WHITE,26,26))
+	panel.add_theme_stylebox_override("panel",UI.box(UI.PANEL,Color.WHITE,26,26))
 	_put(_design,panel,Rect2(300,158,840,548))
 	var stack := VBoxContainer.new()
 	stack.add_theme_constant_override("separation",12)
@@ -75,7 +75,7 @@ func _build() -> void:
 		percentage.text="%d%%"%roundi(value*100)
 		volume_changed.emit(value)
 	)
-	var track := UI.box(Color("c6dce5"),Color.TRANSPARENT,4,0)
+	var track := UI.box(Color("a4d7ee"),Color.TRANSPARENT,4,0)
 	track.content_margin_top=3
 	track.content_margin_bottom=3
 	track.shadow_size=0
