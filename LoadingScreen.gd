@@ -41,9 +41,9 @@ func _ready() -> void:
 	_caption.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_caption.offset_top=-3
 	_caption.offset_bottom=-3
-	_caption.text="Loading....."
+	_caption.text="Loading... 0%"
 	_line=LoadingLine.new()
-	_line.name="LoadingMovingLine"
+	_line.name="LoadingSideRules"
 	_footer.add_child(_line)
 	_line.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	resized.connect(_fit)
@@ -58,24 +58,18 @@ func _process(delta: float) -> void:
 	_elapsed += delta
 	_logo.position.y=size.y*0.018+sin(_elapsed*1.3)*3.0
 	var fraction := minf(_elapsed/2.1,1.0)
-	_line.phase=_elapsed
-	_line.queue_redraw()
+	_caption.text="Loading... %d%%"%roundi(fraction*100)
 	if fraction>=1:
 		set_process(false)
 		finished.emit()
 		queue_free()
 
 class LoadingLine extends Control:
-	var phase: float=0.0
 	func _ready() -> void:mouse_filter=Control.MOUSE_FILTER_IGNORE
 	func _draw() -> void:
-		# Keep the caption centered inside the white face; animate the side rules.
 		var length:=minf(120,get_viewport_rect().size.x*.1)
 		var y:=size.y*.5-3
-		var section:=length*.3
-		var travel:=(length-section)*(.5+.5*sin(phase*3.2-PI/2))
 		for left in [true,false]:
 			var start:=-14.0-length if left else size.x+14
 			draw_line(Vector2(start,y),Vector2(start+length,y),Color("fff2b0"),5,true)
 			draw_line(Vector2(start,y),Vector2(start+length,y),Color("f2c43b"),3,true)
-			draw_line(Vector2(start+travel,y),Vector2(start+travel+section,y),Color("fffbe0"),2.5,true)

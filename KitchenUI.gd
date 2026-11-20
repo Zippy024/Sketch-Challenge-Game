@@ -425,6 +425,7 @@ static func icon(kind: String) -> Texture2D:
 		"planqa":'<path d="M3 3h14v12H3zM6 6h8v6H6zM8 8h3v2M12 11h9v8h-5l-4 3z"/>',
 		"lock":'<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/>',
 		"check":'<path d="M4 12l5 5L21 5"/>',
+		"menu":'<path d="M4.5 6h15M4.5 12h15M4.5 18h15" stroke-width="2.625"/>',
 		"play":'<path d="M8 4l13 8L8 20z" fill="currentColor" stroke="none"/>',
 		"layers":'<path d="M12 3l10 6-10 6L2 9zM2 13l10 6 10-6M2 17l10 6 10-6"/>',
 		"help":'<circle cx="12" cy="12" r="10"/><path d="M9 8a3 3 0 1 1 4 3c-1 1-1 2-1 3M12 17v1"/>',
@@ -440,9 +441,9 @@ static func icon(kind: String) -> Texture2D:
 		"clock":'<circle cx="12" cy="12" r="10"/><path d="M12 5v7l4 3"/>'
 	}
 	var svg := '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+str(shapes.get(kind,shapes["layers"])).replace("currentColor","#ffffff")+'</g></svg>'
-	var img := Image.new()
-	img.load_svg_from_buffer(svg.to_utf8_buffer())
-	return ImageTexture.create_from_image(img)
+	var texture:=DPITexture.create_from_string(svg,2.0)
+	texture.set_size_override(Vector2i(32,32))
+	return texture
 
 static func _refresh_primary(button: Button) -> void:
 	if not bool(button.get_meta("uses_primary_gloss",false)): return
