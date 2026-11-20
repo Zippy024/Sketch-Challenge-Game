@@ -496,7 +496,7 @@ func _stage1_surface(fill: Color, edge: Color, radius: int = 18, pad: int = 9) -
 
 
 func _stage1_glass(variant: String = "panel", pad: int = 12) -> StyleBoxFlat:
-	var fill := Color("fff1f2") if variant == "danger" else (Color("eef9fc") if variant == "speech" else Color("f8fcfa"))
+	var fill := Color("fff1f2") if variant == "danger" else (Color("eef9fc") if variant == "speech" else Color("f4fcff"))
 	return UI.box(fill,Color("edb8c2") if variant == "danger" else (UI.EDGE if variant == "speech" else Color.WHITE),18,pad)
 
 func _stage1_bold(control: Control) -> void:
