@@ -1451,31 +1451,6 @@ func _run_stage_transition() -> void:
 	)
 	add_child(overlay)
 
-func _make_levels_menu_button() -> Button:
-	var btn := Button.new()
-	btn.text = "LEVELS"
-	btn.icon=preload("res://MenuAssets/BackArrow.svg")
-	btn.add_theme_color_override("icon_normal_color",Color("216a58"))
-	btn.add_theme_color_override("icon_hover_color",Color("124b3d"))
-	btn.custom_minimum_size = Vector2(65, 30)
-	btn.add_theme_font_size_override("font_size", 12)
-	btn.add_theme_color_override("font_color", Color("216a58"))
-	btn.add_theme_color_override("font_hover_color", Color("124b3d"))
-	btn.add_theme_color_override("font_pressed_color", Color("124b3d"))
-	btn.add_theme_color_override("font_focus_color", Color("216a58"))
-	for state in ["normal", "hover", "pressed", "focus"]:
-		var style := StyleBoxFlat.new()
-		style.bg_color = Color("f5fbf8") if state == "normal" else Color("def1e9")
-		style.border_color = Color("a7cbbb")
-		style.set_border_width_all(1)
-		style.set_corner_radius_all(9)
-		style.set_content_margin_all(5)
-		btn.add_theme_stylebox_override(state, style)
-	btn.tooltip_text = "Pause and view levels"
-	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	return btn
-
-
 # Show the menu ON TOP of the running scene. Do not lose the drawing or timer.
 func _open_game_menu() -> void:
 	StageRating.checkpoint(true)

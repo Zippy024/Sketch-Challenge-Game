@@ -104,15 +104,6 @@ func _label(t: String, font_size: int = 17, color: Color = TEXT, wrap_text: bool
 	return l
 
 
-func _btn(t: String, main: bool = false, w: float = 92.0) -> Button:
-	return UI.button(t,Callable(),main,int(w),14)
-
-func _panel() -> PanelContainer:
-	var p := PanelContainer.new()
-	p.add_theme_stylebox_override("panel", _style(PANEL))
-	return p
-
-
 func _clear() -> void:
 	if is_instance_valid(_speech):_speech.stop()
 	_speech=null
@@ -699,24 +690,6 @@ func _after_part_correct(revision: int) -> void:
 
 func _finish_written_parts() -> void:
 	if step==Parts.CHALLENGE_STEPS:_refresh()
-
-
-func _draw_completed() -> void:
-	var center := CenterContainer.new()
-	center.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_answer_area.add_child(center)
-	var stack := VBoxContainer.new()
-	stack.add_theme_constant_override("separation", 17)
-	center.add_child(stack)
-	var t := _label("STAGE 3 COMPLETE!", 27, GREEN, false)
-	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	stack.add_child(t)
-	var thanks := _label("ありがとうございました！" if current_lang == "jp" else "ကျေးဇူးတင်ပါတယ်။", 22, TEXT)
-	thanks.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	stack.add_child(thanks)
-	var levels := _btn("View Levels", true, 180)
-	levels.pressed.connect(_go_levels)
-	stack.add_child(levels)
 
 
 func _change_lang(lang: String) -> void:
