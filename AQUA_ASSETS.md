@@ -1,18 +1,20 @@
-# Aqua Builder artwork upload
+# Aqua artwork and UI
 
-The centered Home menu, two progress tiles, segmented loading indicators and circular stage checkpoints are implemented in code. Original logo, language handling, save data and gameplay remain in place. The two standalone background paintings are supplied separately so the repository owner can upload them.
+## Background paintings
 
-Upload the PNG files with these exact case-sensitive paths on `main`:
+The owner uploaded these standalone paintings to `main` on 2026-11-20:
 
-| File | Repository destination |
+| Repository path | Use |
 | --- | --- |
-| `AquaHome.png` | `UIAssets/AquaHome.png` |
-| `AquaBuilder.png` | `LoadingAssets/AquaBuilder.png` |
+| `UIAssets/AquaHome.png` | Centered Home and softly blurred menu backgrounds |
+| `LoadingAssets/AquaBuilder.png` | Native and browser loading background |
 
-Extract the supplied `AquaBuilder-assets.zip`. In GitHub, open this repository's root, choose **Add file → Upload files**, and drag its `UIAssets` and `LoadingAssets` folders into the upload area. Check that the paths above are shown and commit to `main`. Alternatively upload each PNG from inside its corresponding existing folder. Do not upload the ZIP itself or the design mockups as game backgrounds. Keep `LoadingAssets/KitchenLogo.webp` unchanged.
+The paintings contain no UI, logo or progress text. Godot draws real localized controls over them. If either painting is absent, the corresponding original background remains a fallback. Pages automatically copies the uploaded loading picture for the browser shell. Do not upload the full design mockups as backgrounds.
 
-The next normal Pages workflow imports the PNGs and uses them automatically, including the browser's download screen. Until upload, the new UI remains usable with the original background paintings. No source edit or asset rename is required after upload.
+## Logo and navigation
 
-The artwork contains no logo, buttons, progress numbers or text. Those are real localized controls overlaid by Godot. Header badges and loading segments are drawn by code and require no additional PNGs.
+`LoadingAssets/KitchenLogo.webp` now uses the requested brighter aqua coloring while retaining the original logo composition, wording, blueprint scroll and yellow pencil. It is a transparent WebP exported from the generated recolor. The shared logo resource is used throughout the game and copied into the Web loading shell.
 
-Home follows the user's final attached centered design: total best stars across the three currently playable stages (maximum nine) and saved session stage. It does not use the later journal mockup. Stage 04–10 remain unavailable as before. Existing Start Game, Continue, Retry, best scores, Japanese answers and narration behavior are unchanged.
+The latest selected stage header is the Designer Journey reference: connected wavy route, circular numbers, completed ticks, lock medallions and a gold current-stage medal with a translated flag. The loading footer is a compact percentage pill between two gold lines, with no segmented bar. These elements are drawn by code and need no additional image uploads.
+
+Home uses total best stars across the three playable stages (maximum nine) and the saved session stage. Stage 04–10 remain unavailable as before. Start Game, Continue, Retry, save data, best scores, Japanese answers and narration retain their existing behavior.

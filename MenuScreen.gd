@@ -131,6 +131,7 @@ func _build_home() -> void:
 	_level_label(_design,"Your dream kitchen starts here.",Rect2(484,274,472,36),15,UI.INK,true)
 	var start := _button("Start Game",true,28)
 	start.name="StartGame"
+	start.add_theme_font_override("font",UI.font(true))
 	start.icon=UI.icon("play")
 	start.add_theme_constant_override("icon_max_width",32)
 	start.pressed.connect(func():action_requested.emit("new_game"))
@@ -138,6 +139,7 @@ func _build_home() -> void:
 	Aqua.button(start,true)
 	var continue_button := _button("Continue Game",false,25)
 	continue_button.name="ContinueGame"
+	continue_button.add_theme_font_override("font",UI.font(true))
 	continue_button.icon=UI.icon("redo")
 	continue_button.add_theme_color_override("icon_normal_color",UI.TEAL)
 	continue_button.add_theme_constant_override("icon_max_width",28)
@@ -182,7 +184,7 @@ func _build_levels() -> void:
 	var board:=Panel.new()
 	board.name="MissionBoard"
 	board.mouse_filter=Control.MOUSE_FILTER_IGNORE
-	var board_style:=UI.box(Color(0.85,0.95,0.89,0.66),Color("e5fff5"),28,0)
+	var board_style:=UI.box(Color(0.83,0.96,0.99,0.76),Color("e8fcff"),28,0)
 	board_style.shadow_size=12
 	board.add_theme_stylebox_override("panel",board_style)
 	_put(_design,board,Rect2(46,182,1348,546))
@@ -210,7 +212,7 @@ func _build_level_journey() -> void:
 	var strip:=Panel.new()
 	strip.name="LevelJourneyProgress"
 	strip.mouse_filter=Control.MOUSE_FILTER_IGNORE
-	var surface:=UI.box(Color(0.95,0.99,0.94,0.92),Color("eafff4"),24,0)
+	var surface:=UI.box(Color(0.94,0.99,1.0,0.95),Color("dcfaff"),24,0)
 	surface.shadow_size=5
 	strip.add_theme_stylebox_override("panel",surface)
 	_put(_design,strip,Rect2(220,120,1000,54))
@@ -267,7 +269,7 @@ func _thumbnail(stage: int) -> Texture2D:
 func _level_card_style(fill: Color, edge: Color, selected: bool=false) -> StyleBoxFlat:
 	var surface:=UI.box(fill,edge,19,0)
 	surface.set_border_width_all(2)
-	surface.shadow_color=Color(0.14,0.34,0.27,0.2)
+	surface.shadow_color=Color(0.10,0.30,0.42,0.18)
 	surface.shadow_size=8 if selected else 5
 	surface.shadow_offset=Vector2(0,4)
 	return surface
@@ -296,10 +298,10 @@ func _card(stage: int, rect: Rect2) -> void:
 	card.disabled=not available
 	card.text=""
 	card.mouse_default_cursor_shape=Control.CURSOR_POINTING_HAND if available else Control.CURSOR_ARROW
-	card.add_theme_stylebox_override("normal",_level_card_style(Color("f5faee"),Color("f1fff4"),selected))
-	card.add_theme_stylebox_override("hover",_level_card_style(Color("f4fff3"),UI.TEAL,true))
-	card.add_theme_stylebox_override("pressed",_level_card_style(Color("e0f3e7"),UI.TEAL,true))
-	card.add_theme_stylebox_override("disabled",_level_card_style(Color(0.92,0.95,0.88,0.90),Color("edf8e9")))
+	card.add_theme_stylebox_override("normal",_level_card_style(Color("f0fbff"),Color("dcfaff"),selected))
+	card.add_theme_stylebox_override("hover",_level_card_style(Color("e5faff"),UI.TEAL,true))
+	card.add_theme_stylebox_override("pressed",_level_card_style(Color("d6f0f7"),UI.TEAL,true))
+	card.add_theme_stylebox_override("disabled",_level_card_style(Color(0.88,0.95,0.98,0.94),Color("e6f5fb")))
 	var focus:=UI.box(Color.TRANSPARENT,UI.TEAL,19,0)
 	focus.set_border_width_all(2)
 	focus.shadow_size=0
@@ -315,7 +317,7 @@ func _card(stage: int, rect: Rect2) -> void:
 	_put(_design,card,rect)
 	var inner:=Panel.new()
 	inner.mouse_filter=Control.MOUSE_FILTER_IGNORE
-	var inner_style:=UI.box(Color.TRANSPARENT,Color("d8e7d9"),15,0)
+	var inner_style:=UI.box(Color.TRANSPARENT,Color("b9dce8"),15,0)
 	inner_style.shadow_size=0
 	inner.add_theme_stylebox_override("panel",inner_style)
 	_put(card,inner,Rect2(4,4,236,240))
@@ -324,9 +326,9 @@ func _card(stage: int, rect: Rect2) -> void:
 		glow.name="SelectedStageGlow"
 		glow.show_behind_parent=true
 		glow.mouse_filter=Control.MOUSE_FILTER_IGNORE
-		var outline:=UI.box(Color.TRANSPARENT,Color("69d8c8"),23,0)
+		var outline:=UI.box(Color.TRANSPARENT,Color("56c6d7"),23,0)
 		outline.set_border_width_all(3)
-		outline.shadow_color=Color(0,0.65,0.59,0.26)
+		outline.shadow_color=Color(0,0.68,0.78,0.23)
 		outline.shadow_size=10
 		outline.shadow_offset=Vector2.ZERO
 		glow.add_theme_stylebox_override("panel",outline)
@@ -351,7 +353,7 @@ func _card(stage: int, rect: Rect2) -> void:
 	var banner:=Panel.new()
 	banner.name="StageCardHeader"
 	banner.mouse_filter=Control.MOUSE_FILTER_IGNORE
-	var banner_style:=UI.box(Color(0.94,0.98,0.94,0.7),Color.TRANSPARENT,18,0)
+	var banner_style:=UI.box(Color(0.94,0.99,1.0,0.75),Color.TRANSPARENT,18,0)
 	banner_style.corner_radius_bottom_left=0
 	banner_style.corner_radius_bottom_right=0
 	banner_style.shadow_size=0
@@ -370,7 +372,7 @@ func _card(stage: int, rect: Rect2) -> void:
 	symbol.atlas=preload("res://MenuAssets/stage-symbols.svg")
 	symbol.region=Rect2((stage-1)*32,0,32,32)
 	icon.texture=symbol
-	icon.modulate=UI.TEAL if available else Color("63877b")
+	icon.modulate=UI.TEAL if available else Color("638899")
 	icon.expand_mode=TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.mouse_filter=Control.MOUSE_FILTER_IGNORE
@@ -381,7 +383,7 @@ func _card(stage: int, rect: Rect2) -> void:
 	image_frame.name="StageThumbnailFrame"
 	image_frame.mouse_filter=Control.MOUSE_FILTER_IGNORE
 	image_frame.clip_children=CanvasItem.CLIP_CHILDREN_AND_DRAW
-	var image_style:=UI.box(Color("fffdf6"),Color("d4dfd2"),10,0)
+	var image_style:=UI.box(Color("f7fdff"),Color("bfdfe9"),10,0)
 	image_style.shadow_size=0
 	image_frame.add_theme_stylebox_override("panel",image_style)
 	_put(card,image_frame,Rect2(10,44,224,102))
@@ -394,7 +396,7 @@ func _card(stage: int, rect: Rect2) -> void:
 	_put(image_frame,image,Rect2(2,2,220,98))
 	if not available:
 		var wash:=ColorRect.new()
-		wash.color=Color(0.91,0.95,0.88,0.54)
+		wash.color=Color(0.86,0.95,0.99,0.54)
 		wash.mouse_filter=Control.MOUSE_FILTER_IGNORE
 		_put(image_frame,wash,Rect2(2,2,220,98))
 	var caption: String=["Draw the layout","Plan Q&A","Kitchen Selection"][stage-1] if stage<=3 else ""
@@ -409,7 +411,7 @@ func _card(stage: int, rect: Rect2) -> void:
 	else:
 		var medallion:=Panel.new()
 		medallion.mouse_filter=Control.MOUSE_FILTER_IGNORE
-		var medal_style:=UI.box(Color("fffdf0"),Color("c9d8c5"),20,0)
+		var medal_style:=UI.box(Color("f6fdff"),Color("a9d9e4"),20,0)
 		medal_style.shadow_size=3
 		medallion.add_theme_stylebox_override("panel",medal_style)
 		_put(card,medallion,Rect2(104,132,36,36))
@@ -430,7 +432,7 @@ func _card(stage: int, rect: Rect2) -> void:
 		tab.add_theme_stylebox_override("panel",tab_style)
 		_put(card,tab,Rect2(144,-10,99,22))
 		tab.rotation=0.05
-		_level_label(tab,"Selected",Rect2(3,0,93,22),10,Color("38685e"),true,true)
+		_level_label(tab,"Selected",Rect2(3,0,93,22),10,Color("246c85"),true,true)
 		var play:=_button("Play",true,15)
 		play.name="SelectedPlayButton"
 		play.icon=preload("res://MenuAssets/level-play.svg")
@@ -440,11 +442,11 @@ func _card(stage: int, rect: Rect2) -> void:
 		var badge:=Panel.new()
 		badge.name="StageStatusBadge"
 		badge.mouse_filter=Control.MOUSE_FILTER_IGNORE
-		var badge_style:=UI.box(Color("f6faee") if available else Color("e8eee0"),Color("62aaa0") if available else Color("c0d1c2"),18,0)
+		var badge_style:=UI.box(Color("effbff") if available else Color("e5f2f7"),Color("62b6c9") if available else Color("bbdce6"),18,0)
 		badge_style.shadow_size=2
 		badge.add_theme_stylebox_override("panel",badge_style)
 		_put(card,badge,Rect2(28,200,188,32))
-		_level_label(badge,("Completed" if Progress.is_completed(stage) else "Ready") if available else "Coming soon",Rect2(4,0,180,32),12,Color("246b63"),true,true)
+		_level_label(badge,("Completed" if Progress.is_completed(stage) else "Ready") if available else "Coming soon",Rect2(4,0,180,32),12,Color("246d82"),true,true)
 
 func _fit() -> void:
 	if not is_instance_valid(_design):return

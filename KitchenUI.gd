@@ -2,8 +2,8 @@ extends RefCounted
 const Progress = preload("res://GameProgress.gd")
 const INK := Color("082744")
 const MUTED := Color("284f68")
-const TEAL := Color("008f98")
-const EDGE := Color("c3dce9")
+const TEAL := Color("009eaf")
+const EDGE := Color("9ed7e4")
 const SUCCESS := Color("2da36b")
 const FAILURE := Color("cd4c5e")
 const FEEDBACK_TINT := 0.055
@@ -112,7 +112,7 @@ static func _backdrop() -> Texture2D:
 	viewport.size = Vector2i(960,540)
 	viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
 	var photo := TextureRect.new()
-	photo.texture = preload("res://UIAssets/ConceptKitchen.webp")
+	photo.texture = preload("res://AquaStyle.gd").artwork("res://UIAssets/AquaHome.png",preload("res://UIAssets/ConceptKitchen.webp"))
 	photo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	photo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	photo.size = Vector2(960,540)
@@ -164,7 +164,7 @@ static func header(stage: int, _title: String, menu_action: Callable, language_a
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation",14)
 	panel.add_child(row)
-	var mark := logo(144,44)
+	var mark := logo(174,62)
 	mark.name = "Stage1Logo" if stage == 1 else "GameLogo"
 	row.add_child(mark)
 	var reach := level_reach(stage,true)
@@ -175,7 +175,7 @@ static func header(stage: int, _title: String, menu_action: Callable, language_a
 	picker.name = "Stage1LanguagePicker" if stage==1 else "GameLanguagePicker"
 	picker.size_flags_vertical=Control.SIZE_SHRINK_CENTER
 	row.add_child(picker)
-	var home := button("",func(): go_home(menu_action.get_object()),false,38,14)
+	var home := button("",func(): go_home(menu_action.get_object()),false,46,14)
 	home.name = "GameHomeButton"
 	home.icon = icon("home")
 	home.tooltip_text = text("Go to Main Menu")
@@ -183,11 +183,11 @@ static func header(stage: int, _title: String, menu_action: Callable, language_a
 	for state in ["icon_normal_color","icon_hover_color","icon_pressed_color"]:home.add_theme_color_override(state,TEAL)
 	preload("res://AquaStyle.gd").button(home)
 	row.add_child(home)
-	var menu := button("",menu_action,false,34,15)
+	var menu := button("",menu_action,false,46,15)
 	menu.icon = preload("res://Stage1Assets/menu-lines.svg")
-	menu.add_theme_color_override("icon_normal_color",INK)
+	menu.add_theme_color_override("icon_normal_color",TEAL)
 	menu.add_theme_color_override("icon_hover_color",TEAL)
-	menu.add_theme_color_override("icon_pressed_color",INK)
+	menu.add_theme_color_override("icon_pressed_color",TEAL)
 	menu.tooltip_text = text("Menu")
 	menu.name = "Stage1MenuButton" if stage == 1 else "GameMenuButton"
 	menu.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -266,7 +266,7 @@ static func card_stack(parent: Control, expand: bool = false) -> VBoxContainer:
 	var panel := PanelContainer.new()
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	if expand: panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	panel.add_theme_stylebox_override("panel",box(Color("f8fcfa"),Color("cbe1d9")))
+	panel.add_theme_stylebox_override("panel",box(Color("f4fcff"),Color("b1dfea")))
 	parent.add_child(panel)
 	var stack := VBoxContainer.new()
 	stack.add_theme_constant_override("separation",12)
@@ -453,6 +453,7 @@ static func icon(kind: String) -> Texture2D:
 		"home":'<path d="M2 11L12 3l10 8M5 9v12h5v-7h4v7h5V9"/>',
 		"close":'<path d="M6 6l12 12M18 6L6 18"/>',
 		"planqa":'<path d="M3 3h14v12H3zM6 6h8v6H6zM8 8h3v2M12 11h9v8h-5l-4 3z"/>',
+		"lock":'<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/>',
 		"check":'<path d="M4 12l5 5L21 5"/>',
 		"play":'<path d="M8 4l13 8L8 20z" fill="currentColor" stroke="none"/>',
 		"layers":'<path d="M12 3l10 6-10 6L2 9zM2 13l10 6 10-6M2 17l10 6 10-6"/>',

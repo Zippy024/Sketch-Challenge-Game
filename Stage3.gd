@@ -231,7 +231,7 @@ func _refresh() -> void:
 	for i in range(3):
 		var chip:=PanelContainer.new()
 		chip.size_flags_horizontal=Control.SIZE_EXPAND_FILL
-		chip.add_theme_stylebox_override("panel",UI.box(Color("e5f3ed") if i==phase else Color("f7fbf8"),Color("8bbeb2") if i==phase else Color("d7e8e0"),12,6))
+		chip.add_theme_stylebox_override("panel",UI.box(Color("d8f3f8") if i==phase else Color("f4fcff"),Color("74c7d9") if i==phase else Color("b8dfe9"),12,6))
 		phases.add_child(chip)
 		var caption:=UI.label(str(i+1)+" · "+_phase_name(i),12,i==phase)
 		caption.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
