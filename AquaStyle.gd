@@ -42,6 +42,9 @@ static func button(button: Button, primary: bool = false) -> void:
 	_refresh_button(button,primary)
 
 static func _refresh_button(button: Button, primary: bool) -> void:
+	if button.name in ["GameHomeButton","GameMenuButton","Stage1MenuButton"] and button.text.is_empty():
+		_refresh_round_button(button)
+		return
 	button.alignment=HORIZONTAL_ALIGNMENT_CENTER
 	button.icon_alignment=HORIZONTAL_ALIGNMENT_CENTER if button.text.is_empty() else HORIZONTAL_ALIGNMENT_LEFT
 	var icon_space: float=0.0
@@ -63,10 +66,26 @@ static func _refresh_button(button: Button, primary: bool) -> void:
 	for state in ["font_color","font_hover_color","font_pressed_color","font_focus_color"]:
 		button.add_theme_color_override(state,Color.WHITE if primary else Color("092c56"))
 
+static func _refresh_round_button(button: Button) -> void:
+	button.alignment=HORIZONTAL_ALIGNMENT_CENTER
+	button.icon_alignment=HORIZONTAL_ALIGNMENT_CENTER
+	for state in ["normal","hover","pressed","disabled"]:
+		var style:=StyleBoxTexture.new()
+		style.texture=_svg("round_button",'<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><defs><linearGradient id="g" x2="0" y2="1"><stop stop-color="#8cf5f3"/><stop offset=".42" stop-color="#20cbd4"/><stop offset="1" stop-color="#008da8"/></linearGradient></defs><circle cx="40" cy="43" r="35" fill="#207688" opacity=".25"/><circle cx="40" cy="38" r="35" fill="url(#g)" stroke="#ffffff" stroke-width="2.5"/><circle cx="40" cy="38" r="31.5" fill="none" stroke="#9ff9ff" stroke-width="1.5"/></svg>')
+		style.content_margin_left=4
+		style.content_margin_right=4
+		style.content_margin_top=0
+		style.content_margin_bottom=4
+		style.modulate_color=Color("d4ffff") if state=="hover" else (Color("a4dfe9") if state=="pressed" else (Color("d6e7ed") if state=="disabled" else Color.WHITE))
+		button.add_theme_stylebox_override(state,style)
+	for state in ["icon_normal_color","icon_hover_color","icon_pressed_color","icon_focus_color"]:
+		button.add_theme_color_override(state,Color.WHITE)
+
 static func badge(current: bool, done: bool, locked: bool) -> Texture2D:
-	var key := "medal_%s_%s_%s" % [current,done,locked]
-	var top := "#fff9d5" if current else "#ffffff"
-	var bottom := "#ffdc63" if current else ("#d6eff4" if locked else "#e5fbfc")
-	var edge := "#ebb62d" if current or done else "#62b6cc"
-	var source := '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><defs><linearGradient id="g" x2="0" y2="1"><stop stop-color="%s"/><stop offset="1" stop-color="%s"/></linearGradient></defs><circle cx="40" cy="43" r="35" fill="#21697d" opacity=".15"/><circle cx="40" cy="39" r="35" fill="url(#g)" stroke="%s" stroke-width="2.5"/><circle cx="40" cy="39" r="31.5" fill="none" stroke="#ffffff" stroke-width="2"/></svg>' % [top,bottom,edge]
+	var key := "glass_%s_%s_%s" % [current,done,locked]
+	var top := "#cbffff" if current else "#ffffff"
+	var middle := "#53dce8" if current else "#f1faff"
+	var bottom := "#12b7cd" if current else ("#c7dfeb" if locked else "#d5f2f7")
+	var edge := "#55d6e4" if current else "#b6d9e9"
+	var source := '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><defs><linearGradient id="g" x2="0" y2="1"><stop stop-color="%s"/><stop offset=".46" stop-color="%s"/><stop offset="1" stop-color="%s"/></linearGradient></defs><circle cx="40" cy="43" r="35" fill="#366e95" opacity=".17"/><circle cx="40" cy="38" r="35" fill="url(#g)" stroke="%s" stroke-width="2"/><circle cx="40" cy="38" r="31.5" fill="none" stroke="#ffffff" stroke-width="2"/><ellipse cx="34" cy="19" rx="23" ry="11" fill="#ffffff" opacity=".25"/></svg>' % [top,middle,bottom,edge]
 	return _svg(key,source)
