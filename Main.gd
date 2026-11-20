@@ -148,7 +148,7 @@ class ReferencePlanViewer extends Control:
 			accept_event()
 
 	func _draw() -> void:
-		draw_rect(Rect2(Vector2.ZERO, size), Color("ffffff"), true)
+		draw_rect(Rect2(Vector2.ZERO, size), Color("d2e6ed"), true)
 		if not plan_texture:
 			return
 		var tex_size: Vector2 = plan_texture.get_size()
@@ -496,7 +496,7 @@ func _stage1_surface(fill: Color, edge: Color, radius: int = 18, pad: int = 9) -
 
 
 func _stage1_glass(variant: String = "panel", pad: int = 12) -> StyleBoxFlat:
-	var fill := Color("fff1f2") if variant == "danger" else (Color("eef9fc") if variant == "speech" else Color("f4fcff"))
+	var fill := Color("fff1f2") if variant == "danger" else (Color("c5e1e9") if variant == "speech" else Color("cbe3eb"))
 	return UI.box(fill,Color("edb8c2") if variant == "danger" else (UI.EDGE if variant == "speech" else Color.WHITE),18,pad)
 
 func _stage1_bold(control: Control) -> void:
@@ -625,7 +625,7 @@ func _build_ui() -> void:
 	chat_panel.name = "Stage1CustomerCard"
 	chat_panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	chat_panel.size_flags_stretch_ratio = 0.92
-	chat_panel.custom_minimum_size.y = 412
+	chat_panel.custom_minimum_size.y = 300
 	chat_panel.add_theme_stylebox_override("panel", _stage1_glass("customer", 14))
 	left.add_child(chat_panel)
 
@@ -799,7 +799,7 @@ func _build_ui() -> void:
 	image_frame.size_flags_stretch_ratio = 1.0
 	image_frame.custom_minimum_size.y = 200
 
-	image_frame.add_theme_stylebox_override("panel", _stage1_surface(Color("f4fcff"), Color("b3ecff"), 18, 7))
+	image_frame.add_theme_stylebox_override("panel", _stage1_surface(Color("c5e0e9"), Color("8bb9c8"), 18, 7))
 	var reference_card := PanelContainer.new()
 	reference_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	reference_card.size_flags_vertical = Control.SIZE_EXPAND_FILL

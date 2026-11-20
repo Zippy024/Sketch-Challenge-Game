@@ -104,7 +104,7 @@ class PlanViewer extends Control:
 		custom_minimum_size = Vector2(300, 200)
 
 	func _draw() -> void:
-		draw_rect(Rect2(Vector2.ZERO, size), Color.WHITE, true)
+		draw_rect(Rect2(Vector2.ZERO, size), Color("d2e6ed"), true)
 		if plan_texture == null:
 			return
 		var img_size := plan_texture.get_size()
@@ -312,7 +312,7 @@ func _build_ui() -> void:
 	right_panel.name="Stage2AnswerCard"
 	right_panel.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	right_panel.size_flags_stretch_ratio=13
-	right_panel.add_theme_stylebox_override("panel",UI.box(Color("f4fcff"),Color("b1dfea"),24,18))
+	right_panel.add_theme_stylebox_override("panel",UI.box(Color("cbe3eb"),Color("8bb9c8"),24,18))
 	split.add_child(right_panel)
 	var right := VBoxContainer.new()
 	right.add_theme_constant_override("separation",14)
