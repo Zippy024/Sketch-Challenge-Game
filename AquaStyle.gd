@@ -35,51 +35,29 @@ static func surface(primary: bool = false, card: bool = false, button_height: in
 	return style
 
 static func button(button: Button, primary: bool = false) -> void:
-	button.set_meta("uses_primary_gloss",false)
-	if not button.has_meta("aqua_resize"):
-		button.set_meta("aqua_resize",true)
-		button.resized.connect(func():_refresh_button(button,primary))
-	_refresh_button(button,primary)
+	# Restore the game's original pre-Aqua button renderer.
+	var ui=load("res://KitchenUI.gd")
+	var icon_limit:=button.get_theme_constant("icon_max_width")
+	ui.style_button(button,primary,button.get_theme_font_size("font_size"))
+	button.add_theme_constant_override("icon_max_width",icon_limit)
+	if not button.has_meta("classic_alignment"):
+		button.set_meta("classic_alignment",true)
+		button.resized.connect(_align_classic.bind(button))
+	_align_classic(button)
 
-static func _refresh_button(button: Button, primary: bool) -> void:
-	if button.name in ["GameHomeButton","GameMenuButton","Stage1MenuButton"] and button.text.is_empty():
-		_refresh_round_button(button)
-		return
+static func _align_classic(button: Button) -> void:
 	button.alignment=HORIZONTAL_ALIGNMENT_CENTER
 	button.icon_alignment=HORIZONTAL_ALIGNMENT_CENTER if button.text.is_empty() else HORIZONTAL_ALIGNMENT_LEFT
-	var icon_space: float=0.0
+	var reserved: float=0.0
 	if button.icon!=null and not button.text.is_empty():
 		var limit:=button.get_theme_constant("icon_max_width")
-		icon_space=minf(button.icon.get_width(),limit) if limit>0 else button.icon.get_width()
-		icon_space+=button.get_theme_constant("h_separation")
-	var gold:=button.name in ["GameHomeButton","GameMenuButton","Stage1MenuButton"]
+		reserved=minf(button.icon.get_width(),limit) if limit>0 else button.icon.get_width()
+		reserved+=button.get_theme_constant("h_separation")
 	for state in ["normal","hover","pressed","disabled"]:
-		var style := surface(primary,false,roundi(button.size.y),gold)
-		style.modulate_color = Color("e6ffff") if state=="hover" else (Color("b5e2e9") if state=="pressed" else (Color("d9e6ec") if state=="disabled" else Color.WHITE))
-		# Native Button reserves icon_space on the left of its text layout.
-		# Matching space on the right keeps the text at the button's true centre.
+		var style:=button.get_theme_stylebox(state).duplicate() as StyleBox
 		style.content_margin_left=14
-		style.content_margin_right=14+icon_space
-		style.content_margin_top=0
-		style.content_margin_bottom=10
+		style.content_margin_right=14+reserved
 		button.add_theme_stylebox_override(state,style)
-	for state in ["font_color","font_hover_color","font_pressed_color","font_focus_color"]:
-		button.add_theme_color_override(state,Color.WHITE if primary else Color("092c56"))
-
-static func _refresh_round_button(button: Button) -> void:
-	button.alignment=HORIZONTAL_ALIGNMENT_CENTER
-	button.icon_alignment=HORIZONTAL_ALIGNMENT_CENTER
-	for state in ["normal","hover","pressed","disabled"]:
-		var style:=StyleBoxTexture.new()
-		style.texture=_svg("round_button",'<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><defs><linearGradient id="g" x2="0" y2="1"><stop stop-color="#8cf5f3"/><stop offset=".42" stop-color="#20cbd4"/><stop offset="1" stop-color="#008da8"/></linearGradient></defs><circle cx="40" cy="43" r="35" fill="#207688" opacity=".25"/><circle cx="40" cy="38" r="35" fill="url(#g)" stroke="#ffffff" stroke-width="2.5"/><circle cx="40" cy="38" r="31.5" fill="none" stroke="#9ff9ff" stroke-width="1.5"/></svg>')
-		style.content_margin_left=4
-		style.content_margin_right=4
-		style.content_margin_top=0
-		style.content_margin_bottom=4
-		style.modulate_color=Color("d4ffff") if state=="hover" else (Color("a4dfe9") if state=="pressed" else (Color("d6e7ed") if state=="disabled" else Color.WHITE))
-		button.add_theme_stylebox_override(state,style)
-	for state in ["icon_normal_color","icon_hover_color","icon_pressed_color","icon_focus_color"]:
-		button.add_theme_color_override(state,Color.WHITE)
 
 static func badge(current: bool, done: bool, locked: bool) -> Texture2D:
 	var key := "glass_%s_%s_%s" % [current,done,locked]

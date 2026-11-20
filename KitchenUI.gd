@@ -74,7 +74,7 @@ static func style_button(b: Button, primary: bool = false, size: int = 14, warni
 		if state == "hover": fill = fill.darkened(0.05)
 		if state == "pressed": fill = fill.darkened(0.11)
 		if state == "disabled": fill = Color("dce8ed")
-		var style := box(fill,Color("65c9d1") if primary else EDGE,1000,4)
+		var style := box(fill,Color("65c9d1") if primary else Color("c3dce9"),1000,4)
 		style.content_margin_left = 14
 		style.content_margin_right = 14
 		style.shadow_size = 2 if primary else 0
@@ -155,8 +155,8 @@ static func logo(width: int = 150, height: int = 54) -> TextureRect:
 static func header(stage: int, _title: String, menu_action: Callable, language_action: Callable) -> PanelContainer:
 	var panel := PanelContainer.new()
 	panel.name = "Stage1Header" if stage == 1 else "GameHeader"
-	panel.custom_minimum_size.y = 80
-	var style := box(Color("e4f8fb"),Color("8dd6e1"),0,4)
+	panel.custom_minimum_size.y = 64
+	var style := box(Color("bfdee7"),Color("87b6c6"),0,4)
 	style.content_margin_left = 18
 	style.content_margin_right = 18
 	style.shadow_size = 0
@@ -164,7 +164,7 @@ static func header(stage: int, _title: String, menu_action: Callable, language_a
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation",14)
 	panel.add_child(row)
-	var mark := logo(174,62)
+	var mark := logo(150,48)
 	mark.name = "Stage1Logo" if stage == 1 else "GameLogo"
 	row.add_child(mark)
 	var reach := level_reach(stage,true)
@@ -175,24 +175,24 @@ static func header(stage: int, _title: String, menu_action: Callable, language_a
 	picker.name = "Stage1LanguagePicker" if stage==1 else "GameLanguagePicker"
 	picker.size_flags_vertical=Control.SIZE_SHRINK_CENTER
 	row.add_child(picker)
-	var home := button("",func(): go_home(menu_action.get_object()),false,46,14)
+	var home := button("",func(): go_home(menu_action.get_object()),false,38,14)
 	home.name = "GameHomeButton"
 	home.icon = icon("home")
 	home.tooltip_text = text("Go to Main Menu")
-	home.custom_minimum_size=Vector2(46,46)
+	home.custom_minimum_size=Vector2(38,38)
 	home.add_theme_constant_override("icon_max_width",24)
 	home.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	for state in ["icon_normal_color","icon_hover_color","icon_pressed_color"]:home.add_theme_color_override(state,TEAL)
 	preload("res://AquaStyle.gd").button(home)
 	row.add_child(home)
-	var menu := button("",menu_action,false,46,15)
+	var menu := button("",menu_action,false,38,15)
 	menu.icon = preload("res://Stage1Assets/menu-lines.svg")
 	menu.add_theme_color_override("icon_normal_color",TEAL)
 	menu.add_theme_color_override("icon_hover_color",TEAL)
 	menu.add_theme_color_override("icon_pressed_color",TEAL)
 	menu.tooltip_text = text("Menu")
 	menu.name = "Stage1MenuButton" if stage == 1 else "GameMenuButton"
-	menu.custom_minimum_size=Vector2(46,46)
+	menu.custom_minimum_size=Vector2(38,38)
 	menu.add_theme_constant_override("icon_max_width",24)
 	menu.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	preload("res://AquaStyle.gd").button(menu)
@@ -270,7 +270,7 @@ static func card_stack(parent: Control, expand: bool = false) -> VBoxContainer:
 	var panel := PanelContainer.new()
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	if expand: panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	panel.add_theme_stylebox_override("panel",box(Color("f4fcff"),Color("b1dfea")))
+	panel.add_theme_stylebox_override("panel",box(Color("cbe3eb"),Color("8bb9c8")))
 	parent.add_child(panel)
 	var stack := VBoxContainer.new()
 	stack.add_theme_constant_override("separation",12)
@@ -360,7 +360,9 @@ static func request_plate() -> StyleBoxTexture:
 
 static func conversation_style(state: String="neutral") -> StyleBoxFlat:
 	var accent:=SUCCESS if state=="correct" else FAILURE
-	var fill:=Color("f5faff")
+	var fill:=Color("c5e1e9")
+	if state=="incorrect":fill=Color("eed5db")
+	elif state=="correct":fill=Color("c4e5d9")
 	var edge:=EDGE
 	if state!="neutral":
 		fill=fill.lerp(accent,FEEDBACK_TINT)
@@ -571,7 +573,7 @@ static func language_switcher(action: Callable, size: int = 12) -> HBoxContainer
 	picker.name="LanguageMenu"
 	picker.flat=false
 	picker.set_meta("locale_ignore",true)
-	picker.custom_minimum_size=Vector2(138,40)
+	picker.custom_minimum_size=Vector2(138,36)
 	picker.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	picker.size_flags_vertical=Control.SIZE_SHRINK_CENTER
 	picker.icon=icon("globe")
