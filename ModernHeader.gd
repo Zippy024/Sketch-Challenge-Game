@@ -94,7 +94,7 @@ func _refresh() -> void:
 		row.alignment=BoxContainer.ALIGNMENT_CENTER
 		row.add_theme_constant_override("separation",4)
 		point.add_child(row)
-		if active or done or i>3:
+		if active or done or not P.is_level_unlocked(i):
 			var icon:=TextureRect.new()
 			icon.texture=UI.icon("play" if active else ("check" if done else "lock"))
 			icon.modulate=Color.WHITE if active else (Color("2ec75b") if done else Color("386282"))

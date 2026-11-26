@@ -264,6 +264,7 @@ func _level_label(parent: Control, message: String, rect: Rect2, font_size: int,
 
 func _thumbnail(stage: int) -> Texture2D:
 	if stage==1:return preload("res://Refrence image.png")
+	if stage==4:return preload("res://Stage4Assets/Products/Cooktops/JUASDS17WS.png")
 	var atlas:=preload("res://MenuAssets/mission-thumbnails.webp")
 	var index: int=clampi(stage-2,0,7) if stage<10 else 1
 	var tile:=AtlasTexture.new()
@@ -405,16 +406,16 @@ func _card(stage: int, rect: Rect2) -> void:
 		wash.color=Color(0.86,0.95,0.99,0.54)
 		wash.mouse_filter=Control.MOUSE_FILTER_IGNORE
 		_put(image_frame,wash,Rect2(2,2,220,98))
-	var caption: String=["Draw the layout","Plan Q&A","Kitchen Selection"][stage-1] if stage<=3 else ""
+	var caption: String=["Draw the layout","Plan Q&A","Kitchen Selection"][stage-1] if stage<=3 else (preload("res://Stage4Assets/ProductCatalog.gd").text("Kitchen parts") if stage==4 else "")
 	var caption_view:=_level_label(card,caption,Rect2(7,147,230,28),12 if Progress.get_language()=="mm" else 14,UI.INK,true,true)
 	caption_view.name="StageCaption"
-	if available:
+	if available and stage<=3:
 		var stars:=Decor.new()
 		stars.name="StageStars"
 		stars.earned=int(Rating.best(stage).get("stars",0))
 		stars.set_meta("stars",stars.earned)
 		_put(card,stars,Rect2(54,175,136,20))
-	else:
+	elif not available:
 		var medallion:=Panel.new()
 		medallion.mouse_filter=Control.MOUSE_FILTER_IGNORE
 		var medal_style:=UI.box(Color("f6fdff"),Color("a9d9e4"),20,0)

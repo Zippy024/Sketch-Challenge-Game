@@ -15,6 +15,9 @@ static var _stage2_draft: String = ""
 static var _stage3_step: int = 0
 static var _stage3_answers: Array[String]=["","","","","","","",""]
 static var _stage3_solved: Array[bool]=[false,false,false,false,false,false,false,false]
+static var _stage4_choices: Array[int]=[0,0,0,0]
+static var _stage4_confirmed: Array[bool]=[false,false,false,false]
+static var _stage4_view: Dictionary={}
 static var _language: String = "jp"
 static var show_levels_on_open: bool = false
 static var show_home_on_open: bool = false
@@ -39,6 +42,14 @@ static func _ensure_loaded() -> void:
 		_stage1_zoom = clampf(float(config.get_value("session","zoom",1.0)),0.1,8.0)
 		_stage1_pan = config.get_value("session","pan",Vector2(72,60))
 		_stage2_draft = str(config.get_value("session","answer",""))
+		var custom_choices: Variant=config.get_value("session","stage4_choices",[])
+		var custom_confirmed: Variant=config.get_value("session","stage4_confirmed",[])
+		if custom_choices is Array and custom_choices.size()==4:
+			for i in range(4):_stage4_choices[i]=clampi(int(custom_choices[i]),0,4)
+		if custom_confirmed is Array and custom_confirmed.size()==4:
+			for i in range(4):_stage4_confirmed[i]=bool(custom_confirmed[i])
+		var custom_view: Variant=config.get_value("session","stage4_view",{})
+		_stage4_view=custom_view if custom_view is Dictionary else {}
 		_stage3_step = clampi(int(config.get_value("session","step",0)),0,Parts.CHALLENGE_STEPS)
 		_reset_kitchen_parts()
 		var version: int=int(config.get_value("session","parts_version",0))
@@ -85,6 +96,9 @@ static func _save() -> void:
 	config.set_value("session","parts_version",3)
 	config.set_value("session","parts_answers",_stage3_answers)
 	config.set_value("session","parts_solved",_stage3_solved)
+	config.set_value("session","stage4_choices",_stage4_choices)
+	config.set_value("session","stage4_confirmed",_stage4_confirmed)
+	config.set_value("session","stage4_view",_stage4_view)
 	var result := config.save(SAVE_PATH)
 	if result != OK:
 		push_warning("Could not save game progress: " + str(result))
@@ -108,14 +122,14 @@ static func set_language(lang: String) -> void:
 
 static func is_level_unlocked(level: int) -> bool:
 	_ensure_loaded()
-	return level >= 1 and level <= 3
+	return level >= 1 and level <= 4
 
 static func unlock_level(level: int) -> void:
 	if level==2: complete(1)
 
 static func get_highest_unlocked() -> int:
 	_ensure_loaded()
-	return 3
+	return 4
 
 static func is_completed(stage: int) -> bool:
 	_ensure_loaded()
@@ -127,7 +141,7 @@ static func complete(stage: int) -> void:
 	elif stage == 2: _stage2_cleared = true
 	elif stage == 3: _stage3_cleared = true
 	else: return
-	_resume_stage = mini(stage+1,3)
+	_resume_stage = mini(stage+1,4)
 	if stage==1:
 		_stage1_draft.clear()
 		_stage2_draft=""
@@ -145,7 +159,7 @@ static func completed_count() -> int:
 static func next_stage() -> int:
 	for stage in range(1,4):
 		if not is_completed(stage): return stage
-	return 3
+	return 4
 
 # Testing option: reset level unlocks, keeping the chosen language.
 static func reset_progress(keep_best_scores: bool=false) -> void:
@@ -161,11 +175,12 @@ static func reset_progress(keep_best_scores: bool=false) -> void:
 	_stage2_draft=""
 	_stage3_step=0
 	_reset_kitchen_parts()
+	_reset_stage4()
 	_save()
 
 static func has_session() -> bool:
 	_ensure_loaded()
-	return _resume_stage in [1,2,3]
+	return _resume_stage in [1,2,3,4]
 
 static func resume_stage() -> int:
 	_ensure_loaded()
@@ -177,7 +192,7 @@ static func start_new_game() -> void:
 
 static func open_stage(stage: int, resume: bool = false) -> void:
 	_ensure_loaded()
-	if stage not in [1,2,3]: return
+	if stage not in [1,2,3,4]: return
 	_resume_stage=stage
 	if not resume:
 		Rating.begin(stage,true)
@@ -189,6 +204,7 @@ static func open_stage(stage: int, resume: bool = false) -> void:
 		if stage==3:
 			_stage3_step=0
 			_reset_kitchen_parts()
+		if stage==4:_reset_stage4()
 	_save()
 
 static func save_drawing(lines: Array, zoom: float, pan: Vector2) -> void:
@@ -243,4 +259,26 @@ static func save_kitchen_parts(answers: Array[String], solved: Array[bool]) -> v
 	_stage3_answers=answers.duplicate()
 	_stage3_solved=solved.duplicate()
 	if _stage3_step>=2:_stage3_step=2+_stage3_solved.count(true)
+	_save()
+
+
+static func scene_for_stage(stage: int) -> String:
+	return {1:"res://main.tscn",2:"res://stage_2.tscn",3:"res://stage_3.tscn",4:"res://stage_4.tscn"}.get(stage,"")
+
+static func _reset_stage4() -> void:
+	_stage4_choices.assign([0,0,0,0])
+	_stage4_confirmed.assign([false,false,false,false])
+	_stage4_view={}
+
+static func stage4_selection() -> Dictionary:
+	_ensure_loaded()
+	return {"choices":_stage4_choices.duplicate(),"confirmed":_stage4_confirmed.duplicate(),"view":_stage4_view.duplicate(true)}
+
+static func save_stage4_selection(choices: Array,confirmed: Array,view: Dictionary) -> void:
+	_ensure_loaded()
+	if choices.size()!=4 or confirmed.size()!=4:return
+	for i in range(4):
+		_stage4_choices[i]=clampi(int(choices[i]),0,4)
+		_stage4_confirmed[i]=bool(confirmed[i])
+	_stage4_view=view.duplicate(true)
 	_save()

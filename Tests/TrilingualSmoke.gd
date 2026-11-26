@@ -108,7 +108,7 @@ func _run() -> void:
 		assert(screen.find_children("SelectedStageGlow","Panel",true,false).size()==1)
 		assert(screen.find_child("SelectedStageTag",true,false).z_index>screen.find_child("SelectedStageOutline",true,false).z_index)
 		for card in cards:
-			assert(card.disabled==(int(card.get_meta("stage"))>3))
+			assert(card.disabled==(int(card.get_meta("stage"))>4))
 			var title=card.find_child("StageTitle",true,false)
 			assert(card.find_child("StageSymbol",true,false)!=null)
 			assert((card.find_child("StageLock",true,false)!=null)==card.disabled)
@@ -686,8 +686,13 @@ func _run() -> void:
 			third_popup.find_child("CompletionNext",true,false).pressed.emit()
 		await _wait()
 		assert(Progress.completed_count()==3)
-		assert(game.find_child("ResultsTitle",true,false).text==manager.text("Training complete!"))
-		assert(game.get_global_rect().encloses(game.find_child("ResultsCard",true,false).get_global_rect()))
+		if language=="jp":
+			# Continue after the three assessed stages now resumes Stage 4's layout.
+			assert(game.name=="Stage4" and Progress.resume_stage()==4)
+			assert(game.find_child("Stage4CheckAnswer",true,false).disabled)
+		else:
+			assert(game.find_child("ResultsTitle",true,false).text==manager.text("Training complete!"))
+			assert(game.get_global_rect().encloses(game.find_child("ResultsCard",true,false).get_global_rect()))
 	# Reload persisted flags; directly clearing Stage 3 must not claim all missions complete.
 	Progress.reset_progress()
 	Progress.complete(3)
