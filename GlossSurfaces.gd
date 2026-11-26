@@ -91,6 +91,8 @@ static func refresh_button(button: Button) -> void:
 		for side in [SIDE_LEFT,SIDE_TOP,SIDE_RIGHT,SIDE_BOTTOM]:style.set_content_margin(side,original.get_content_margin(side))
 		if state=="hover":style.modulate_color=Color("f1fbff")
 		elif state=="pressed":style.modulate_color=Color("cceaf9")
-		elif state=="disabled":style.modulate_color=Color("dcecf5")
+		elif state=="disabled":
+			style.texture=surface("button",maxi(24,roundi(button.size.x)),maxi(24,roundi(button.size.y)))
+			style.modulate_color=Color("edf2f7")
 		button.add_theme_stylebox_override(state,style)
 	button.set_meta("gloss_button_busy",false)
