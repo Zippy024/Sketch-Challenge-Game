@@ -419,28 +419,13 @@ func _modern_button_style(button: Button, kind: String = "secondary") -> void:
 	UI.style_button(button,kind=="primary",14,kind=="warning")
 
 func _compact_button_style(button: Button, warning: bool = false, primary: bool = false) -> void:
-	var fill := "e4f5ff" if not warning else "ffe6e8"
-	var edge := "88cce9" if not warning else "ffbfc8"
-	var ink := "254563" if not warning else "b2213d"
-	if primary:
-		fill = "009fd6"
-		edge = "67c8ec"
-		ink = "ffffff"
-	for state in ["normal", "hover", "pressed", "disabled"]:
-		var box := _stage1_surface(Color(fill), Color(edge), 17, 4)
-		if state in ["hover", "pressed"]: box.bg_color = box.bg_color.darkened(0.06 if state == "hover" else 0.12)
-		box.shadow_size = 0
-		box.content_margin_left = 8
-		box.content_margin_right = 8
-		button.add_theme_stylebox_override(state, box)
-	var focus := _stage1_surface(Color.TRANSPARENT, Color("258fc4"), 17, 0)
-	focus.set_border_width_all(2)
-	button.add_theme_stylebox_override("focus", focus)
-	for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
-		button.add_theme_color_override(state, Color(ink))
-	button.add_theme_font_size_override("font_size", 12)
-	button.remove_theme_font_override("font")
-	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	UI.style_button(button,primary,16,warning)
+	for state in ["normal","hover","pressed","disabled"]:
+		var style=button.get_theme_stylebox(state).duplicate()
+		style.content_margin_left=8
+		style.content_margin_right=8
+		button.add_theme_stylebox_override(state,style)
+	UI.Gloss.bind_button(button,primary,warning)
 
 
 func _button(value: String, action: Callable, min_w: float = 80.0) -> Button:
@@ -497,7 +482,7 @@ func _stage1_surface(fill: Color, edge: Color, radius: int = 18, pad: int = 9) -
 
 func _stage1_glass(variant: String = "panel", pad: int = 12) -> StyleBoxFlat:
 	var fill := Color("fff1f2") if variant == "danger" else (UI.SPEECH if variant == "speech" else UI.PANEL)
-	return UI.box(fill,Color("edb8c2") if variant == "danger" else (UI.EDGE if variant == "speech" else Color.WHITE),18,pad)
+	return UI.box(fill,Color("edb8c2") if variant == "danger" else (UI.EDGE if variant == "speech" else UI.EDGE),18,pad)
 
 func _stage1_bold(control: Control) -> void:
 	control.add_theme_font_override("font",UI.font(true))
@@ -627,6 +612,7 @@ func _build_ui() -> void:
 	chat_panel.size_flags_stretch_ratio = 0.92
 	chat_panel.custom_minimum_size.y = 300
 	chat_panel.add_theme_stylebox_override("panel", _stage1_glass("customer", 14))
+	UI.Gloss.bind_panel(chat_panel,"panel",chat_panel.get_theme_stylebox("panel"))
 	left.add_child(chat_panel)
 
 	var customer_stack := VBoxContainer.new()
@@ -660,6 +646,7 @@ func _build_ui() -> void:
 	name_plate.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var identity_box := UI.customer_plate()
 	name_plate.add_theme_stylebox_override("panel", identity_box)
+	UI.Gloss.bind_panel(name_plate,"name",name_plate.get_theme_stylebox("panel"))
 	avatar_column.add_child(name_plate)
 	speaker_name_label = _label(DIALOGUE_TEXTS[current_lang]["speaker"], 15, "173b61")
 	_stage1_bold(speaker_name_label)
@@ -678,11 +665,12 @@ func _build_ui() -> void:
 	request_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var heading_box := UI.request_plate()
 	request_header.add_theme_stylebox_override("panel", heading_box)
+	UI.Gloss.bind_panel(request_header,"tab",request_header.get_theme_stylebox("panel"))
 	speech_stack.add_child(request_header)
 	var request_heading_row := HBoxContainer.new()
 	request_heading_row.add_theme_constant_override("separation",7)
 	request_header.add_child(request_heading_row)
-	var request_heading := _label("Customer Request", 15, "082744")
+	var request_heading := _label("Customer Request", 17, "061a4f")
 	_stage1_bold(request_heading)
 	request_heading.autowrap_mode = TextServer.AUTOWRAP_OFF
 	request_heading_row.add_child(request_heading)
@@ -696,6 +684,7 @@ func _build_ui() -> void:
 	dialog_bubble.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	dialog_bubble.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	dialog_bubble.add_theme_stylebox_override("panel", UI.conversation_style())
+	UI.Gloss.bind_panel(dialog_bubble,"speech",dialog_bubble.get_theme_stylebox("panel"))
 	speech_stack.add_child(dialog_bubble)
 
 	var bubble_vbox := VBoxContainer.new()
@@ -790,7 +779,7 @@ func _build_ui() -> void:
 	ref_title_btn.add_theme_color_override("font_color", Color("0c315b"))
 	ref_title_btn.add_theme_color_override("font_hover_color", Color("117489"))
 	ref_title_btn.pressed.connect(_open_reference_popup)
-	ref_title_btn.custom_minimum_size.y = 33
+	UI.reference_heading(ref_title_btn)
 
 	# Reference Plan ဧရိယာကို ကြီးမားကျယ်ဝန်းစွာ ချဲ့ထွင်ထားခြင်း (stretch_ratio = 1.45)
 	var image_frame: PanelContainer = PanelContainer.new()
@@ -805,6 +794,7 @@ func _build_ui() -> void:
 	reference_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	reference_card.name = "Stage1ReferenceCard"
 	reference_card.add_theme_stylebox_override("panel", _stage1_glass("panel", 14))
+	UI.Gloss.bind_panel(reference_card,"panel",reference_card.get_theme_stylebox("panel"))
 	left.add_child(reference_card)
 	var ref_contents := VBoxContainer.new()
 	ref_contents.add_theme_constant_override("separation", 10)
@@ -829,6 +819,7 @@ func _build_ui() -> void:
 	right_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	right_panel.name = "Stage1DrawingCard"
 	right_panel.add_theme_stylebox_override("panel", _stage1_glass("panel", 10))
+	UI.Gloss.bind_panel(right_panel,"panel",right_panel.get_theme_stylebox("panel"))
 	split.add_child(right_panel)
 
 	var right: VBoxContainer = VBoxContainer.new()
@@ -837,7 +828,8 @@ func _build_ui() -> void:
 	right.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	right_panel.add_child(right)
 
-	var drawing_heading := _label("Layout Drawing Area", 21, "163657")
+	var drawing_heading := _label("Layout Drawing Area", 25, "061a4f")
+	_stage1_bold(drawing_heading)
 	drawing_heading.name = "Stage1DrawingHeading"
 	right.add_child(drawing_heading)
 	var drawing_hint := _label("1 Small Grid = 100 mm (e.g., 1,000 mm = 10 grids) | Click points to draw (straight or angled) | Drag = Move", 12, "45617b")
@@ -866,12 +858,12 @@ func _build_ui() -> void:
 		button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 		button.clip_text = false
 		button.add_theme_font_size_override("font_size", 14)
-		_compact_button_style(button, false)
+		_compact_button_style(button, warning)
 		var kind: String = {"Undo":"undo","Redo":"redo","Delete Last":"layers","Delete":"trash","Zoom In":"zoom","Zoom Out":"zoomout"}[label_text]
 		button.icon = UI.icon(kind)
 		button.add_theme_color_override("icon_normal_color",UI.TEAL)
 		button.add_theme_color_override("icon_hover_color",UI.INK)
-		button.add_theme_constant_override("icon_max_width",16)
+		button.add_theme_constant_override("icon_max_width",20)
 		tools_row.add_child(button)
 	add_tool.call("Undo", _undo, 80)
 	add_tool.call("Redo", _redo, 80)
@@ -932,7 +924,7 @@ func _build_ui() -> void:
 
 	var clear_button := _button("Reset", _clear)
 	clear_button.name = "Stage1ResetDrawing"
-	clear_button.icon = preload("res://Stage1Assets/reset.svg")
+	clear_button.icon = UI.icon("undo")
 	clear_button.add_theme_constant_override("icon_max_width", 18)
 	clear_button.custom_minimum_size = Vector2(78, 34)
 	_compact_button_style(clear_button)
@@ -943,7 +935,7 @@ func _build_ui() -> void:
 	_compact_button_style(again_button, true)
 	ok_button = _button("Check Answer", _confirm)
 	ok_button.name = "Stage1CheckAnswer"
-	ok_button.icon = preload("res://Stage1Assets/check.svg")
+	ok_button.icon = UI.icon("check")
 	ok_button.add_theme_constant_override("icon_max_width", 18)
 	ok_button.custom_minimum_size = Vector2(132, 34)
 	_compact_button_style(ok_button, false, true)

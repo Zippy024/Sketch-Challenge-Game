@@ -397,7 +397,7 @@ func _format_num(n: int) -> String:
 	return res
 
 func _draw() -> void:
-	draw_rect(Rect2(Vector2.ZERO, size), Color("d6f0ff"), true)
+	draw_rect(Rect2(Vector2.ZERO, size), Color("fbfdff"), true)
 	_draw_dynamic_grid()
 
 	for i in range(lines.size()):
@@ -434,23 +434,23 @@ func _draw_dynamic_grid() -> void:
 
 		var x: float = fposmod(pan.x, sub_px)
 		while x < size.x:
-			var col: Color = Color("94ccea") if is_zero_approx(fposmod(x - pan.x, major_px)) else Color("b2dcf2")
+			var col: Color = Color("a5bfd2") if is_zero_approx(fposmod(x - pan.x, major_px)) else Color("d5e4ee")
 			draw_line(Vector2(x, 0), Vector2(x, size.y), col, 1.0)
 			x += sub_px
 
 		var y: float = fposmod(pan.y, sub_px)
 		while y < size.y:
-			var col: Color = Color("94ccea") if is_zero_approx(fposmod(y - pan.y, major_px)) else Color("b2dcf2")
+			var col: Color = Color("a5bfd2") if is_zero_approx(fposmod(y - pan.y, major_px)) else Color("d5e4ee")
 			draw_line(Vector2(0, y), Vector2(size.x, y), col, 1.0)
 			y += sub_px
 
 	var mx: float = fposmod(pan.x, major_px)
 	while mx < size.x:
-		draw_line(Vector2(mx, 0), Vector2(mx, size.y), Color("81bfdf"), 1.2)
+		draw_line(Vector2(mx, 0), Vector2(mx, size.y), Color("a5bfd2"), 1.2)
 		mx += major_px
 	var my: float = fposmod(pan.y, major_px)
 	while my < size.y:
-		draw_line(Vector2(0, my), Vector2(size.x, my), Color("81bfdf"), 1.2)
+		draw_line(Vector2(0, my), Vector2(size.x, my), Color("a5bfd2"), 1.2)
 		my += major_px
 
 func _draw_solid_wall(a_mm: Vector2, b_mm: Vector2, highlight: bool, v_state: int, is_selected: bool) -> void:

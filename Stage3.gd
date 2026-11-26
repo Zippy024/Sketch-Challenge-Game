@@ -194,7 +194,7 @@ func _refresh() -> void:
 	var heading:=HBoxContainer.new()
 	heading.add_theme_constant_override("separation",12)
 	right.add_child(heading)
-	var title:=UI.label("Kitchen Selection" if step<2 else "Kitchen Parts",25 if step<2 else 21,true)
+	var title:=UI.label("Kitchen Selection" if step<2 else "Kitchen Parts",25,true)
 	title.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	heading.add_child(title)
 	_feedback_panel=PanelContainer.new()
@@ -211,7 +211,7 @@ func _refresh() -> void:
 	_feedback_panel.hide()
 	var retry:=UI.button(_tr("Retry","ပြန်ကစားမည်","もう一度"),_retry_stage,false,110,14)
 	retry.name="Stage3Retry"
-	retry.icon=preload("res://Stage1Assets/reset.svg")
+	retry.icon=UI.icon("undo")
 	retry.tooltip_text=_tr("Restart Stage 3","အဆင့် ၃ ကို အစမှပြန်ကစားမည်","ステージ3を最初からやり直す")
 	heading.add_child(retry)
 	var phase:=mini(step,2)
@@ -222,10 +222,12 @@ func _refresh() -> void:
 	for i in range(3):
 		var chip:=PanelContainer.new()
 		chip.size_flags_horizontal=Control.SIZE_EXPAND_FILL
-		chip.add_theme_stylebox_override("panel",UI.box(Color("8dd8f7") if i==phase else UI.SPEECH,UI.TEAL if i==phase else UI.EDGE,12,6))
+		chip.add_theme_stylebox_override("panel",UI.box(UI.TEAL if i==phase else UI.INPUT,UI.TEAL if i==phase else UI.EDGE,12,6))
+		UI.Gloss.bind_panel(chip,"primary" if i==phase else "button",chip.get_theme_stylebox("panel"))
 		phases.add_child(chip)
 		var caption:=UI.label(str(i+1)+" · "+_phase_name(i),12,i==phase)
 		caption.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+		if i==phase:caption.add_theme_color_override("font_color",Color.WHITE)
 		chip.add_child(caption)
 	if step<2:right.add_child(UI.label(_tr("Section %d of 3","အပိုင်း ၃ ပိုင်းမှ %d","全3項目中 %d項目")%(phase+1),14,false,UI.MUTED))
 	_answer_area = VBoxContainer.new()
@@ -278,6 +280,7 @@ func _begin_question_speech(speech: Control, caption: Label, path: String) -> vo
 
 func _reference_tile(parent: VBoxContainer) -> void:
 	var title:=UI.label("Reference Plan",18,true)
+	UI.reference_heading(title)
 	parent.add_child(title)
 	var plan:=PlanOverlay.PlanView.new()
 	plan.passive=true

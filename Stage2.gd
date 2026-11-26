@@ -299,7 +299,7 @@ func _build_ui() -> void:
 	dialogue.move_child(customer.voice,dialogue.get_child_count()-1)
 	var reference := UI.card_stack(left,true)
 	var ref_title := UI.button("Reference Plan  ↗",_open_reference_popup,false,160,16)
-	ref_title.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	UI.reference_heading(ref_title)
 	reference.add_child(ref_title)
 	var texture := preload("res://reference_ps_stage2.png")
 	var embedded := PlanViewer.new(texture)
@@ -313,6 +313,7 @@ func _build_ui() -> void:
 	right_panel.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	right_panel.size_flags_stretch_ratio=13
 	right_panel.add_theme_stylebox_override("panel",UI.box(UI.PANEL,UI.EDGE,24,18))
+	UI.Gloss.bind_panel(right_panel,"panel",right_panel.get_theme_stylebox("panel"))
 	split.add_child(right_panel)
 	var right := VBoxContainer.new()
 	right.add_theme_constant_override("separation",14)
@@ -333,7 +334,7 @@ func _build_ui() -> void:
 	header.add_child(answer_title)
 	var retry:=UI.button("Retry",_replay_stage_two,false,110,14)
 	retry.name="Stage2Retry"
-	retry.icon=preload("res://Stage1Assets/reset.svg")
+	retry.icon=UI.icon("undo")
 	retry.tooltip_text="Restart this stage and clear the answer"
 	header.add_child(retry)
 	var instructions:=UI.label("Type your answer, then press OK.",14,false,UI.MUTED)

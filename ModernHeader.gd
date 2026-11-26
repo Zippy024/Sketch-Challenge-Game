@@ -12,26 +12,20 @@ var _stage_nodes: Array[Control]=[]
 static func svg(source: String) -> Texture2D:
 	# Retain SVG data so Godot rasterizes at the actual canvas/display scale.
 	# A fixed 1070px/36px ImageTexture becomes soft when this header is enlarged.
-	var texture:=DPITexture.create_from_string(source,2.0)
+	var texture:=DPITexture.create_from_string(source,1.0)
 	# Cover the header's own scaled design as well as the viewport's DPI scale.
-	texture.set_size_override(Vector2i(texture.get_size()/2.0))
+	texture.set_size_override(Vector2i(texture.get_size()))
 	return texture
 
-static func pill(active: bool,done: bool=false,round_button: bool=false,state: String="normal") -> StyleBoxTexture:
-	# Match the nameplate: a raised base, a pale top rim and a shaded lower lip.
-	var w:=36 if round_button else 120
-	var top:="#71dfff" if active else ("#ffffff" if done else "#d8f2ff")
-	var middle:="#00bfff" if active else ("#e3f5ff" if done else "#a9dcf3")
-	var bottom:="#007fb4" if active else ("#a9dcf3" if done else "#74b7da")
-	var source:='<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="36"><defs><linearGradient id="g" x2="0" y2="1"><stop stop-color="%s"/><stop offset=".48" stop-color="%s"/><stop offset="1" stop-color="%s"/></linearGradient></defs><rect x="1" y="6" width="%d" height="29" rx="15" fill="#14688e" opacity=".28"/><rect x="1" y="3" width="%d" height="29" rx="15" fill="#4ca5ce"/><rect x="1" y="1" width="%d" height="29" rx="15" fill="url(#g)" stroke="#8fdcff" stroke-width="1.3"/><rect x="3" y="2.8" width="%d" height="24" rx="12" fill="none" stroke="#ffffff" stroke-width="1.4" opacity=".88"/><path d="M10 28H%d" stroke="#267ea6" stroke-opacity=".35" stroke-width="1.5" stroke-linecap="round"/></svg>'%[w,top,middle,bottom,w-2,w-2,w-2,w-6,w-10]
-	var style:=StyleBoxTexture.new()
-	style.texture=svg(source)
-	style.texture_margin_left=10 if round_button else 18
-	style.texture_margin_right=10 if round_button else 18
-	style.set_content_margin_all(3 if round_button else 2)
-	style.content_margin_top=0 if not round_button else 2
-	style.content_margin_bottom=5
-	style.modulate_color=Color("b7def0") if state=="pressed" else (Color("eefbff") if state=="hover" else Color.WHITE)
+static func pill(active: bool,done: bool=false,round_button: bool=false,state: String="normal",locked: bool=false) -> StyleBoxTexture:
+	var width=36 if round_button else 120
+	var style=StyleBoxTexture.new()
+	style.texture=UI.Gloss.surface("primary" if active else ("locked" if locked else ("round" if round_button else "button")),width,36)
+	style.texture_margin_left=10 if not round_button else 12;style.texture_margin_right=style.texture_margin_left
+	style.texture_margin_top=10;style.texture_margin_bottom=10
+	style.set_content_margin_all(3);style.content_margin_top=1;style.content_margin_bottom=4
+	if state=="hover":style.modulate_color=Color("f1fbff")
+	elif state=="pressed":style.modulate_color=Color("cceaf9")
 	return style
 
 func _ready() -> void:
@@ -44,7 +38,7 @@ func _ready() -> void:
 	design.mouse_filter=Control.MOUSE_FILTER_IGNORE
 	add_child(design)
 	frame=TextureRect.new()
-	frame.texture=svg('<svg xmlns="http://www.w3.org/2000/svg" width="1070" height="52"><defs><linearGradient id="g"><stop stop-color="#00bfff"/><stop offset=".52" stop-color="#57cfff"/><stop offset="1" stop-color="#219fdf"/></linearGradient><linearGradient id="v" x2="0" y2="1"><stop stop-color="#ffffff" stop-opacity=".46"/><stop offset=".46" stop-color="#ffffff" stop-opacity=".10"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></linearGradient></defs><rect x="1" y="6" width="1068" height="45" rx="17" fill="#14688e" opacity=".28"/><rect x="1" y="3" width="1068" height="45" rx="17" fill="#2195c4"/><rect x=".7" y=".7" width="1068.6" height="44" rx="17" fill="url(#g)" stroke="#89dcfb" stroke-width="1.4"/><rect x="3.5" y="2.5" width="1063" height="39" rx="14" fill="url(#v)" stroke="#f1fdff" stroke-width="1.4"/><path d="M22 4H1048" stroke="#fff" stroke-width="1.5" opacity=".85"/><path d="M21 43H1049" stroke="#007da8" stroke-width="2" opacity=".35"/><path d="M155 2L136 43M159 2L140 43M879 2L861 43" stroke="#e9fcff" opacity=".48" fill="none"/><path d="M156 25Q330 15 511 25T859 25" stroke="#edffff" stroke-width="2" opacity=".8" fill="none"/></svg>')
+	frame.texture=UI.Gloss.surface("header",1070,52)
 	frame.expand_mode=TextureRect.EXPAND_IGNORE_SIZE
 	frame.size=Vector2(1070,52)
 	frame.mouse_filter=Control.MOUSE_FILTER_IGNORE
@@ -56,10 +50,41 @@ func _ready() -> void:
 
 func _fit() -> void:
 	if design==null:return
-	var factor:=maxf(1.0,size.x-24.0)/1070.0
-	design.scale=Vector2.ONE*factor
+	var factor=maxf(1.0,size.x-24.0)/1070.0
+	design.scale=Vector2.ONE
 	design.position=Vector2(12,8)
-	var height:=52*factor+13
+	design.size=Vector2(roundf(1070*factor),roundf(52*factor))
+	frame.size=design.size
+	frame.texture=UI.Gloss.surface("header",roundi(design.size.x),roundi(design.size.y))
+	for child in design.get_children():
+		if child==frame or not child is Control:continue
+		if not child.has_meta("header_base_rect"):child.set_meta("header_base_rect",Rect2(child.position,child.size))
+		var base_rect: Rect2=child.get_meta("header_base_rect")
+		child.position=(base_rect.position*factor).round()
+		child.size=(base_rect.size*factor).round()
+		if child is PanelContainer and child.has_meta("stage"):
+			var kind="primary" if child.get_meta("current") else ("locked" if child.get_meta("locked") else "button")
+			var style=StyleBoxTexture.new();style.texture=UI.Gloss.surface(kind,roundi(child.size.x),roundi(child.size.y))
+			style.set_content_margin_all(3);style.content_margin_top=1;style.content_margin_bottom=4
+			child.add_theme_stylebox_override("panel",style)
+			for caption in child.find_children("*","Label",true,false):caption.add_theme_font_size_override("font_size",maxi(13,roundi(13*factor)))
+			for icon in child.find_children("*","TextureRect",true,false):icon.custom_minimum_size=Vector2.ONE*roundf(12*factor)
+			for row in child.find_children("*","HBoxContainer",true,false):row.add_theme_constant_override("separation",roundi(4*factor))
+		elif child.name in ["GameHomeButton","GameMenuButton","Stage1MenuButton"]:
+			child.add_theme_constant_override("icon_max_width",roundi(19*factor))
+			for state in ["normal","hover","pressed","disabled"]:
+				var style=StyleBoxTexture.new();style.texture=UI.Gloss.surface("round",roundi(child.size.x),roundi(child.size.y));style.set_content_margin_all(3)
+				child.add_theme_stylebox_override(state,style)
+		else:
+			var picker=child.find_child("LanguageMenu",true,false) as MenuButton
+			if picker:
+				picker.custom_minimum_size=(Vector2(98,30)*factor).round()
+				picker.add_theme_font_size_override("font_size",maxi(12,roundi(12*factor)))
+				picker.add_theme_constant_override("icon_max_width",roundi(15*factor))
+				for state in ["normal","hover","pressed","disabled"]:
+					var style=StyleBoxTexture.new();style.texture=UI.Gloss.surface("button",roundi(98*factor),roundi(30*factor));style.set_content_margin_all(3);style.content_margin_right=roundf(14*factor)
+					picker.add_theme_stylebox_override(state,style)
+	var height=roundf(52*factor)+13
 	if not is_equal_approx(custom_minimum_size.y,height):custom_minimum_size.y=height
 
 func _process(_delta: float) -> void:
@@ -73,7 +98,7 @@ func _refresh() -> void:
 		design.remove_child(n)
 		n.queue_free()
 	_stage_nodes.clear()
-	var x:=173.0
+	var x:=164.0
 	for i in range(1,11):
 		var active:=i==stage
 		var done:=P.is_completed(i)
@@ -84,32 +109,39 @@ func _refresh() -> void:
 		point.set_meta("completed",done)
 		point.set_meta("locked",not P.is_level_unlocked(i))
 		point.tooltip_text=UI.text("Stage %d")%i+"\n"+UI.text("Coming soon" if not P.is_level_unlocked(i) else ("Completed" if done else "Ready"))
-		var width:=92.0 if active else (54.0 if i<=3 else 52.0)
+		var width:=52.0
 		point.position=Vector2(x,8 if active else 9)
 		point.size=Vector2(width,34)
-		point.add_theme_stylebox_override("panel",pill(active,done))
+		point.add_theme_stylebox_override("panel",pill(active,done,false,"normal",not P.is_level_unlocked(i)))
+		if stage==4 and P.is_level_unlocked(i) and not active:
+			point.mouse_default_cursor_shape=Control.CURSOR_POINTING_HAND
+			point.gui_input.connect(_stage_pressed.bind(i))
 		design.add_child(point)
 		_stage_nodes.append(point)
+		if active:
+			var pointer=TextureRect.new();pointer.texture=svg('<svg xmlns="http://www.w3.org/2000/svg" width="14" height="8"><path d="M1 1H13L7 7Z" fill="#087fff" stroke="#087fff" stroke-linejoin="round"/></svg>');pointer.mouse_filter=Control.MOUSE_FILTER_IGNORE
+			pointer.position=Vector2(x+(width-14)*.5,0);pointer.size=Vector2(14,8);design.add_child(pointer);_stage_nodes.append(pointer)
 		var row:=HBoxContainer.new()
 		row.alignment=BoxContainer.ALIGNMENT_CENTER
 		row.add_theme_constant_override("separation",4)
 		point.add_child(row)
-		if active or done or not P.is_level_unlocked(i):
+		if done or not P.is_level_unlocked(i):
 			var icon:=TextureRect.new()
 			icon.texture=UI.icon("play" if active else ("check" if done else "lock"))
-			icon.modulate=Color.WHITE if active else (Color("2ec75b") if done else Color("386282"))
+			icon.modulate=Color.WHITE if active else (Color("21a55b") if done else Color("63849a"))
 			icon.expand_mode=TextureRect.EXPAND_IGNORE_SIZE
 			icon.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 			icon.custom_minimum_size=Vector2(12,12)
 			icon.size_flags_vertical=Control.SIZE_SHRINK_CENTER
 			row.add_child(icon)
-		var caption:=UI.inline_label(UI.text("Stage %d")%i if active else "%02d"%i,11,true)
+		var caption:=UI.inline_label("%02d"%i,11,true)
 		caption.name="CurrentStageLabel" if active else "ReachStageLabel"
 		caption.set_meta("locale_ignore",not active)
 		caption.add_theme_color_override("font_color",Color.WHITE if active else Color("163e61"))
 		caption.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
 		row.add_child(caption)
-		x+=width+(9.0 if i==1 else (13.0 if i==2 else (18.0 if i==3 else 12.0)))
+		x+=width+16.0
+	_fit.call_deferred()
 
 func _build_controls() -> void:
 	var mark=UI.logo(0,0)
@@ -120,12 +152,13 @@ func _build_controls() -> void:
 	var language=UI.language_switcher(language_action,10)
 	language.name="Stage1LanguagePicker" if stage==1 else "GameLanguagePicker"
 	design.add_child(language)
-	language.position=Vector2(881,8)
+	language.position=Vector2(850,8)
 	var picker=language.find_child("LanguageMenu",true,false)
 	# Header is uniformly scaled from the accepted native reference geometry.
 	# Remove only the classic alignment callback; native popup/action signals stay.
 	for connection in picker.resized.get_connections():picker.resized.disconnect(connection.callable)
-	picker.custom_minimum_size=Vector2(88,30)
+	UI.Gloss.disable_button(picker)
+	picker.custom_minimum_size=Vector2(98,30)
 	picker.add_theme_constant_override("icon_max_width",15)
 	picker.add_theme_constant_override("h_separation",4)
 	for state in ["normal","hover","pressed","disabled"]:
@@ -138,21 +171,28 @@ func _build_controls() -> void:
 	chevron.offset_right=-6
 	chevron.offset_top=-3
 	chevron.offset_bottom=3
-	language.size=Vector2(88,32)
+	language.size=Vector2(98,32)
 	for home in [true,false]:
 		var action: Callable=func():UI.go_home(menu_action.get_object())
 		if not home:action=menu_action
-		var button=UI.button("",action,false,31,14)
+		var button=UI.button("",action,false,36,11)
+		UI.Gloss.disable_button(button)
 		button.name="GameHomeButton" if home else ("Stage1MenuButton" if stage==1 else "GameMenuButton")
 		button.icon=UI.icon("home" if home else "menu")
 		button.tooltip_text=UI.text("Go to Main Menu" if home else "Menu")
 		design.add_child(button)
-		button.custom_minimum_size=Vector2(31,31)
-		button.position=Vector2(979 if home else 1020,8)
+		button.custom_minimum_size=Vector2(36,31)
+		button.position=Vector2(960 if home else 1012,8)
 		button.icon_alignment=HORIZONTAL_ALIGNMENT_CENTER
 		button.alignment=HORIZONTAL_ALIGNMENT_CENTER
 		button.add_theme_constant_override("icon_max_width",19)
+		button.add_theme_constant_override("h_separation",4)
 		for state in ["normal","hover","pressed","disabled"]:
 			button.add_theme_stylebox_override(state,pill(false,true,true,state))
-		for state in ["icon_normal_color","icon_hover_color","icon_pressed_color"]:button.add_theme_color_override(state,Color("007db3"))
-		button.size=Vector2(31,31)
+		for state in ["icon_normal_color","icon_hover_color","icon_pressed_color"]:button.add_theme_color_override(state,Color("087fff"))
+		button.size=Vector2(36,31)
+
+func _stage_pressed(event: InputEvent,number: int) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index==MOUSE_BUTTON_LEFT:
+		var owner=menu_action.get_object()
+		if is_instance_valid(owner) and owner.has_method("_go_stage"):owner.call("_go_stage",number)
