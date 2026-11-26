@@ -1,0 +1,124 @@
+{
+  "images": [
+    {
+      "path": "Cooktops/JUAED21WB.png",
+      "bytes": 1532723,
+      "sha256": "d68bc36a71d388b7264ed686f686f5e701b8cfd116b00200a4ce518f7819f91e",
+      "source": "catalog_based_generated_image"
+    },
+    {
+      "path": "Cooktops/JUASDS17WS.png",
+      "bytes": 1568163,
+      "sha256": "fd8b219ad135bd24826819b11dde1309f6067c80a0aec53500a7b4abb51e1db7",
+      "source": "catalog_based_generated_image"
+    },
+    {
+      "path": "Cooktops/JUASG32T1V.png",
+      "bytes": 1439070,
+      "sha256": "0581a22709e91a1bd7e865a32b04b5f275b5baca9d0869e2e9b67f790acfd315",
+      "source": "catalog_based_generated_image"
+    },
+    {
+      "path": "Cooktops/JUASHW38R7.png",
+      "bytes": 1508685,
+      "sha256": "2386d9a6bfd66947b6a4bf198edec28f34a93f93427c1fdb74a20c1b5c9ebdc4",
+      "source": "catalog_based_generated_image"
+    },
+    {
+      "path": "Cooktops/JUASW28P1W.png",
+      "bytes": 1447871,
+      "sha256": "754485adc909b6d5c93ee9406554412474b2285d3e540ba604e51e206566f362",
+      "source": "catalog_based_generated_image"
+    },
+    {
+      "path": "Faucets/faucet-01.png",
+      "bytes": 20411,
+      "sha256": "a0ae001d3dc213da725a5209f93dd8ee2d8ec6d4b0d45c5d2451517e758c9d65",
+      "source": "temporary_native_mesh_thumbnail"
+    },
+    {
+      "path": "Faucets/faucet-02.png",
+      "bytes": 26931,
+      "sha256": "302a6deac6c11b1454cba6e2f21de6a8cbde7be79486f4d1b1ccc429cdd6e95d",
+      "source": "temporary_native_mesh_thumbnail"
+    },
+    {
+      "path": "Faucets/faucet-03.png",
+      "bytes": 34281,
+      "sha256": "bd8a20820765a7b0a8fda8d2de93cb983dda45081c57f622e2fa2d97115294ff",
+      "source": "temporary_native_mesh_thumbnail"
+    },
+    {
+      "path": "Faucets/faucet-04.png",
+      "bytes": 18223,
+      "sha256": "c6a411b0c37f9d57d0ea552605e1beb598d561ecf03a5cbb24dfe9193fef5f30",
+      "source": "temporary_native_mesh_thumbnail"
+    },
+    {
+      "path": "Faucets/faucet-05.png",
+      "bytes": 18685,
+      "sha256": "b3b92da7f0bb857c2bf2ddc722e0579cd6a39f97c8b2b1104a373d36815d1757",
+      "source": "temporary_native_mesh_thumbnail"
+    },
+    {
+      "path": "Hoods/hood-01-hottokleen.png",
+      "bytes": 1487101,
+      "sha256": "cc0ed6ffb1a401925ea5c6e02e5eaab40574513d9e7b55af79e365b3c01c94b6",
+      "source": "catalog_based_generated_image"
+    },
+    {
+      "path": "Hoods/hood-02-smart-ii-black.png",
+      "bytes": 1412334,
+      "sha256": "67ee9cac3e6d1d12350af51cdf0b18f5ebc93341530a8a0ff198cf0451d04efd",
+      "source": "catalog_based_generated_image"
+    },
+    {
+      "path": "Hoods/hood-03-stylish.png",
+      "bytes": 1179328,
+      "sha256": "7ae91a542153d2f088f62902cd67d69704fb3c113f2eb1ba6b68a95d3a5acddb",
+      "source": "catalog_based_generated_image"
+    },
+    {
+      "path": "Hoods/hood-04-thin.png",
+      "bytes": 1395218,
+      "sha256": "1a3740981e597c212965db373ddeecfc46533ac6b2b612fdbec8f5e748264178",
+      "source": "catalog_based_generated_image"
+    },
+    {
+      "path": "Hoods/hood-05-boots-sirocco.png",
+      "bytes": 1484125,
+      "sha256": "d817d60c896d513e92d2c482c73d280b0402a697c4770674ea8bc14ddc162c8f",
+      "source": "catalog_based_generated_image"
+    },
+    {
+      "path": "Sinks/sink-01-stainless-m.png",
+      "bytes": 1405402,
+      "sha256": "d400deefa7ea256a0a684874a791dd4bc2b5237b27f11f787bf41040a1ad2333",
+      "source": "catalog_based_generated_image"
+    },
+    {
+      "path": "Sinks/sink-02-stainless-s.png",
+      "bytes": 1388534,
+      "sha256": "fa9357148f49b629a9190263808fa1860f16307560430fdc7962197964a78ef0",
+      "source": "catalog_based_generated_image"
+    },
+    {
+      "path": "Sinks/sink-03-g-sink-76.png",
+      "bytes": 1430806,
+      "sha256": "34ee8b6cd7359d70b646b201f57c79dbfa174ed5b4a63d178aad0c3b4a12dbe5",
+      "source": "catalog_based_generated_image"
+    },
+    {
+      "path": "Sinks/sink-04-raku-suru.png",
+      "bytes": 1396239,
+      "sha256": "6de72b6d34b8b77cea125aa53f6db490d1021319abb7abc6dd96b3350a75f179",
+      "source": "catalog_based_generated_image"
+    },
+    {
+      "path": "Sinks/sink-05-mu-black.png",
+      "bytes": 1330252,
+      "sha256": "d1eb56134d6d27347f4fb627964b071f6c25504567f7ea2846b13de687d48477",
+      "source": "catalog_based_generated_image"
+    }
+  ]
+}

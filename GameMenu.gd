@@ -451,7 +451,7 @@ func _start_new_game() -> void:
 	_show_levels()
 
 func _start_level(level: int, resume: bool = false) -> void:
-	if level > 3 or not Progress.is_level_unlocked(level):
+	if not Progress.is_level_unlocked(level):
 		return
 	var current := get_tree().current_scene
 	if current.has_method("_save_session"): current.call("_save_session")
@@ -460,7 +460,7 @@ func _start_level(level: int, resume: bool = false) -> void:
 	Progress.launch_from_level_menu = (level == 1)
 	if is_pause_overlay:
 		get_tree().paused = false
-	var target: String = "res://main.tscn" if level == 1 else ("res://stage_2.tscn" if level == 2 else "res://stage_3.tscn")
+	var target: String = Progress.scene_for_stage(level)
 	var result: Error = get_tree().change_scene_to_file(target)
 	if result == OK:
 		Extras.record_launch(level)

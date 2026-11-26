@@ -1,0 +1,53 @@
+name: Validate Godot pull request
+
+on:
+  pull_request:
+    branches: [main]
+
+# This workflow validates the proposed source only. It cannot deploy Pages.
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Godot and Web export templates
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.7.2
+          use-dotnet: false
+          include-templates: true
+      - name: Import project
+        run: godot --headless --editor --path . --import --quit
+      - name: Check existing stages and Stage 4 selection
+        shell: python
+        run: |
+          import subprocess
+          checks = {
+              "TrilingualSmoke": "TRILINGUAL_SMOKE_OK",
+              "SessionFlow": "SESSION_FLOW_OK",
+              "CompletionTiming": "COMPLETION_TIMING_OK",
+              "Stage3Speech": "STAGE3_SPEECH_OK",
+              "DirectKitchenParts": "DIRECT_KITCHEN_PARTS_OK",
+              "Stage4Selection": "STAGE4_SELECTION_OK",
+          }
+          for script, marker in checks.items():
+              result = subprocess.run(
+                  ["godot", "--headless", "--audio-driver", "Dummy", "--path", ".",
+                   "--script", "res://Tests/" + script + ".gd", "--max-fps", "120",
+                   "--quit-after", "14400"],
+                  capture_output=True, text=True, timeout=150,
+              )
+              log = result.stdout + result.stderr
+              print(log, flush=True)
+              assert result.returncode == 0 and marker in log and "SCRIPT ERROR" not in log, script
+      - name: Verify Web export
+        run: |
+          mkdir -p /tmp/stage4-web-export
+          godot --headless --path . --export-release Web /tmp/stage4-web-export/game.html
+          test -s /tmp/stage4-web-export/game.html
+          test -s /tmp/stage4-web-export/game.wasm
+          test -s /tmp/stage4-web-export/game.pck
