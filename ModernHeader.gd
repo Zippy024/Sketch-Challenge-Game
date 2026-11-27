@@ -53,7 +53,7 @@ func _fit() -> void:
 	if design==null or not _controls_ready or _fitting or size.x<280:return
 	_fitting=true
 	var factor: float=maxf(0.5,(size.x-24.0)/1070.0)
-	design.position=Vector2(12,6)
+	design.position=Vector2(12,8)
 	design.size=Vector2(roundf(1070.0*factor),roundf(52.0*factor))
 	frame.size=design.size
 	frame.texture=UI.Gloss.surface("header",roundi(frame.size.x),roundi(frame.size.y))
@@ -76,7 +76,7 @@ func _fit() -> void:
 		elif child is Button:
 			child.add_theme_font_size_override("font_size",maxi(12,roundi(12*factor)))
 			child.add_theme_constant_override("icon_max_width",roundi(14*factor))
-		elif child==_language_name.get_parent():
+		elif child==_language_name.get_parent().get_parent():
 			_language_name.add_theme_font_size_override("font_size",maxi(12,roundi(12*factor)))
 			for icon in child.find_children("*","TextureRect",true,false):
 				icon.custom_minimum_size=Vector2(24*factor,17*factor)

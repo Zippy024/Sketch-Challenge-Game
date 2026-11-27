@@ -20,10 +20,10 @@ static func icon(button: Button,kind: String) -> void:
 
 static func card(button: Button,selected: bool=false) -> void:
 	for state in ["normal","hover","pressed","disabled"]:
-		var style=UI.box(Color.WHITE,CYAN if selected or state in ["hover","pressed"] else Color("bad9e6"),12,0)
+		var style=UI.box(Color.WHITE,CYAN if selected or state in ["hover","pressed"] else Color("bad9e6"),16,0)
 		style.set_border_width_all(2 if selected else 1);style.shadow_size=2;style.shadow_offset=Vector2(0,1)
 		button.add_theme_stylebox_override(state,style)
-	var focus=UI.box(Color.TRANSPARENT,CYAN,12,0);focus.set_border_width_all(2);focus.shadow_size=0
+	var focus=UI.box(Color.TRANSPARENT,CYAN,16,0);focus.set_border_width_all(2);focus.shadow_size=0
 	button.add_theme_stylebox_override("focus",focus)
 
 static func ignore_children(node: Node) -> void:
