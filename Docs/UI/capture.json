@@ -19,7 +19,7 @@
   "browser_console_errors": [],
   "source_sha256": {
     "GlossSurfaces.gd": "20f3ada3d9adcea07d2fbb5d0b9164b189fccd361f3d3037b808af9cdf080427",
-    "KitchenUI.gd": "1fc2e8d5ed3749cda6c1248d733470dfa0cfd7f7e76d7cb8554239e1dc56452f",
+    "KitchenUI.gd": "ddc1788e3559033112029a9ec2f17b427d877ddc8306ca3c78cb0fc3ae707ee5",
     "ModernHeader.gd": "754e0fa828abd8544ce5b931eda453903e859a87e474e60314caf5ef0b3745ed",
     "StageCardPicker.gd": "739513b663c942dbf96b7e67e32854cf314a5c15240b2d8b68223bb27c877135",
     "Main.gd": "8ab8b2e18a14bcdd807407b9137d5e9a4daeea062113d49d8c576a835cc46c1d",
@@ -27,16 +27,19 @@
     "Stage3.gd": "9bdfc254f6064528a7ba00f399bc1e1388420f8f757017aeba7a40e1450de47f",
     "Stage4.gd": "b4faccf444ab6a0a962412044aac7752e00de88a79cdb8cd63e0da3332c16e5f",
     "Localization/Messages.gd": "bb2c1d362c5b98c041cd6c159989425217f93d6d8e0b2f1e6c8585a651804253",
-    "UIAssets/mint-workspace.svg": "7a5011ca1ccc1c5f1b33c1080f6069fe306698111e3875b2a0de3820e23cd3f2"
+    "UIAssets/mint-workspace.svg": "7a5011ca1ccc1c5f1b33c1080f6069fe306698111e3875b2a0de3820e23cd3f2",
+    "MenuScreen.gd": "653af9627bd24fa3d9af420132a90c62fdba2d39a37aa61a142cca8cc20a88b5",
+    "HomeProgress.gd": "0abefe18e6fcda08af961d2384ae485576aeaba3015c9fa1b55a6e819565462e",
+    "Stage4Assets/StudioTheme.gd": "1f5a0baef75d6c99e485c28075e39d36f9efc2c190dcc1586750dc8ec6a2bb05"
   },
   "local_native_checks": {
-    "TrilingualSmoke": "passed Godot 4.7.2",
-    "HeaderNavigation": "passed Godot 4.7.2",
-    "SessionFlow": "passed Godot 4.7.2",
-    "CompletionTiming": "passed Godot 4.7.2",
-    "Stage3Speech": "passed Godot 4.7.2",
-    "DirectKitchenParts": "passed Godot 4.7.2",
-    "Stage4Selection": "passed Godot 4.7.2"
+    "HeaderNavigation": "passed Godot 4.7.2 after integrating latest main",
+    "TrilingualSmoke": "passed Godot 4.7.2 after integrating latest main",
+    "SessionFlow": "passed Godot 4.7.2 after integrating latest main",
+    "CompletionTiming": "passed Godot 4.7.2 after integrating latest main",
+    "Stage3Speech": "passed Godot 4.7.2 after integrating latest main",
+    "DirectKitchenParts": "passed Godot 4.7.2 after integrating latest main",
+    "Stage4Selection": "passed Godot 4.7.2 after integrating latest main"
   },
   "ci_checks": "Seven native regression suites and Web export run in both pull-request validation and Pages deployment."
 }
