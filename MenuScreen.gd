@@ -161,12 +161,12 @@ func _welcome_button(title: String, icon_key: String, rect: Rect2, primary: bool
 	button.add_theme_constant_override("icon_max_width",26)
 	button.add_theme_constant_override("h_separation",18)
 	for state in ["normal","hover","pressed","disabled"]:
-		var active:=primary and state!="disabled"
-		var fill:=Color("0078e7") if active else Color("f8fcff")
+		var active: bool=primary and str(state)!="disabled"
+		var fill: Color=Color("0078e7") if active else Color("f8fcff")
 		if state=="hover":fill=Color("009bea") if primary else Color("d9f5ff")
 		if state=="pressed":fill=Color("0067c4") if primary else Color("c8efff")
 		if state=="disabled":fill=Color("e7f0f4")
-		var outline:=Color("77ecff") if active else Color("86bfff")
+		var outline: Color=Color("77ecff") if active else Color("86bfff")
 		var style:=UI.box(fill,outline,38,10)
 		style.set_border_width_all(2)
 		style.shadow_color=Color(0.02,0.2,0.55,0.20)
