@@ -258,7 +258,6 @@ func _show_presentation(levels: bool) -> void:
 				elif Progress.has_session(): _start_level(Progress.resume_stage(),true)
 			"language":_show_language_select()
 			"guide":_show_help()
-			"progress":_show_progress()
 			"settings":_show_settings()
 			"profile":_show_profile()
 			"back":

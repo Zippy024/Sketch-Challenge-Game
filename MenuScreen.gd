@@ -124,118 +124,59 @@ func _top_controls() -> void:
 	settings.tooltip_text=UI.text("Settings")
 	_put(_design,settings,Rect2(1350,22,46,44))
 
-func _home_decoration(name: String, markup: String, rect: Rect2) -> TextureRect:
-	var illustration := TextureRect.new()
-	illustration.name=name
-	var svg := Image.new()
-	if svg.load_svg_from_buffer(markup.to_utf8_buffer())==OK:
-		illustration.texture=ImageTexture.create_from_image(svg)
-	illustration.expand_mode=TextureRect.EXPAND_IGNORE_SIZE
-	illustration.stretch_mode=TextureRect.STRETCH_SCALE
-	illustration.mouse_filter=Control.MOUSE_FILTER_IGNORE
-	_put(_design,illustration,rect)
-	return illustration
-
 func _build_home() -> void:
-	# The approved Welcome concept: realistic kitchen art on the left,
-	# readable controls on the right, a single real-data progress strip,
-	# and three independent navigation shortcuts below the modal.
-	var hero:=Panel.new()
-	hero.name="HomeHeroPanel"
-	hero.mouse_filter=Control.MOUSE_FILTER_IGNORE
-	var frame:=UI.box(Color("f3fbff"),Color("8ed9fc"),33,12)
-	frame.set_border_width_all(3)
-	frame.shadow_size=18
-	frame.shadow_color=Color(0.02,0.22,0.34,0.26)
-	frame.shadow_offset=Vector2(0,8)
-	hero.add_theme_stylebox_override("panel",frame)
-	_put(_design,hero,Rect2(172,150,1096,540))
-	_home_decoration("HomeHeroWash",
-		'<svg xmlns="http://www.w3.org/2000/svg" width="636" height="525" viewBox="0 0 636 525"><defs><linearGradient id="bg" x2=".9" y2="1"><stop stop-color="#ffffff"/><stop offset="1" stop-color="#cdefff"/></linearGradient></defs><path d="M0 0H603Q636 0 636 33V490Q636 525 602 525H0Z" fill="url(#bg)"/><path d="M0 479Q151 444 301 480T636 470V525H0Z" fill="#3ccafe" opacity=".24"/><path d="M0 497Q155 463 327 495T636 490V525H0Z" fill="#009bd8" opacity=".19"/></svg>',
-		Rect2(604,158,655,523))
-	var illustration_frame:=Panel.new()
-	illustration_frame.name="HomeKitchenArtFrame"
-	illustration_frame.mouse_filter=Control.MOUSE_FILTER_IGNORE
-	illustration_frame.clip_children=CanvasItem.CLIP_CHILDREN_AND_DRAW
-	var photo_frame:=UI.box(Color("e5f6ff"),Color("b6e9fe"),25,0)
-	photo_frame.set_border_width_all(2)
-	photo_frame.shadow_size=0
-	illustration_frame.add_theme_stylebox_override("panel",photo_frame)
-	_put(_design,illustration_frame,Rect2(191,166,416,506))
-	var illustration:=TextureRect.new()
-	illustration.name="HomeKitchenIllustration"
-	illustration.texture=preload("res://UIAssets/RealKitchenIntro.webp")
-	illustration.expand_mode=TextureRect.EXPAND_IGNORE_SIZE
-	illustration.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	illustration.mouse_filter=Control.MOUSE_FILTER_IGNORE
-	_put(illustration_frame,illustration,Rect2(4,4,408,498))
-	var photo_tint:=ColorRect.new()
-	photo_tint.color=Color(0.77,0.92,1.0,0.06)
-	photo_tint.mouse_filter=Control.MOUSE_FILTER_IGNORE
-	_put(illustration_frame,photo_tint,Rect2(4,4,408,498))
-	_home_decoration("HomePhotoDivider",
-		'<svg xmlns="http://www.w3.org/2000/svg" width="55" height="506"><path d="M0 0Q53 84 29 169T17 342Q20 445 55 506" fill="none" stroke="#ffffff" stroke-width="9" opacity=".95"/><path d="M9 0Q59 86 35 174T24 340Q24 440 60 506" fill="none" stroke="#31c7ff" stroke-width="4" opacity=".85"/><path d="M28 392Q22 457 51 502" fill="none" stroke="#f2b829" stroke-width="6"/></svg>',
-		Rect2(579,166,53,506))
-	# Keep the actual shared logo, not a text-based imitation.
-	_add_logo(Rect2(547,36,346,158))
-	var title:=_level_label(_design,"Welcome!",Rect2(669,239,508,65),31 if Progress.get_language()=="mm" else 45,Color("102e62"),true,true)
+	_add_logo(Rect2(540,18,360,168))
+	_top_controls()
+	var panel := Panel.new()
+	panel.name = "HomeHeroPanel"
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.add_theme_stylebox_override("panel",Aqua.surface(false,true))
+	_put(_design,panel,Rect2(450,190,540,556))
+	var title := _level_label(_design,"Welcome, Designer!",Rect2(474,210,492,64),28 if Progress.get_language()=="mm" else 34,UI.INK,true,true)
 	title.name="HomeWelcomeTitle"
-	_level_label(_design,"Your dream kitchen starts here.",Rect2(653,302,543,38),15,Color("3f6581"),true)
-	var accent:=ColorRect.new()
-	accent.name="HomeTitleAccent"
-	accent.color=Color("f5be37")
-	accent.mouse_filter=Control.MOUSE_FILTER_IGNORE
-	_put(_design,accent,Rect2(1173,254,32,5))
-	accent.rotation=0.27
-	var start:=_button("Start Game",true,21)
+	_level_label(_design,"Your dream kitchen starts here.",Rect2(484,274,472,36),15,UI.INK,true)
+	var start := _button("Start Game",true,24)
 	start.name="StartGame"
 	start.add_theme_font_override("font",UI.font(true))
 	start.icon=UI.icon("play")
-	start.add_theme_constant_override("icon_max_width",20)
+	start.add_theme_constant_override("icon_max_width",22)
 	start.pressed.connect(func():action_requested.emit("new_game"))
-	_put(_design,start,Rect2(711,367,398,59))
+	_put(_design,start,Rect2(496,326,448,64))
 	Aqua.button(start,true)
-	var continue_button:=_button("Continue Game",false,17)
+	var continue_button := _button("Continue Game",false,22)
 	continue_button.name="ContinueGame"
 	continue_button.add_theme_font_override("font",UI.font(true))
 	continue_button.icon=UI.icon("redo")
 	continue_button.add_theme_color_override("icon_normal_color",UI.TEAL)
-	continue_button.add_theme_constant_override("icon_max_width",19)
+	continue_button.add_theme_constant_override("icon_max_width",22)
 	continue_button.disabled=not paused_game and not Progress.has_session()
 	continue_button.tooltip_text=UI.text("Resume your saved game") if not continue_button.disabled else UI.text("Start a game first")
 	continue_button.pressed.connect(func():action_requested.emit("continue"))
-	_put(_design,continue_button,Rect2(750,450,320,48))
+	_put(_design,continue_button,Rect2(496,408,448,60))
 	Aqua.button(continue_button)
+	for i in range(2):
+		var button := _button("Select Level" if i==0 else "How to Play",false,17)
+		button.name = "SelectLevel" if i==0 else "HowToPlay"
+		button.icon = UI.icon("layers" if i==0 else "help")
+		button.add_theme_color_override("icon_normal_color",UI.INK)
+		button.add_theme_constant_override("icon_max_width",23)
+		button.pressed.connect(func(): action_requested.emit("levels" if i==0 else "guide"))
+		_put(_design,button,Rect2(496+i*232,488,216,50))
+		Aqua.button(button)
+	var line := HSeparator.new()
+	_put(_design,line,Rect2(494,580,452,2))
+	var progress_title:=_level_label(_design,"Your progress",Rect2(484,586,472,40),20,UI.INK,true,true)
+	progress_title.name="HomeProgressTitle"
 	var progress:=preload("res://HomeProgress.gd").new()
-	_put(_design,progress,Rect2(661,541,505,86))
-	var shortcuts: Array[String]=["Select Level","How to Play","Progress"]
-	var actions: Array[String]=["levels","guide","progress"]
-	var icons: Array[String]=["layers","help","plan"]
-	for i in range(3):
-		var shortcut:=_button(shortcuts[i],false,16)
-		shortcut.name=["SelectLevel","HowToPlay","HomeProgressButton"][i]
-		shortcut.icon=UI.icon(icons[i])
-		shortcut.add_theme_color_override("icon_normal_color",UI.TEAL)
-		shortcut.add_theme_color_override("icon_hover_color",UI.TEAL)
-		shortcut.add_theme_constant_override("icon_max_width",21)
-		shortcut.pressed.connect(func():action_requested.emit(actions[i]))
-		_put(_design,shortcut,Rect2(233+i*337,715,296,50))
-		Aqua.button(shortcut)
-		if i<2:
-			var divider:=ColorRect.new()
-			divider.color=Color(0.95,1.0,1.0,0.8)
-			divider.mouse_filter=Control.MOUSE_FILTER_IGNORE
-			_put(_design,divider,Rect2(551+i*337,728,2,25))
-	var back:=_back_button("Language","language")
-	back.name="BackToLanguage"
+	_put(_design,progress,Rect2(482,636,476,80))
+	var back := _back_button("Language","language")
+	back.name = "BackToLanguage"
 	_put(_design,back,Rect2(20,16,164,42))
 	Aqua.button(back)
-	_top_controls()
 	if paused_game:
-		var resume:=_button("Back to Game",true,15)
-		resume.name="HomeResumePaused"
+		var resume := _button("Back to Game",true,16)
 		resume.pressed.connect(func():action_requested.emit("back"))
-		_put(_design,resume,Rect2(1175,759,205,40))
+		_put(_design,resume,Rect2(1180,740,220,42))
 		Aqua.button(resume,true)
 
 func _build_levels() -> void:
