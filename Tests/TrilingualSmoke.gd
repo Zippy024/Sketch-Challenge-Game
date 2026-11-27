@@ -72,11 +72,15 @@ func _run() -> void:
 		_collect(menu,"home")
 		var home=menu.find_child("KitchenHomeScreen",true,false)
 		var hero=home.find_child("HomeHeroPanel",true,false)
-		assert(hero.size.x<home.size.x*0.65 and hero.size.y<home.size.y*0.72)
-		for control in ["StartGame","ContinueGame","SelectLevel","HowToPlay"]:
+		assert(hero.size.x<home.size.x*0.75 and hero.size.y<home.size.y*0.78)
+		for control in ["StartGame","ContinueGame"]:
 			assert(hero.get_global_rect().encloses(home.find_child(control,true,false).get_global_rect()))
+		for control in ["SelectLevel","HowToPlay","HomeProgressButton"]:
+			assert(home.get_global_rect().encloses(home.find_child(control,true,false).get_global_rect()))
+		assert(home.find_child("WelcomeKitchenPhoto",true,false)!=null)
+		assert(home.find_child("HomeProgressCombinedPill",true,false)!=null)
 		assert(home.find_child("GameGuide",true,false)==null)
-		assert(home.find_child("HomeWelcomeTitle",true,false).text==manager.text("Welcome, Designer!"))
+		assert(home.find_child("HomeWelcomeTitle",true,false).text=={"en":"Welcome!","mm":"ကြိုဆိုပါတယ်!","jp":"ようこそ！"}[language])
 		assert(home.find_child("StartGame",true,false)!=null)
 		assert(home.find_child("ContinueGame",true,false).disabled)
 		var settings=home.find_child("Settings",true,false)

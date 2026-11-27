@@ -124,60 +124,146 @@ func _top_controls() -> void:
 	settings.tooltip_text=UI.text("Settings")
 	_put(_design,settings,Rect2(1350,22,46,44))
 
+
+func _welcome_copy(english: String, myanmar: String, japanese: String) -> String:
+	match Progress.get_language():
+		"mm":return myanmar
+		"jp":return japanese
+	return english
+
+func _welcome_shape(name: String, rect: Rect2, svg: String) -> void:
+	var image := Image.new()
+	if image.load_svg_from_buffer(svg.to_utf8_buffer()) != OK:
+		return
+	var artwork := TextureRect.new()
+	artwork.name=name
+	artwork.texture=ImageTexture.create_from_image(image)
+	artwork.expand_mode=TextureRect.EXPAND_IGNORE_SIZE
+	artwork.stretch_mode=TextureRect.STRETCH_SCALE
+	artwork.mouse_filter=Control.MOUSE_FILTER_IGNORE
+	_put(_design,artwork,rect)
+
+func _welcome_button(title: String, icon_key: String, rect: Rect2, primary: bool, callback: Callable) -> Button:
+	var button:=_button(title,primary,22 if primary else 19)
+	button.name=title.replace(" ","")
+	button.text=title
+	button.icon=UI.icon(icon_key)
+	button.icon_alignment=HORIZONTAL_ALIGNMENT_LEFT
+	button.alignment=HORIZONTAL_ALIGNMENT_CENTER
+	button.mouse_default_cursor_shape=Control.CURSOR_POINTING_HAND
+	button.add_theme_font_override("font",UI.font(true))
+	button.add_theme_font_size_override("font_size",22 if primary else 18)
+	var ink:=Color.WHITE if primary else Color("103274")
+	for key in ["font_color","font_hover_color","font_pressed_color","font_focus_color"]:
+		button.add_theme_color_override(key,ink)
+	for key in ["icon_normal_color","icon_hover_color","icon_pressed_color"]:
+		button.add_theme_color_override(key,ink)
+	button.add_theme_constant_override("icon_max_width",26)
+	button.add_theme_constant_override("h_separation",18)
+	for state in ["normal","hover","pressed","disabled"]:
+		var active:=primary and state!="disabled"
+		var fill:=Color("0078e7") if active else Color("f8fcff")
+		if state=="hover":fill=Color("009bea") if primary else Color("d9f5ff")
+		if state=="pressed":fill=Color("0067c4") if primary else Color("c8efff")
+		if state=="disabled":fill=Color("e7f0f4")
+		var outline:=Color("77ecff") if active else Color("86bfff")
+		var style:=UI.box(fill,outline,38,10)
+		style.set_border_width_all(2)
+		style.shadow_color=Color(0.02,0.2,0.55,0.20)
+		style.shadow_size=6 if state=="disabled" else 9
+		style.shadow_offset=Vector2(0,5)
+		button.add_theme_stylebox_override(state,style)
+	button.add_theme_stylebox_override("focus",UI.box(Color.TRANSPARENT,Color("f8ca39"),38,0))
+	button.pressed.connect(callback)
+	_put(_design,button,rect)
+	return button
+
+func _welcome_bottom_action(name: String, title: String, icon_name: String, rect: Rect2, action: String) -> Button:
+	var button:=_welcome_button(title,icon_name,rect,false,func():action_requested.emit(action))
+	button.name=name
+	button.add_theme_font_size_override("font_size",18)
+	for state in ["normal","hover","pressed"]:
+		var surface:=button.get_theme_stylebox(state) as StyleBoxFlat
+		surface.bg_color=Color("f9fdff") if state=="normal" else Color("e0f7ff")
+		surface.border_color=Color("9dd4ff")
+	return button
+
 func _build_home() -> void:
-	_add_logo(Rect2(540,18,360,168))
-	_top_controls()
-	var panel := Panel.new()
-	panel.name = "HomeHeroPanel"
-	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	panel.add_theme_stylebox_override("panel",Aqua.surface(false,true))
-	_put(_design,panel,Rect2(450,190,540,556))
-	var title := _level_label(_design,"Welcome, Designer!",Rect2(474,210,492,64),28 if Progress.get_language()=="mm" else 34,UI.INK,true,true)
-	title.name="HomeWelcomeTitle"
-	_level_label(_design,"Your dream kitchen starts here.",Rect2(484,274,472,36),15,UI.INK,true)
-	var start := _button("Start Game",true,24)
+	# Bright interactive WYM welcome design: photo on the left and the playable
+	# controls on the right. The reference illustration is NOT used as a flat UI.
+	var hero:=Panel.new()
+	hero.name="HomeHeroPanel"
+	hero.mouse_filter=Control.MOUSE_FILTER_IGNORE
+	var shell:=UI.box(Color(0.945,0.984,1.0,0.985),Color("b2f5ff"),49,0)
+	shell.set_border_width_all(4)
+	shell.shadow_color=Color(0.005,0.28,0.53,0.30)
+	shell.shadow_size=20
+	shell.shadow_offset=Vector2(0,10)
+	hero.add_theme_stylebox_override("panel",shell)
+	_put(_design,hero,Rect2(219,111,1002,548))
+
+	# Real kitchen photo is masked to a sweeping right edge, as in the reference.
+	var photo:=TextureRect.new()
+	photo.name="WelcomeKitchenPhoto"
+	photo.texture=Aqua.artwork("res://UIAssets/RealKitchenIntro.webp",preload("res://MenuAssets/GlassKitchenHomeClear.png"))
+	photo.expand_mode=TextureRect.EXPAND_IGNORE_SIZE
+	photo.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	photo.mouse_filter=Control.MOUSE_FILTER_IGNORE
+	var mask:=ShaderMaterial.new()
+	mask.shader=preload("res://MenuAssets/welcome-photo-mask.gdshader")
+	photo.material=mask
+	_put(_design,photo,Rect2(232,125,419,522))
+	_welcome_shape("WelcomePhotoGoldArc",Rect2(232,125,419,522),'<svg xmlns="http://www.w3.org/2000/svg" width="419" height="522" viewBox="0 0 419 522"><path d="M281 0C466 153 466 369 281 522" stroke="#f9ca22" stroke-width="11" fill="none"/><path d="M278 0C463 153 463 369 278 522" stroke="#e9faff" stroke-width="3" opacity=".9" fill="none"/></svg>')
+	# Subtle cyan ribbons are behind the text, not in the hit targets.
+	_welcome_shape("WelcomeBlueWaves",Rect2(616,576,599,78),'<svg xmlns="http://www.w3.org/2000/svg" width="599" height="78" viewBox="0 0 599 78"><path d="M0 56Q110 12 221 43T443 31Q541 13 599 29V78H0Z" fill="#2ed5fa" opacity=".31"/><path d="M0 68Q109 39 222 62T447 43Q539 22 599 46V78H0Z" fill="#02b8ef" opacity=".53"/><path d="M0 76Q114 56 240 67T455 57Q542 45 599 49V78H0Z" fill="#09a9e7" opacity=".42"/></svg>')
+	_welcome_shape("WelcomeSparkles",Rect2(973,201,64,54),'<svg xmlns="http://www.w3.org/2000/svg" width="64" height="54"><path d="M12 37l-4-17 8-2 4 18M37 20l7-15 7 5-8 15M45 39l16-8 3 8-17 7" stroke="#f6b910" stroke-width="5" fill="none" stroke-linecap="round"/></svg>')
+
+	var welcome:=_level_label(_design,"Welcome!",Rect2(674,212,500,68),48,Color("09266a"),true,true)
+	welcome.name="HomeWelcomeTitle"
+	welcome.text=_welcome_copy("Welcome!","ကြိုဆိုပါတယ်!","ようこそ！")
+	_level_label(_design,_welcome_copy("Design and decorate your dream kitchen.","သင့်စိတ်ကူးထဲက မီးဖိုချောင်ကို ဒီဇိုင်းဆွဲပါ။","理想のキッチンをデザインしましょう。"),Rect2(679,282,496,38),18,Color("385783"),true)
+
+	var start:=_welcome_button("Start Game","play",Rect2(699,344,418,64),true,func():action_requested.emit("new_game"))
 	start.name="StartGame"
-	start.add_theme_font_override("font",UI.font(true))
-	start.icon=UI.icon("play")
-	start.add_theme_constant_override("icon_max_width",22)
-	start.pressed.connect(func():action_requested.emit("new_game"))
-	_put(_design,start,Rect2(496,326,448,64))
-	Aqua.button(start,true)
-	var continue_button := _button("Continue Game",false,22)
+	start.text=_welcome_copy("Start Game","ဂိမ်းစတင်မည်","ゲーム開始")
+	start.tooltip_text=UI.text("Start Game")
+	var continue_button:=_welcome_button("Continue Game","layers",Rect2(714,432,388,58),false,func():action_requested.emit("continue"))
 	continue_button.name="ContinueGame"
-	continue_button.add_theme_font_override("font",UI.font(true))
-	continue_button.icon=UI.icon("redo")
-	continue_button.add_theme_color_override("icon_normal_color",UI.TEAL)
-	continue_button.add_theme_constant_override("icon_max_width",22)
+	continue_button.text=_welcome_copy("Continue Game","ဆက်ကစားမည်","続きから")
 	continue_button.disabled=not paused_game and not Progress.has_session()
 	continue_button.tooltip_text=UI.text("Resume your saved game") if not continue_button.disabled else UI.text("Start a game first")
-	continue_button.pressed.connect(func():action_requested.emit("continue"))
-	_put(_design,continue_button,Rect2(496,408,448,60))
-	Aqua.button(continue_button)
-	for i in range(2):
-		var button := _button("Select Level" if i==0 else "How to Play",false,17)
-		button.name = "SelectLevel" if i==0 else "HowToPlay"
-		button.icon = UI.icon("layers" if i==0 else "help")
-		button.add_theme_color_override("icon_normal_color",UI.INK)
-		button.add_theme_constant_override("icon_max_width",23)
-		button.pressed.connect(func(): action_requested.emit("levels" if i==0 else "guide"))
-		_put(_design,button,Rect2(496+i*232,488,216,50))
-		Aqua.button(button)
-	var line := HSeparator.new()
-	_put(_design,line,Rect2(494,580,452,2))
-	var progress_title:=_level_label(_design,"Your progress",Rect2(484,586,472,40),20,UI.INK,true,true)
-	progress_title.name="HomeProgressTitle"
+
+	# A single, connected score pill shows best stars and last played stage.
 	var progress:=preload("res://HomeProgress.gd").new()
-	_put(_design,progress,Rect2(482,636,476,80))
-	var back := _back_button("Language","language")
-	back.name = "BackToLanguage"
-	_put(_design,back,Rect2(20,16,164,42))
-	Aqua.button(back)
+	_put(_design,progress,Rect2(678,520,456,82))
+	_add_logo(Rect2(556,15,348,176))
+
+	# Bottom nav matches the screenshot; all three are working controls.
+	_welcome_bottom_action("SelectLevel",_welcome_copy("Select Level","အဆင့်ရွေးမည်","ステージ選択"),"layers",Rect2(250,699,267,58),"levels")
+	_welcome_bottom_action("HowToPlay",_welcome_copy("How to Play","ကစားနည်း","遊び方"),"help",Rect2(586,699,267,58),"guide")
+	_welcome_bottom_action("HomeProgressButton",_welcome_copy("Progress","တိုးတက်မှု","進捗"),"star",Rect2(921,699,267,58),"progress")
+	# Retain the existing navigation controls and their testable identities.
+	var back:=_back_button("Language","language")
+	back.name="BackToLanguage"
+	_put(_design,back,Rect2(20,19,154,41))
+	var language_row:=UI.language_switcher(func(lang: String):
+		Progress.set_language(lang)
+		_build()
+	,15)
+	_put(_design,language_row,Rect2(1219,26,170,43))
+	var settings:=UI.button("",func():action_requested.emit("settings"),false,43,16)
+	settings.name="Settings"
+	settings.icon=UI.icon("gear")
+	settings.icon_alignment=HORIZONTAL_ALIGNMENT_CENTER
+	settings.alignment=HORIZONTAL_ALIGNMENT_CENTER
+	settings.add_theme_color_override("icon_normal_color",UI.INK)
+	settings.add_theme_color_override("icon_hover_color",UI.TEAL)
+	settings.add_theme_constant_override("icon_max_width",24)
+	settings.tooltip_text=UI.text("Settings")
+	_put(_design,settings,Rect2(1393,26,43,43))
 	if paused_game:
-		var resume := _button("Back to Game",true,16)
-		resume.pressed.connect(func():action_requested.emit("back"))
-		_put(_design,resume,Rect2(1180,740,220,42))
-		Aqua.button(resume,true)
+		var resume:=_welcome_button("Back to Game","home",Rect2(1160,764,246,40),false,func():action_requested.emit("back"))
+		resume.name="ResumeGame"
 
 func _build_levels() -> void:
 	_add_logo(Rect2(62,3,250,106))
