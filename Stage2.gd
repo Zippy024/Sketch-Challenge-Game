@@ -272,7 +272,7 @@ func _btn(t: String, min_width: float = 85.0) -> Button:
 	return b
 
 func _build_ui() -> void:
-	var page := UI.page(self,2,"Pipe Shaft Q&A",_open_game_menu,_change_language)
+	var page := UI.page(self,2,"Pipe Shaft Q&A",_open_game_menu,_change_language,_replay_stage_two)
 	var split := HBoxContainer.new()
 	split.add_theme_constant_override("separation",18)
 	split.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -318,9 +318,13 @@ func _build_ui() -> void:
 	var right := VBoxContainer.new()
 	right.add_theme_constant_override("separation",14)
 	right_panel.add_child(right)
+	var header_indent:=MarginContainer.new()
+	header_indent.name="Stage2TitleIndent"
+	header_indent.add_theme_constant_override("margin_left",12)
+	right.add_child(header_indent)
 	var header := HBoxContainer.new()
 	header.add_theme_constant_override("separation",10)
-	right.add_child(header)
+	header_indent.add_child(header)
 	var mark := TextureRect.new()
 	mark.texture=UI.icon("planqa")
 	mark.modulate=UI.TEAL
@@ -333,14 +337,12 @@ func _build_ui() -> void:
 	answer_title.name="Stage2QATitle"
 	answer_title.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	header.add_child(answer_title)
-	var retry:=UI.button("Retry",_replay_stage_two,false,110,14)
-	retry.name="Stage2Retry"
-	retry.icon=UI.icon("undo")
-	retry.tooltip_text="Restart this stage and clear the answer"
-	header.add_child(retry)
 	var instructions:=UI.label("Type your answer, then press OK.",14,false,UI.MUTED)
 	instructions.name="Stage2AnswerInstructions"
-	right.add_child(instructions)
+	var prompt_indent:=MarginContainer.new()
+	prompt_indent.add_theme_constant_override("margin_left",12)
+	right.add_child(prompt_indent)
+	prompt_indent.add_child(instructions)
 	status_label=UI.label("",12)
 	status_label.hide()
 	right.add_child(status_label)

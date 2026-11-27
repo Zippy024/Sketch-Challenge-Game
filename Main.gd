@@ -570,7 +570,7 @@ func _build_ui() -> void:
 	add_child(screen_layout)
 	screen_layout.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	screen_layout.add_theme_constant_override("separation",0)
-	var hud := UI.header(1,"LDK Boundary Drawing",_open_game_menu,_switch_language)
+	var hud := UI.header(1,"LDK Boundary Drawing",_open_game_menu,_switch_language,_on_again_pressed)
 	screen_layout.add_child(hud)
 	_stage1_language_picker = hud.find_child("Stage1LanguagePicker",true,false)
 	var margin := MarginContainer.new()
@@ -832,10 +832,18 @@ func _build_ui() -> void:
 	_stage1_bold(drawing_heading)
 	UI.decorate_heading(drawing_heading)
 	drawing_heading.name = "Stage1DrawingHeading"
-	right.add_child(drawing_heading)
+	var heading_indent:=MarginContainer.new()
+	heading_indent.name="Stage1HeadingIndent"
+	heading_indent.add_theme_constant_override("margin_left",12)
+	right.add_child(heading_indent)
+	heading_indent.add_child(drawing_heading)
 	var drawing_hint := _label("1 Small Grid = 100 mm (e.g., 1,000 mm = 10 grids) | Click points to draw (straight or angled) | Drag = Move", 12, "45617b")
 	drawing_hint.name = "Stage1DrawingHint"
-	right.add_child(drawing_hint)
+	var hint_indent:=MarginContainer.new()
+	hint_indent.name="Stage1HintIndent"
+	hint_indent.add_theme_constant_override("margin_left",12)
+	right.add_child(hint_indent)
+	hint_indent.add_child(drawing_hint)
 	# Compact tools grouped together; each callback retains its original function.
 	var toolbar := HBoxContainer.new()
 	toolbar.name = "Stage1DrawingToolbar"
@@ -923,17 +931,8 @@ func _build_ui() -> void:
 	status_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	status_row.add_child(status_label)
 
-	var clear_button := _button("Reset", _clear)
-	clear_button.name = "Stage1ResetDrawing"
-	clear_button.icon = UI.icon("undo")
-	clear_button.add_theme_constant_override("icon_max_width", 18)
-	clear_button.custom_minimum_size = Vector2(78, 34)
-	_compact_button_style(clear_button)
-	footer.add_child(clear_button)
-	again_button_row.size_flags_horizontal = Control.SIZE_SHRINK_END
-	footer.add_child(again_button_row)
-	again_button.custom_minimum_size = Vector2(98, 34)
-	_compact_button_style(again_button, true)
+	# Bottom Reset/Retry removed. The toolbar keeps Reset View, while the
+	# shared header now owns the single full-attempt Retry action.
 	ok_button = _button("Check Answer", _confirm)
 	ok_button.name = "Stage1CheckAnswer"
 	ok_button.icon = UI.icon("check")

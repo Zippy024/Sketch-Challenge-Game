@@ -32,7 +32,7 @@ func _ready() -> void:
 func _text(key: String) -> String:return Catalog.text(key)
 
 func _build() -> void:
-	var page=UI.page(self,4,"Kitchen parts",_open_game_menu,_change_language)
+	var page=UI.page(self,4,"Kitchen parts",_open_game_menu,_change_language,_retry_stage)
 	var columns=HBoxContainer.new();columns.name="Stage4Columns";columns.add_theme_constant_override("separation",18);columns.size_flags_vertical=Control.SIZE_EXPAND_FILL;page.add_child(columns)
 	var left=VBoxContainer.new();left.name="Stage4CustomerColumn";left.size_flags_horizontal=Control.SIZE_EXPAND_FILL;left.size_flags_stretch_ratio=7;left.add_theme_constant_override("separation",12);columns.add_child(left)
 	_customer(left);_reference(left)
@@ -53,7 +53,12 @@ func _reference(parent: Control) -> void:
 
 func _build_catalog(parent: Control) -> void:
 	_main=VBoxContainer.new();_main.name="Stage4CategoryCatalog";_main.size_flags_vertical=Control.SIZE_EXPAND_FILL;_main.add_theme_constant_override("separation",10);parent.add_child(_main)
-	var title=S.label(_text("Kitchen parts"),20);UI.decorate_heading(title);_main.add_child(title)
+	var title=S.label(_text("Kitchen parts"),20);UI.decorate_heading(title)
+	var title_indent:=MarginContainer.new()
+	title_indent.name="Stage4HeadingIndent"
+	title_indent.add_theme_constant_override("margin_left",12)
+	_main.add_child(title_indent)
+	title_indent.add_child(title)
 	var grid=GridContainer.new();grid.columns=2;grid.size_flags_vertical=Control.SIZE_EXPAND_FILL;grid.add_theme_constant_override("h_separation",10);grid.add_theme_constant_override("v_separation",10);_main.add_child(grid)
 	for category in range(4):
 		var button=_product_card(grid,category,choices[category],true);button.name="Stage4Category%d"%category;button.pressed.connect(open_picker.bind(category));_cards.append(button)
@@ -112,6 +117,16 @@ func _update_cards() -> void:
 		_cards[category].find_child("ProductCaption",true,false).text=Catalog.caption(category,choices[category])
 		S.card(_cards[category],confirmed[category])
 	_count.text="%d / 4"%confirmed.count(true)
+
+func _retry_stage() -> void:
+	# The same header Retry action resets just this stage, not achievements.
+	if active>=0:cancel_selection()
+	P.open_stage(4)
+	choices.assign([0,0,0,0])
+	confirmed.assign([false,false,false,false])
+	_saved_view.clear()
+	_update_cards()
+	_save_session()
 
 func _open_plan() -> void:add_child(Plan.new())
 

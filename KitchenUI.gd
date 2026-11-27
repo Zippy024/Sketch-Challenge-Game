@@ -157,11 +157,12 @@ static func logo(width: int = 150, height: int = 54) -> TextureRect:
 	mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return mark
 
-static func header(stage: int, _title: String, menu_action: Callable, language_action: Callable) -> Control:
+static func header(stage: int, _title: String, menu_action: Callable, language_action: Callable, retry_action: Callable=Callable()) -> Control:
 	var header=load("res://ModernHeader.gd").new()
 	header.stage=stage
 	header.menu_action=menu_action
 	header.language_action=language_action
+	header.retry_action=retry_action
 	return header
 
 static func bullet_text(value: String) -> String:
@@ -183,13 +184,13 @@ static func level_reach(stage: int, in_header: bool=false) -> MarginContainer:
 	margin.add_child(track)
 	return margin
 
-static func page(parent: Control, stage: int, title: String, menu_action: Callable, language_action: Callable) -> VBoxContainer:
+static func page(parent: Control, stage: int, title: String, menu_action: Callable, language_action: Callable, retry_action: Callable=Callable()) -> VBoxContainer:
 	background(parent,true)
 	var root := VBoxContainer.new()
 	root.add_theme_constant_override("separation",12)
 	parent.add_child(root)
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	root.add_child(header(stage,title,menu_action,language_action))
+	root.add_child(header(stage,title,menu_action,language_action,retry_action))
 	var margin := MarginContainer.new()
 	for side in ["left","right","bottom"]: margin.add_theme_constant_override("margin_"+side,18)
 	margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
