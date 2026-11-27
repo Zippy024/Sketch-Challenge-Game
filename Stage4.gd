@@ -32,7 +32,7 @@ func _ready() -> void:
 func _text(key: String) -> String:return Catalog.text(key)
 
 func _build() -> void:
-	var page=UI.page(self,4,"Kitchen parts",_open_game_menu,_change_language)
+	var page=UI.page(self,4,"Kitchen parts",_open_game_menu,_change_language,_retry_stage)
 	var columns=HBoxContainer.new();columns.name="Stage4Columns";columns.add_theme_constant_override("separation",18);columns.size_flags_vertical=Control.SIZE_EXPAND_FILL;page.add_child(columns)
 	var left=VBoxContainer.new();left.name="Stage4CustomerColumn";left.size_flags_horizontal=Control.SIZE_EXPAND_FILL;left.size_flags_stretch_ratio=7;left.add_theme_constant_override("separation",12);columns.add_child(left)
 	_customer(left);_reference(left)
@@ -53,7 +53,7 @@ func _reference(parent: Control) -> void:
 
 func _build_catalog(parent: Control) -> void:
 	_main=VBoxContainer.new();_main.name="Stage4CategoryCatalog";_main.size_flags_vertical=Control.SIZE_EXPAND_FILL;_main.add_theme_constant_override("separation",10);parent.add_child(_main)
-	var title=S.label(_text("Kitchen parts"),20);UI.decorate_heading(title);_main.add_child(title)
+	var title=S.label(_text("Kitchen parts"),20);UI.decorate_heading(title);UI.inset_text(title);_main.add_child(title)
 	var grid=GridContainer.new();grid.columns=2;grid.size_flags_vertical=Control.SIZE_EXPAND_FILL;grid.add_theme_constant_override("h_separation",10);grid.add_theme_constant_override("v_separation",10);_main.add_child(grid)
 	for category in range(4):
 		var button=_product_card(grid,category,choices[category],true);button.name="Stage4Category%d"%category;button.pressed.connect(open_picker.bind(category));_cards.append(button)
@@ -64,7 +64,7 @@ func _build_catalog(parent: Control) -> void:
 	var trail=HBoxContainer.new();trail.add_theme_constant_override("separation",8);_picker.add_child(trail)
 	var back=S.button("←",cancel_selection,false,32,32,18);back.name="Stage4BackFromPicker";trail.add_child(back)
 	_breadcrumb=S.label("",13);_breadcrumb.size_flags_horizontal=Control.SIZE_EXPAND_FILL;trail.add_child(_breadcrumb)
-	_picker_heading=S.label("",19);UI.decorate_heading(_picker_heading);_picker.add_child(_picker_heading)
+	_picker_heading=S.label("",19);UI.decorate_heading(_picker_heading);UI.inset_text(_picker_heading);_picker.add_child(_picker_heading)
 	_option_grid=GridContainer.new();_option_grid.name="Stage4FiveChoices";_option_grid.columns=3;_option_grid.size_flags_vertical=Control.SIZE_EXPAND_FILL;_option_grid.add_theme_constant_override("h_separation",9);_option_grid.add_theme_constant_override("v_separation",9);_picker.add_child(_option_grid)
 	var actions=HBoxContainer.new();actions.add_theme_constant_override("separation",8);_picker.add_child(actions)
 	var cancel=S.button(_text("Cancel"),cancel_selection,false,0,42,13);cancel.name="Stage4CancelSelection";cancel.size_flags_horizontal=Control.SIZE_EXPAND_FILL;actions.add_child(cancel)
@@ -117,6 +117,9 @@ func _open_plan() -> void:add_child(Plan.new())
 
 func _change_language(language: String) -> void:
 	_save_session();P.set_language(language);get_tree().reload_current_scene()
+
+func _retry_stage() -> void:
+	_session_save_suspended=true;P.open_stage(4);get_tree().reload_current_scene()
 
 func _go_stage(stage: int) -> void:
 	if stage==4 or not P.is_level_unlocked(stage):return

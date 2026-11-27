@@ -137,7 +137,7 @@ func _refresh() -> void:
 		results.home_requested.connect(func(): get_tree().change_scene_to_file("res://GameMenu.tscn"))
 		add_child(results)
 		return
-	var page := UI.page(self,3,"S-Class Kitchen Selection",_open_game_menu,_change_lang)
+	var page := UI.page(self,3,"S-Class Kitchen Selection",_open_game_menu,_change_lang,_retry_stage)
 	var split := HBoxContainer.new()
 	split.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	split.add_theme_constant_override("separation",18)
@@ -196,6 +196,7 @@ func _refresh() -> void:
 	right.add_child(heading)
 	var title:=UI.label("Kitchen Selection" if step<2 else "Kitchen Parts",25,true)
 	UI.decorate_heading(title)
+	UI.inset_text(title)
 	title.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	heading.add_child(title)
 	_feedback_panel=PanelContainer.new()
@@ -210,11 +211,6 @@ func _refresh() -> void:
 	_feedback.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
 	_feedback_panel.add_child(_feedback)
 	_feedback_panel.hide()
-	var retry:=UI.button(_tr("Retry","ပြန်ကစားမည်","もう一度"),_retry_stage,false,110,14)
-	retry.name="Stage3Retry"
-	retry.icon=UI.icon("undo")
-	retry.tooltip_text=_tr("Restart Stage 3","အဆင့် ၃ ကို အစမှပြန်ကစားမည်","ステージ3を最初からやり直す")
-	heading.add_child(retry)
 	var phase:=mini(step,2)
 	var phases:=HBoxContainer.new()
 	phases.name="Stage3Sections"

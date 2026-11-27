@@ -570,7 +570,7 @@ func _build_ui() -> void:
 	add_child(screen_layout)
 	screen_layout.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	screen_layout.add_theme_constant_override("separation",0)
-	var hud := UI.header(1,"LDK Boundary Drawing",_open_game_menu,_switch_language)
+	var hud := UI.header(1,"LDK Boundary Drawing",_open_game_menu,_switch_language,_on_again_pressed)
 	screen_layout.add_child(hud)
 	_stage1_language_picker = hud.find_child("Stage1LanguagePicker",true,false)
 	var margin := MarginContainer.new()
@@ -733,39 +733,8 @@ func _build_ui() -> void:
 	meter.audio_player=voice_player
 	meter_row.add_child(meter)
 
-	again_button_row = HBoxContainer.new()
-	again_button_row.alignment = BoxContainer.ALIGNMENT_END
-	again_button_row.visible = true
-	# Keep Retry available throughout the stage, not only after a wrong answer.
-
-	again_button = Button.new()
-	again_button.name = "Stage1Retry"
-	again_button.text = "Retry"
-	# V9: compact, legible retry action instead of the oversized solid-red button.
-	again_button.custom_minimum_size = Vector2(101, 30)
-	again_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	var again_style := StyleBoxFlat.new()
-	again_style.bg_color = Color("fff7f5")
-	again_style.border_color = Color("e9a29a")
-	again_style.set_border_width_all(1)
-	again_style.set_corner_radius_all(22)
-	again_style.set_content_margin_all(4)
-	var again_hover: StyleBoxFlat = again_style.duplicate() as StyleBoxFlat
-	again_hover.bg_color = Color("ffe9e6")
-	again_hover.border_color = Color("ce5b50")
-	var again_pressed: StyleBoxFlat = again_style.duplicate() as StyleBoxFlat
-	again_pressed.bg_color = Color("fbd5d0")
-	again_button.add_theme_stylebox_override("normal", again_style)
-	again_button.add_theme_stylebox_override("hover", again_hover)
-	again_button.add_theme_stylebox_override("pressed", again_pressed)
-	again_button.add_theme_stylebox_override("focus", again_hover)
-	again_button.add_theme_color_override("font_color", Color("ad3832"))
-	again_button.add_theme_color_override("font_hover_color", Color("952a25"))
-	again_button.add_theme_color_override("font_pressed_color", Color("952a25"))
-	again_button.add_theme_font_size_override("font_size", 14)
-	_modern_button_style(again_button, "warning")
-	again_button.pressed.connect(_on_again_pressed)
-	again_button_row.add_child(again_button)
+	again_button_row = hud.find_child("HeaderRetryGroup",true,false)
+	again_button = hud.find_child("Stage1Retry",true,false)
 
 	# Reference Plan
 	var ref_title_btn: Button = Button.new()
@@ -831,9 +800,11 @@ func _build_ui() -> void:
 	var drawing_heading := _label("Layout Drawing Area", 25, "061a4f")
 	_stage1_bold(drawing_heading)
 	UI.decorate_heading(drawing_heading)
+	UI.inset_text(drawing_heading)
 	drawing_heading.name = "Stage1DrawingHeading"
 	right.add_child(drawing_heading)
 	var drawing_hint := _label("1 Small Grid = 100 mm (e.g., 1,000 mm = 10 grids) | Click points to draw (straight or angled) | Drag = Move", 12, "45617b")
+	UI.inset_text(drawing_hint)
 	drawing_hint.name = "Stage1DrawingHint"
 	right.add_child(drawing_hint)
 	# Compact tools grouped together; each callback retains its original function.
@@ -923,17 +894,6 @@ func _build_ui() -> void:
 	status_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	status_row.add_child(status_label)
 
-	var clear_button := _button("Reset", _clear)
-	clear_button.name = "Stage1ResetDrawing"
-	clear_button.icon = UI.icon("undo")
-	clear_button.add_theme_constant_override("icon_max_width", 18)
-	clear_button.custom_minimum_size = Vector2(78, 34)
-	_compact_button_style(clear_button)
-	footer.add_child(clear_button)
-	again_button_row.size_flags_horizontal = Control.SIZE_SHRINK_END
-	footer.add_child(again_button_row)
-	again_button.custom_minimum_size = Vector2(98, 34)
-	_compact_button_style(again_button, true)
 	ok_button = _button("Check Answer", _confirm)
 	ok_button.name = "Stage1CheckAnswer"
 	ok_button.icon = UI.icon("check")

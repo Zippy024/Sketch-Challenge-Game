@@ -157,11 +157,12 @@ static func logo(width: int = 150, height: int = 54) -> TextureRect:
 	mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return mark
 
-static func header(stage: int, _title: String, menu_action: Callable, language_action: Callable) -> Control:
+static func header(stage: int, _title: String, menu_action: Callable, language_action: Callable, retry_action: Callable=Callable()) -> Control:
 	var header=load("res://ModernHeader.gd").new()
 	header.stage=stage
 	header.menu_action=menu_action
 	header.language_action=language_action
+	header.retry_action=retry_action
 	return header
 
 static func bullet_text(value: String) -> String:
@@ -183,13 +184,13 @@ static func level_reach(stage: int, in_header: bool=false) -> MarginContainer:
 	margin.add_child(track)
 	return margin
 
-static func page(parent: Control, stage: int, title: String, menu_action: Callable, language_action: Callable) -> VBoxContainer:
+static func page(parent: Control, stage: int, title: String, menu_action: Callable, language_action: Callable, retry_action: Callable=Callable()) -> VBoxContainer:
 	background(parent,true)
 	var root := VBoxContainer.new()
 	root.add_theme_constant_override("separation",12)
 	parent.add_child(root)
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	root.add_child(header(stage,title,menu_action,language_action))
+	root.add_child(header(stage,title,menu_action,language_action,retry_action))
 	var margin := MarginContainer.new()
 	for side in ["left","right","bottom"]: margin.add_theme_constant_override("margin_"+side,18)
 	margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -242,6 +243,11 @@ static func card_stack(parent: Control, expand: bool = false) -> VBoxContainer:
 	stack.add_theme_constant_override("separation",12)
 	panel.add_child(stack)
 	return stack
+
+static func inset_text(control: Control,pixels: int=12) -> void:
+	var padding=StyleBoxEmpty.new();padding.content_margin_left=pixels;control.add_theme_stylebox_override("normal",padding)
+	var accent=control.get_node_or_null("HeadingAccent")
+	if accent:accent.offset_left=pixels
 
 static func decorate_heading(control: Control) -> void:
 	if control.has_meta("heading_decoration"):return
@@ -456,7 +462,7 @@ static func inline_label(value: String, size: int = 14, bold: bool = false) -> L
 	result.autowrap_mode = TextServer.AUTOWRAP_OFF
 	return result
 
-static func icon(kind: String) -> Texture2D:
+static func icon(kind: String,logical_size: int=32) -> Texture2D:
 	var shapes := {
 		"star":'<path d="M12 2l3 6.5 7 1-5 5 .9 7-5.9-3.5L6 21.5l1-7-5-5 7-1z" fill="#ffffff"/>',
 		"cabinet":'<path d="M3 4h18v17H3zM2 2h20v3H2zM3 11h18M12 11v10M7 8h3M7 15v3M16 15v3"/>',
@@ -483,6 +489,7 @@ static func icon(kind: String) -> Texture2D:
 		"clock":'<circle cx="12" cy="12" r="10"/><path d="M12 5v7l4 3"/>'
 	}
 	var svg := '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+str(shapes.get(kind,shapes["layers"])).replace("currentColor","#ffffff")+'</g></svg>'
+	if logical_size!=32:return Gloss.vector(svg.replace('width="32" height="32"','width="%d" height="%d"'%[logical_size,logical_size]))
 	var texture:=DPITexture.create_from_string(svg,2.0)
 	texture.set_size_override(Vector2i(32,32))
 	return texture

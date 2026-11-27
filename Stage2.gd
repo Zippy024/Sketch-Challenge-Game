@@ -272,7 +272,7 @@ func _btn(t: String, min_width: float = 85.0) -> Button:
 	return b
 
 func _build_ui() -> void:
-	var page := UI.page(self,2,"Pipe Shaft Q&A",_open_game_menu,_change_language)
+	var page := UI.page(self,2,"Pipe Shaft Q&A",_open_game_menu,_change_language,_replay_stage_two)
 	var split := HBoxContainer.new()
 	split.add_theme_constant_override("separation",18)
 	split.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -330,15 +330,12 @@ func _build_ui() -> void:
 	header.add_child(mark)
 	answer_title=UI.label("Plan Q&A",24,true)
 	UI.decorate_heading(answer_title)
+	UI.inset_text(answer_title)
 	answer_title.name="Stage2QATitle"
 	answer_title.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	header.add_child(answer_title)
-	var retry:=UI.button("Retry",_replay_stage_two,false,110,14)
-	retry.name="Stage2Retry"
-	retry.icon=UI.icon("undo")
-	retry.tooltip_text="Restart this stage and clear the answer"
-	header.add_child(retry)
 	var instructions:=UI.label("Type your answer, then press OK.",14,false,UI.MUTED)
+	UI.inset_text(instructions)
 	instructions.name="Stage2AnswerInstructions"
 	right.add_child(instructions)
 	status_label=UI.label("",12)
