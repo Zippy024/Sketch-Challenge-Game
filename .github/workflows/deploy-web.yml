@@ -67,7 +67,7 @@ jobs:
           grep -q "DIRECT_KITCHEN_PARTS_OK" /tmp/direct-kitchen.log
           if grep -q "SCRIPT ERROR" /tmp/direct-kitchen.log; then exit 1; fi
 
-      - name: Verify Stage 4 selection and fixed 3D layout
+      - name: Verify Stage 4 selection and customer/reference layout
         run: |
           timeout 60s godot --headless --audio-driver Dummy --path . --script res://Tests/Stage4Selection.gd --max-fps 120 --quit-after 7200 2>&1 | tee /tmp/stage4-selection.log
           grep -q "STAGE4_SELECTION_OK" /tmp/stage4-selection.log

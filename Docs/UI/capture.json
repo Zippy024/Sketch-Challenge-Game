@@ -1,0 +1,56 @@
+{
+  "viewport_css": [
+    1662,
+    940
+  ],
+  "device_pixel_ratio": 2,
+  "capture_pixels": [
+    3324,
+    1880
+  ],
+  "renderer": "Actual Godot4.6.3 Web export in Chromium/WebGL2",
+  "verified_interactions": [
+    "language selection",
+    "Start Game and stage selection",
+    "Stage1 drawing and Undo",
+    "header Home navigation",
+    "Stage4 selection-only layout"
+  ],
+  "draw_test_dark_pixels": {
+    "before": 0,
+    "drawn": 4850,
+    "after_undo": 242
+  },
+  "native_suites": [
+    {
+      "suite": "TrilingualSmoke",
+      "exit": 0,
+      "ok": true
+    },
+    {
+      "suite": "SessionFlow",
+      "exit": 0,
+      "ok": true
+    },
+    {
+      "suite": "CompletionTiming",
+      "exit": 0,
+      "ok": true
+    },
+    {
+      "suite": "Stage3Speech",
+      "exit": 0,
+      "ok": true
+    },
+    {
+      "suite": "DirectKitchenParts",
+      "exit": 0,
+      "ok": true
+    },
+    {
+      "suite": "Stage4Selection",
+      "exit": 0,
+      "ok": true
+    }
+  ]
+}

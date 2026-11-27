@@ -1,13 +1,14 @@
 extends RefCounted
+const Gloss=preload("res://GlossSurfaces.gd")
 const Progress = preload("res://GameProgress.gd")
-const INK := Color("082744")
-const MUTED := Color("284f68")
-const TEAL := Color("00bfff")
-const PANEL := Color("c6eafb")
-const SPEECH := Color("b8e4f8")
-const INPUT := Color("e4f5ff")
-const CANVAS := Color("d6f0ff")
-const EDGE := Color("67c8ec")
+const INK := Color("061a4f")
+const MUTED := Color("335b85")
+const TEAL := Color("087fff")
+const PANEL := Color("d9edff")
+const SPEECH := Color("eff9fe")
+const INPUT := Color("edf7ff")
+const CANVAS := Color("fbfdff")
+const EDGE := Color("9cc8ec")
 const SUCCESS := Color("2da36b")
 const FAILURE := Color("cd4c5e")
 const FEEDBACK_TINT := 0.055
@@ -24,7 +25,7 @@ static func text(value: String) -> String:
 static func _font_file(path: String) -> FontFile:
 	if not _font_files.has(path):
 		var file := load(path).duplicate() as FontFile
-		file.oversampling=2.0
+		file.oversampling=0.0 # Let Godot match the viewport/device pixel scale.
 		_font_files[path]=file
 	return _font_files[path]
 
@@ -53,9 +54,9 @@ static func box(fill: Color = Color(0.80,0.93,1.0,0.95), edge: Color = Color(1,1
 	s.set_border_width_all(1)
 	s.set_corner_radius_all(radius)
 	s.set_content_margin_all(pad)
-	s.shadow_color = Color(0.06,0.24,0.32,0.10)
-	s.shadow_size = 8
-	s.shadow_offset = Vector2(0,3)
+	s.shadow_color = Color(0.06,0.24,0.32,0.06)
+	s.shadow_size = 2
+	s.shadow_offset = Vector2(0,1)
 	return s
 
 static func label(value: String, size: int = 16, bold: bool = false, color: Color = INK) -> Label:
@@ -70,34 +71,34 @@ static func label(value: String, size: int = 16, bold: bool = false, color: Colo
 	return l
 
 static func style_button(b: Button, primary: bool = false, size: int = 14, warning: bool = false) -> void:
-	b.add_theme_font_override("font",font(primary))
-	b.add_theme_font_size_override("font_size",size)
+	b.add_theme_font_override("font",font(true))
+	b.add_theme_font_size_override("font_size",maxi(15,size))
 	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	for state in ["normal","hover","pressed","disabled"]:
 		var fill := TEAL if primary else (Color("fff0f1") if warning else INPUT)
 		if state == "hover": fill = fill.darkened(0.05)
 		if state == "pressed": fill = fill.darkened(0.11)
 		if state == "disabled": fill = Color("dce8ed")
-		var style := box(fill,Color("50c9f4") if primary else Color("88cce9"),1000,4)
+		var style := box(fill,Color("50c9f4") if primary else Color("88cce9"),10,4)
 		style.content_margin_left = 14
 		style.content_margin_right = 14
+		style.content_margin_top=2
+		style.content_margin_bottom=5
 		style.shadow_size = 2 if primary else 0
 		b.add_theme_stylebox_override(state,style)
-	b.set_meta("uses_primary_gloss",primary)
-	if primary:
-		_refresh_primary(b)
-		if not b.has_meta("primary_resize_connected"):
-			b.set_meta("primary_resize_connected",true)
-			b.resized.connect(_refresh_primary.bind(b))
-	var focus := box(Color.TRANSPARENT,TEAL,1000,0)
+	b.set_meta("uses_primary_gloss",false)
+	var focus := box(Color.TRANSPARENT,TEAL,10,0)
 	focus.set_border_width_all(2)
 	focus.shadow_size = 0
 	b.add_theme_stylebox_override("focus",focus)
 	var ink := Color.WHITE if primary else (Color("b32741") if warning else INK)
 	for state in ["font_color","font_hover_color","font_pressed_color","font_focus_color"]: b.add_theme_color_override(state,ink)
+	for state in ["icon_normal_color","icon_hover_color","icon_pressed_color","icon_focus_color"]:b.add_theme_color_override(state,ink)
+	b.add_theme_color_override("icon_disabled_color",MUTED)
 	b.add_theme_color_override("font_disabled_color",MUTED)
 	b.add_theme_constant_override("icon_max_width",20)
 	b.add_theme_constant_override("h_separation",8)
+	Gloss.bind_button(b,primary,warning)
 
 static func button(value: String, action: Callable, primary: bool = false, width: int = 110, size: int = 14) -> Button:
 	var b := Button.new()
@@ -235,11 +236,30 @@ static func card_stack(parent: Control, expand: bool = false) -> VBoxContainer:
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	if expand: panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	panel.add_theme_stylebox_override("panel",box(PANEL,EDGE))
+	Gloss.bind_panel(panel,"panel",panel.get_theme_stylebox("panel"))
 	parent.add_child(panel)
 	var stack := VBoxContainer.new()
 	stack.add_theme_constant_override("separation",12)
 	panel.add_child(stack)
 	return stack
+
+static func reference_heading(control: Control) -> void:
+	control.name="ReferencePlanHeading"
+	control.custom_minimum_size.y=38
+	control.add_theme_font_override("font",font(true))
+	control.add_theme_font_size_override("font_size",22)
+	control.add_theme_color_override("font_color",INK)
+	if control is Button:
+		Gloss.disable_button(control)
+		control.text=text("Reference Plan")
+		control.icon=null
+		control.alignment=HORIZONTAL_ALIGNMENT_LEFT
+		for state in ["normal","hover","pressed","disabled"]:
+			var style=box(Color("eef8fe") if state in ["hover","pressed"] else Color.TRANSPARENT,Color.TRANSPARENT,6,0)
+			style.shadow_size=0
+			control.add_theme_stylebox_override(state,style)
+	elif control is Label:
+		control.autowrap_mode=TextServer.AUTOWRAP_OFF
 
 static func customer(parent: Control) -> Dictionary:
 	var stack := card_stack(parent)
@@ -255,6 +275,7 @@ static func customer(parent: Control) -> Dictionary:
 	var plate := PanelContainer.new()
 	plate.name="CustomerNamePlate"
 	plate.add_theme_stylebox_override("panel",customer_plate())
+	Gloss.bind_panel(plate,"name",plate.get_theme_stylebox("panel"))
 	identity.add_child(plate)
 	var customer_name := label("Ms. Hosokawa",15,true)
 	customer_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -267,11 +288,12 @@ static func customer(parent: Control) -> Dictionary:
 	tag.name="CustomerRequestHeader"
 	tag.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	tag.add_theme_stylebox_override("panel",request_plate())
+	Gloss.bind_panel(tag,"tab",tag.get_theme_stylebox("panel"))
 	talk.add_child(tag)
 	var header_row:=HBoxContainer.new()
 	header_row.add_theme_constant_override("separation",7)
 	tag.add_child(header_row)
-	var request_title:=label("Customer Request",15,true)
+	var request_title:=label("Customer Request",17,true)
 	request_title.autowrap_mode=TextServer.AUTOWRAP_OFF
 	header_row.add_child(request_title)
 	var header_spacer:=Control.new()
@@ -280,6 +302,7 @@ static func customer(parent: Control) -> Dictionary:
 	var bubble := PanelContainer.new()
 	bubble.name="CustomerConversation"
 	bubble.add_theme_stylebox_override("panel",conversation_style())
+	Gloss.bind_panel(bubble,"speech",bubble.get_theme_stylebox("panel"))
 	bubble.custom_minimum_size.y = 200
 	talk.add_child(bubble)
 	var dialogue := VBoxContainer.new()
@@ -332,7 +355,7 @@ static func conversation_style(state: String="neutral") -> StyleBoxFlat:
 		fill=fill.lerp(accent,FEEDBACK_TINT)
 		edge=edge.lerp(accent,0.22)
 	var style:=box(fill,edge,18,12)
-	style.shadow_size=4
+	style.shadow_size=0
 	return style
 
 static func add_customer_feedback(bubble: PanelContainer,feedback_parent: VBoxContainer) -> void:
@@ -372,7 +395,9 @@ static func set_customer_feedback(bubble: PanelContainer,state: String,animate: 
 	var surface:=conversation_style(state)
 	var target:=surface.bg_color
 	if changed and animate and previous:surface.bg_color=previous.bg_color
+	bubble.set_meta("gloss_kind","")
 	bubble.add_theme_stylebox_override("panel",surface)
+	if state=="neutral":Gloss.bind_panel(bubble,"speech",surface)
 	var old: Variant=bubble.get_meta("feedback_tween") if bubble.has_meta("feedback_tween") else null
 	if old is Tween and old.is_valid():old.kill()
 	if changed and animate and bubble.is_inside_tree():
@@ -382,7 +407,7 @@ static func set_customer_feedback(bubble: PanelContainer,state: String,animate: 
 	badge.visible=state!="neutral"
 	if not badge.visible:return
 	var accent:=Color("237454") if state=="correct" else Color("a84655")
-	var style:=box(Color("e7f6ee") if state=="correct" else Color("fff0f2"),Color("a5d9be") if state=="correct" else Color("e9b7c0"),1000,4)
+	var style:=box(Color("e7f6ee") if state=="correct" else Color("fff0f2"),Color("a5d9be") if state=="correct" else Color("e9b7c0"),10,4)
 	style.content_margin_left=9
 	style.content_margin_right=9
 	style.shadow_size=0
