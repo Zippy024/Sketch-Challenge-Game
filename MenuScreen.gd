@@ -144,7 +144,9 @@ func _welcome_shape(name: String, rect: Rect2, svg: String) -> void:
 	_put(_design,artwork,rect)
 
 func _welcome_button(title: String, icon_key: String, rect: Rect2, primary: bool, callback: Callable) -> Button:
-	var button:=_button(title,primary,22 if primary else 19)
+	# Build a native button without the global glossy style binder: the welcome
+	# layout owns these blue and white button styles.
+	var button:=Button.new()
 	button.name=title.replace(" ","")
 	button.text=title
 	button.icon=UI.icon(icon_key)
@@ -158,6 +160,8 @@ func _welcome_button(title: String, icon_key: String, rect: Rect2, primary: bool
 		button.add_theme_color_override(key,ink)
 	for key in ["icon_normal_color","icon_hover_color","icon_pressed_color"]:
 		button.add_theme_color_override(key,ink)
+	button.add_theme_color_override("font_disabled_color",Color("809cb1"))
+	button.add_theme_color_override("icon_disabled_color",Color("809cb1"))
 	button.add_theme_constant_override("icon_max_width",26)
 	button.add_theme_constant_override("h_separation",18)
 	for state in ["normal","hover","pressed","disabled"]:
