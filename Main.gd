@@ -830,6 +830,7 @@ func _build_ui() -> void:
 
 	var drawing_heading := _label("Layout Drawing Area", 25, "061a4f")
 	_stage1_bold(drawing_heading)
+	UI.decorate_heading(drawing_heading)
 	drawing_heading.name = "Stage1DrawingHeading"
 	right.add_child(drawing_heading)
 	var drawing_hint := _label("1 Small Grid = 100 mm (e.g., 1,000 mm = 10 grids) | Click points to draw (straight or angled) | Drag = Move", 12, "45617b")

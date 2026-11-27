@@ -195,6 +195,7 @@ func _refresh() -> void:
 	heading.add_theme_constant_override("separation",12)
 	right.add_child(heading)
 	var title:=UI.label("Kitchen Selection" if step<2 else "Kitchen Parts",25,true)
+	UI.decorate_heading(title)
 	title.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	heading.add_child(title)
 	_feedback_panel=PanelContainer.new()
