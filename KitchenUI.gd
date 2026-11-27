@@ -79,7 +79,7 @@ static func style_button(b: Button, primary: bool = false, size: int = 14, warni
 		if state == "hover": fill = fill.darkened(0.05)
 		if state == "pressed": fill = fill.darkened(0.11)
 		if state == "disabled": fill = Color("dce8ed")
-		var style := box(fill,Color("50c9f4") if primary else Color("88cce9"),16,4)
+		var style := box(fill,Color("50c9f4") if primary else Color("88cce9"),20,4)
 		style.content_margin_left = 14
 		style.content_margin_right = 14
 		style.content_margin_top=2
@@ -87,7 +87,7 @@ static func style_button(b: Button, primary: bool = false, size: int = 14, warni
 		style.shadow_size = 2 if primary else 0
 		b.add_theme_stylebox_override(state,style)
 	b.set_meta("uses_primary_gloss",false)
-	var focus := box(Color.TRANSPARENT,TEAL,16,0)
+	var focus := box(Color.TRANSPARENT,TEAL,20,0)
 	focus.set_border_width_all(2)
 	focus.shadow_size = 0
 	b.add_theme_stylebox_override("focus",focus)
