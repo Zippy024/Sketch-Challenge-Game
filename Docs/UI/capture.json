@@ -8,13 +8,14 @@
     3324,
     1880
   ],
-  "renderer": "Actual Godot4.6.3 Web export in Chromium/WebGL2",
+  "renderer": "Actual Godot4.7.2 Web export in Chromium/WebGL2",
   "verified_interactions": [
     "language selection",
     "Start Game and stage selection",
     "Stage1 drawing and Undo",
     "header Home navigation",
-    "Stage4 selection-only layout"
+    "Stage4 selection-only layout",
+    "first Stage1 entry retains original logo, language icon, and six stage lock icons"
   ],
   "draw_test_dark_pixels": {
     "before": 0,
