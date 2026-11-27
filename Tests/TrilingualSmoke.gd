@@ -190,17 +190,25 @@ func _run() -> void:
 		var reach=game.find_child("LevelReachBar",true,false)
 		assert(reach!=null)
 		var active_header=game.find_child("Stage1Header",true,false)
-		var header_language=active_header.find_child("LanguageMenu",true,false)
-		assert(header_language is MenuButton and header_language.icon!=null and header_language.get_popup().item_count==3)
-		var language_popup_style:=header_language.get_popup().get_theme_stylebox("panel") as StyleBoxFlat
-		assert(language_popup_style!=null and language_popup_style.bg_color.get_luminance()>0.8)
-		assert(active_header.find_child("GameHomeButton",true,false).icon!=null)
-		# The reference header uses a scaled native design: localized controls must
-		# remain within its blue frame and must not collide with the tenth stage.
-		for control_name in ["LanguageMenu","GameHomeButton","Stage1MenuButton"]:
+		var header_language=active_header.find_child("HeaderLanguageBadge",true,false)
+		assert(header_language!=null)
+		assert(active_header.find_child("LanguageMenu",true,false)==null)
+		assert(active_header.find_child("GameHomeButton",true,false)==null)
+		assert(active_header.find_child("HeaderLanguageLabel",true,false).text=={"jp":"Japan","mm":"Myanmar","en":"English"}[language])
+		for control_name in ["HeaderRetryButton","HeaderStageButton","HeaderLanguageBadge"]:
 			var header_control=active_header.find_child(control_name,true,false)
+			assert(header_control!=null)
 			assert(active_header.get_global_rect().encloses(header_control.get_global_rect()))
-		assert(active_header.find_child("ReachNode10",true,false).get_global_rect().end.x<header_language.global_position.x)
+		assert(active_header.find_child("ReachNode10",true,false).get_global_rect().end.x<active_header.find_child("HeaderRetryButton",true,false).global_position.x)
+		assert(active_header.find_child("HeaderRetryButton",true,false).global_position.x<active_header.find_child("HeaderStageButton",true,false).global_position.x)
+		assert(active_header.find_child("HeaderStageButton",true,false).global_position.x<header_language.global_position.x)
+		active_header.call("_show_preview",3)
+		await process_frame
+		var mini_preview=game.find_child("StageMiniPreview",true,false)
+		assert(mini_preview!=null and mini_preview.find_child("StagePreviewArtwork",true,false)!=null)
+		assert(mini_preview.find_child("StagePreviewSelect10",true,false)!=null)
+		mini_preview.find_child("CloseStageMiniPreview",true,false).pressed.emit()
+		await process_frame
 
 		assert(active_header.get_global_rect().encloses(reach.get_global_rect()))
 		assert(reach.global_position.y-active_header.global_position.y>=7)
@@ -270,8 +278,10 @@ func _run() -> void:
 			assert(game.get_global_rect().encloses(game.find_child(card_name,true,false).get_global_rect()))
 		# Exercise the visible Stage 1 controls, including the two distinct Resets.
 		var drawing=game.get("canvas")
-		var live_retry=game.find_child("Stage1Retry",true,false)
+		var live_retry=game.find_child("HeaderRetryButton",true,false)
 		assert(live_retry!=null and live_retry.is_visible_in_tree())
+		assert(game.find_child("Stage1ResetDrawing",true,false)==null)
+		assert(game.find_child("Stage1Retry",true,false)==null)
 		var wall=PackedVector2Array([Vector2.ZERO,Vector2(1000,0)])
 		drawing.lines.append(wall)
 		game.find_child("Stage1ToolUndo",true,false).pressed.emit()
@@ -292,7 +302,7 @@ func _run() -> void:
 		drawing.pan=Vector2(200,200)
 		game.find_child("Stage1ResetView",true,false).pressed.emit()
 		assert(drawing.pan==Vector2(72,60) and drawing.lines.size()==1)
-		game.find_child("Stage1ResetDrawing",true,false).pressed.emit()
+		game.call("_clear")
 		assert(drawing.lines.is_empty() and drawing.drawing_enabled)
 		game.find_child("Stage1CheckAnswer",true,false).pressed.emit()
 		await _wait()
@@ -302,20 +312,20 @@ func _run() -> void:
 		assert(wrong_tint>0.0 and wrong_tint<0.1)
 		assert(game.get("dialog_bubble").get_theme_stylebox("panel").bg_color.r>game.get("dialog_bubble").get_theme_stylebox("panel").bg_color.g)
 		assert(game.get("again_button_row").visible)
-		for control_name in ["Stage1DrawingToolbar","Stage1ResetDrawing","Stage1CheckAnswer"]:
+		for control_name in ["Stage1DrawingToolbar","Stage1CheckAnswer"]:
 			var control=game.find_child(control_name,true,false)
 			assert(drawing_card.get_global_rect().encloses(control.get_global_rect()))
-		assert(drawing_card.get_global_rect().encloses(game.get("again_button").get_global_rect()))
-		game.get("again_button").pressed.emit()
+		live_retry.pressed.emit()
 		assert(game.get("last_eval_state")=="none" and not drawing.drawing_enabled)
 		assert(not game.get("conversation_finished") and game.get("ok_button").disabled)
 		assert(live_retry.is_visible_in_tree() and drawing.lines.is_empty())
 		# Language changes must not restore the old, hard-coded customer name.
 		var alternate_language="jp" if language!="jp" else "en"
-		header_language.get_popup().id_pressed.emit(["jp","mm","en"].find(alternate_language))
+		game.call("_switch_language",alternate_language)
 		await _wait()
 		assert(game.get("speaker_name_label").text==manager.text("Ms. Hosokawa"))
-		header_language.get_popup().id_pressed.emit(["jp","mm","en"].find(language))
+		assert(header_language.find_child("HeaderLanguageLabel",true,false).text=={"jp":"Japan","mm":"Myanmar","en":"English"}[alternate_language])
+		game.call("_switch_language",language)
 		game.call("_stop_voice")
 		game.call("_on_voice_finished")
 		await _wait()
@@ -385,7 +395,10 @@ func _run() -> void:
 		assert(game.find_child("CustomerAnswerBadge",true,false).get_parent().get_parent()==game.find_child("CustomerConversation",true,false))
 		assert(game.get("answer_input").size.y/qa_card.size.y>0.6)
 		assert(game.get("submit_button").text=="OK")
-		assert(game.find_child("Stage2Retry",true,false)!=null and game.find_child("Stage2Retry",true,false).is_visible_in_tree())
+		assert(game.find_child("Stage2Retry",true,false)==null)
+		assert(game.find_child("HeaderRetryButton",true,false)!=null)
+		assert(game.find_child("HeaderStageButton",true,false)!=null)
+		assert(game.find_child("HeaderLanguageBadge",true,false)!=null)
 		assert(game.get("progress_description").text==manager.text("Type your answer, then press OK."))
 		assert(qa_card.get_global_rect().encloses(game.get("submit_button").get_global_rect()))
 		assert(qa_card.get_global_rect().encloses(game.get("progress_card").get_global_rect()))
