@@ -262,7 +262,7 @@ func _check_retry(stage: int) -> void:
 		await _continue_phase()
 		Rating.advance(3,60)
 		Rating.mistake(3)
-		current_scene.find_child("Stage3Retry",true,false).pressed.emit()
+		current_scene.find_child("HeaderRetryButton",true,false).pressed.emit()
 		await _wait()
 		assert(current_scene.get("step")==0 and not current_scene.get("_transitioning"))
 		assert(int(Rating.current(3).mistakes)==0 and float(Rating.current(3).elapsed)<2)
