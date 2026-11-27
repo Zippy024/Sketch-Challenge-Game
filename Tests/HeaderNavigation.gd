@@ -37,6 +37,9 @@ func run() -> void:
 			click_tile(h,stage);await settle()
 			var popup=game.find_child("StageCardPicker",true,false)
 			assert(paused and popup!=null and popup.selected_stage==stage)
+			var panel=popup.find_child("StagePickerPanel",true,false)
+			assert(panel.size.is_equal_approx(Vector2(520,560)), "Popup size %s (%s, stage %d), minimum %s"%[panel.size,language,stage,panel.get_combined_minimum_size()])
+			assert(panel.position.is_equal_approx(((popup.size-panel.size)*.5).round()))
 			assert(game.find_child("LevelSelectionScreen",true,false)==null)
 			if stage==2:
 				game.answer_input.grab_focus();await process_frame;await process_frame
@@ -44,6 +47,8 @@ func run() -> void:
 			assert(game.find_children("StagePreviewCard","PanelContainer",true,false).size()==1)
 			for choice in range(1,11):
 				popup.find_child("StagePopupChoice%02d"%choice,true,false).pressed.emit();await process_frame
+				assert(panel.size.is_equal_approx(Vector2(520,560)), "Popup size %s (%s, stage %d), minimum %s"%[panel.size,language,stage,panel.get_combined_minimum_size()])
+				assert(panel.position.is_equal_approx(((popup.size-panel.size)*.5).round()))
 				assert(popup.selected_stage==choice and popup.find_child("StageCardTitle",true,false).text==preload("res://KitchenUI.gd").text("Stage %02d")%choice)
 				assert(popup.find_child("StageCardStart",true,false).disabled==(choice>4))
 				assert(popup.find_child("StageCardStars",true,false).visible==(choice<=3))

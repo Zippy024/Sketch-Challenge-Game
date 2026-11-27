@@ -15,14 +15,15 @@ static func surface(kind: String,width: int,height: int) -> Texture2D:
 	elif kind=="speech":top="#e1f3ff";bottom="#add7ff";edge="#70a8d4";radius=14
 	elif kind=="tab":top="#e9f8ff";bottom="#b5ddff";edge="#397dcc";radius=9;shadow=.08
 	elif kind=="name":top="#eaf8ff";bottom="#a9d8ff";edge="#397dcc";radius=9;shadow=.18
-	elif kind=="danger":top="#fff9fa";bottom="#ffdce2";edge="#f5a5b3";radius=9
-	elif kind=="button":top="#ffffff";bottom="#d0e8ff";edge="#4d88be";radius=9;shadow=.16
-	elif kind=="start":top="#34df99";bottom="#08b879";edge="#edfff7";radius=16;shadow=.18
-	elif kind=="primary":top="#19a9ff";bottom="#0057e3";edge="#004cc2";radius=9;shadow=.18
+	elif kind=="danger":top="#fff3f5";bottom="#ffdee5";edge="#d7798d";radius=9
+	elif kind=="button":top="#f0f8ff";bottom="#d8eaff";edge="#4d88be";radius=9;shadow=.14
+	elif kind=="start":top="#22ce88";bottom="#0aa970";edge="#087c54";radius=16;shadow=.16
+	elif kind=="primary":top="#168eff";bottom="#0766df";edge="#0757bf";radius=9;shadow=.16
 	elif kind=="round":top="#ffffff";bottom="#e4efff";edge="#4d80ba";radius=(h-5)*.5;shadow=.20
 	elif kind=="locked":top="#d4e7f7";bottom="#9abbdb";edge="#7b99b8";radius=8;shadow=.16
 	elif kind=="navy":top="#2b568a";bottom="#123562";edge="#7a9fc3";radius=7;shadow=.04
 	elif kind=="reference":top="#f2faff";bottom="#d2eaff";edge="#3a87c6";radius=16
+	if kind in ["button","danger","primary","start","round","locked","navy"]:radius=(h-5)*.5
 	var defs='<defs><linearGradient id="g" x2="0" y2="1"><stop stop-color="%s"/><stop offset="1" stop-color="%s"/></linearGradient><radialGradient id="light" cx=".32" cy=".22" r=".8"><stop stop-color="#ffffff" stop-opacity=".78"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient></defs>'%[top,bottom]
 	var body='<rect x="1" y="4" width="%d" height="%d" rx="%s" fill="#11375c" opacity="%s"/><rect x="1" y="1" width="%d" height="%d" rx="%s" fill="url(#g)" stroke="%s" stroke-width="1.4"/>'%[w-2,h-5,str(radius),str(shadow),w-2,h-5,str(radius),edge]
 	if kind=="speech":
@@ -36,19 +37,13 @@ static func surface(kind: String,width: int,height: int) -> Texture2D:
 		body+='<path d="M%s 11V%dM%s 11V%d" stroke="#6f9ecb" stroke-width="1.2"/><path d="M%s %sH%s" stroke="#7faad0" stroke-width="2"/><path d="M%s %sH%s" stroke="#edf9ff" stroke-width="1"/>'%[str(roundf(151*scale)),h-14,str(roundf(718*scale)),h-14,str(roundf(193*scale)),str(roundf(25*scale)),str(roundf(643*scale)),str(roundf(193*scale)),str(roundf(24*scale)),str(roundf(643*scale))]
 	if kind=="heading":
 		body='<rect x="0" y="%d" width="66" height="3" rx="1.5" fill="#169cff"/><rect x="70" y="%d" width="14" height="3" rx="1.5" fill="#77d5ff"/><circle cx="90" cy="%s" r="1.5" fill="#ffc958"/>'%[h-4,h-4,str(h-2.5)]
-	elif kind in ["button","primary","start","round","locked","name","tab","header","navy"]:
-		var shine_height=maxf(6,(h-8)*.46)
-		var shine_alpha=.24 if kind in ["primary","navy"] else .48
-		body+='<rect x="4" y="3" width="%d" height="%s" rx="%s" fill="#ffffff" opacity="%s"/><path d="M%s %dH%s" stroke="#ffffff" stroke-width="1.2" opacity=".85"/>'%[w-8,str(shine_height),str(maxf(4,radius-3)),str(shine_alpha),str(radius),h-7,str(w-radius)]
-		if kind=="primary":
-			body+='<path d="M%d 6L%d 10L%d 6L%d 2Z" fill="#ffffff" opacity=".8"/>'%[w-14,w-11,w-8,w-11]
-		elif kind=="name":
-			body+='<path d="M10 %sL14 %sL10 %sL6 %sZ" fill="#259bff" opacity=".75"/>'%[str(h*.5-4),str(h*.5),str(h*.5+4),str(h*.5)]
+	elif kind=="name":
+		body+='<path d="M10 %sL14 %sL10 %sL6 %sZ" fill="#259bff" opacity=".75"/>'%[str(h*.5-4),str(h*.5),str(h*.5+4),str(h*.5)]
 	if kind in ["panel","frame","reference"]:
 		body+='<path d="M20 8H72" stroke="#54c6ff" stroke-width="3" stroke-linecap="round"/><path d="M%d 8H%dL%d 18" fill="none" stroke="#66c5f4" stroke-width="2" opacity=".7"/><path d="M%d 8L%d 12L%d 8L%d 4Z" fill="#ffc958"/>'%[w-60,w-29,w-19,w-74,w-70,w-66,w-70]
 	if kind=="header":
 		body+='<path d="M20 %sQ70 %s 142 7" fill="none" stroke="#ffffff" stroke-width="3" opacity=".75"/><path d="M22 %sQ90 %s 154 9" fill="none" stroke="#48b7ef" stroke-width="1" opacity=".5"/>'%[str(h-10),str(h-4),str(h-9),str(h-7)]
-	if kind in ["frame","header","panel","reference","button","primary","name","tab"]:body+='<rect x="3" y="3" width="%d" height="%d" rx="%s" fill="none" stroke="#efffff" stroke-width="1"/>'%[w-6,h-9,str(radius-2)]
+	if kind in ["frame","header","panel","reference"]:body+='<rect x="3" y="3" width="%d" height="%d" rx="%s" fill="none" stroke="#efffff" stroke-width="1"/>'%[w-6,h-9,str(radius-2)]
 	if _surfaces.size()>24:_surfaces.clear()
 	var texture=vector('<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="%d">'%[w,h]+defs+body+'</svg>')
 	_surfaces[key]=texture

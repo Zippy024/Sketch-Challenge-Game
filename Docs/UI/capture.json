@@ -18,10 +18,10 @@
   ],
   "browser_console_errors": [],
   "source_sha256": {
-    "GlossSurfaces.gd": "20f3ada3d9adcea07d2fbb5d0b9164b189fccd361f3d3037b808af9cdf080427",
-    "KitchenUI.gd": "ddc1788e3559033112029a9ec2f17b427d877ddc8306ca3c78cb0fc3ae707ee5",
+    "GlossSurfaces.gd": "76974f66b081a992041665fb664893b5525ee5d5a2bd2d68383647e0eced1928",
+    "KitchenUI.gd": "f2b90e08e6266628fd87b5c9b9e621b77b3c9c12b81e1084616033a862f42252",
     "ModernHeader.gd": "754e0fa828abd8544ce5b931eda453903e859a87e474e60314caf5ef0b3745ed",
-    "StageCardPicker.gd": "739513b663c942dbf96b7e67e32854cf314a5c15240b2d8b68223bb27c877135",
+    "StageCardPicker.gd": "057d2c49f03c57f9724a3b34e1484f4c1abc8d571f4051d82b5666c069037e7b",
     "Main.gd": "8ab8b2e18a14bcdd807407b9137d5e9a4daeea062113d49d8c576a835cc46c1d",
     "Stage2.gd": "4e1b4f1fdcefdfa2c4a16f6f8bcb31a687ef155dd03fcd862d19035ac80a9c04",
     "Stage3.gd": "9bdfc254f6064528a7ba00f399bc1e1388420f8f757017aeba7a40e1450de47f",
@@ -33,13 +33,16 @@
     "Stage4Assets/StudioTheme.gd": "1f5a0baef75d6c99e485c28075e39d36f9efc2c190dcc1586750dc8ec6a2bb05"
   },
   "local_native_checks": {
-    "HeaderNavigation": "passed Godot 4.7.2 after integrating latest main",
-    "TrilingualSmoke": "passed Godot 4.7.2 after integrating latest main",
-    "SessionFlow": "passed Godot 4.7.2 after integrating latest main",
-    "CompletionTiming": "passed Godot 4.7.2 after integrating latest main",
-    "Stage3Speech": "passed Godot 4.7.2 after integrating latest main",
-    "DirectKitchenParts": "passed Godot 4.7.2 after integrating latest main",
-    "Stage4Selection": "passed Godot 4.7.2 after integrating latest main"
+    "HeaderNavigation": "passed Godot 4.7.2 for rounded controls and uniform popup",
+    "TrilingualSmoke": "passed Godot 4.7.2 for rounded controls and uniform popup",
+    "Stage4Selection": "passed Godot 4.7.2 for rounded controls and uniform popup"
   },
-  "ci_checks": "Seven native regression suites and Web export run in both pull-request validation and Pages deployment."
+  "ci_checks": "Seven native regression suites and Web export run in both pull-request validation and Pages deployment.",
+  "level_popup": {
+    "size_logical": [
+      520,
+      560
+    ],
+    "verified": "Centered, fixed size across all 10 cards, all 4 playable stages and all 3 languages; star space reserved for ungraded stages."
+  }
 }
