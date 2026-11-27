@@ -4,9 +4,12 @@ const Rating=preload("res://StageRating.gd")
 func _initialize() -> void: call_deferred("_run")
 func _wait() -> void: await create_timer(0.3).timeout
 func _home() -> Control:
-	var direct_home=current_scene.find_child("GameHomeButton",true,false) if current_scene else null
-	if direct_home!=null:
-		direct_home.pressed.emit()
+	var header=current_scene.find_child("Stage1Header",true,false) if current_scene else null
+	if header==null and current_scene:header=current_scene.find_child("GameHeader",true,false)
+	if header!=null:
+		header.call("_open_stage_card",Progress.resume_stage())
+		await _wait()
+		current_scene.find_child("StagePickerMainMenu",true,false).pressed.emit()
 		await _wait()
 		assert(not paused and current_scene.find_child("LanguageSelectionScreen",true,false)==null)
 		var saved_home=current_scene.find_child("KitchenHomeScreen",true,false)
@@ -262,7 +265,7 @@ func _check_retry(stage: int) -> void:
 		await _continue_phase()
 		Rating.advance(3,60)
 		Rating.mistake(3)
-		current_scene.find_child("HeaderRetryButton",true,false).pressed.emit()
+		current_scene.find_child("Stage3Retry",true,false).pressed.emit()
 		await _wait()
 		assert(current_scene.get("step")==0 and not current_scene.get("_transitioning"))
 		assert(int(Rating.current(3).mistakes)==0 and float(Rating.current(3).elapsed)<2)

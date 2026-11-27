@@ -17,6 +17,7 @@ static func surface(kind: String,width: int,height: int) -> Texture2D:
 	elif kind=="name":top="#eaf8ff";bottom="#a9d8ff";edge="#397dcc";radius=9;shadow=.18
 	elif kind=="danger":top="#fff9fa";bottom="#ffdce2";edge="#f5a5b3";radius=9
 	elif kind=="button":top="#ffffff";bottom="#d0e8ff";edge="#4d88be";radius=9;shadow=.16
+	elif kind=="start":top="#34df99";bottom="#08b879";edge="#edfff7";radius=16;shadow=.18
 	elif kind=="primary":top="#19a9ff";bottom="#0057e3";edge="#004cc2";radius=9;shadow=.18
 	elif kind=="round":top="#ffffff";bottom="#e4efff";edge="#4d80ba";radius=(h-5)*.5;shadow=.20
 	elif kind=="locked":top="#d4e7f7";bottom="#9abbdb";edge="#7b99b8";radius=8;shadow=.16
@@ -32,10 +33,10 @@ static func surface(kind: String,width: int,height: int) -> Texture2D:
 		body+='<rect x="3" y="3" width="%d" height="%d" rx="11" fill="url(#light)"/>'%[w-6,h-9]
 	elif kind=="header":
 		var scale=float(w)/1070.0
-		body+='<path d="M%s 11V%dM%s 11V%d" stroke="#6f9ecb" stroke-width="1.2"/><path d="M%s %sH%s" stroke="#7faad0" stroke-width="2"/><path d="M%s %sH%s" stroke="#edf9ff" stroke-width="1"/>'%[str(roundf(151*scale)),h-14,str(roundf(839*scale)),h-14,str(roundf(164*scale)),str(roundf(25*scale)),str(roundf(828*scale)),str(roundf(164*scale)),str(roundf(24*scale)),str(roundf(828*scale))]
+		body+='<path d="M%s 11V%dM%s 11V%d" stroke="#6f9ecb" stroke-width="1.2"/><path d="M%s %sH%s" stroke="#7faad0" stroke-width="2"/><path d="M%s %sH%s" stroke="#edf9ff" stroke-width="1"/>'%[str(roundf(151*scale)),h-14,str(roundf(718*scale)),h-14,str(roundf(193*scale)),str(roundf(25*scale)),str(roundf(643*scale)),str(roundf(193*scale)),str(roundf(24*scale)),str(roundf(643*scale))]
 	if kind=="heading":
 		body='<rect x="0" y="%d" width="66" height="3" rx="1.5" fill="#169cff"/><rect x="70" y="%d" width="14" height="3" rx="1.5" fill="#77d5ff"/><circle cx="90" cy="%s" r="1.5" fill="#ffc958"/>'%[h-4,h-4,str(h-2.5)]
-	elif kind in ["button","primary","round","locked","name","tab","header","navy"]:
+	elif kind in ["button","primary","start","round","locked","name","tab","header","navy"]:
 		var shine_height=maxf(6,(h-8)*.46)
 		var shine_alpha=.24 if kind in ["primary","navy"] else .48
 		body+='<rect x="4" y="3" width="%d" height="%s" rx="%s" fill="#ffffff" opacity="%s"/><path d="M%s %dH%s" stroke="#ffffff" stroke-width="1.2" opacity=".85"/>'%[w-8,str(shine_height),str(maxf(4,radius-3)),str(shine_alpha),str(radius),h-7,str(w-radius)]

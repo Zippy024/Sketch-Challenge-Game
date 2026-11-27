@@ -28,6 +28,7 @@ jobs:
           import subprocess
           checks = {
               "TrilingualSmoke": "TRILINGUAL_SMOKE_OK",
+              "HeaderNavigation": "HEADER_NAVIGATION_OK",
               "SessionFlow": "SESSION_FLOW_OK",
               "CompletionTiming": "COMPLETION_TIMING_OK",
               "Stage3Speech": "STAGE3_SPEECH_OK",

@@ -318,13 +318,9 @@ func _build_ui() -> void:
 	var right := VBoxContainer.new()
 	right.add_theme_constant_override("separation",14)
 	right_panel.add_child(right)
-	var header_indent:=MarginContainer.new()
-	header_indent.name="Stage2TitleIndent"
-	header_indent.add_theme_constant_override("margin_left",12)
-	right.add_child(header_indent)
 	var header := HBoxContainer.new()
 	header.add_theme_constant_override("separation",10)
-	header_indent.add_child(header)
+	right.add_child(header)
 	var mark := TextureRect.new()
 	mark.texture=UI.icon("planqa")
 	mark.modulate=UI.TEAL
@@ -334,15 +330,14 @@ func _build_ui() -> void:
 	header.add_child(mark)
 	answer_title=UI.label("Plan Q&A",24,true)
 	UI.decorate_heading(answer_title)
+	UI.inset_text(answer_title)
 	answer_title.name="Stage2QATitle"
 	answer_title.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	header.add_child(answer_title)
 	var instructions:=UI.label("Type your answer, then press OK.",14,false,UI.MUTED)
+	UI.inset_text(instructions)
 	instructions.name="Stage2AnswerInstructions"
-	var prompt_indent:=MarginContainer.new()
-	prompt_indent.add_theme_constant_override("margin_left",12)
-	right.add_child(prompt_indent)
-	prompt_indent.add_child(instructions)
+	right.add_child(instructions)
 	status_label=UI.label("",12)
 	status_label.hide()
 	right.add_child(status_label)

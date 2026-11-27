@@ -73,6 +73,12 @@ jobs:
           grep -q "STAGE4_SELECTION_OK" /tmp/stage4-selection.log
           if grep -q "SCRIPT ERROR" /tmp/stage4-selection.log; then exit 1; fi
 
+      - name: Verify compact header and stage card navigation
+        run: |
+          timeout 120s godot --headless --audio-driver Dummy --path . --script res://Tests/HeaderNavigation.gd --max-fps 120 --quit-after 14400 2>&1 | tee /tmp/header-navigation.log
+          grep -q "HEADER_NAVIGATION_OK" /tmp/header-navigation.log
+          if grep -q "SCRIPT ERROR" /tmp/header-navigation.log; then exit 1; fi
+
       - name: Export Web game
         run: |
           mkdir -p "Web Game"

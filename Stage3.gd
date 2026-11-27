@@ -191,15 +191,12 @@ func _refresh() -> void:
 	var right := UI.card_stack(split,true)
 	right.get_parent().name="Stage3AnswerCard"
 	right.get_parent().size_flags_stretch_ratio = 13
-	var head_inset:=MarginContainer.new()
-	head_inset.name="Stage3HeadingIndent"
-	head_inset.add_theme_constant_override("margin_left",12)
-	right.add_child(head_inset)
 	var heading:=HBoxContainer.new()
 	heading.add_theme_constant_override("separation",12)
-	head_inset.add_child(heading)
+	right.add_child(heading)
 	var title:=UI.label("Kitchen Selection" if step<2 else "Kitchen Parts",25,true)
 	UI.decorate_heading(title)
+	UI.inset_text(title)
 	title.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	heading.add_child(title)
 	_feedback_panel=PanelContainer.new()

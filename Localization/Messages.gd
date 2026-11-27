@@ -1,5 +1,9 @@
 extends RefCounted
 const MESSAGES = [
+	{"en":"Stage","mm":"အဆင့်","jp":"ステージ","aliases":[]},
+	{"en":"Start","mm":"စတင်မည်","jp":"スタート","aliases":[]},
+	{"en":"Return to Game","mm":"ဂိမ်းသို့ ပြန်မည်","jp":"ゲームに戻る","aliases":[]},
+	{"en":"Main Menu","mm":"ပင်မစာမျက်နှာ","jp":"メインメニュー","aliases":[]},
 	{
 		"en": "Kitchen Layout Game",
 		"mm": "မီးဖိုချောင် အခန်းဖွဲ့စည်းမှုဂိမ်း",
