@@ -482,7 +482,10 @@ func _run() -> void:
 		assert(game.find_child("MintWorkspace",true,false)!=null)
 		assert(game.find_children("KitchenChoice*","Button",true,false).size()==5)
 		assert(game.find_child("Stage3ReferencePlan",true,false).texture.resource_path=="res://Refrence image.png")
-		assert(game.find_child("Stage3Retry",true,false)!=null)
+		assert(game.find_child("Stage3Retry",true,false)==null)
+		assert(game.find_child("HeaderRetryButton",true,false)!=null)
+		assert(game.find_child("HeaderStageButton",true,false)!=null)
+		assert(game.find_child("HeaderLanguageBadge",true,false)!=null)
 		var plan_click:=InputEventMouseButton.new()
 		plan_click.position=game.find_child("Stage3ReferencePlan",true,false).get_global_rect().get_center()
 		plan_click.button_index=MOUSE_BUTTON_LEFT
