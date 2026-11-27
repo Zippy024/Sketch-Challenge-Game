@@ -8,6 +8,8 @@ var design: Control
 var frame: TextureRect
 var _signature: String=""
 var _stage_nodes: Array[Control]=[]
+var _controls_ready: bool=false
+var _fitting: bool=false
 
 static func svg(source: String) -> Texture2D:
 	# Retain SVG data so Godot rasterizes at the actual canvas/display scale.
@@ -46,10 +48,12 @@ func _ready() -> void:
 	resized.connect(_fit)
 	_refresh()
 	_build_controls()
+	_controls_ready=true
 	_fit()
 
 func _fit() -> void:
-	if design==null:return
+	if design==null or not _controls_ready or _fitting:return
+	_fitting=true
 	var factor=maxf(1.0,size.x-24.0)/1070.0
 	design.scale=Vector2.ONE
 	design.position=Vector2(12,8)
@@ -86,6 +90,7 @@ func _fit() -> void:
 					picker.add_theme_stylebox_override(state,style)
 	var height=roundf(52*factor)+13
 	if not is_equal_approx(custom_minimum_size.y,height):custom_minimum_size.y=height
+	_fitting=false
 
 func _process(_delta: float) -> void:
 	var key: String=P.get_language()+str(P.is_completed(1))+str(P.is_completed(2))+str(P.is_completed(3))

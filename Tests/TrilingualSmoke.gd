@@ -232,6 +232,12 @@ func _run() -> void:
 		var drawing_card=game.find_child("Stage1DrawingCard",true,false)
 		assert(game.find_child("Stage1Header",true,false).size.y<=90)
 		assert(game.find_child("Stage1Logo",true,false).texture.resource_path=="res://LoadingAssets/KitchenLogo.webp")
+		var header_logo=game.find_child("Stage1Logo",true,false)
+		assert(header_logo.size.x>50 and header_logo.size.y>20)
+		assert(active_header.get_global_rect().encloses(header_logo.get_global_rect()))
+		for locked_stage in range(5,11):
+			var lock_image=reach.find_child("ReachNode%02d"%locked_stage,true,false).find_children("*","TextureRect",true,false)[0]
+			assert(lock_image.size.x>6 and lock_image.size.y>6)
 		var avatar=game.find_child("Stage1CustomerAvatar",true,false)
 		var stage_one_avatar_size: Vector2 = avatar.size
 		var name_plate=game.find_child("Stage1CustomerIdentity",true,false)
