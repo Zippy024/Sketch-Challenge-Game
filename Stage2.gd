@@ -329,6 +329,7 @@ func _build_ui() -> void:
 	mark.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	header.add_child(mark)
 	answer_title=UI.label("Plan Q&A",24,true)
+	UI.decorate_heading(answer_title)
 	answer_title.name="Stage2QATitle"
 	answer_title.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	header.add_child(answer_title)

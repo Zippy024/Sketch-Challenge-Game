@@ -1,4 +1,5 @@
 {
+  "renderer": "Actual Godot 4.7.2 Web export in Chromium/WebGL2",
   "viewport_css": [
     1662,
     940
@@ -8,50 +9,20 @@
     3324,
     1880
   ],
-  "renderer": "Actual Godot4.7.2 Web export in Chromium/WebGL2",
   "verified_interactions": [
-    "language selection",
-    "Start Game and stage selection",
-    "Stage1 drawing and Undo",
+    "fresh Stage 1 entry with original logo and six locked-stage icons",
     "header Home navigation",
-    "Stage4 selection-only layout",
-    "first Stage1 entry retains original logo, language icon, and six stage lock icons"
+    "Stage 4 overview and five-option sink picker"
   ],
-  "draw_test_dark_pixels": {
-    "before": 0,
-    "drawn": 4850,
-    "after_undo": 242
+  "browser_console_errors": [],
+  "source_sha256": {
+    "GlossSurfaces.gd": "921b7e93bccfadca324c8cc505bafefb127a6487fae025f90981842e1548851d",
+    "KitchenUI.gd": "73a071af557e9341d27db3d0145524206f0285c1891ed6fd678cd10e7cd23503",
+    "Main.gd": "43cb9a681a4db466814516740d8e47e256d418d5bf76810f8d41c4e39b5ddcac",
+    "Stage2.gd": "cdb5196fe60bece96820e8891cc0c96916e75eeda01c004f68492fa8a299e679",
+    "Stage3.gd": "54d262ed1c3a032c5af1eef9cf6145d0be26e590269e5b3de3c48ecfbc1e638c",
+    "Stage4.gd": "ef7402ee713c4f2b1802736cb2e7a6b911dfd3e2f42031b21ce1b7b6c1be4003",
+    "UIAssets/mint-workspace.svg": "7a5011ca1ccc1c5f1b33c1080f6069fe306698111e3875b2a0de3820e23cd3f2"
   },
-  "native_suites": [
-    {
-      "suite": "TrilingualSmoke",
-      "exit": 0,
-      "ok": true
-    },
-    {
-      "suite": "SessionFlow",
-      "exit": 0,
-      "ok": true
-    },
-    {
-      "suite": "CompletionTiming",
-      "exit": 0,
-      "ok": true
-    },
-    {
-      "suite": "Stage3Speech",
-      "exit": 0,
-      "ok": true
-    },
-    {
-      "suite": "DirectKitchenParts",
-      "exit": 0,
-      "ok": true
-    },
-    {
-      "suite": "Stage4Selection",
-      "exit": 0,
-      "ok": true
-    }
-  ]
+  "ci_checks": "Six existing native regression suites and Web export run in the pull-request workflow."
 }

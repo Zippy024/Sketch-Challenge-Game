@@ -4,11 +4,11 @@ const Progress = preload("res://GameProgress.gd")
 const INK := Color("061a4f")
 const MUTED := Color("335b85")
 const TEAL := Color("087fff")
-const PANEL := Color("d9edff")
+const PANEL := Color("ffffff")
 const SPEECH := Color("eff9fe")
-const INPUT := Color("edf7ff")
+const INPUT := Color("f5f8ff")
 const CANVAS := Color("fbfdff")
-const EDGE := Color("9cc8ec")
+const EDGE := Color("6595c4")
 const SUCCESS := Color("2da36b")
 const FAILURE := Color("cd4c5e")
 const FEEDBACK_TINT := 0.055
@@ -243,7 +243,24 @@ static func card_stack(parent: Control, expand: bool = false) -> VBoxContainer:
 	panel.add_child(stack)
 	return stack
 
+static func decorate_heading(control: Control) -> void:
+	if control.has_meta("heading_decoration"):return
+	control.set_meta("heading_decoration",true)
+	var decoration:=TextureRect.new()
+	decoration.name="HeadingAccent"
+	decoration.expand_mode=TextureRect.EXPAND_IGNORE_SIZE
+	decoration.mouse_filter=Control.MOUSE_FILTER_IGNORE
+	decoration.show_behind_parent=true
+	control.add_child(decoration)
+	decoration.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var refresh=func():
+		if is_instance_valid(control) and is_instance_valid(decoration):
+			decoration.texture=Gloss.surface("heading",maxi(100,roundi(control.size.x)),maxi(24,roundi(control.size.y)))
+	control.resized.connect(refresh)
+	refresh.call_deferred()
+
 static func reference_heading(control: Control) -> void:
+	decorate_heading(control)
 	control.name="ReferencePlanHeading"
 	control.custom_minimum_size.y=38
 	control.add_theme_font_override("font",font(true))
