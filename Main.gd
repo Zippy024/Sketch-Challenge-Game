@@ -203,7 +203,7 @@ var mm_lang_btn: Button
 var en_lang_btn: Button
 var _stage1_language_picker: Control
 
-# Recorded voice files. Place the three MP3 files in res:// (the project root).
+# Recorded request and feedback voice files are bundled in res://.
 var voice_player: AudioStreamPlayer
 var voice_kind: String = ""
 var voice_caption: Control
@@ -224,7 +224,7 @@ var typing_token: int = 0
 const DIALOGUE_TEXTS: Dictionary = {
 	"en": {
 		"speaker": "Ms. Hosokawa",
-		"request": "I am thinking about renovating my kitchen.\nI have a floor plan, but I do not understand it clearly.\nCould you neatly draw the area that I need?\nI would like to know the exact layout of the living/dining area and the kitchen.",
+		"request": "I'm thinking about remodeling my kitchen.\nI have a floor plan, but I don't quite understand it.\nCould you redraw the necessary areas clearly and neatly?\nI'd like to know the exact layout of the combined living and dining area and the kitchen.",
 		"correct": "I understand now.\nThank you very much.",
 		"wrong": "Something seems a little different.",
 		"try_again": "Try Again",
@@ -240,7 +240,7 @@ const DIALOGUE_TEXTS: Dictionary = {
 	},
 	"mm": {
 		"speaker": "ဟိုဆိုကာဝါစံ",
-		"request": "မီးဖိုချောင်ကို ပြန်လည်ပြင်ဆင်ဖို့ စဉ်းစားနေပါတယ်။\nပုံစံစာရွက် ရှိပေမယ့် သေချာနားမလည်လို့ပါ။\nလိုအပ်တဲ့ ဧရိယာလေးကို သပ်သပ်ရပ်ရပ် ဆွဲပေးနိုင်မလားရှင်။\nဧည့်ခန်း၊ ထမင်းစားနေရာနဲ့ မီးဖိုချောင်ရဲ့ အခန်းဖွဲ့စည်းပုံကို အတိအကျ သိချင်ပါတယ်။",
+		"request": "မီးဖိုချောင်ကို ပြန်လည်ပြုပြင်ဖို့ စဉ်းစားနေပါတယ်ရှင်။\nအိမ်ရဲ့ အခန်းဖွဲ့စည်းပုံ ပုံကြမ်းရှိပေမယ့် သေသေချာချာ နားမလည်ပါဘူး။\nလိုအပ်တဲ့ နေရာတွေကို ရှင်းရှင်းလင်းလင်းနဲ့ သပ်သပ်ရပ်ရပ် ပြန်ဆွဲပေးလို့ရမလားရှင်။\nဧည့်ခန်းနဲ့ ထမင်းစားခန်း ပေါင်းထားတဲ့အခန်းရယ်၊ မီးဖိုချောင်ရယ်ကို ဘယ်လိုဖွဲ့စည်းထားလဲဆိုတာ တိတိကျကျ သိချင်ပါတယ်ရှင်။",
 		"correct": "သေချာနားလည်သွားပါပြီ။\nကျေးဇူးအများကြီးတင်ပါတယ်။",
 		"wrong": "နည်းနည်းလေး လွဲနေသလိုပဲနော်、、、",
 		"try_again": "Try Again",
@@ -1140,10 +1140,13 @@ func _reset_feedback_ui() -> void:
 
 func _sync_stage1_retry_text() -> void:
 	if not is_instance_valid(again_button):return
+	var caption: String
 	if last_eval_state=="wrong":
-		again_button.text={"en":"Try Again","jp":"もう一度","mm":"ထပ်ကြိုးစားမည်"}.get(current_lang,"Try Again")
+		caption={"en":"Try Again","jp":"もう一度","mm":"ထပ်ကြိုးစားမည်"}.get(current_lang,"Try Again")
 	else:
-		again_button.text={"en":"Retry","jp":"やり直す","mm":"ပြန်စမည်"}.get(current_lang,"Retry")
+		caption={"en":"Retry","jp":"やり直す","mm":"ပြန်စမည်"}.get(current_lang,"Retry")
+	again_button.tooltip_text=caption
+	again_button.text="" if again_button.get_meta("icon_only",false) else caption
 
 func _on_again_pressed() -> void:
 	# Full fresh attempt: clear drawing, reset score and replay the question.
@@ -1195,11 +1198,11 @@ func _confirm() -> void:
 		await _scroll_dialog_to_bottom()
 	ok_button.disabled = last_eval_state=="correct"
 
-# ---------------- Recorded Japanese voice and synchronized subtitles ----------------
+# ---------------- Recorded voices and synchronized subtitles ----------------
 func _voice_path(kind: String) -> String:
 	if current_lang == "en":
 		match kind:
-			"talk": return "res://Stage 1 eng question.mp3"
+			"talk": return "res://Question eng stage 1.mp3"
 			"wrong": return "res://Stage 1 eng wrong.mp3"
 			"correct": return "res://Stage 1 eng thanks.mp3"
 	if current_lang == "jp":
@@ -1210,7 +1213,7 @@ func _voice_path(kind: String) -> String:
 	# Myanmar voice uses the user's supplied MP3 filenames.
 	else:
 		match kind:
-			"talk": return "res://Talkmm.mp3"
+			"talk": return "res://Question mm stage 1.mp3"
 			"wrong": return "res://Wrongmm.mp3"
 			"correct": return "res://Thanksmm.mp3"
 	return ""
@@ -1263,14 +1266,16 @@ func _play_voice(kind: String) -> void:
 	elif current_lang == "jp" and kind == "correct":
 		voice_segment_texts = ["よくわかりました。\n", "ありがとうございます。"]
 		voice_segment_times = [0.0, 2.21, stream.get_length()]
-	elif current_lang == "mm" and kind == "talk":
-		voice_segment_texts = [
-			"မီးဖိုချောင်ကို ပြန်လည်ပြင်ဆင်ဖို့ စဉ်းစားနေပါတယ်။\n",
-			"ပုံစံစာရွက် ရှိပေမယ့် သေချာနားမလည်လို့ပါ။\n",
-			"လိုအပ်တဲ့ ဧရိယာလေးကို သပ်သပ်ရပ်ရပ် ဆွဲပေးနိုင်မလားရှင်။\n",
-			"ဧည့်ခန်း၊ ထမင်းစားနေရာနဲ့ မီးဖိုချောင်ရဲ့ အခန်းဖွဲ့စည်းပုံကို အတိအကျ သိချင်ပါတယ်။"
-		]
-		voice_segment_times = [0.0, 4.3, 8.1, 12.8, stream.get_length()]
+	elif current_lang in ["en", "mm"] and kind == "talk":
+		# Use the displayed copy as the caption source so revisions cannot drift.
+		var sentences: PackedStringArray = str(DIALOGUE_TEXTS[current_lang]["request"]).split("\n")
+		for index in range(sentences.size()):
+			voice_segment_texts.append(sentences[index] + ("\n" if index < sentences.size() - 1 else ""))
+		# Sentence onsets measured in the supplied English and Myanmar recordings.
+		if current_lang == "en":
+			voice_segment_times = [0.0, 3.03, 6.67, 10.47, stream.get_length()]
+		else:
+			voice_segment_times = [0.0, 4.39, 9.64, 15.40, stream.get_length()]
 	elif current_lang == "mm" and kind == "correct":
 		voice_segment_texts = ["သေချာနားလည်သွားပါပြီ။\n", "ကျေးဇူးအများကြီးတင်ပါတယ်။"]
 		voice_segment_times = [0.0, 2.7, stream.get_length()]

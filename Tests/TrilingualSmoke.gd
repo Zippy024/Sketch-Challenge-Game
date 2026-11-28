@@ -204,7 +204,7 @@ func _run() -> void:
 		assert(active_header.find_child("ReachNode01",true,false).size.x<60)
 
 		assert(active_header.get_global_rect().encloses(reach.get_global_rect()))
-		assert(reach.global_position.y-active_header.global_position.y>=7)
+		assert(reach.global_position.is_equal_approx(active_header.global_position))
 		assert(active_header.find_child("StageRibbon",true,false)==null)
 		assert(active_header.find_child("CurrentStageLabel",true,false).text=="01")
 		assert(reach.find_child("ReachNode01",true,false).get_global_rect().encloses(reach.find_child("CurrentStageLabel",true,false).get_global_rect()))
@@ -242,6 +242,7 @@ func _run() -> void:
 		assert(active_header.get_global_rect().encloses(header_logo.get_global_rect()))
 		for locked_stage in range(5,11):
 			var lock_image=reach.find_child("ReachNode%02d"%locked_stage,true,false).find_children("*","TextureRect",true,false)[0]
+			# Twelve-pixel reference locks remain readable at the 1440px game viewport.
 			assert(lock_image.size.x>6 and lock_image.size.y>6)
 		var avatar=game.find_child("Stage1CustomerAvatar",true,false)
 		var stage_one_avatar_size: Vector2 = avatar.size
