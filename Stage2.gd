@@ -682,7 +682,7 @@ func _voice_path(kind: String) -> String:
 			"good": candidates = ["res://Understand.mp3"]
 	else:
 		match kind:
-			"question": candidates = ["res://Ps Questionmm.mp3", "res://Talkmm.mp3"]
+			"question": candidates = ["res://Ps Questionmm.mp3"]
 			"needs": candidates = ["res://Dontunderstandmm.mp3", "res://Wrongmm.mp3"]
 			"good": candidates = ["res://Understandmm.mp3", "res://Thanksmm.mp3"]
 
