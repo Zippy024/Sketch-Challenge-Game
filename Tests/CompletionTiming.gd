@@ -19,6 +19,18 @@ func _run() -> void:
 		change_scene_to_file("res://main.tscn")
 		await _wait()
 		var game=current_scene
+		# Request playback must finish naturally before drawing becomes available.
+		var request_voice: AudioStreamPlayer = game.get("voice_player")
+		assert(request_voice.playing and not game.get("conversation_finished"))
+		assert(not game.get("canvas").drawing_enabled)
+		assert("".join(game.get("voice_segment_texts")) == game.get("request_label").text)
+		var cues = game.get("voice_segment_times")
+		for cue_index in range(1, cues.size()):
+			assert(cues[cue_index] > cues[cue_index - 1])
+		request_voice.seek(request_voice.stream.get_length() - 0.08)
+		await _wait(0.45)
+		assert(game.get("conversation_finished") and game.get("canvas").drawing_enabled)
+		assert(game.get("request_label").visible_characters == -1)
 		if lang=="en":
 			for kind in ["talk","wrong","correct"]:
 				assert(ResourceLoader.exists(game.call("_voice_path",kind)))
