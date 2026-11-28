@@ -54,8 +54,8 @@ func _ready() -> void:
 		var b=action(design,"%02d"%i,Rect2(26+(i-1)*48,441,34,34),_select.bind(i));b.name="StagePopupChoice%02d"%i;b.set_meta("stage",i);_choices.append(b)
 		_checks.append(art(design,Look.symbol("check"),Rect2(0,0,15,15)))
 	_crown=art(design,Look.symbol("crown"),Rect2(0,0,27,27));_crown.name="SelectedStageCrown"
-	var back=action(design,"Return to Game",Rect2(27,506,223,40),func():resume_requested.emit(),"button",14);back.name="StagePickerReturn";back.icon=UI.icon("undo",18)
-	var home=action(design,"Main Menu",Rect2(270,506,223,40),func():main_menu_requested.emit(),"button",14);home.name="StagePickerMainMenu";home.icon=UI.icon("home",18)
+	var back=action(design,"Return to Game",Rect2(27,506,223,40),func():resume_requested.emit(),"button",14);back.name="StagePickerReturn";Look.center_content(back,UI.icon("undo",18),UI.INK)
+	var home=action(design,"Main Menu",Rect2(270,506,223,40),func():main_menu_requested.emit(),"button",14);home.name="StagePickerMainMenu";Look.center_content(home,UI.icon("home",18),UI.INK)
 	resized.connect(_fit);_select(selected_stage);_fit.call_deferred()
 
 func _process(_delta: float) -> void:
@@ -96,12 +96,13 @@ func _select(stage: int) -> void:
 		b.add_theme_font_size_override("font_size",18 if active else 13)
 		b.text="" if locked else "%02d"%n;b.icon=UI.icon("lock",15) if locked else null;b.add_theme_constant_override("icon_max_width",15)
 		Look.style_button(b,"blue" if active else ("locked" if locked else ("done" if done else "button")))
-		for state in ["font_color","font_hover_color","font_pressed_color"]:b.add_theme_color_override(state,Color.WHITE if active else UI.INK)
+		for state in ["font_color","font_hover_color","font_pressed_color","font_focus_color"]:b.add_theme_color_override(state,Color.WHITE if active else UI.INK)
 		var check=_checks[n-1];check.visible=done and not active;check.position=b.position+Vector2(23,24)
 	_crown.visible=available;_crown.position=Vector2(43+(stage-1)*48-13.5,411)
 	var target=_start if available else find_child("StagePickerReturn",true,false);target.grab_focus.call_deferred();_fit.call_deferred()
 func _start_skin() -> void:
 	Look.style_button(_start,"green")
+	Look.center_content(_start,UI.icon("play",20),Color("526c83") if _start.disabled else Color.WHITE)
 func _start_selected() -> void:
 	if P.is_level_unlocked(selected_stage):stage_requested.emit(selected_stage)
 
