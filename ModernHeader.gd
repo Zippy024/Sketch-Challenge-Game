@@ -1,5 +1,6 @@
 extends Control
 const UI=preload("res://KitchenUI.gd")
+const Look=preload("res://StagePickerStyle.gd")
 const P=preload("res://GameProgress.gd")
 const Rating=preload("res://StageRating.gd")
 const REFERENCE_SIZE=Vector2(1912,110)
@@ -49,29 +50,10 @@ static func command_icon(kind: String) -> Texture2D:
 	return svg('<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">'+shape+'</svg>')
 
 static func ribbon_texture(kind: String,w: int,h: int) -> Texture2D:
-	w=maxi(24,w);h=maxi(18,h)
-	var dimensions={"header":Vector2(1912,110),"command":Vector2(47,47),"locale":Vector2(154,47),"track":Vector2(733,37),"label":Vector2(113,44),"active":Vector2(48,48),"done":Vector2(48,48),"available":Vector2(48,48),"locked":Vector2(48,48)}
-	var palettes={"header":["#2dc7f4","#075b98","#063c68"],"command":["#45d9fb","#117fb6","#064a78"],"locale":["#f0fbff","#cceaff","#064f7e"],"track":["#0c4b76","#07375b","#418cb0"],"label":["#0e5d94","#073f72","#54dcff"],"active":["#4de1ff","#0ca5df","#84efff"],"done":["#4ee5b4","#1aa483","#8cebc9"],"available":["#427fa7","#245f8b","#4e9ec6"],"locked":["#2c5d83","#20496d","#3b7499"]}
-	var reference: Vector2=dimensions[kind];var colors: Array=palettes[kind]
-	var stops='<stop stop-color="%s"/><stop offset="1" stop-color="%s"/>'%[colors[0],colors[1]]
-	if kind=="header":stops='<stop stop-color="#2dc7f4"/><stop offset=".26" stop-color="#159bdb"/><stop offset=".65" stop-color="#0a7bbd"/><stop offset="1" stop-color="#075b98"/>'
-	var defs='<defs><linearGradient id="g" x2="0" y2="1">'+stops+'</linearGradient><radialGradient id="soft" cx=".48" cy="0" r=".8"><stop stop-color="#dffaff" stop-opacity=".14"/><stop offset="1" stop-color="#dffaff" stop-opacity="0"/></radialGradient></defs>'
-	var body: String
-	if kind=="header":
-		body='<rect x="8" y="12" width="1898" height="94" rx="26" fill="#064570" opacity=".5"/><rect x="6" y="6" width="1900" height="94" rx="25" fill="url(#g)" stroke="#063c68" stroke-width="2.2"/><rect x="9" y="9" width="1894" height="88" rx="23" fill="none" stroke="#6bddff" stroke-width="1" opacity=".5"/><path d="M331 32V78M1608 32V78" stroke="#8ce5fb" stroke-width="1.2" opacity=".35"/>'
-	elif kind=="command":
-		body='<circle cx="23.5" cy="25" r="22" fill="#06476a" opacity=".4"/><circle cx="23.5" cy="23.5" r="22" fill="url(#g)" stroke="#064a78" stroke-width="1.6"/>'
-	elif kind=="locale":
-		body='<rect x="1" y="4" width="152" height="42" rx="12" fill="#064f77" opacity=".4"/><rect x="1" y="1" width="152" height="44" rx="12" fill="url(#g)" stroke="#064f7e" stroke-width="1.6"/>'
-	elif kind=="label":
-		body='<rect x="1" y="2" width="111" height="41" rx="12" fill="#06446a" opacity=".5"/><rect x="1" y="1" width="111" height="42" rx="12" fill="url(#g)" stroke="#54dcff" stroke-width="1.4"/><path d="M29 41H85" stroke="#4edbff" stroke-width="2"/>'
-	elif kind=="track":
-		body='<path d="M39 18.5H696" fill="none" stroke="#0a3a60" stroke-width="8" stroke-linecap="round"/><path d="M39 18.5H696" fill="none" stroke="#6ac2e4" stroke-width="3" stroke-linecap="round" opacity=".7"/>'
-	else:
-		body='<circle cx="24" cy="25.5" r="22" fill="#082b49" opacity=".4"/><circle cx="24" cy="24" r="22" fill="url(#g)" stroke="%s" stroke-width="1.4"/>'%colors[2]
-		if kind=="active":body+='<circle cx="24" cy="24" r="23" fill="none" stroke="#8df4ff" stroke-width="2"/>'
-
-	return svg('<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="%d" viewBox="0 0 %s %s" preserveAspectRatio="none">'%[w,h,str(reference.x),str(reference.y)]+defs+body+'</svg>')
+	if kind=="track":
+		return svg('<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="%d" viewBox="0 0 733 37"><path d="M32 18.5H701" stroke="#087fc4" stroke-width="12" stroke-linecap="round"/><path d="M32 17H701" stroke="#70e5ff" stroke-width="6" stroke-linecap="round"/><path d="M32 15H701" stroke="white" stroke-width="1.5" opacity=".8"/></svg>'%[w,h])
+	var mapped={"header":"bar","command":"blue","locale":"button","label":"blue","active":"blue","done":"done","available":"button","locked":"locked"}
+	return Look.texture(mapped.get(kind,"button"),w,h)
 
 static func ribbon_skin(kind: String,w: int,h: int) -> StyleBoxTexture:
 	var result=StyleBoxTexture.new();result.texture=ribbon_texture(kind,w,h)
@@ -111,9 +93,9 @@ func _fit() -> void:
 			var marker=child.get_node_or_null("ActiveStageMark")
 			if marker:marker.visible=false
 			for icon in child.find_children("*","TextureRect",true,false):
-				var stars=icon.name=="EarnedStageStar"
-				icon.size=Vector2.ONE*roundf((22 if stars else 12)*factor)
-				icon.position=Vector2(roundf((child.size.x-icon.size.x)*.5),roundf(-12*factor)) if stars else Vector2(child.size.x-icon.size.x,roundf(36*factor))
+				var base: Rect2=icon.get_meta("decoration_rect")
+				icon.position=(base.position*factor).round();icon.size=(base.size*factor).round()
+
 		elif child.has_meta("ribbon_surface"):
 			child.texture=ribbon_texture(str(child.get_meta("ribbon_surface")),roundi(child.size.x),roundi(child.size.y))
 			if child.name=="RibbonLevelBadge":
@@ -157,24 +139,30 @@ func _refresh() -> void:
 		var point=Panel.new();point.name="ReachNode%02d"%i
 		point.set_meta("stage",i);point.set_meta("current",active);point.set_meta("completed",done);point.set_meta("locked",locked)
 		point.tooltip_text=UI.text("Stage %d")%i;point.mouse_default_cursor_shape=Control.CURSOR_POINTING_HAND;point.focus_mode=Control.FOCUS_ALL
-		point.position=Vector2(680+(i-1)*73,30);point.size=Vector2(48,48);point.set_meta("header_base_rect",Rect2(point.position,point.size))
+		var side=58 if active else 44
+		point.position=Vector2(704+(i-1)*73-side*.5,54-side*.5);point.size=Vector2.ONE*side;point.set_meta("header_base_rect",Rect2(point.position,point.size))
 		point.gui_input.connect(_stage_pressed.bind(i));design.add_child(point);_stage_nodes.append(point)
-		var caption=UI.inline_label("%02d"%i,11,true);caption.name="CurrentStageLabel" if active else "ReachStageLabel";caption.set_meta("locale_ignore",true);caption.clip_text=true;caption.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER;caption.add_theme_color_override("font_color",Color("c6e2f4") if locked else (Color("063e63") if active or done else Color("f4fbff")));point.add_child(caption)
-		point.mouse_entered.connect(func():point.self_modulate=Color(1.12,1.12,1.12,1))
+		var caption=UI.inline_label("" if locked else "%02d"%i,11,true);caption.name="CurrentStageLabel" if active else "ReachStageLabel";caption.set_meta("locale_ignore",true);caption.clip_text=true;caption.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER;caption.add_theme_color_override("font_color",Color.WHITE if active else UI.INK);point.add_child(caption)
+		point.mouse_entered.connect(func():point.self_modulate=Color(1.06,1.06,1.06,1))
 		point.mouse_exited.connect(func():point.self_modulate=Color.WHITE)
 		if active:
-			var marker=ColorRect.new();marker.name="ActiveStageMark";marker.color=Color("8df4ff");marker.mouse_filter=Control.MOUSE_FILTER_IGNORE;point.add_child(marker)
-		if done or locked:
-			var icon=TextureRect.new();icon.name="EarnedStageStar" if done else "LockedStageCorner";icon.texture=award_icon() if done else clear_lock_icon();icon.modulate=Color.WHITE if done else Color("d7effe");icon.expand_mode=TextureRect.EXPAND_IGNORE_SIZE;icon.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED;icon.mouse_filter=Control.MOUSE_FILTER_IGNORE;point.add_child(icon)
+			_node_art(point,"CurrentStageCrown",Look.symbol("crown"),Rect2(14,-18,30,25))
+			_node_art(point,"CurrentStagePlay",Look.symbol("play"),Rect2(17,45,24,24))
+		elif done:_node_art(point,"CompletedStageCheck",Look.symbol("check"),Rect2(28,28,18,18))
+		if locked:_node_art(point,"LockedStageCorner",UI.icon("lock",20),Rect2(12,11,20,20))
+
 	var status=design.get_node_or_null("GameLanguageStatus")
 	if status:
 		status.set_meta("language",P.get_language());status.find_child("LanguageFlag",true,false).texture=flag(P.get_language());status.find_child("LanguageCaption",true,false).text={"jp":"Japan","mm":"Myanmar","en":"English"}[P.get_language()]
 	_fit.call_deferred()
 
+func _node_art(parent: Control,title: String,texture: Texture2D,rect: Rect2) -> void:
+	var icon=TextureRect.new();icon.name=title;icon.texture=texture;icon.set_meta("decoration_rect",rect);icon.expand_mode=TextureRect.EXPAND_IGNORE_SIZE;icon.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED;icon.mouse_filter=Control.MOUSE_FILTER_IGNORE;parent.add_child(icon)
+
 func _build_controls() -> void:
 	var rail=TextureRect.new();rail.name="StageRibbonTrack";rail.expand_mode=TextureRect.EXPAND_IGNORE_SIZE;rail.set_meta("ribbon_surface","track");rail.position=Vector2(665,36);rail.size=Vector2(733,37);rail.mouse_filter=Control.MOUSE_FILTER_IGNORE;design.add_child(rail);design.move_child(rail,1)
 	var badge=TextureRect.new();badge.name="RibbonLevelBadge";badge.expand_mode=TextureRect.EXPAND_IGNORE_SIZE;badge.set_meta("ribbon_surface","label");badge.position=Vector2(541,31);badge.size=Vector2(113,44);badge.mouse_filter=Control.MOUSE_FILTER_IGNORE;design.add_child(badge)
-	var star=TextureRect.new();star.name="RibbonLevelStar";star.texture=award_icon();star.modulate=Color.WHITE;star.expand_mode=TextureRect.EXPAND_IGNORE_SIZE;star.mouse_filter=Control.MOUSE_FILTER_IGNORE;badge.add_child(star)
+	var star=TextureRect.new();star.name="RibbonLevelStar";star.texture=Look.symbol("layers");star.modulate=Color.WHITE;star.expand_mode=TextureRect.EXPAND_IGNORE_SIZE;star.mouse_filter=Control.MOUSE_FILTER_IGNORE;badge.add_child(star)
 	var level=UI.inline_label("LEVEL",20,true);level.name="RibbonLevelLabel";level.set_meta("locale_ignore",true);level.clip_text=true;level.add_theme_color_override("font_color",Color.WHITE);badge.add_child(level)
 	var mark=UI.logo(0,0);mark.name="Stage1Logo" if stage==1 else "GameLogo";mark.position=Vector2(28,8);mark.size=Vector2(278,82);mark.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT;design.add_child(mark)
 	var group=HBoxContainer.new();group.name="HeaderRetryGroup";group.set_meta("header_command",true);group.set_meta("circle_command",true);group.position=Vector2(1624,29);group.size=Vector2(47,47);group.set_meta("header_base_rect",Rect2(1624,29,47,47));design.add_child(group)
