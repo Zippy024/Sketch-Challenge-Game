@@ -45,6 +45,12 @@ func run() -> void:
 				game.answer_input.grab_focus();await process_frame;await process_frame
 				assert(popup.is_ancestor_of(root.gui_get_focus_owner()))
 			assert(game.find_children("StagePreviewCard","PanelContainer",true,false).size()==1)
+			# Decorative rail, crown and check marks must not intercept real clicks.
+			var clicked_choice=popup.find_child("StagePopupChoice03",true,false)
+			for down in [true,false]:
+				var event=InputEventMouseButton.new();event.button_index=MOUSE_BUTTON_LEFT;event.pressed=down;event.position=clicked_choice.get_global_rect().get_center();root.push_input(event,true);await process_frame
+			assert(popup.selected_stage==3)
+
 			for choice in range(1,11):
 				popup.find_child("StagePopupChoice%02d"%choice,true,false).pressed.emit();await process_frame
 				assert(panel.size.is_equal_approx(Vector2(520,560)), "Popup size %s (%s, stage %d), minimum %s"%[panel.size,language,stage,panel.get_combined_minimum_size()])

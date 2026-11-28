@@ -211,7 +211,7 @@ func _run() -> void:
 		for heading in active_header.find_children("*","Label",true,false):assert(heading.text!=manager.text("LDK Boundary Drawing"))
 		var active_point=reach.find_child("ReachNode01",true,false)
 		var small_point=reach.find_child("ReachNode04",true,false)
-		assert(is_equal_approx(active_point.size.x,small_point.size.x))
+		assert(active_point.size.x>small_point.size.x)
 		for n in range(2,11):
 			var inactive_point=reach.find_child("ReachNode%02d"%n,true,false)
 			assert(absf(inactive_point.size.x-small_point.size.x)<=3)
@@ -396,7 +396,7 @@ func _run() -> void:
 		var locked_point=qa_reach.find_child("ReachNode04",true,false)
 		assert(finished_point.get_meta("completed"))
 		assert(absf(finished_point.size.x-locked_point.size.x)<=3)
-		assert(is_equal_approx(qa_reach.find_child("ReachNode02",true,false).size.x,finished_point.size.x))
+		assert(qa_reach.find_child("ReachNode02",true,false).size.x>finished_point.size.x)
 		game.get("submit_button").pressed.emit()
 		await _wait()
 		assert(not game.get("progress_description").text.is_empty())

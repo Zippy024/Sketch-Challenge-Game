@@ -6,6 +6,7 @@ const UI=preload("res://KitchenUI.gd")
 const P=preload("res://GameProgress.gd")
 const Rating=preload("res://StageRating.gd")
 const Decor=preload("res://MenuAssets/MissionDecor.gd")
+const Look=preload("res://StagePickerStyle.gd")
 const PANEL_SIZE=Vector2(520,560)
 var selected_stage: int=1
 var _panel: PanelContainer
@@ -17,37 +18,44 @@ var _stars: Control
 var _status: Label
 var _start: Button
 var _choices: Array[Button]=[]
-
+var _crown: TextureRect
+var _checks: Array[TextureRect]=[]
+func put(parent: Node,node: Control,rect: Rect2) -> void:
+	parent.add_child(node);node.position=rect.position;node.size=rect.size
+func art(parent: Node,image: Texture2D,rect: Rect2) -> TextureRect:
+	var n=TextureRect.new();n.texture=image;n.expand_mode=TextureRect.EXPAND_IGNORE_SIZE;n.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED;n.mouse_filter=Control.MOUSE_FILTER_IGNORE;put(parent,n,rect);return n
+func face(parent: Node,kind: String,rect: Rect2) -> PanelContainer:
+	var n=PanelContainer.new();n.add_theme_stylebox_override("panel",Look.skin(kind,roundi(rect.size.x),roundi(rect.size.y)));put(parent,n,rect);return n
+func caption(parent: Node,value: String,rect: Rect2,font_size: int=16,white: bool=false) -> Label:
+	var n=UI.inline_label(value,font_size,true);n.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER;n.add_theme_color_override("font_color",Color.WHITE if white else UI.INK);put(parent,n,rect);return n
+func action(parent: Node,value: String,rect: Rect2,callback: Callable,kind: String="button",font_size: int=15) -> Button:
+	var n=UI.button(value,callback,false,0,font_size);n.custom_minimum_size=Vector2.ZERO;put(parent,n,rect);n.alignment=HORIZONTAL_ALIGNMENT_CENTER;n.icon_alignment=HORIZONTAL_ALIGNMENT_CENTER;Look.style_button(n,kind);return n
 func _ready() -> void:
-	name="StageCardPicker";theme=UI.make_theme();mouse_filter=Control.MOUSE_FILTER_STOP
-	set_meta("locale_ignore",true)
-	var shade=ColorRect.new();shade.color=Color(0.03,.13,.26,.48);add_child(shade);shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_panel=PanelContainer.new();_panel.name="StagePickerPanel";var style=UI.box(Color("d8efff"),Color("80bce8"),24,14);style.set_border_width_all(2);style.shadow_size=10;style.shadow_color=Color(0,.12,.25,.25);_panel.add_theme_stylebox_override("panel",style);UI.Gloss.bind_panel(_panel,"panel",style);add_child(_panel);_panel.resized.connect(_center)
-	var stack=VBoxContainer.new();stack.add_theme_constant_override("separation",10);_panel.add_child(stack)
-	var heading=PanelContainer.new();var heading_style=UI.box(UI.TEAL,Color.WHITE,22,6);heading.add_theme_stylebox_override("panel",heading_style);UI.Gloss.bind_panel(heading,"primary",heading_style);stack.add_child(heading)
-	var title=UI.label("Select a Level",21,true,Color.WHITE);title.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER;heading.add_child(title)
-	var align=HBoxContainer.new();stack.add_child(align)
-	var before=Control.new();before.size_flags_horizontal=Control.SIZE_EXPAND_FILL;align.add_child(before)
-	var card=PanelContainer.new();card.name="StagePreviewCard";card.custom_minimum_size=Vector2(310,0);card.add_theme_stylebox_override("panel",UI.box(Color("f3fcff"),Color("87cbed"),16,10));align.add_child(card)
-	var content=VBoxContainer.new();content.add_theme_constant_override("separation",4);card.add_child(content)
-	var row=HBoxContainer.new();row.add_theme_constant_override("separation",10);content.add_child(row)
-	var badge=PanelContainer.new();badge.custom_minimum_size=Vector2(44,30);var badge_style=UI.box(UI.TEAL,Color.WHITE,8,2);badge.add_theme_stylebox_override("panel",badge_style);UI.Gloss.bind_panel(badge,"primary",badge_style);row.add_child(badge)
-	_number=UI.label("",19,true,Color.WHITE);_number.name="StageCardNumber";_number.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER;badge.add_child(_number)
-	_title=UI.inline_label("",17,true);_title.name="StageCardTitle";_title.size_flags_horizontal=Control.SIZE_EXPAND_FILL;_title.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER;row.add_child(_title)
-	var frame=PanelContainer.new();frame.add_theme_stylebox_override("panel",UI.box(Color.WHITE,Color("c2e0f0"),10,4));content.add_child(frame)
-	_image=TextureRect.new();_image.name="StageCardImage";_image.custom_minimum_size.y=120;_image.expand_mode=TextureRect.EXPAND_IGNORE_SIZE;_image.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED;_image.mouse_filter=Control.MOUSE_FILTER_IGNORE;frame.add_child(_image)
-	_caption=UI.label("",15,true);_caption.name="StageCardCaption";_caption.custom_minimum_size.y=48;_caption.max_lines_visible=2;_caption.clip_text=true;_caption.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER;content.add_child(_caption)
-	var star_slot=Control.new();star_slot.name="StageCardStarsSlot";star_slot.custom_minimum_size.y=25;content.add_child(star_slot)
-	_stars=Decor.new();_stars.name="StageCardStars";star_slot.add_child(_stars);_stars.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_status=UI.inline_label("",13,true);_status.add_theme_color_override("font_color",UI.MUTED);_status.name="StageCardStatus";_status.custom_minimum_size.y=18;_status.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER;content.add_child(_status)
-	_start=UI.button("Start",_start_selected,true,0,17);_start.name="StageCardStart";_start.custom_minimum_size.y=34;_start.icon=UI.icon("play",16);UI.Gloss.disable_button(_start);_start.resized.connect(_start_skin);content.add_child(_start)
-	var after=Control.new();after.size_flags_horizontal=Control.SIZE_EXPAND_FILL;align.add_child(after)
-	var choices=HBoxContainer.new();choices.name="StageCardChoices";choices.add_theme_constant_override("separation",4);stack.add_child(choices)
+	name="StageCardPicker";theme=UI.make_theme();mouse_filter=Control.MOUSE_FILTER_STOP;set_meta("locale_ignore",true)
+	var shade=ColorRect.new();shade.color=Color(.025,.13,.26,.43);add_child(shade);shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_panel=face(self,"outer",Rect2(Vector2.ZERO,PANEL_SIZE));_panel.name="StagePickerPanel";_panel.resized.connect(_center)
+	var design=Control.new();design.mouse_filter=Control.MOUSE_FILTER_IGNORE;_panel.add_child(design)
+	var heading=face(design,"heading",Rect2(108,-5,304,48));caption(heading,"Select a Level",Rect2(0,1,304,40),22,true)
+	art(design,Look.symbol("spark"),Rect2(128,8,20,20));art(design,Look.symbol("spark"),Rect2(376,8,20,20))
+	var card=face(design,"card",Rect2(91,54,338,354));card.name="StagePreviewCard"
+	var content=Control.new();content.mouse_filter=Control.MOUSE_FILTER_IGNORE;card.add_child(content)
+	face(content,"title",Rect2(19,16,302,38));face(content,"blue",Rect2(8,3,61,61))
+	_number=caption(content,"",Rect2(8,8,61,49),25,true);_number.name="StageCardNumber"
+	_title=caption(content,"",Rect2(72,16,238,33),19);_title.name="StageCardTitle"
+	var frame=face(content,"photo",Rect2(14,68,310,132))
+	_image=TextureRect.new();_image.name="StageCardImage";_image.expand_mode=TextureRect.EXPAND_IGNORE_SIZE;_image.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED;_image.mouse_filter=Control.MOUSE_FILTER_IGNORE;frame.add_child(_image)
+	_caption=caption(content,"",Rect2(15,201,308,35),17 if P.get_language()=="mm" else 19);_caption.name="StageCardCaption";_caption.clip_text=true
+	_stars=Decor.new();_stars.name="StageCardStars";put(content,_stars,Rect2(108,237,90,24));_stars.scale=Vector2(1.35,1.35)
+	face(content,"title",Rect2(94,269,150,25));_status=caption(content,"",Rect2(87,269,164,23),13);_status.name="StageCardStatus";_status.add_theme_color_override("font_color",Color("3c7da3"))
+	_start=action(content,"Start",Rect2(18,302,302,44),_start_selected,"green",21);_start.name="StageCardStart";_start.icon=UI.icon("play",19);_start.add_theme_color_override("font_color",Color.WHITE);_start.add_theme_color_override("font_hover_color",Color.WHITE);_start.add_theme_color_override("font_pressed_color",Color.WHITE);_start.add_theme_color_override("icon_normal_color",Color.WHITE)
+	face(design,"card",Rect2(16,426,488,65))
+	var rail=ColorRect.new();rail.color=Color("6acdf0");rail.mouse_filter=Control.MOUSE_FILTER_IGNORE;put(design,rail,Rect2(40,455,440,5))
 	for i in range(1,11):
-		var button=UI.button("%02d"%i,_select.bind(i),false,0,13);button.name="StagePopupChoice%02d"%i;button.set_meta("stage",i);button.size_flags_horizontal=Control.SIZE_EXPAND_FILL;button.custom_minimum_size.y=32;UI.Gloss.disable_button(button);choices.add_child(button);_choices.append(button)
-	var actions=HBoxContainer.new();actions.add_theme_constant_override("separation",12);stack.add_child(actions)
-	var back=UI.button("Return to Game",func():resume_requested.emit(),false,0,14);back.name="StagePickerReturn";back.size_flags_horizontal=Control.SIZE_EXPAND_FILL;actions.add_child(back)
-	var home=UI.button("Main Menu",func():main_menu_requested.emit(),false,0,14);home.name="StagePickerMainMenu";home.icon=UI.icon("home",16);home.size_flags_horizontal=Control.SIZE_EXPAND_FILL;actions.add_child(home)
+		var b=action(design,"%02d"%i,Rect2(26+(i-1)*48,441,34,34),_select.bind(i));b.name="StagePopupChoice%02d"%i;b.set_meta("stage",i);_choices.append(b)
+		_checks.append(art(design,Look.symbol("check"),Rect2(0,0,15,15)))
+	_crown=art(design,Look.symbol("crown"),Rect2(0,0,27,27));_crown.name="SelectedStageCrown"
+	var back=action(design,"Return to Game",Rect2(27,506,223,40),func():resume_requested.emit(),"button",14);back.name="StagePickerReturn";back.icon=UI.icon("undo",18)
+	var home=action(design,"Main Menu",Rect2(270,506,223,40),func():main_menu_requested.emit(),"button",14);home.name="StagePickerMainMenu";home.icon=UI.icon("home",18)
 	resized.connect(_fit);_select(selected_stage);_fit.call_deferred()
 
 func _process(_delta: float) -> void:
@@ -81,21 +89,19 @@ func _select(stage: int) -> void:
 	_stars.visible=stage<=3;_stars.earned=int(Rating.best(stage).get("stars",0));_stars.set_meta("stars",_stars.earned);_stars.queue_redraw()
 	_status.text=UI.text("Completed") if P.is_completed(stage) else (UI.text("Ready") if available else UI.text("Coming soon"))
 	_start.disabled=not available;_start.text=UI.text("Start") if available else UI.text("Coming soon");_start_skin()
-	for button in _choices:
-		var n=int(button.get_meta("stage"));var locked=not P.is_level_unlocked(n)
-		button.text="" if locked else "%02d"%n;button.icon=UI.icon("lock",12) if locked else null;button.add_theme_constant_override("icon_max_width",12)
-		for state in ["normal","hover","pressed","disabled"]:
-			var style=StyleBoxTexture.new();style.texture=UI.Gloss.surface("primary" if n==stage else ("locked" if locked else "button"),44,32);style.set_content_margin_all(2);button.add_theme_stylebox_override(state,style)
-		for state in ["font_color","font_hover_color","font_pressed_color"]:button.add_theme_color_override(state,Color.WHITE if n==stage else UI.INK)
-	var focus_target=_start if available else find_child("StagePickerReturn",true,false)
-	focus_target.grab_focus.call_deferred()
-	_fit.call_deferred()
-
+	for b in _choices:
+		var n=int(b.get_meta("stage"));var locked=not P.is_level_unlocked(n);var active=n==stage;var done=P.is_completed(n)
+		var side=48 if active else 34
+		b.position=Vector2(43+(n-1)*48-side*.5,458-side*.5);b.size=Vector2.ONE*side
+		b.add_theme_font_size_override("font_size",18 if active else 13)
+		b.text="" if locked else "%02d"%n;b.icon=UI.icon("lock",15) if locked else null;b.add_theme_constant_override("icon_max_width",15)
+		Look.style_button(b,"blue" if active else ("locked" if locked else ("done" if done else "button")))
+		for state in ["font_color","font_hover_color","font_pressed_color"]:b.add_theme_color_override(state,Color.WHITE if active else UI.INK)
+		var check=_checks[n-1];check.visible=done and not active;check.position=b.position+Vector2(23,24)
+	_crown.visible=available;_crown.position=Vector2(43+(stage-1)*48-13.5,411)
+	var target=_start if available else find_child("StagePickerReturn",true,false);target.grab_focus.call_deferred();_fit.call_deferred()
 func _start_skin() -> void:
-	if not is_instance_valid(_start):return
-	for state in ["normal","hover","pressed","disabled"]:
-		var style=StyleBoxTexture.new();style.texture=UI.Gloss.surface("button" if _start.disabled else "start",maxi(100,roundi(_start.size.x)),34);style.set_content_margin_all(3);_start.add_theme_stylebox_override(state,style)
-
+	Look.style_button(_start,"green")
 func _start_selected() -> void:
 	if P.is_level_unlocked(selected_stage):stage_requested.emit(selected_stage)
 
